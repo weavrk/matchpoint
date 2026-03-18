@@ -87,8 +87,7 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 - **AI Provider:** Google AI Studio (Gemini)
 - **Styling:** CSS (no framework)
 - **Icons:** Lucide React
-- Github repro: [https://github.com/weavrk/matchpoint.git](https://github.com/weavrk/matchpoint.git)  
-
+- Github repro: [https://github.com/weavrk/matchpoint.git](https://github.com/weavrk/matchpoint.git)
 
 **IMPORTANT:** All UI development happens in the React app (`web/`). The `public/index.html` file is legacy/deprecated — do not use it.
 
@@ -134,15 +133,11 @@ GEMINI_API_KEY=your_key_here
 ## Market Comparables
 
 ### Market
-- User defines the market/location to search within (e.g., "NYC", "Los Angeles", "Chicago")
-- On entry, perform search with highest match first
-- Market selection drives: salary ranges, job availability, competitive landscape
-
-> TBD: Market search UI, supported markets list, data sources per market
 
 ### Job Sites
 
 #### General Job Boards
+
 - **Indeed** - Largest job board, strong for hourly/retail roles
 - **ZipRecruiter** - AI matching, good retail coverage
 - **LinkedIn** - Better for management/supervisor roles
@@ -150,11 +145,13 @@ GEMINI_API_KEY=your_key_here
 - **CareerBuilder** - General board with retail category
 
 #### Retail-Specific
+
 - **AllRetailJobs.com** - Dedicated retail job board
 - **RetailJobsWeb.com** - Retail-focused, management + hourly
 - **RetailCareersNow** - Retail industry specific
 
 #### Hourly / Shift-Based
+
 - **Snagajob** - Built for hourly work, pre-screens availability
 - **Wonolo** - On-demand staffing, retail/warehouse
 - **Instawork** - Gig-style retail/hospitality shifts
@@ -162,17 +159,20 @@ GEMINI_API_KEY=your_key_here
 ### Job Roles
 
 #### Entry-Level Positions
+
 - **Sales Associate / Retail Associate** - Customer service, sales floor support, POS transactions
 - **Cashier** - Checkout operations, handling payments
 - **Stock Associate / Stocker** - Receiving, organizing, replenishing inventory
 - **Fitting Room Attendant** - Managing dressing rooms, returning items to floor
 
 #### Specialized Roles
+
 - **Visual Merchandiser** - Displays, store layout, product presentation
 - **Inventory Specialist** - Stock counts, inventory management systems
 - **Beauty Advisor / Cosmetics Associate** - Product expertise, demos (Sephora, Ulta, department stores)
 
 #### Supervisory / Management
+
 - **Key Holder / Lead Associate** - Opening/closing, shift supervision
 - **Department Supervisor** - Oversees specific section (shoes, menswear, etc.)
 - **Assistant Store Manager** - Operations support, staff scheduling
@@ -180,6 +180,7 @@ GEMINI_API_KEY=your_key_here
 - **District / Area Manager** - Multi-store oversight
 
 #### Seasonal / Part-Time Focus
+
 - **Holiday Seasonal Associate** - Temp positions for peak seasons
 - **Weekend Associate** - Dedicated weekend availability
 - **Early Morning Stocker** - Pre-open inventory work

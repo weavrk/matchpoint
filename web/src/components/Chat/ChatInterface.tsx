@@ -44,10 +44,7 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
           <Sparkles size={20} />
         </div>
         <div className="chat-header-content">
-          <h2 className="chat-header-title">Create Job Posting</h2>
-          <p className="chat-header-subtitle">
-            I'll help you define what you're looking for in a permanent hire
-          </p>
+          <h2 className="chat-header-title">Search Retail Talent</h2>
         </div>
       </div>
 

@@ -11,22 +11,22 @@
 
 .chat-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   padding: 20px 24px;
   border-bottom: 1px solid var(--black-alpha-100);
-  background: var(--green-50);
+  background: var(--blue-50);
 }
 
 .chat-header-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--green-100);
+  background: var(--blue-100);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--green-600);
+  color: var(--blue-600);
   flex-shrink: 0;
 }
 
@@ -38,7 +38,8 @@
   font-size: 18px;
   font-weight: 600;
   color: var(--app-primary);
-  margin: 0 0 4px;
+  margin: 0;
+  line-height: 1.2;
 }
 
 .chat-header-subtitle {
@@ -75,11 +76,11 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--green-100);
+  background: var(--blue-100);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--green-600);
+  color: var(--blue-600);
   flex-shrink: 0;
 }
 
@@ -166,7 +167,7 @@
 }
 
 .chat-input:focus {
-  border-color: var(--green-400);
+  border-color: var(--blue-400);
 }
 
 .chat-input::placeholder {

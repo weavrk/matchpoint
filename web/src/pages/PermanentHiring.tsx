@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Briefcase, Link, FileText, BarChart3, Search } from 'lucide-react';
+import { Briefcase, Link, FileText, Search } from 'lucide-react';
 import { ChatInterface } from '../components/Chat';
 import { WorkerGrid } from '../components/Workers';
 import { MockGeminiService } from '../services/gemini';
@@ -15,23 +15,85 @@ interface PermanentHiringProps {
 
 type TabId = 'ask-reflex' | 'published-jobs' | 'market-comparables';
 
+// Common/popular markets shown as quick-select chips
+const COMMON_MARKETS = [
+  { id: 'new-york-ny', name: 'New York', state: 'NY' },
+  { id: 'los-angeles-ca', name: 'Los Angeles', state: 'CA' },
+  { id: 'chicago-il', name: 'Chicago', state: 'IL' },
+  { id: 'miami-fl', name: 'Miami', state: 'FL' },
+  { id: 'dallas-tx', name: 'Dallas', state: 'TX' },
+  { id: 'atlanta-ga', name: 'Atlanta', state: 'GA' },
+  { id: 'houston-tx', name: 'Houston', state: 'TX' },
+  { id: 'boston-ma', name: 'Boston', state: 'MA' },
+  { id: 'san-francisco-ca', name: 'San Francisco', state: 'CA' },
+  { id: 'seattle-wa', name: 'Seattle', state: 'WA' },
+  { id: 'denver-co', name: 'Denver', state: 'CO' },
+  { id: 'phoenix-az', name: 'Phoenix', state: 'AZ' },
+  { id: 'las-vegas-nv', name: 'Las Vegas', state: 'NV' },
+  { id: 'washington-dc', name: 'Washington', state: 'D.C.' },
+];
+
+// All available markets
 const MARKETS = [
-  { id: 'nyc', name: 'New York City', state: 'NY' },
-  { id: 'la', name: 'Los Angeles', state: 'CA' },
-  { id: 'chicago', name: 'Chicago', state: 'IL' },
-  { id: 'houston', name: 'Houston', state: 'TX' },
-  { id: 'phoenix', name: 'Phoenix', state: 'AZ' },
-  { id: 'philadelphia', name: 'Philadelphia', state: 'PA' },
-  { id: 'san-antonio', name: 'San Antonio', state: 'TX' },
-  { id: 'san-diego', name: 'San Diego', state: 'CA' },
-  { id: 'dallas', name: 'Dallas', state: 'TX' },
-  { id: 'san-jose', name: 'San Jose', state: 'CA' },
-  { id: 'austin', name: 'Austin', state: 'TX' },
-  { id: 'miami', name: 'Miami', state: 'FL' },
-  { id: 'atlanta', name: 'Atlanta', state: 'GA' },
-  { id: 'boston', name: 'Boston', state: 'MA' },
-  { id: 'seattle', name: 'Seattle', state: 'WA' },
-  { id: 'denver', name: 'Denver', state: 'CO' },
+  { id: 'austin-tx', name: 'Austin', state: 'TX' },
+  { id: 'san-marcos-tx', name: 'San Marcos', state: 'TX' },
+  { id: 'dallas-tx', name: 'Dallas', state: 'TX' },
+  { id: 'houston-tx', name: 'Houston', state: 'TX' },
+  { id: 'nashville-tn', name: 'Nashville', state: 'TN' },
+  { id: 'san-antonio-tx', name: 'San Antonio', state: 'TX' },
+  { id: 'phoenix-az', name: 'Phoenix', state: 'AZ' },
+  { id: 'washington-dc', name: 'Washington', state: 'D.C.' },
+  { id: 'orlando-fl', name: 'Orlando', state: 'FL' },
+  { id: 'miami-fl', name: 'Miami', state: 'FL' },
+  { id: 'new-york-ny', name: 'New York', state: 'NY' },
+  { id: 'boston-ma', name: 'Boston', state: 'MA' },
+  { id: 'woodbury-ny', name: 'Woodbury', state: 'NY' },
+  { id: 'las-vegas-nv', name: 'Las Vegas', state: 'NV' },
+  { id: 'tampa-fl', name: 'Tampa', state: 'FL' },
+  { id: 'long-island-east-ny', name: 'Long Island East', state: 'NY' },
+  { id: 'long-island-west-ny', name: 'Long Island West', state: 'NY' },
+  { id: 'charleston-sc', name: 'Charleston', state: 'SC' },
+  { id: 'fort-walton-beach-fl', name: 'Fort Walton Beach', state: 'FL' },
+  { id: 'newark-nj', name: 'Newark', state: 'NJ' },
+  { id: 'central-new-jersey-nj', name: 'Central New Jersey', state: 'NJ' },
+  { id: 'los-angeles-ca', name: 'Los Angeles', state: 'CA' },
+  { id: 'atlanta-ga', name: 'Atlanta', state: 'GA' },
+  { id: 'denver-co', name: 'Denver', state: 'CO' },
+  { id: 'detroit-mi', name: 'Detroit', state: 'MI' },
+  { id: 'chicago-il', name: 'Chicago', state: 'IL' },
+  { id: 'charlotte-nc', name: 'Charlotte', state: 'NC' },
+  { id: 'westport-ct', name: 'Westport', state: 'CT' },
+  { id: 'king-of-prussia-pa', name: 'King of Prussia', state: 'PA' },
+  { id: 'cabazon-ca', name: 'Cabazon', state: 'CA' },
+  { id: 'san-jose-ca', name: 'San Jose', state: 'CA' },
+  { id: 'tulsa-ok', name: 'Tulsa', state: 'OK' },
+  { id: 'minneapolis-mn', name: 'Minneapolis', state: 'MN' },
+  { id: 'memphis-tn', name: 'Memphis', state: 'TN' },
+  { id: 'new-orleans-la', name: 'New Orleans', state: 'LA' },
+  { id: 'san-diego-ca', name: 'San Diego', state: 'CA' },
+  { id: 'st-louis-mo', name: 'St. Louis', state: 'MO' },
+  { id: 'portland-or', name: 'Portland', state: 'OR' },
+  { id: 'seattle-wa', name: 'Seattle', state: 'WA' },
+  { id: 'knoxville-tn', name: 'Knoxville', state: 'TN' },
+  { id: 'san-francisco-ca', name: 'San Francisco', state: 'CA' },
+  { id: 'cincinnati-oh', name: 'Cincinnati', state: 'OH' },
+  { id: 'baton-rouge-la', name: 'Baton Rouge', state: 'LA' },
+  { id: 'savannah-ga', name: 'Savannah', state: 'GA' },
+  { id: 'bakersfield-ca', name: 'Bakersfield', state: 'CA' },
+  { id: 'fresno-ca', name: 'Fresno', state: 'CA' },
+  { id: 'salt-lake-city-ut', name: 'Salt Lake City', state: 'UT' },
+  { id: 'biloxi-ms', name: 'Biloxi', state: 'MS' },
+  { id: 'raleigh-durham-nc', name: 'Raleigh-Durham', state: 'NC' },
+  { id: 'columbus-oh', name: 'Columbus', state: 'OH' },
+  { id: 'westchester-ny', name: 'Westchester', state: 'NY' },
+  { id: 'wilmington-de', name: 'Wilmington', state: 'DE' },
+  { id: 'boulder-co', name: 'Boulder', state: 'CO' },
+  { id: 'milwaukee-wi', name: 'Milwaukee', state: 'WI' },
+  { id: 'fort-myers-fl', name: 'Fort Myers', state: 'FL' },
+  { id: 'indianapolis-in', name: 'Indianapolis', state: 'IN' },
+  { id: 'sacramento-ca', name: 'Sacramento', state: 'CA' },
+  { id: 'omaha-ne', name: 'Omaha', state: 'NE' },
+  { id: 'merrimack-nh', name: 'Merrimack', state: 'NH' },
 ];
 
 const JOB_SITES = {
@@ -87,7 +149,7 @@ export function PermanentHiring({ onRegisterStartChat }: PermanentHiringProps) {
   const [selectedMarket, setSelectedMarket] = useState<string | null>(null);
 
   const filteredMarkets = useMemo(() => {
-    if (!marketSearch.trim()) return MARKETS;
+    if (!marketSearch.trim()) return [];
     const search = marketSearch.toLowerCase();
     return MARKETS
       .map(market => {
@@ -97,7 +159,8 @@ export function PermanentHiring({ onRegisterStartChat }: PermanentHiringProps) {
         return { ...market, score };
       })
       .filter(m => m.score > 0)
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8);
   }, [marketSearch]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -279,21 +342,51 @@ export function PermanentHiring({ onRegisterStartChat }: PermanentHiringProps) {
                 onChange={(e) => setMarketSearch(e.target.value)}
               />
             </div>
-            <div className="market-list">
-              {filteredMarkets.map(market => (
-                <button
-                  key={market.id}
-                  className={`market-item ${selectedMarket === market.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedMarket(market.id)}
-                >
-                  <span className="market-name">{market.name}</span>
-                  <span className="market-state">{market.state}</span>
-                </button>
-              ))}
-              {filteredMarkets.length === 0 && (
-                <p className="no-results">No markets found</p>
-              )}
-            </div>
+
+            {/* Show search results when searching */}
+            {marketSearch.trim() && (
+              <div className="market-group">
+                <h3 className="market-group-title">
+                  Search Results
+                  <span className="market-count">({filteredMarkets.length})</span>
+                </h3>
+                {filteredMarkets.length > 0 ? (
+                  <div className="market-list">
+                    {filteredMarkets.map(market => (
+                      <button
+                        key={market.id}
+                        className={`market-item ${selectedMarket === market.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedMarket(market.id)}
+                      >
+                        <span className="market-name">{market.name}</span>
+                        <span className="market-state">{market.state}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="no-results">No markets found</p>
+                )}
+              </div>
+            )}
+
+            {/* Show common markets when not searching */}
+            {!marketSearch.trim() && (
+              <div className="market-group">
+                <h3 className="market-group-title">Common Markets</h3>
+                <div className="market-list">
+                  {COMMON_MARKETS.map(market => (
+                    <button
+                      key={market.id}
+                      className={`market-item ${selectedMarket === market.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedMarket(market.id)}
+                    >
+                      <span className="market-name">{market.name}</span>
+                      <span className="market-state">{market.state}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="job-sites-section">
