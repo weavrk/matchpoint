@@ -67,6 +67,7 @@ export function SideNav({ activePage = 'home', onNavigate }: SideNavProps) {
           <img className="avatar-img" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face" alt="" />
           <img className="avatar-img" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face" alt="" />
           <img className="avatar-img" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face" alt="" />
+          <img className="avatar-img" src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=80&h=80&fit=crop&crop=face" alt="" />
           <span className="reviews-alert-more">+more</span>
         </div>
         <button className="reviews-alert-btn">Leave Reviews</button>
