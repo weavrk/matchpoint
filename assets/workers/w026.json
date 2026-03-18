@@ -1,0 +1,65 @@
+{
+  "id": "w026",
+  "name": "Jasmine Howard",
+  "market": "New York City",
+  "brandsWorked": ["Sandro", "Maje", "Ba&sh"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 42,
+  "shiftVerified": true,
+  "preference": "Full-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 40,
+    "selfStarter": 36,
+    "preparedness": 41,
+    "perfectAttire": 42,
+    "workPace": 38,
+    "productivity": 39,
+    "attentionToDetail": 37,
+    "teamPlayer": 40,
+    "positiveAttitude": 42,
+    "adaptable": 35
+  },
+  "onTimeRating": "Exceptional",
+  "commitmentScore": "Exceptional",
+  "invitedBackStores": 12,
+  "about": "4 years in French contemporary at Sandro and Maje. Strong with young professional clientele seeking polished workwear. Retailers praise her efficiency during sample sales.",
+  "interviewTranscript": "I've been with French contemporary brands for four years now. What I love about Sandro and Maje is the aesthetic—it's elevated but wearable. My customers are often young professionals building their work wardrobe, and I help them find pieces that transition from office to evening. I'm efficient, I know the product, and I thrive during high-volume events like sample sales.",
+  "previousRetailExperience": [
+    {
+      "company": "Sandro",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Sandro",
+      "duration": "6 months to 1 year",
+      "roles": ["Visual Merchandiser"]
+    },
+    {
+      "company": "Maje",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Ba&sh",
+      "duration": "6 months to 1 year",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Ba&sh",
+      "duration": "Less than 6 months",
+      "roles": ["Floor Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Visual Merchandising", "Events"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": true,
+      "prefersIndependentFocus": false,
+      "needsDetailedDirection": false,
+      "physicallyActive": true
+    }
+  }
+}

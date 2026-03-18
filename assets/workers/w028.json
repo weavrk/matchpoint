@@ -1,0 +1,65 @@
+{
+  "id": "w028",
+  "name": "Nina Petrov",
+  "market": "New York City",
+  "brandsWorked": ["Valentino", "Dolce & Gabbana", "Versace"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 51,
+  "shiftVerified": true,
+  "preference": "Full-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 49,
+    "selfStarter": 45,
+    "preparedness": 50,
+    "perfectAttire": 51,
+    "workPace": 42,
+    "productivity": 47,
+    "attentionToDetail": 51,
+    "teamPlayer": 46,
+    "positiveAttitude": 48,
+    "adaptable": 40
+  },
+  "onTimeRating": "Exceptional",
+  "commitmentScore": "Exceptional",
+  "invitedBackStores": 15,
+  "about": "6 years in Italian luxury at Valentino and Dolce & Gabbana Madison Avenue. Fluent in Russian, strong with international clientele. Retailers describe her as effortlessly sophisticated.",
+  "interviewTranscript": "Six years in Italian luxury has shaped everything about how I approach retail. At Valentino and Dolce & Gabbana, you learn that every detail matters—from how you present yourself to how you present the garment. Being fluent in Russian has been invaluable with international clients. I'm looking for a permanent role where I can continue growing.",
+  "previousRetailExperience": [
+    {
+      "company": "Valentino",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Valentino",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Dolce & Gabbana",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Dolce & Gabbana",
+      "duration": "6 months to 1 year",
+      "roles": ["Visual Merchandiser"]
+    },
+    {
+      "company": "Versace",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Events", "Visual Merchandising"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": false,
+      "prefersIndependentFocus": true,
+      "needsDetailedDirection": false,
+      "physicallyActive": false
+    }
+  }
+}

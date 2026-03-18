@@ -1,0 +1,70 @@
+{
+  "id": "w024",
+  "name": "Brittany Harris",
+  "market": "New York City",
+  "brandsWorked": ["Tory Burch", "Kate Spade", "Coach"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 39,
+  "shiftVerified": true,
+  "preference": "Part-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 36,
+    "selfStarter": 33,
+    "preparedness": 37,
+    "perfectAttire": 39,
+    "workPace": 34,
+    "productivity": 35,
+    "attentionToDetail": 38,
+    "teamPlayer": 36,
+    "positiveAttitude": 37,
+    "adaptable": 32
+  },
+  "onTimeRating": "Exceptional",
+  "commitmentScore": null,
+  "invitedBackStores": 11,
+  "about": "4 years in accessible luxury at Tory Burch and Kate Spade. High-end retail polish with strong appeal to aspirational shoppers. Retailers note her warmth and relatability.",
+  "interviewTranscript": "I've worked in accessible luxury for four years—Tory Burch, Kate Spade, Coach. These customers are often shopping for something special, maybe their first designer bag or a gift for someone important. I love being part of that moment. I'm warm and approachable, which helps customers feel comfortable asking questions and trying things on. Retailers have told me that's what sets me apart.",
+  "previousRetailExperience": [
+    {
+      "company": "Tory Burch",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Tory Burch",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Kate Spade",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Kate Spade",
+      "duration": "6 months to 1 year",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Coach",
+      "duration": "6 months to 1 year",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Coach",
+      "duration": "Less than 6 months",
+      "roles": ["Floor Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Cashier", "Floor Organization"],
+    "traits": {
+      "selfDirected": false,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": true,
+      "prefersIndependentFocus": false,
+      "needsDetailedDirection": true,
+      "physicallyActive": true
+    }
+  }
+}

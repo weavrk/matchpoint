@@ -1,0 +1,49 @@
+{
+  "id": "w036",
+  "name": "Aaliyah Johnson",
+  "market": "New York City",
+  "brandsWorked": ["Everlane", "Madewell", "Splendid"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 0,
+  "shiftVerified": false,
+  "preference": "Part-Time, Full-Time",
+  "retailerEndorsements": {},
+  "onTimeRating": null,
+  "commitmentScore": null,
+  "invitedBackStores": 0,
+  "about": "3 years in contemporary retail at Everlane and Madewell. Strong customer service foundation and product knowledge. New to Reflex, eager to learn.",
+  "interviewTranscript": "I've spent three years in contemporary retail—Everlane, Madewell, Splendid. What I learned is that customer connection is everything. I love helping customers find pieces that fit their lifestyle. The skills I've built—reading customers, building relationships, creating an experience. I'm new to Reflex and eager to prove myself.",
+  "previousRetailExperience": [
+    {
+      "company": "Everlane",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Madewell",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Madewell",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Splendid",
+      "duration": "6 months to 1 year",
+      "roles": ["Sales Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Events"],
+    "traits": {
+      "selfDirected": false,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": true,
+      "prefersIndependentFocus": false,
+      "needsDetailedDirection": true,
+      "physicallyActive": true
+    }
+  }
+}

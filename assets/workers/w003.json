@@ -1,0 +1,70 @@
+{
+  "id": "w003",
+  "name": "Tyler Rodriguez",
+  "market": "New York City",
+  "brandsWorked": ["Gucci", "Saint Laurent", "Balenciaga"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 38,
+  "shiftVerified": true,
+  "preference": "Full-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 35,
+    "selfStarter": 32,
+    "preparedness": 36,
+    "perfectAttire": 38,
+    "workPace": 30,
+    "productivity": 33,
+    "attentionToDetail": 37,
+    "teamPlayer": 28,
+    "positiveAttitude": 34,
+    "adaptable": 31
+  },
+  "onTimeRating": "Exceptional",
+  "commitmentScore": null,
+  "invitedBackStores": 11,
+  "about": "4 years in luxury menswear at Gucci and Saint Laurent SoHo. Known for his product expertise and ability to style head-to-toe looks. Retailers note his calm demeanor with clients.",
+  "interviewTranscript": "I have 15 plus years in the luxury retail and fashion industry. I love what I do—I'm very passionate. I love helping others feel their best and look their best from the inside out. I love styling people, making people feel good about themselves, finding the perfect items and fit for them for various events or just for their day to day. I've been able to build a strong book of clients throughout my work history. I'm a team player, I can adjust in any environment, and I work effectively and efficiently.",
+  "previousRetailExperience": [
+    {
+      "company": "Gucci",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Gucci",
+      "duration": "6 months to 1 year",
+      "roles": ["Visual Merchandiser"]
+    },
+    {
+      "company": "Saint Laurent",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Balenciaga",
+      "duration": "6 months to 1 year",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Armani Exchange",
+      "duration": "Less than 6 months",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Michael Kors",
+      "duration": "Less than 6 months",
+      "roles": ["Sales Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Visual Merchandising", "Events"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": false,
+      "prefersIndependentFocus": true,
+      "needsDetailedDirection": false,
+      "physicallyActive": false
+    }
+  }
+}

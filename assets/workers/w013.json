@@ -1,0 +1,65 @@
+{
+  "id": "w013",
+  "name": "Elliot Anderson",
+  "market": "New York City",
+  "brandsWorked": ["Lululemon", "Alo Yoga", "Rhone"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 35,
+  "shiftVerified": true,
+  "preference": "Full-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 33,
+    "selfStarter": 30,
+    "preparedness": 32,
+    "perfectAttire": 34,
+    "workPace": 35,
+    "productivity": 34,
+    "attentionToDetail": 28,
+    "teamPlayer": 33,
+    "positiveAttitude": 35,
+    "adaptable": 31
+  },
+  "onTimeRating": "Exceptional",
+  "commitmentScore": null,
+  "invitedBackStores": 10,
+  "about": "3 years in athletic apparel at Lululemon and Alo Yoga flagships. Strong closer who exceeds targets on launch days. Retailers note his energy and product knowledge.",
+  "interviewTranscript": "I used to work at Lululemon. I worked there for roughly around a year. It was a very cool experience. I was able to be in an environment where it was very busy every day, help a lot of customers, a lot of interactions. Speak to people from different countries because there's a lot of people visiting. I think Reflex will be good for me because I'm able to work on the side and save up money. A time I was able to help a customer out and go above and beyond was they wanted a specific style that we didn't have in our specific store, but we were able to call a different store and I was able to make sure they had it and that customer was satisfied. I like to be social but also know how to be determined and hardworking and I know like the time and place—there's sometimes you could maybe talk to your co-workers or there's not a time and I'd like to get things done beforehand rather than wait and procrastinate.",
+  "previousRetailExperience": [
+    {
+      "company": "Lululemon",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Lululemon",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Alo Yoga",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Alo Yoga",
+      "duration": "6 months to 1 year",
+      "roles": ["Visual Merchandiser"]
+    },
+    {
+      "company": "Rhone",
+      "duration": "6 months to 1 year",
+      "roles": ["Sales Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Events", "New Store Opening"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": true,
+      "prefersIndependentFocus": false,
+      "needsDetailedDirection": false,
+      "physicallyActive": true
+    }
+  }
+}

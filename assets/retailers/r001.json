@@ -1,0 +1,26 @@
+{
+  "id": "r001",
+  "name": "Hartwell & Co.",
+  "logo": "🏛️",
+  "market": "New York City",
+  "location": "Fifth Avenue Flagship",
+  "storeType": ["apparel", "footwear"],
+  "about": "Founded in 1967, Hartwell & Co. has defined American heritage luxury for over five decades. We believe in timeless craftsmanship, quality materials, and the art of dressing well. Our Fifth Avenue flagship represents the pinnacle of refined style—where classic meets contemporary. We're not just selling clothes; we're inviting customers into a lifestyle built on authenticity, attention to detail, and understated elegance. Join a team that takes pride in exceptional service and building lasting client relationships.",
+  "currentOpening": {
+    "role": "Sales Associate",
+    "employmentType": "Full-Time",
+    "hourlyRate": "$24-28/hr",
+    "benefits": [
+      "Health & dental insurance",
+      "401(k) with company match",
+      "Generous employee discount",
+      "Paid time off",
+      "Commission opportunities"
+    ],
+    "schedule": "5 days/week, rotating weekends"
+  },
+  "starRating": 4.7,
+  "wouldWorkAgainPct": 93,
+  "totalFlexesAtStore": 312,
+  "activeJobPostings": 1
+}

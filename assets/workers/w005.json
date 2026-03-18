@@ -1,0 +1,55 @@
+{
+  "id": "w005",
+  "name": "DeShawn Williams",
+  "market": "New York City",
+  "brandsWorked": ["Ralph Lauren", "Marc Jacobs", "MCM Worldwide"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 31,
+  "shiftVerified": true,
+  "preference": "Full-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 28,
+    "selfStarter": 25,
+    "preparedness": 29,
+    "perfectAttire": 31,
+    "workPace": 24,
+    "productivity": 27,
+    "attentionToDetail": 30,
+    "teamPlayer": 26,
+    "positiveAttitude": 28,
+    "adaptable": 22
+  },
+  "onTimeRating": null,
+  "commitmentScore": "Exceptional",
+  "invitedBackStores": 9,
+  "about": "3 years in luxury apparel at Ralph Lauren and Marc Jacobs. Retailers praise his patience with clients and upselling instincts. Consistently hits accessory attach targets.",
+  "interviewTranscript": "A time where I went above and beyond—a customer was getting married and we overnighted her a pair of shoes on Friday. The shoes arrived damaged from another location and there was nothing that could be done. So I took it upon myself to drive to another location where they had a second pair. I drove there and back and met her right before the ceremony. Since then we've built a long-lasting relationship. I'm truly passionate about what I do. I can adjust in any environment and I work effectively and efficiently.",
+  "previousRetailExperience": [
+    {
+      "company": "Ralph Lauren",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Marc Jacobs",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "MCM Worldwide",
+      "duration": "6 months to 1 year",
+      "roles": ["Sales Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Inventory"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": false,
+      "prefersFastPacedEnvironment": false,
+      "prefersIndependentFocus": true,
+      "needsDetailedDirection": false,
+      "physicallyActive": true
+    }
+  }
+}

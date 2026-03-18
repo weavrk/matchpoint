@@ -1,0 +1,65 @@
+{
+  "id": "w007",
+  "name": "Brandon Lee",
+  "market": "New York City",
+  "brandsWorked": ["Rag & Bone", "Faherty", "Rhone"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 41,
+  "shiftVerified": true,
+  "preference": "Full-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 39,
+    "selfStarter": 37,
+    "preparedness": 40,
+    "perfectAttire": 41,
+    "workPace": 38,
+    "productivity": 36,
+    "attentionToDetail": 35,
+    "teamPlayer": 40,
+    "positiveAttitude": 41,
+    "adaptable": 34
+  },
+  "onTimeRating": null,
+  "commitmentScore": "Exceptional",
+  "invitedBackStores": 12,
+  "about": "4 years in elevated menswear at Rag & Bone and Faherty. Retailers love his energy on the floor and ability to connect with younger male shoppers. Strong closer on leather goods.",
+  "interviewTranscript": "Retail management has been my path—I've worked at several elevated brands and built my way up. I'm very experienced with sales floor operations, visual merchandising, and connecting with customers on a personal level. I pride myself on understanding what people are looking for before they even know it themselves. When it comes to menswear, I know what works and I'm confident making recommendations. My managers have always trusted me to handle VIP clients and high-pressure situations.",
+  "previousRetailExperience": [
+    {
+      "company": "Rag & Bone",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Rag & Bone",
+      "duration": "6 months to 1 year",
+      "roles": ["Assistant Store Manager"]
+    },
+    {
+      "company": "Faherty",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Rhone",
+      "duration": "6 months to 1 year",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Mizzen+Main",
+      "duration": "Less than 6 months",
+      "roles": ["Visual Merchandiser"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Visual Merchandising", "Floor Organization"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": true,
+      "prefersIndependentFocus": false,
+      "needsDetailedDirection": false,
+      "physicallyActive": true
+    }
+  }
+}

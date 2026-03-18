@@ -1,0 +1,75 @@
+{
+  "id": "w004",
+  "name": "Cynthia Kim",
+  "market": "New York City",
+  "brandsWorked": ["Nordstrom", "Theory", "Reiss"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 55,
+  "shiftVerified": true,
+  "preference": "Part-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 52,
+    "selfStarter": 48,
+    "preparedness": 53,
+    "perfectAttire": 55,
+    "workPace": 45,
+    "productivity": 50,
+    "attentionToDetail": 54,
+    "teamPlayer": 51,
+    "positiveAttitude": 49,
+    "adaptable": 47
+  },
+  "onTimeRating": "Exceptional",
+  "commitmentScore": null,
+  "invitedBackStores": 15,
+  "about": "5 years in contemporary women's apparel at Nordstrom and Theory. Customers request her by name for personal styling sessions. Retailers highlight her sharp eye for fit and proportion.",
+  "interviewTranscript": "I currently work at Nordstrom as a sales associate in the kids department. The things we do there as a sales associate—we obviously create connections, we service customers, we ask them what they're looking for. On top of that we also have tasks such as filling in, doing markdowns, replenishing our floor. I constantly always ask if customers are finding everything they're looking for, but I always try to go above and beyond by really listening to them to see what they need. Some of them come into the store not really having an idea of what they're trying to purchase. So I literally try to search the entire store for something that they are looking for. And they normally end up really happy. And then when we offer gift wrapping, it's like a cherry on top because they're so ecstatic about it. As for the environment of work—pretty much just positive attitude in the stores. I feel like a lot of people tend to feed off everybody's energy. So I feel like as long as it's a good environment to be at, people will want to come back.",
+  "previousRetailExperience": [
+    {
+      "company": "Nordstrom",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Nordstrom",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Theory",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Theory",
+      "duration": "6 months to 1 year",
+      "roles": ["Visual Merchandiser"]
+    },
+    {
+      "company": "Reiss",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "J. Crew",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Madewell",
+      "duration": "Less than 6 months",
+      "roles": ["Sales Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Floor Organization", "Visual Merchandising"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": true,
+      "prefersIndependentFocus": false,
+      "needsDetailedDirection": false,
+      "physicallyActive": true
+    }
+  }
+}

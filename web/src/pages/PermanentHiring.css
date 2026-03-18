@@ -1,0 +1,149 @@
+.permanent-hiring-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px);
+  max-height: calc(100vh - 48px);
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.page-header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: var(--green-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green-600);
+  flex-shrink: 0;
+}
+
+.page-header-content {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--app-primary);
+  margin: 0 0 4px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: var(--text-hint);
+  margin: 0;
+}
+
+.retailer-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--main-white);
+  border: 1px solid var(--black-alpha-100);
+  border-radius: var(--radius-lg);
+}
+
+.retailer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.retailer-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-primary);
+}
+
+.retailer-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-hint);
+}
+
+.retailer-meta svg {
+  color: #F59E0B;
+}
+
+.hiring-content {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+}
+
+.chat-column {
+  flex: 0 0 420px;
+  min-width: 360px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.results-column {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.results-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--black-alpha-200);
+}
+
+.placeholder-content {
+  text-align: center;
+  color: var(--text-hint);
+  max-width: 280px;
+}
+
+.placeholder-content svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.placeholder-content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--app-secondary);
+  margin: 0 0 8px;
+}
+
+.placeholder-content p {
+  font-size: 14px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+@media (max-width: 1200px) {
+  .hiring-content {
+    flex-direction: column;
+  }
+
+  .chat-column {
+    flex: 0 0 400px;
+    min-height: 400px;
+  }
+
+  .results-column {
+    flex: 1;
+    overflow-y: visible;
+  }
+}

@@ -1,0 +1,367 @@
+/* ============================================================
+   Design System Tokens
+   Source: assets/design-library/primitive-variables.json
+           assets/design-library/semantic-variables.json
+   ============================================================ */
+
+:root {
+
+  /* ----------------------------------------------------------
+     PRIMITIVE COLORS
+  ---------------------------------------------------------- */
+
+  /* Gray */
+  --gray-50:  #f5f5f5;
+  --gray-100: #ebebeb;
+  --gray-200: #cecece;
+  --gray-300: #bababa;
+  --gray-400: #a5a5a5;
+  --gray-500: #919191;
+  --gray-600: #616161;
+  --gray-700: #454545;
+  --gray-800: #292929;
+  --gray-900: #0d0d0d;
+
+  /* Stone */
+  --stone-50:  #fafafa;
+  --stone-100: #f4f4f5;
+  --stone-200: #e4e4e7;
+  --stone-300: #d4d4d8;
+  --stone-400: #a1a1aa;
+  --stone-500: #71717a;
+  --stone-600: #52525b;
+  --stone-700: #3f3f46;
+  --stone-800: #27272a;
+  --stone-900: #18181b;
+
+  /* Pink */
+  --pink-50:  #fffafa;
+  --pink-100: #fff5f5;
+  --pink-200: #ffe6e6;
+  --pink-300: #ffd7d7;
+  --pink-400: #ffb8b8;
+  --pink-500: #ff9a9a;
+  --pink-600: #e68b8b;
+  --pink-700: #bf7474;
+  --pink-800: #995c5c;
+  --pink-900: #7d4b4b;
+
+  /* Green */
+  --green-50:  #f3faf9;
+  --green-100: #e6f6f3;
+  --green-200: #c2e7e1;
+  --green-300: #9dd9cf;
+  --green-400: #53bdaa;
+  --green-500: #4ba098;
+  --green-600: #3c8e84;
+  --green-700: #327a72;
+  --green-800: #296760;
+  --green-900: #224543;
+
+  /* Navy */
+  --navy-50:  #f4f6f7;
+  --navy-100: #eaedef;
+  --navy-200: #c9d2d8;
+  --navy-300: #a9b7c1;
+  --navy-400: #698192;
+  --navy-500: #284b63;
+  --navy-600: #244459;
+  --navy-700: #1e384a;
+  --navy-800: #182d3b;
+  --navy-900: #142531;
+
+  /* Blue */
+  --blue-50:  #f6f9fb;
+  --blue-100: #e0f1fc;
+  --blue-200: #bdddf9;
+  --blue-300: #90bbef;
+  --blue-400: #5c8ad6;
+  --blue-500: #3b73ce;
+  --blue-600: #2a5aa7;
+  --blue-700: #234a8b;
+  --blue-800: #1c3968;
+  --blue-900: #12274a;
+
+  /* Yellow */
+  --yellow-50:  #fffcf6;
+  --yellow-100: #fff8ec;
+  --yellow-200: #ffeed0;
+  --yellow-300: #ffe4b3;
+  --yellow-400: #ffd07b;
+  --yellow-500: #ffbc42;
+  --yellow-600: #e6a93b;
+  --yellow-700: #bf8d32;
+  --yellow-800: #997128;
+  --yellow-900: #7d5c20;
+
+  /* Orange */
+  --orange-50:  #fff7ef;
+  --orange-100: #ffeedf;
+  --orange-200: #f8cfa9;
+  --orange-300: #f5ba84;
+  --orange-400: #f2a55e;
+  --orange-500: #ef9038;
+  --orange-600: #db781f;
+  --orange-700: #c16419;
+  --orange-800: #a55013;
+  --orange-900: #844a0f;
+
+  /* Red */
+  --red-50:  #fff4f4;
+  --red-100: #feeded;
+  --red-200: #fcc7c7;
+  --red-300: #f9a0a0;
+  --red-400: #f77a7a;
+  --red-500: #f55353;
+  --red-600: #dc4a4a;
+  --red-700: #c34141;
+  --red-800: #aa3838;
+  --red-900: #7a2626;
+
+  /* Purple */
+  --purple-50:  #f8f8ff;
+  --purple-100: #ededfd;
+  --purple-200: #cac9f8;
+  --purple-300: #a7a5f3;
+  --purple-400: #8381ee;
+  --purple-500: #676bd7;
+  --purple-600: #5055b7;
+  --purple-700: #394096;
+  --purple-800: #232b76;
+  --purple-900: #1f235a;
+
+  /* Black Alpha */
+  --black-alpha-100: rgba(0, 0, 0, 0.06);
+  --black-alpha-200: rgba(0, 0, 0, 0.08);
+  --black-alpha-500: rgba(0, 0, 0, 0.36);
+  --black-alpha-600: rgba(0, 0, 0, 0.48);
+  --black-alpha-700: rgba(0, 0, 0, 0.64);
+
+  /* Main */
+  --main-white: #ffffff;
+  --main-dark:  #18181b;
+
+  /* ----------------------------------------------------------
+     SEMANTIC — PRIMARY
+  ---------------------------------------------------------- */
+  --primary:    #3f3f46; /* stone-700 */
+  --secondary:  #a1a1aa; /* stone-400 */
+  --tertiary:   #d4d4d8; /* stone-300 */
+  --quaternary: #e4e4e7; /* stone-200 */
+
+  /* ----------------------------------------------------------
+     SEMANTIC — BRAND
+  ---------------------------------------------------------- */
+  --brand-pink: #ff9a9a; /* pink-500 */
+  --brand-navy: #284b63; /* navy-500 */
+
+  /* ----------------------------------------------------------
+     SEMANTIC — BODY
+  ---------------------------------------------------------- */
+  --body-dark:  #fafafa; /* stone-50 */
+  --body-light: #ffffff; /* white */
+
+  /* ----------------------------------------------------------
+     SEMANTIC — BACKGROUND
+  ---------------------------------------------------------- */
+  --background-navy:   #f4f6f7; /* navy-50  */
+  --background-green:  #e6f6f3; /* green-100 */
+  --background-pink:   #ffe6e6; /* pink-200 */
+  --background-blue:   #e0f1fc; /* blue-100 */
+  --background-gray:   #e4e4e7; /* stone-200 */
+  --background-purple: #ededfd; /* purple-100 */
+  --background-red:    #feeded; /* red-100 */
+  --background-yellow: #fff8ec; /* yellow-100 */
+  --background-orange: #ffeedf; /* orange-100 */
+
+  /* ----------------------------------------------------------
+     SEMANTIC — ACCENT (Navy)
+  ---------------------------------------------------------- */
+  --accent-navy-dark:  #1e384a; /* navy-700 */
+  --accent-navy-mid:   #698192; /* navy-400 */
+  --accent-navy-light: #a9b7c1; /* navy-300 */
+
+  /* Accent (Green) */
+  --accent-green-dark:  #327a72; /* green-700 */
+  --accent-green-mid:   #4ba098; /* green-500 */
+  --accent-green-light: #9dd9cf; /* green-300 */
+
+  /* Accent (Blue) */
+  --accent-blue-dark:  #2a5aa7; /* blue-600 */
+  --accent-blue-mid:   #3b73ce; /* blue-500 */
+  --accent-blue-light: #90bbef; /* blue-300 */
+
+  /* Accent (Yellow) */
+  --accent-yellow-dark:  #e6a93b; /* yellow-600 */
+  --accent-yellow-mid:   #ffd07b; /* yellow-400 */
+  --accent-yellow-light: #ffeed0; /* yellow-200 */
+
+  /* Accent (Orange) */
+  --accent-orange-dark:  #db781f; /* orange-600 */
+  --accent-orange-mid:   #f2a55e; /* orange-400 */
+  --accent-orange-light: #f8cfa9; /* orange-200 */
+
+  /* Accent (Purple) */
+  --accent-purple-dark:  #5055b7; /* purple-600 */
+  --accent-purple-mid:   #676bd7; /* purple-500 */
+  --accent-purple-light: #a7a5f3; /* purple-300 */
+
+  /* Accent (Red) */
+  --accent-red-dark:  #aa3838; /* red-800 */
+  --accent-red-mid:   #dc4a4a; /* red-600 */
+  --accent-red-light: #fcc7c7; /* red-200 */
+
+  /* Accent (Pink) */
+  --accent-pink-dark:  #e68b8b; /* pink-600 */
+  --accent-pink-mid:   #ffb8b8; /* pink-400 */
+  --accent-pink-light: #ffd7d7; /* pink-300 */
+
+  /* ----------------------------------------------------------
+     TYPOGRAPHY — Fonts
+  ---------------------------------------------------------- */
+  --font-primary:   "Circular Std", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-secondary: "Quincy CF", Georgia, serif;
+
+  /* Font Sizes */
+  --text-xxs: 10px;
+  --text-xs:  12px;
+  --text-sm:  14px;
+  --text-md:  16px;
+  --text-lg:  18px;
+  --text-xl:  20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+  --text-4xl: 36px;
+  --text-5xl: 40px;
+  --text-6xl: 48px;
+  --text-7xl: 60px;
+  --text-8xl: 72px;
+  --text-9xl: 96px;
+
+  /* Font Weights */
+  --font-book:   450;
+  --font-medium: 500;
+  --font-bold:   700;
+
+  /* Line Heights */
+  --leading-12:  12px;
+  --leading-14:  14px;
+  --leading-16:  16px;
+  --leading-18:  18px;
+  --leading-20:  20px;
+  --leading-22:  22px;
+  --leading-24:  24px;
+  --leading-26:  26px;
+  --leading-28:  28px;
+  --leading-30:  30px;
+  --leading-34:  34px;
+  --leading-36:  36px;
+  --leading-40:  40px;
+  --leading-42:  42px;
+  --leading-44:  44px;
+  --leading-46:  46px;
+  --leading-48:  48px;
+  --leading-52:  52px;
+  --leading-54:  54px;
+  --leading-56:  56px;
+  --leading-64:  64px;
+  --leading-66:  66px;
+  --leading-68:  68px;
+  --leading-76:  76px;
+  --leading-78:  78px;
+  --leading-80:  80px;
+  --leading-100: 100px;
+  --leading-102: 102px;
+  --leading-104: 104px;
+
+  /* ----------------------------------------------------------
+     SPACING
+  ---------------------------------------------------------- */
+  --spacing-0:    0px;
+  --spacing-0_5:  2px;
+  --spacing-1:    4px;
+  --spacing-2:    8px;
+  --spacing-3:    12px;
+  --spacing-4:    16px;
+  --spacing-5:    20px;
+  --spacing-6:    24px;
+  --spacing-7:    28px;
+  --spacing-8:    32px;
+  --spacing-9:    36px;
+  --spacing-10:   40px;
+  --spacing-11:   44px;
+  --spacing-12:   48px;
+  --spacing-13:   52px;
+  --spacing-14:   56px;
+  --spacing-15:   60px;
+  --spacing-16:   64px;
+  --spacing-17:   68px;
+  --spacing-18:   72px;
+  --spacing-19:   76px;
+  --spacing-20:   80px;
+  --spacing-21:   84px;
+  --spacing-22:   88px;
+  --spacing-23:   92px;
+  --spacing-24:   96px;
+  --spacing-25:  100px;
+
+  /* ----------------------------------------------------------
+     BORDER RADIUS
+  ---------------------------------------------------------- */
+  --radius-0:  0px;
+  --radius-1:  4px;
+  --radius-2:  8px;
+  --radius-3:  12px;
+  --radius-4:  16px;
+  --radius-5:  20px;
+  --radius-6:  24px;
+  --radius-7:  28px;
+  --radius-8:  32px;
+
+  /* ----------------------------------------------------------
+     BORDER WIDTH / STROKE
+  ---------------------------------------------------------- */
+  --border-0: 0px;
+  --border-1: 1px;
+  --border-2: 2px;
+  --border-3: 3px;
+  --border-4: 4px;
+  --border-5: 5px;
+  --border-6: 6px;
+  --border-7: 7px;
+  --border-8: 8px;
+
+  /* ----------------------------------------------------------
+     SHADOWS
+  ---------------------------------------------------------- */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+
+  /* ----------------------------------------------------------
+     LEGACY ALIASES (backward compatibility)
+  ---------------------------------------------------------- */
+  --font-family:          var(--font-primary);
+  --radius-sm:            var(--radius-1);
+  --radius-md:            var(--radius-2);
+  --radius-lg:            var(--radius-3);
+  --radius-xl:            var(--radius-4);
+  --app-primary:          var(--primary);
+  --app-secondary:        var(--secondary);
+  --app-background-navy:  var(--background-navy);
+  --background-sky:       #fbfbfb;
+  --text-primary:         var(--primary);
+  --text-hint:            var(--gray-500);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-primary);
+  color: var(--text-primary);
+  background: var(--background-sky);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

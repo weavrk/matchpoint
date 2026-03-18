@@ -1,0 +1,65 @@
+{
+  "id": "w023",
+  "name": "Anthony Moore",
+  "market": "New York City",
+  "brandsWorked": ["Tom Ford", "Ermenegildo Zegna", "Brunello Cucinelli"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 57,
+  "shiftVerified": true,
+  "preference": "Full-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 55,
+    "selfStarter": 52,
+    "preparedness": 56,
+    "perfectAttire": 57,
+    "workPace": 48,
+    "productivity": 53,
+    "attentionToDetail": 57,
+    "teamPlayer": 50,
+    "positiveAttitude": 54,
+    "adaptable": 47
+  },
+  "onTimeRating": "Exceptional",
+  "commitmentScore": "Exceptional",
+  "invitedBackStores": 17,
+  "about": "6 years in luxury menswear at Tom Ford and Zegna Madison Avenue. Retailers praise his premium retail mindset and impeccable client service. A true brand ambassador.",
+  "interviewTranscript": "Six years in luxury menswear has taught me that details matter—the way you greet someone, the way you present a garment, the way you follow up after a sale. At Tom Ford and Zegna, you're not just selling clothes, you're representing a lifestyle. I take that seriously. My clients trust me because I understand their needs and I deliver consistently. I'm looking for a permanent home where I can continue building those relationships.",
+  "previousRetailExperience": [
+    {
+      "company": "Tom Ford",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Tom Ford",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Ermenegildo Zegna",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Ermenegildo Zegna",
+      "duration": "6 months to 1 year",
+      "roles": ["Visual Merchandiser"]
+    },
+    {
+      "company": "Brunello Cucinelli",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Events", "Visual Merchandising"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": false,
+      "prefersFastPacedEnvironment": false,
+      "prefersIndependentFocus": true,
+      "needsDetailedDirection": false,
+      "physicallyActive": false
+    }
+  }
+}

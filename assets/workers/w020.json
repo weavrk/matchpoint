@@ -1,0 +1,70 @@
+{
+  "id": "w020",
+  "name": "Lauren Taylor",
+  "market": "New York City",
+  "brandsWorked": ["Veronica Beard", "Vince", "Theory"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 52,
+  "shiftVerified": true,
+  "preference": "Full-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 50,
+    "selfStarter": 48,
+    "preparedness": 51,
+    "perfectAttire": 52,
+    "workPace": 47,
+    "productivity": 49,
+    "attentionToDetail": 50,
+    "teamPlayer": 52,
+    "positiveAttitude": 51,
+    "adaptable": 46
+  },
+  "onTimeRating": "Exceptional",
+  "commitmentScore": "Exceptional",
+  "invitedBackStores": 16,
+  "about": "5 years in elevated contemporary womenswear at Veronica Beard and Vince. Ready for team lead role per multiple retailers. Extremely dependable and a natural mentor to newer staff.",
+  "interviewTranscript": "I've been in elevated contemporary womenswear for five years now. What sets me apart is that I'm not just good at selling—I'm good at building teams. I mentor newer staff, I help with visual merchandising, I step up when managers need support. Multiple retailers have told me I'm ready for a team lead role. I'm looking for a permanent position where I can grow into management and really invest in building something.",
+  "previousRetailExperience": [
+    {
+      "company": "Veronica Beard",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Veronica Beard",
+      "duration": "6 months to 1 year",
+      "roles": ["Assistant Store Manager"]
+    },
+    {
+      "company": "Vince",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Vince",
+      "duration": "6 months to 1 year",
+      "roles": ["Visual Merchandiser"]
+    },
+    {
+      "company": "Theory",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Theory",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Visual Merchandising", "New Store Opening"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": true,
+      "prefersIndependentFocus": false,
+      "needsDetailedDirection": false,
+      "physicallyActive": true
+    }
+  }
+}

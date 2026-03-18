@@ -1,0 +1,65 @@
+{
+  "id": "w032",
+  "name": "Samantha Wells",
+  "market": "New York City",
+  "brandsWorked": ["Diane von Furstenberg", "Rebecca Taylor", "Splendid"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 46,
+  "shiftVerified": true,
+  "preference": "Full-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 44,
+    "selfStarter": 41,
+    "preparedness": 45,
+    "perfectAttire": 46,
+    "workPace": 40,
+    "productivity": 43,
+    "attentionToDetail": 44,
+    "teamPlayer": 42,
+    "positiveAttitude": 46,
+    "adaptable": 38
+  },
+  "onTimeRating": "Exceptional",
+  "commitmentScore": "Exceptional",
+  "invitedBackStores": 14,
+  "about": "5 years in feminine contemporary at DVF and Rebecca Taylor. Known for occasion dressing expertise—weddings, galas, cocktail parties. Retailers call her the go-to for special events.",
+  "interviewTranscript": "Five years in feminine contemporary has made me an expert in occasion dressing. At DVF and Rebecca Taylor, I help women find that perfect dress for weddings, galas, cocktail parties. It's not just about the dress—it's about how she feels walking into the room. I've built relationships with clients who come back for every event. That's what I love about this work.",
+  "previousRetailExperience": [
+    {
+      "company": "Diane von Furstenberg",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Diane von Furstenberg",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Rebecca Taylor",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Rebecca Taylor",
+      "duration": "6 months to 1 year",
+      "roles": ["Visual Merchandiser"]
+    },
+    {
+      "company": "Splendid",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Events", "Visual Merchandising"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": true,
+      "prefersFastPacedEnvironment": false,
+      "prefersIndependentFocus": false,
+      "needsDetailedDirection": false,
+      "physicallyActive": false
+    }
+  }
+}

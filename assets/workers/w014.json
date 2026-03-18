@@ -1,0 +1,65 @@
+{
+  "id": "w014",
+  "name": "Ashley Davis",
+  "market": "New York City",
+  "brandsWorked": ["Zimmermann", "Ulla Johnson", "Rixo"],
+  "experienceTypes": ["apparel"],
+  "shiftsOnReflex": 33,
+  "shiftVerified": true,
+  "preference": "Part-Time",
+  "retailerEndorsements": {
+    "customerEngagement": 30,
+    "selfStarter": 28,
+    "preparedness": 31,
+    "perfectAttire": 33,
+    "workPace": 25,
+    "productivity": 29,
+    "attentionToDetail": 32,
+    "teamPlayer": 27,
+    "positiveAttitude": 30,
+    "adaptable": 26
+  },
+  "onTimeRating": null,
+  "commitmentScore": "Exceptional",
+  "invitedBackStores": 9,
+  "about": "4 years in elevated bohemian womenswear at Zimmermann and Ulla Johnson. Quick learner who handles high-volume trunk show days with ease. Retailers appreciate her calm under pressure.",
+  "interviewTranscript": "I love doing what I do—styling people, making people feel good about themselves, finding the perfect items and fit for them. Whether it's for a special event or just everyday wear, I take the same care. I've worked trunk shows where it gets really busy and you have to stay calm while keeping everyone happy. That's where I shine. I'm detail-oriented and I genuinely care about the customer walking out feeling confident.",
+  "previousRetailExperience": [
+    {
+      "company": "Zimmermann",
+      "duration": "2+ years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Zimmermann",
+      "duration": "6 months to 1 year",
+      "roles": ["Floor Associate"]
+    },
+    {
+      "company": "Ulla Johnson",
+      "duration": "1 to 2 years",
+      "roles": ["Sales Associate"]
+    },
+    {
+      "company": "Ulla Johnson",
+      "duration": "6 months to 1 year",
+      "roles": ["Visual Merchandiser"]
+    },
+    {
+      "company": "Rixo",
+      "duration": "6 months to 1 year",
+      "roles": ["Sales Associate"]
+    }
+  ],
+  "workStyle": {
+    "rolePreferences": ["Sales", "Greeting Customers", "Events", "Visual Merchandising"],
+    "traits": {
+      "selfDirected": true,
+      "comfortableWithTaskSwitching": false,
+      "prefersFastPacedEnvironment": false,
+      "prefersIndependentFocus": true,
+      "needsDetailedDirection": false,
+      "physicallyActive": false
+    }
+  }
+}
