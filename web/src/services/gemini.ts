@@ -44,7 +44,7 @@ export class GeminiService {
       throw new Error('API key not configured');
     }
 
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     this.chat = model.startChat({
       history: [
@@ -92,44 +92,123 @@ export class GeminiService {
 }
 
 // Mock service for when no API key is available
+// Simulates realistic conversation by tracking what info has been gathered
 export class MockGeminiService {
-  private messageCount = 0;
+  private gathered: {
+    roleType?: string;
+    brandTier?: 'mid' | 'elevated' | 'luxury';
+    preference?: 'FT' | 'PT' | 'Both';
+    skills?: string[];
+    title?: string;
+  } = {};
 
   async startChat(_retailerName: string, _storeType: string): Promise<string> {
+    this.gathered = {};
     return "Hi! I'm here to help you create a job posting for a permanent hire. What type of retail role are you looking to fill?";
   }
 
   async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec }> {
-    this.messageCount++;
+    const lower = message.toLowerCase();
 
-    // Simple mock conversation flow
-    if (this.messageCount === 1) {
+    // Parse role type
+    if (!this.gathered.roleType) {
+      if (lower.includes('sales') || lower.includes('associate')) {
+        this.gathered.roleType = 'sales';
+        this.gathered.title = 'Sales Associate';
+      } else if (lower.includes('manager') || lower.includes('lead')) {
+        this.gathered.roleType = 'manager';
+        this.gathered.title = 'Store Manager';
+      } else if (lower.includes('cashier')) {
+        this.gathered.roleType = 'cashier';
+        this.gathered.title = 'Cashier';
+      } else if (lower.includes('stock') || lower.includes('inventory')) {
+        this.gathered.roleType = 'stock';
+        this.gathered.title = 'Stock Associate';
+      } else if (lower.includes('stylist') || lower.includes('fashion')) {
+        this.gathered.roleType = 'stylist';
+        this.gathered.title = 'Fashion Stylist';
+      } else if (lower.includes('beauty') || lower.includes('cosmetic')) {
+        this.gathered.roleType = 'beauty';
+        this.gathered.title = 'Beauty Advisor';
+      } else {
+        this.gathered.roleType = 'general';
+        this.gathered.title = 'Retail Associate';
+      }
+    }
+
+    // Parse brand tier
+    if (!this.gathered.brandTier) {
+      if (lower.includes('luxury') || lower.includes('high-end') || lower.includes('gucci') || lower.includes('neiman')) {
+        this.gathered.brandTier = 'luxury';
+      } else if (lower.includes('elevated') || lower.includes('nordstrom') || lower.includes('j.crew') || lower.includes('j crew')) {
+        this.gathered.brandTier = 'elevated';
+      } else if (lower.includes('mid') || lower.includes('gap') || lower.includes('h&m') || lower.includes('zara')) {
+        this.gathered.brandTier = 'mid';
+      }
+    }
+
+    // Parse FT/PT preference
+    if (!this.gathered.preference) {
+      if (lower.includes('full-time') || lower.includes('full time') || lower.includes('ft')) {
+        this.gathered.preference = 'FT';
+      } else if (lower.includes('part-time') || lower.includes('part time') || lower.includes('pt')) {
+        this.gathered.preference = 'PT';
+      } else if (lower.includes('both') || lower.includes('either') || lower.includes('flexible')) {
+        this.gathered.preference = 'Both';
+      }
+    }
+
+    // Parse skills mentioned
+    const skillKeywords = ['customer service', 'communication', 'teamwork', 'leadership', 'visual merchandising', 'inventory', 'pos', 'clienteling'];
+    const foundSkills = skillKeywords.filter(skill => lower.includes(skill));
+    if (foundSkills.length > 0) {
+      this.gathered.skills = [...(this.gathered.skills || []), ...foundSkills];
+    }
+
+    // Determine what to ask next
+    if (!this.gathered.brandTier) {
+      const roleAck = this.gathered.roleType === 'sales' ? 'A sales role' :
+                      this.gathered.roleType === 'manager' ? 'A management position' :
+                      this.gathered.roleType === 'stylist' ? 'A stylist role' :
+                      this.gathered.roleType === 'beauty' ? 'A beauty advisor position' :
+                      `A ${this.gathered.title?.toLowerCase()} role`;
       return {
-        text: `Great, ${message.toLowerCase().includes('sales') ? 'a sales role' : 'that role'} sounds good! Are you looking for someone with mid-tier, elevated, or luxury brand experience?`,
+        text: `${roleAck} sounds great! What level of brand experience are you looking for — mid-tier like Gap or H&M, elevated like Nordstrom or J.Crew, or luxury like Gucci or Neiman Marcus?`,
       };
     }
 
-    if (this.messageCount === 2) {
+    if (!this.gathered.preference) {
       return {
-        text: 'Perfect. Would this be a full-time or part-time position?',
+        text: `Got it, ${this.gathered.brandTier} experience. Would this be a full-time or part-time position? Or are you open to both?`,
       };
     }
 
-    if (this.messageCount >= 3) {
-      return {
-        text: "Excellent! I've created your job posting based on our conversation. Here are the candidates that match your criteria!",
-        jobSpec: {
-          title: 'Sales Associate',
-          market: 'New York City',
-          brandTier: ['elevated'],
-          preference: 'FT',
-          requirements: ['Customer service experience', 'Retail background', 'Team player'],
-          description: 'Looking for an experienced sales associate to join our team.',
-          retailerName: '',
-        },
-      };
-    }
+    // We have enough info - generate job spec
+    const defaultSkills = this.gathered.roleType === 'manager'
+      ? ['Leadership experience', 'Team management', 'Sales floor operations']
+      : this.gathered.roleType === 'beauty'
+      ? ['Beauty product knowledge', 'Customer consultation', 'Makeup application']
+      : this.gathered.roleType === 'stylist'
+      ? ['Fashion knowledge', 'Clienteling', 'Visual merchandising']
+      : ['Customer service', 'Retail experience', 'Strong communication'];
 
-    return { text: 'Could you tell me more about what you need?' };
+    const description = this.gathered.roleType === 'manager'
+      ? `Seeking an experienced retail manager with ${this.gathered.brandTier} brand background to lead our team.`
+      : this.gathered.roleType === 'beauty'
+      ? `Looking for a passionate beauty advisor with ${this.gathered.brandTier} cosmetics experience.`
+      : `Looking for a ${this.gathered.preference === 'FT' ? 'full-time' : this.gathered.preference === 'PT' ? 'part-time' : 'flexible'} ${this.gathered.title?.toLowerCase()} with ${this.gathered.brandTier} retail experience.`;
+
+    return {
+      text: `Perfect! I've created your job posting for a ${this.gathered.preference === 'FT' ? 'full-time' : this.gathered.preference === 'PT' ? 'part-time' : 'full-time or part-time'} ${this.gathered.title} with ${this.gathered.brandTier} brand experience. Here are the candidates that match your criteria!`,
+      jobSpec: {
+        title: this.gathered.title || 'Retail Associate',
+        market: 'New York City',
+        brandTier: [this.gathered.brandTier],
+        preference: this.gathered.preference,
+        requirements: this.gathered.skills?.length ? this.gathered.skills : defaultSkills,
+        description,
+        retailerName: '',
+      },
+    };
   }
 }

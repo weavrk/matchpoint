@@ -34,8 +34,42 @@
   }
 }
 
+.nav-area.collapsed {
+  flex: 0 0 88px;
+  min-width: 88px;
+}
+
 @media (max-width: 768px) {
   .nav-area {
     display: none;
   }
+}
+
+/* Floating Action Button - Start Chat (dev only) */
+.fab-start-chat {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--main-white);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: background 0.15s, transform 0.15s;
+  z-index: 1000;
+}
+
+.fab-start-chat:hover {
+  background: var(--gray-600);
+  transform: scale(1.05);
+}
+
+.fab-start-chat svg {
+  margin-left: 2px; /* optical center for play icon */
 }
