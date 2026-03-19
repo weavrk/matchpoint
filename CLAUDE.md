@@ -88,26 +88,89 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 - **Styling:** CSS (no framework)
 - **Icons:** Lucide React
 - Github repro: [https://github.com/weavrk/matchpoint.git](https://github.com/weavrk/matchpoint.git)
-
-**IMPORTANT:** All UI development happens in the React app (`web/`). The `public/index.html` file is legacy/deprecated — do not use it.
+- Supabase: [weavrk@gmail.com](mailto:weavrk@gmail.com)
+  - project url: [https://kxfbismfpmjwvemfznvm.supabase.co](https://kxfbismfpmjwvemfznvm.supabase.co)
+  - anon key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZmJpc21mcG1qd3ZlbWZ6bnZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NzIzODIsImV4cCI6MjA4OTQ0ODM4Mn0.DB_d_RvlhKNOPDrnEySJPWHvLn3_HacXY3O5xoSS6bI
+  - database connection: postgresql://postgres:[YOUR-PASSWORD]@db.kxfbismfpmjwvemfznvm.supabase.co:5432/postgres
+  - password: reflexmatchpoint123
+  - **Tables:**
+    - `markets` - Geographic markets where Reflex operates (city, state). Used for job filtering.
+    - `roles` - Job role types (title, category, description). Categories: Entry Level, Specialized, Management, Seasonal.
+    - `retailers` - Retailer brands (name, classification). Classifications: Luxury, Mid, Big Box.
+    - `job_postings` - Scraped job listings with retailer_id, market_id, role_id, source, salary info, benefits
 
 ## Project Structure
 
 ```
 matchpoint/
-├── web/              # React frontend (Vite) ← PRIMARY UI
+├── web/                           # React frontend (Vite) ← ALL UI DEVELOPMENT HERE
 │   ├── src/
-│   │   ├── components/   # React components
-│   │   ├── pages/        # Page components
-│   │   ├── services/     # API services
-│   │   ├── data/         # Mock data
-│   │   └── styles/       # CSS variables
+│   │   ├── components/
+│   │   │   ├── Chat/
+│   │   │   │   ├── ChatInterface.tsx
+│   │   │   │   ├── ChatInterface.css
+│   │   │   │   └── index.ts
+│   │   │   ├── Layout/
+│   │   │   │   ├── AppLayout.tsx      # Main layout wrapper
+│   │   │   │   ├── AppLayout.css
+│   │   │   │   ├── SideNav.tsx        # Left navigation
+│   │   │   │   ├── SideNav.css
+│   │   │   │   └── index.ts
+│   │   │   └── Workers/
+│   │   │       ├── WorkerCard.tsx
+│   │   │       ├── WorkerCard.css
+│   │   │       ├── WorkerGrid.tsx
+│   │   │       ├── WorkerGrid.css
+│   │   │       └── index.ts
+│   │   ├── pages/
+│   │   │   ├── PermanentHiring.tsx    # Main talent portal page
+│   │   │   └── PermanentHiring.css
+│   │   ├── services/
+│   │   │   ├── gemini.ts              # Gemini API + MockGeminiService
+│   │   │   ├── matching.ts            # Worker matching algorithm
+│   │   │   └── supabase.ts            # Supabase client
+│   │   ├── data/
+│   │   │   ├── workers.ts             # Sample worker profiles
+│   │   │   └── retailer.ts            # Sample retailer data
+│   │   ├── styles/
+│   │   │   └── variables.css          # Design tokens (uses design-library/)
+│   │   ├── types/
+│   │   │   └── index.ts               # TypeScript interfaces
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── public/
+│   │   └── images/
+│   │       ├── wordmark.svg           # Reflex logo (from assets/)
+│   │       ├── logomark.svg           # Collapsed logo
+│   │       └── nav-background.svg     # Sidebar background
 │   └── package.json
-├── src/              # Node.js backend (Express API)
-├── public/           # DEPRECATED — do not use
-├── x.reference/      # Reference materials
-├── .env              # Environment variables (gitignored — do NOT commit)
-└── CLAUDE.md         # This file
+│
+├── src/                               # Node.js backend (Express API)
+│   ├── server.ts                      # Express server
+│   ├── index.ts                       # Entry point
+│   ├── matching.ts                    # Server-side matching
+│   ├── types.ts                       # Shared types
+│   └── data.ts                        # Data utilities
+│
+├── assets/                            # Design library & brand assets
+│   ├── design-library/
+│   │   ├── primitive-variables.json   # Color primitives (gray, pink, etc.)
+│   │   └── semantic-variables.json    # Semantic tokens (primary, accent, etc.)
+│   ├── logo-and-backgrounds/
+│   │   ├── wordmark.svg               # Reflex wordmark
+│   │   ├── logo.svg                   # Reflex logo
+│   │   └── background.svg             # Nav background pattern
+│   ├── retailers/
+│   │   └── r001.json                  # Sample retailer data
+│   └── workers/
+│       └── w001-w040.json             # 40 synthetic worker profiles
+│
+├── tests/
+│   └── test-workers.html              # Worker card rendering test
+│
+├── x.reference/                       # Reference materials (don't modify)
+├── .env                               # Environment variables (gitignored)
+└── CLAUDE.md                          # This file
 ```
 
 ## Environment Variables
@@ -129,59 +192,4 @@ GEMINI_API_KEY=your_key_here
 
 - `npm start` - Run Express server with ts-node ([http://localhost:3000](http://localhost:3000))
 - `npm run build` - Compile TypeScript to JavaScript
-
-## Market Comparables
-
-### Market
-
-### Job Sites
-
-#### General Job Boards
-
-- **Indeed** - Largest job board, strong for hourly/retail roles
-- **ZipRecruiter** - AI matching, good retail coverage
-- **LinkedIn** - Better for management/supervisor roles
-- **Glassdoor** - Job postings + salary data
-- **CareerBuilder** - General board with retail category
-
-#### Retail-Specific
-
-- **AllRetailJobs.com** - Dedicated retail job board
-- **RetailJobsWeb.com** - Retail-focused, management + hourly
-- **RetailCareersNow** - Retail industry specific
-
-#### Hourly / Shift-Based
-
-- **Snagajob** - Built for hourly work, pre-screens availability
-- **Wonolo** - On-demand staffing, retail/warehouse
-- **Instawork** - Gig-style retail/hospitality shifts
-
-### Job Roles
-
-#### Entry-Level Positions
-
-- **Sales Associate / Retail Associate** - Customer service, sales floor support, POS transactions
-- **Cashier** - Checkout operations, handling payments
-- **Stock Associate / Stocker** - Receiving, organizing, replenishing inventory
-- **Fitting Room Attendant** - Managing dressing rooms, returning items to floor
-
-#### Specialized Roles
-
-- **Visual Merchandiser** - Displays, store layout, product presentation
-- **Inventory Specialist** - Stock counts, inventory management systems
-- **Beauty Advisor / Cosmetics Associate** - Product expertise, demos (Sephora, Ulta, department stores)
-
-#### Supervisory / Management
-
-- **Key Holder / Lead Associate** - Opening/closing, shift supervision
-- **Department Supervisor** - Oversees specific section (shoes, menswear, etc.)
-- **Assistant Store Manager** - Operations support, staff scheduling
-- **Store Manager** - Full P&L responsibility, hiring, performance
-- **District / Area Manager** - Multi-store oversight
-
-#### Seasonal / Part-Time Focus
-
-- **Holiday Seasonal Associate** - Temp positions for peak seasons
-- **Weekend Associate** - Dedicated weekend availability
-- **Early Morning Stocker** - Pre-open inventory work
 
