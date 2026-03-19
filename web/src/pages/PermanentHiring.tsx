@@ -1676,7 +1676,15 @@ export function PermanentHiring() {
                           <div className="oz-job-sites-list">
                             {JOB_SITES.general.map((site, idx) => (
                               <div key={idx} className="oz-job-site-item">
-                                <span className="oz-job-site-name">{site.name}</span>
+                                <span className="oz-job-site-name">
+                                  {site.name}
+                                  {site.name === 'Indeed + Glassdoor' && (
+                                    <span className="oz-connected-badge">
+                                      <Link size={12} />
+                                      Connected
+                                    </span>
+                                  )}
+                                </span>
                                 <span className="oz-job-site-desc">{site.description}</span>
                               </div>
                             ))}
@@ -1750,7 +1758,7 @@ export function PermanentHiring() {
                 onSearchChange={setClassFilterSearch}
               />
               <FilterDropdown
-                label="Source"
+                label="Job Site"
                 options={JOB_SOURCES}
                 selected={jpSourceFilter}
                 onSelect={setJpSourceFilter}

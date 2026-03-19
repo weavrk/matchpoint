@@ -1091,12 +1091,15 @@
 
 .oz-info-bubble {
   position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 8px;
-  width: 700px;
-  max-height: 500px;
-  overflow-y: auto;
+  top: 0;
+  left: calc(100% + 8px);
+  margin-top: 0;
+  width: 300px;
+  height: 280px;
+  max-height: 400px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: var(--main-white);
   border: 1px solid var(--black-alpha-200);
   border-radius: var(--radius-lg);
@@ -1139,8 +1142,16 @@
   color: var(--app-primary);
 }
 
+.oz-info-bubble .oz-job-sites,
+.oz-info-bubble .oz-job-sites * {
+  font-size: 12px;
+}
+
 .oz-info-bubble .oz-job-sites {
   margin-top: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 
@@ -1417,9 +1428,9 @@
 
 /* Oz Job Sites */
 .oz-job-sites {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .oz-job-sites-group {
@@ -1430,10 +1441,10 @@
 .oz-job-sites-group-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--app-secondary);
+  color: var(--app-primary);
   margin: 0 0 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--app-primary);
 }
 
 .oz-job-sites-list {
@@ -1452,6 +1463,25 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--app-primary);
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.oz-connected-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0;
+  flex-shrink: 0;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--background-green);
+  color: var(--app-primary);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
 .oz-job-site-desc {
