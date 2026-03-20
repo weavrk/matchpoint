@@ -39,14 +39,14 @@ export interface JobPosting {
   location: string | null;
   title: string;
   employment_type: string | null;
-  salary_type: string | null;
-  salary_min: number | null;
-  salary_max: number | null;
+  salary: string | null;
   benefits: string | null;
   market_id: string;
   retailer_id: string | null;
   role_id: string;
   scraped_at: string;
+  source_url: string | null;
+  source: string | null;
 }
 
 // Markets API
@@ -144,10 +144,16 @@ export async function fetchRoles(): Promise<Role[]> {
   return data || [];
 }
 
-export async function addRole(title: string, category: string = 'Other', description: string | null = null): Promise<Role> {
+// Convert string to Title Case
+function toTitleCase(str: string): string {
+  return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+}
+
+export async function addRole(title: string, category: string = 'Other'): Promise<Role> {
+  const titleCased = toTitleCase(title);
   const { data, error } = await supabase
     .from('roles')
-    .insert({ title, category, description })
+    .insert({ title: titleCased, category })
     .select()
     .single();
 
@@ -380,30 +386,51 @@ export interface ScrapedJob {
   title: string;
   company: string;
   location?: string;
-  salaryType?: string;
-  salaryMin?: number;
-  salaryMax?: number;
+  salary?: string;
   benefits?: string;
   employmentType?: string;
   link?: string;
   sourceUrl?: string;
+  source?: string;
   market: string;
   marketId: string;
   role: string;
   roleId: string;
 }
 
-export async function saveScrapedJobs(jobs: ScrapedJob[], retailers: Retailer[]): Promise<{ saved: number; errors: number }> {
+export async function saveScrapedJobs(jobs: ScrapedJob[], retailers: Retailer[]): Promise<{ saved: number; errors: number; skipped: number }> {
   // Create a map of retailer name to id (case-insensitive)
   const retailerMap = new Map(retailers.map(r => [r.name.toLowerCase(), r.id]));
+
+  // First, fetch existing source_urls from database to dedupe
+  const { data: existingJobs, error: fetchError } = await supabase
+    .from('job_postings')
+    .select('source_url');
+
+  if (fetchError) {
+    console.error('Error fetching existing jobs for dedupe:', fetchError);
+  }
+
+  const existingUrls = new Set((existingJobs || []).map(j => j.source_url).filter(Boolean));
+
+  // Dedupe jobs - filter out any with source_url already in database
+  const newJobs = jobs.filter(job => {
+    const url = job.sourceUrl || job.link;
+    return url && !existingUrls.has(url);
+  });
+
+  const skipped = jobs.length - newJobs.length;
+  if (skipped > 0) {
+    console.log(`Skipping ${skipped} duplicate jobs (already in database)`);
+  }
 
   let saved = 0;
   let errors = 0;
 
   // Insert jobs in batches of 50 to avoid hitting limits
   const batchSize = 50;
-  for (let i = 0; i < jobs.length; i += batchSize) {
-    const batch = jobs.slice(i, i + batchSize);
+  for (let i = 0; i < newJobs.length; i += batchSize) {
+    const batch = newJobs.slice(i, i + batchSize);
 
     const jobsToInsert = batch.map(job => {
       // Try to find retailer ID by matching company name
@@ -411,18 +438,19 @@ export async function saveScrapedJobs(jobs: ScrapedJob[], retailers: Retailer[])
 
       return {
         market_name: job.market,
-        company: job.company,
+        company: toTitleCase(job.company),
         location: job.location || null,
         title: job.title,
         employment_type: job.employmentType || null,
-        salary_type: job.salaryType || null,
-        salary_min: job.salaryMin || null,
-        salary_max: job.salaryMax || null,
+        salary: job.salary || null,
         benefits: job.benefits || null,
         market_id: job.marketId,
         retailer_id: retailerId,
         role_id: job.roleId,
+        role: job.role ? toTitleCase(job.role) : null,
         scraped_at: new Date().toISOString(),
+        source_url: job.sourceUrl || null,
+        source: job.source || null,
       };
     });
 
@@ -438,6 +466,6 @@ export async function saveScrapedJobs(jobs: ScrapedJob[], retailers: Retailer[])
     }
   }
 
-  console.log(`Saved ${saved} jobs to Supabase, ${errors} errors`);
-  return { saved, errors };
+  console.log(`Saved ${saved} jobs to Supabase, ${errors} errors, ${skipped} skipped (duplicates)`);
+  return { saved, errors, skipped };
 }

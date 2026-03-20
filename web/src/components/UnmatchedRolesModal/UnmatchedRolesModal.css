@@ -63,7 +63,7 @@
 
 .unmatched-list-header {
   display: grid;
-  grid-template-columns: 1fr 60px 140px 1px 180px 80px;
+  grid-template-columns: 1fr 60px 140px 140px 1px 180px 80px;
   gap: 12px;
   padding: 12px 24px;
   background: var(--gray-50);
@@ -87,7 +87,7 @@
 
 .unmatched-row {
   display: grid;
-  grid-template-columns: 1fr 60px 140px 1px 180px 80px;
+  grid-template-columns: 1fr 60px 140px 140px 1px 180px 80px;
   gap: 12px;
   padding: 12px 24px;
   border-bottom: 1px solid var(--black-alpha-50);
@@ -163,6 +163,28 @@
   background: var(--gray-100);
 }
 
+.unmatched-col-custom-title input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--black-alpha-200);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  background: white;
+  transition: border-color 0.15s;
+}
+
+.unmatched-col-custom-title input:focus {
+  outline: none;
+  border-color: var(--app-primary);
+}
+
+.unmatched-col-custom-title input.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--gray-100);
+}
+
 .unmatched-col-divider {
   width: 1px;
   height: 100%;
@@ -177,21 +199,21 @@
   gap: 12px;
 }
 
-.unmatched-skip-btn {
+.unmatched-ignore-all-btn {
   padding: 10px 20px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid #ef4444;
   border-radius: 8px;
   background: white;
   font-size: 14px;
   font-weight: 500;
-  color: var(--gray-700);
+  color: #ef4444;
   cursor: pointer;
   transition: all 0.15s;
 }
 
-.unmatched-skip-btn:hover {
-  background: var(--gray-50);
-  border-color: var(--black-alpha-300);
+.unmatched-ignore-all-btn:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
 }
 
 .unmatched-confirm-btn {

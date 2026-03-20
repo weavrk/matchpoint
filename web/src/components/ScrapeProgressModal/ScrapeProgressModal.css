@@ -40,12 +40,18 @@
 
 .scrape-progress-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   font-size: 16px;
   font-weight: 500;
   color: var(--gray-900);
   margin-bottom: 20px;
+}
+
+.scrape-progress-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .scrape-progress-spinner {
@@ -111,11 +117,28 @@
   font-weight: 400;
 }
 
+.scrape-progress-saved {
+  font-size: 12px;
+  color: #22c55e;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.scrape-progress-stat-new {
+  color: #22c55e;
+}
+
 .scrape-progress-stats {
   display: flex;
   gap: 40px;
   justify-content: center;
   margin-bottom: 24px;
+}
+
+.scrape-progress-status {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--gray-500);
 }
 
 .scrape-progress-stat {

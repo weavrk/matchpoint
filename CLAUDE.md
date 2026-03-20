@@ -99,6 +99,61 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
     - `retailers` - Retailer brands (name, classification). Classifications: Luxury, Mid, Big Box.
     - `job_postings` - Scraped job listings with retailer_id, market_id, role_id, source, salary info, benefits
 
+## Job Site Scrapers
+
+Scrapers live in `src/scrapers/`. Common behavior:
+
+- **Location format:** URL slug style `city-name-state` (e.g., `austin-tx`, `new-york-ny`)
+- **Keyword search:** Generic "Retail" search to find all retail jobs
+- **Filtering:** Results filtered by retailer name (fuzzy match) and location (city + state)
+- **Role matching:** Job titles fuzzy-matched to roles from Supabase `roles` table
+- **Pagination:** Up to `maxPages` pages scraped per search
+
+### Indeed (`src/scrapers/indeed.ts`)
+
+- **Proxy:** ScraperAPI for anti-bot bypass (`SCRAPERAPI_KEY`)
+- **HTML Parsing:** Cheerio
+- **Pagination:** `?start=0,10,20...` (10 jobs per page)
+- **URL format:** `https://www.indeed.com/jobs?q=Retail&l=Austin,+TX`
+
+### Glassdoor (`src/scrapers/glassdoor.ts`)
+
+- **Browser:** Puppeteer (headless Chrome)
+- **CAPTCHA Bypass:** Session cookie injection from logged-in browser
+- **HTML Parsing:** Cheerio after page load
+- **Pagination:** `?p=1,2,3...`
+- **URL format:** `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=Retail&locKeyword=AUSTIN,+TX`
+
+#### Cookie Injection Setup
+
+The scraper loads cookies from `glassdoor-cookies.json` to bypass CAPTCHA. To refresh cookies:
+
+1. Log into Glassdoor in Chrome
+2. Open DevTools Console (Cmd+Option+J)
+3. Run this command to export cookies:
+  ```javascript
+   JSON.stringify(document.cookie.split('; ').map(c => {
+     const [name, ...v] = c.split('=');
+     return { name, value: v.join('='), domain: '.glassdoor.com', path: '/' };
+   }), null, 2)
+  ```
+4. Copy the output and save to `glassdoor-cookies.json` in project root
+5. Cookies typically last a few days before needing refresh
+
+## Environment Variables
+
+Stored in `.env` (gitignored). Do NOT hardcode keys in source files.
+
+```
+GEMINI_API_KEY=your_key_here
+SCRAPERAPI_KEY=your_key_here
+TWOCAPTCHA_API_KEY=your_key_here
+```
+
+- **GEMINI_API_KEY** - Google AI Studio API key for Gemini chat
+- **SCRAPERAPI_KEY** - ScraperAPI key for Indeed scraping (proxy/anti-bot bypass)
+- **TWOCAPTCHA_API_KEY** - 2Captcha API key for Glassdoor Cloudflare Turnstile solving
+
 ## Project Structure
 
 ```
@@ -173,14 +228,6 @@ matchpoint/
 └── CLAUDE.md                          # This file
 ```
 
-## Environment Variables
-
-Stored in `.env` (gitignored). Do NOT hardcode keys in source files or this document.
-
-```
-GEMINI_API_KEY=your_key_here
-```
-
 ## Scripts
 
 ### Frontend (web/)
@@ -193,37 +240,5 @@ GEMINI_API_KEY=your_key_here
 - `npm start` - Run Express server with ts-node ([http://localhost:3000](http://localhost:3000))
 - `npm run build` - Compile TypeScript to JavaScript
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 

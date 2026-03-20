@@ -95,7 +95,7 @@ export function SideNav({ activePage = 'home', onNavigate, collapsed = false, on
               <div className="logout-row">
                 <button className="logout-btn">Log Out</button>
                 <ChevronLeft
-                  size={40}
+                  size={36}
                   className="collapse-icon"
                   onClick={onToggleCollapse}
                 />
@@ -106,7 +106,7 @@ export function SideNav({ activePage = 'home', onNavigate, collapsed = false, on
               <div className="user-avatar">M</div>
               <div className="expand-row">
                 <ChevronRight
-                  size={40}
+                  size={36}
                   className="collapse-icon"
                   onClick={onToggleCollapse}
                 />

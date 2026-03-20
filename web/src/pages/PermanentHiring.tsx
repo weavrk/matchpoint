@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Briefcase, Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Play, Check, Info, Loader2 } from 'lucide-react';
+import { Briefcase, Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Play, Check, Info, Loader2, Clipboard } from 'lucide-react';
 import { ChatInterface } from '../components/Chat';
 import { WorkerGrid } from '../components/Workers';
 import { ScrapeModal, type ScrapeConfig } from '../components/ScrapeModal';
@@ -999,7 +999,7 @@ export function PermanentHiring() {
   // Scrape state (will be used for UI feedback)
   const [isScraping, setIsScraping] = useState(false);
   const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
-  const [unmatchedRoles, setUnmatchedRoles] = useState<{ title: string; company: string; count: number }[]>([]);
+  const [unmatchedRoles, setUnmatchedRoles] = useState<{ title: string; company: string; count: number; jobs: any[] }[]>([]);
   const [showUnmatchedModal, setShowUnmatchedModal] = useState(false);
 
   // Load job postings from Supabase
@@ -1131,47 +1131,142 @@ export function PermanentHiring() {
         body: JSON.stringify({
           jobSites: config.jobSites,
           markets: selectedMarketObjects.map(m => ({ id: m.id, name: m.name, state: m.state })),
-          roles: selectedRoleObjects.map(r => ({ id: r.id, title: r.title })),
+          roles: selectedRoleObjects.map(r => ({ id: r.id, title: r.title, match_keywords: r.match_keywords })),
           retailers: retailersToFilter.map(r => ({ name: r.name, classification: r.classification })),
         }),
       });
 
-      const data = await response.json();
+      // Read SSE stream
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let finalData: any = null;
 
-      if (data.success) {
-        console.log(`Scrape complete: ${data.jobCount} jobs found`);
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        // Save jobs to Supabase
-        if (data.jobs && data.jobs.length > 0) {
-          console.log('Saving jobs to Supabase...');
-          try {
-            // Get all retailers with valid IDs for mapping
-            const retailersWithIds = ozRetailers.filter((r): r is Retailer => !!r.id);
-            const saveResult = await saveScrapedJobs(data.jobs as ScrapedJob[], retailersWithIds);
-            console.log(`Saved ${saveResult.saved} jobs to database`);
+          const text = decoder.decode(value, { stream: true });
+          const lines = text.split('\n');
 
-            // Reload jobs from Supabase to show the latest
-            await loadJobPostings();
-          } catch (saveErr) {
-            console.error('Error saving jobs to Supabase:', saveErr);
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const eventData = JSON.parse(line.slice(6));
+
+                if (eventData.type === 'progress') {
+                  // Update progress in real-time
+                  setScrapeProgress(prev => prev ? {
+                    ...prev,
+                    currentMarket: eventData.currentMarket,
+                    jobsFound: eventData.jobsFound,
+                    matchedRetailers: eventData.matchedRetailers,
+                    matchedJobs: eventData.matchedJobs,
+                    marketsCompleted: eventData.marketsCompleted,
+                    totalMarkets: eventData.totalMarkets,
+                    currentPass: eventData.pass,
+                    totalPasses: eventData.totalPasses,
+                    statusMessage: eventData.statusMessage,
+                  } : prev);
+                } else if (eventData.type === 'pass_start') {
+                  // Update UI to show new pass starting
+                  console.log(`Starting pass ${eventData.pass}/${eventData.totalPasses}`);
+                  setScrapeProgress(prev => prev ? {
+                    ...prev,
+                    currentPass: eventData.pass,
+                    totalPasses: eventData.totalPasses,
+                    jobsFound: eventData.jobsFound ?? prev.jobsFound,
+                    matchedJobs: eventData.totalMatchedJobs ?? prev.matchedJobs,
+                    jobsSavedThisPass: 0,
+                    newJobsThisPass: 0,
+                    marketsCompleted: 0,
+                  } : prev);
+                } else if (eventData.type === 'pass_complete') {
+                  // Save jobs from this pass to database
+                  console.log(`Pass ${eventData.pass} complete: ${eventData.newJobsThisPass} new jobs`);
+                  // Always update the UI with newJobsThisPass even if 0
+                  setScrapeProgress(prev => prev ? {
+                    ...prev,
+                    newJobsThisPass: eventData.newJobsThisPass || 0,
+                    currentPass: eventData.pass,
+                    totalPasses: eventData.totalPasses,
+                    jobsFound: eventData.jobsFound ?? prev.jobsFound,
+                    matchedJobs: eventData.totalMatchedJobs,
+                  } : prev);
+                  if (eventData.passJobs && eventData.passJobs.length > 0) {
+                    const retailersWithIds = ozRetailers.filter((r): r is Retailer => !!r.id);
+                    try {
+                      const saveResult = await saveScrapedJobs(eventData.passJobs as ScrapedJob[], retailersWithIds);
+                      console.log(`Saved ${saveResult.saved} jobs from pass ${eventData.pass}`);
+                      setScrapeProgress(prev => prev ? {
+                        ...prev,
+                        jobsSavedThisPass: saveResult.saved,
+                      } : prev);
+                    } catch (saveErr) {
+                      console.error(`Error saving jobs from pass ${eventData.pass}:`, saveErr);
+                    }
+                  }
+                } else if (eventData.type === 'market_complete') {
+                  // Save this market's jobs immediately to the database
+                  if (eventData.jobs && eventData.jobs.length > 0) {
+                    const retailersWithIds = ozRetailers.filter((r): r is Retailer => !!r.id);
+                    try {
+                      const saveResult = await saveScrapedJobs(eventData.jobs as ScrapedJob[], retailersWithIds);
+                      console.log(`Saved ${saveResult.saved} jobs from ${eventData.market}`);
+                    } catch (saveErr) {
+                      console.error(`Error saving jobs from ${eventData.market}:`, saveErr);
+                    }
+                  }
+                  // Update progress to show market completed
+                  setScrapeProgress(prev => prev ? {
+                    ...prev,
+                    currentMarket: eventData.market,
+                    marketsCompleted: eventData.marketIndex + 1,
+                    totalMarkets: eventData.totalMarkets,
+                    jobsFound: eventData.jobsFound,
+                    matchedRetailers: eventData.matchedRetailers,
+                    matchedJobs: eventData.matchedJobs,
+                  } : prev);
+                } else if (eventData.type === 'complete') {
+                  finalData = eventData;
+                } else if (eventData.type === 'error') {
+                  throw new Error(eventData.error);
+                }
+              } catch (parseErr) {
+                // Ignore parse errors for incomplete chunks
+              }
+            }
           }
         }
+      }
+
+      if (finalData?.success) {
+        console.log(`Scrape complete: ${finalData.jobCount} jobs found`);
+
+        // Jobs are already saved during pass_complete events
+        // Just reload from Supabase to show the latest
+        await loadJobPostings();
 
         // Check for unmatched roles
-        if (data.unmatchedRoles && data.unmatchedRoles.length > 0) {
-          console.log(`Found ${data.unmatchedRoles.length} unmatched role titles`);
-          setUnmatchedRoles(data.unmatchedRoles);
+        if (finalData.unmatchedRoles && finalData.unmatchedRoles.length > 0) {
+          console.log(`Found ${finalData.unmatchedRoles.length} unmatched role titles`);
+          setUnmatchedRoles(finalData.unmatchedRoles);
           setShowUnmatchedModal(true);
         } else {
-          alert(`Scrape complete!\n\nFound ${data.jobCount} jobs from tracked retailers.`);
+          alert(`Scrape complete!\n\nFound ${finalData.jobCount} jobs from tracked retailers.`);
         }
+      } else if (!finalData) {
+        console.error('Scrape failed: No response received');
+        alert('Scrape failed: No response received');
       } else {
-        console.error('Scrape failed:', data.error);
-        alert(`Scrape failed: ${data.error}`);
+        console.error('Scrape failed:', finalData.error);
+        alert(`Scrape failed: ${finalData.error}`);
       }
     } catch (err: any) {
       console.error('Scrape error:', err);
-      alert(`Scrape error: ${err.message}`);
+      if (err.name !== 'AbortError') {
+        alert(`Scrape error: ${err.message}`);
+      }
     } finally {
       // Clean up timers
       if (scrapeTimerRef.current) {
@@ -1990,25 +2085,32 @@ export function PermanentHiring() {
                       <th>Location</th>
                       <th>Role</th>
                       <th>Salary</th>
-                      <th>Benefits</th>
+                      <th>Employment Type</th>
                     </tr>
                   </thead>
                   <tbody>
                     {jobPostings.map(job => (
                       <tr key={job.id}>
-                        <td className="oz-job-source">glassdoor</td>
+                        <td className="oz-job-source">
+                          {job.source || '—'}
+                          {job.source_url && (
+                            <button
+                              className="oz-job-source-link"
+                              onClick={() => {
+                                navigator.clipboard.writeText(job.source_url!);
+                              }}
+                              title="Copy URL to clipboard"
+                            >
+                              <Clipboard size={14} />
+                            </button>
+                          )}
+                        </td>
                         <td>{job.market_name || '—'}</td>
                         <td>{job.company || '—'}</td>
                         <td>{job.location || '—'}</td>
                         <td>{job.title}</td>
-                        <td>
-                          {job.salary_min && job.salary_max
-                            ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`
-                            : job.salary_min
-                            ? `$${job.salary_min.toLocaleString()}+`
-                            : '—'}
-                        </td>
-                        <td>{job.benefits || '—'}</td>
+                        <td>{job.salary || '—'}</td>
+                        <td>{job.employment_type || '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -2050,24 +2152,65 @@ export function PermanentHiring() {
         existingRoles={ozRoles.filter((r): r is { id: string; title: string; category: string } =>
           !!r.id && !!r.category
         )}
-        onAddRoles={async (newRoles) => {
-          // Add new roles to Supabase and state
-          console.log('Adding new roles:', newRoles);
-          for (const role of newRoles) {
+        onAddRoles={async (newRoles, originalTitles) => {
+          // Add new roles to Supabase and state, then save associated jobs
+          console.log('Adding new roles:', newRoles, 'Original titles:', originalTitles);
+          for (let i = 0; i < newRoles.length; i++) {
+            const role = newRoles[i];
+            const originalTitle = originalTitles?.[i] || role.title;
             try {
               const savedRole = await addRole(role.title, role.category);
               setOzRoles(prev => [...prev, savedRole]);
+
+              // Find the unmatched role entry to get the jobs
+              const unmatchedEntry = unmatchedRoles.find(
+                ur => ur.title.toLowerCase() === originalTitle.toLowerCase()
+              );
+
+              if (unmatchedEntry && unmatchedEntry.jobs && unmatchedEntry.jobs.length > 0) {
+                // Add role info to each job and save
+                const jobsToSave = unmatchedEntry.jobs.map(job => ({
+                  ...job,
+                  role: savedRole.title,
+                  roleId: savedRole.id,
+                }));
+                console.log(`Saving ${jobsToSave.length} jobs for new role "${savedRole.title}"`);
+                await saveScrapedJobs(jobsToSave, ozRetailers);
+                await loadJobPostings();
+              }
             } catch (err) {
               console.error('Failed to add role:', role.title, err);
             }
           }
         }}
         onMapRoles={async (mappings) => {
-          // Add keywords to existing roles for future matching
+          // Add keywords to existing roles and save associated jobs
           console.log('Mapping roles:', mappings);
           for (const mapping of mappings) {
             try {
               await addKeywordToRole(mapping.existingRoleId, mapping.unmatchedTitle);
+
+              // Find the unmatched role entry to get the jobs
+              const unmatchedEntry = unmatchedRoles.find(
+                ur => ur.title.toLowerCase() === mapping.unmatchedTitle.toLowerCase()
+              );
+
+              if (unmatchedEntry && unmatchedEntry.jobs && unmatchedEntry.jobs.length > 0) {
+                // Find the existing role to get its title
+                const existingRole = ozRoles.find(r => r.id === mapping.existingRoleId);
+                if (existingRole) {
+                  // Add role info to each job and save
+                  const jobsToSave = unmatchedEntry.jobs.map(job => ({
+                    ...job,
+                    role: existingRole.title,
+                    roleId: existingRole.id,
+                  }));
+                  console.log(`Saving ${jobsToSave.length} jobs mapped to role "${existingRole.title}"`);
+                  await saveScrapedJobs(jobsToSave, ozRetailers);
+                  await loadJobPostings();
+                }
+              }
+
               // Refresh roles to get updated keywords
               const updatedRoles = await fetchRoles();
               setOzRoles(updatedRoles);

@@ -25,6 +25,7 @@ interface ScrapeOptions {
   keyword: string;       // e.g., "Retail"
   maxPages?: number;     // Limit pages to scrape
   headless?: boolean;    // Ignored - kept for compatibility
+  retailers?: string[];  // Ignored - kept for compatibility with Indeed
 }
 
 // Helper to parse salary strings like "$50K - $70K" or "$18.00 - $22.00 Per Hour"
@@ -93,10 +94,13 @@ function buildSearchUrl(options: ScrapeOptions, page: number = 1): string {
   const state = parts.pop() || '';
   const city = parts.join(' ');
 
-  // Build location string: "Austin, TX"
-  const locationStr = `${city}, ${state}`.toUpperCase();
+  // Build location string for URL: "atlanta-ga" style
+  const locationSlug = `${city.replace(/\s+/g, '-')}-${state}`.toLowerCase();
 
-  let url = `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encodeURIComponent(keyword)}&locT=C&locKeyword=${encodeURIComponent(locationStr)}&radius=25`;
+  // Use the SEO-friendly URL format that Glassdoor actually uses
+  // Format: /Job/{city}-{state}-jobs-SRCH_IL.0,{len}_IC{locId}.htm
+  // Since we don't have locId, use the search format with l parameter
+  let url = `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=${encodeURIComponent(keyword)}&locT=C&locId=0&locKeyword=${encodeURIComponent(`${city}, ${state}`.toUpperCase())}&jobType=`;
 
   if (page > 1) {
     url += `&p=${page}`;
@@ -165,35 +169,55 @@ async function solveTurnstileCaptcha(pageUrl: string, siteKey: string): Promise<
 // Detect if page has Cloudflare challenge
 async function detectCloudflareTurnstile(page: Page): Promise<string | null> {
   try {
+    // Wait for Turnstile widget to potentially render
+    await delay(3000);
+
     // Look for Turnstile iframe or challenge elements
     const siteKey = await page.evaluate(() => {
-      // Check for Turnstile widget
+      // Check for Turnstile widget with data-sitekey (this is the real sitekey)
       const turnstileDiv = document.querySelector('[data-sitekey]');
       if (turnstileDiv) {
-        return turnstileDiv.getAttribute('data-sitekey');
+        const key = turnstileDiv.getAttribute('data-sitekey');
+        // Real Turnstile sitekeys start with '0x' and are longer
+        if (key && key.startsWith('0x')) {
+          return key;
+        }
       }
 
-      // Check in iframe
+      // Check in Turnstile iframe src for sitekey parameter
       const iframe = document.querySelector('iframe[src*="challenges.cloudflare.com"]');
       if (iframe) {
         const src = iframe.getAttribute('src') || '';
         const match = src.match(/sitekey=([^&]+)/);
-        if (match) return match[1];
+        if (match && match[1].startsWith('0x')) return match[1];
       }
 
-      // Check if Cloudflare challenge page
+      // Check if Cloudflare challenge page and look for sitekey in scripts
       if (document.title.includes('Just a moment') ||
+          document.body.innerText.includes('Help Us Protect') ||
           document.body.innerText.includes('Checking your browser')) {
-        // Try to find sitekey in page source
+        // Try to find sitekey in page source - real ones start with 0x
         const scripts = Array.from(document.querySelectorAll('script'));
         for (const script of scripts) {
-          const match = script.textContent?.match(/sitekey['":\s]+['"]([^'"]+)['"]/);
+          // Look for sitekey patterns like: sitekey: '0x4AAAAAAA...'
+          const match = script.textContent?.match(/sitekey['":\s]+['"]?(0x[A-Za-z0-9_-]+)['"]?/);
           if (match) return match[1];
         }
+
+        // Also check in the HTML itself
+        const html = document.documentElement.innerHTML;
+        const htmlMatch = html.match(/data-sitekey=['"]?(0x[A-Za-z0-9_-]+)['"]?/);
+        if (htmlMatch) return htmlMatch[1];
       }
 
       return null;
     });
+
+    // If we still don't have a valid sitekey, return null to indicate CAPTCHA but no solvable key
+    if (siteKey && !siteKey.startsWith('0x')) {
+      console.log(`Found invalid sitekey format: ${siteKey}`);
+      return null;
+    }
 
     return siteKey;
   } catch {
@@ -201,20 +225,30 @@ async function detectCloudflareTurnstile(page: Page): Promise<string | null> {
   }
 }
 
+// Check if page is a Cloudflare challenge
+function isCloudflareChallenge(html: string): boolean {
+  const lower = html.toLowerCase();
+  return lower.includes('cf-turnstile-response') ||
+         lower.includes('verify you are human') ||
+         lower.includes('help us protect glassdoor') ||
+         lower.includes('just a moment') ||
+         lower.includes('checking your browser') ||
+         lower.includes('challenge-platform');
+}
+
 // Parse job listings from HTML using Cheerio
 function parseJobsFromHTML(html: string): ScrapedJob[] {
   const $ = cheerio.load(html);
   const jobs: ScrapedJob[] = [];
 
-  // Debug: check if we got blocked
-  if (html.toLowerCase().includes('verify you are human') ||
-      html.toLowerCase().includes('help us protect glassdoor')) {
-    console.log('WARNING: Still getting CAPTCHA page');
+  // Debug: check if we got blocked by Cloudflare or Glassdoor CAPTCHA
+  if (isCloudflareChallenge(html)) {
+    console.log('WARNING: Cloudflare challenge detected - cookies may need refresh');
     return jobs;
   }
 
-  // Try multiple selectors for job cards
-  const jobCards = $('li[data-test="jobListing"], .JobsList_jobListItem__wjTHv, .JobsList_jobListItem__JBBUV, [data-job-id], .jobCard, .react-job-listing');
+  // Try multiple selectors for job cards - use partial class matching since Glassdoor randomizes suffixes
+  const jobCards = $('li[data-test="jobListing"], [class*="JobCard_jobCardWrapper"], [class*="jobListItem"], [data-job-id], .jobCard');
 
   console.log(`Found ${jobCards.length} job cards in HTML`);
 
@@ -222,29 +256,29 @@ function parseJobsFromHTML(html: string): ScrapedJob[] {
     try {
       const $card = $(card);
 
-      // Job title
-      const titleEl = $card.find('[data-test="job-title"], .JobCard_jobTitle___7I6y, .JobCard_jobTitle__GLyJ1, .job-title, a.jobLink');
+      // Job title - use partial class match
+      const titleEl = $card.find('[data-test="job-title"], [class*="JobCard_jobTitle"], .job-title, a.jobLink');
       const title = titleEl.first().text().trim();
 
-      // Company name
+      // Company name - use partial class match
       let company = '';
-      const companyEl = $card.find('[data-test="employer-name"], .EmployerProfile_compactEmployerName__LE242, .EmployerProfile_employerName__Xemli, .employer-name');
+      const companyEl = $card.find('[data-test="employer-name"], [class*="EmployerProfile_compactEmployerName"], [class*="EmployerProfile_employerName"], .employer-name');
       if (companyEl.length) {
         company = companyEl.first().text().trim();
         // Remove rating suffix like "3.5"
         company = company.replace(/\s*\d+\.\d+\s*$/, '').trim();
       }
 
-      // Location
-      const locationEl = $card.find('[data-test="emp-location"], .JobCard_location__rCz3x, .JobCard_location__N_iYE, .location');
+      // Location - use partial class match
+      const locationEl = $card.find('[data-test="emp-location"], [class*="JobCard_location"], .location');
       const location = locationEl.first().text().trim();
 
-      // Salary
-      const salaryEl = $card.find('[data-test="detailSalary"], .JobCard_salaryEstimate__QpbTW, .JobCard_salaryEstimate__arV5J, .salary-estimate');
+      // Salary - use partial class match
+      const salaryEl = $card.find('[data-test="detailSalary"], [class*="JobCard_salaryEstimate"], .salary-estimate');
       const salary = salaryEl.first().text().trim();
 
       // Benefits
-      const benefitEls = $card.find('[data-test="benefit"], .JobCard_benefit__YbD_u, .benefit-tag');
+      const benefitEls = $card.find('[data-test="benefit"], [class*="JobCard_benefit"], .benefit-tag');
       const benefits = benefitEls.map((_, el) => $(el).text().trim()).get().filter(Boolean).join(', ');
 
       // Job URL
@@ -309,81 +343,133 @@ export async function scrapeGlassdoor(options: ScrapeOptions): Promise<ScrapedJo
     // Set viewport
     await page.setViewport({ width: 1920, height: 1080 });
 
-    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
-      const url = buildSearchUrl(options, pageNum);
-      console.log(`Scraping page ${pageNum}: ${url}`);
+    // Load session cookies from file to bypass login/CAPTCHA
+    try {
+      const fs = await import('fs');
+      const path = await import('path');
+      const cookiesPath = path.join(process.cwd(), 'glassdoor-cookies.json');
 
-      try {
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+      if (fs.existsSync(cookiesPath)) {
+        const cookiesJson = fs.readFileSync(cookiesPath, 'utf-8');
+        const cookies = JSON.parse(cookiesJson);
 
-        // Check for Cloudflare challenge
-        const siteKey = await detectCloudflareTurnstile(page);
+        // Convert to Puppeteer cookie format
+        const puppeteerCookies = cookies.map((c: any) => ({
+          name: c.name,
+          value: c.value,
+          domain: c.domain,
+          path: c.path || '/',
+        }));
 
-        if (siteKey) {
-          console.log(`Detected Cloudflare Turnstile CAPTCHA (sitekey: ${siteKey.substring(0, 10)}...)`);
+        await page.setCookie(...puppeteerCookies);
+        console.log(`Loaded ${puppeteerCookies.length} session cookies from glassdoor-cookies.json`);
+      } else {
+        console.log('No glassdoor-cookies.json found, proceeding without session cookies');
+      }
+    } catch (cookieError) {
+      console.log('Failed to load cookies:', cookieError);
+    }
 
-          // Solve CAPTCHA
-          const token = await solveTurnstileCaptcha(page.url(), siteKey);
+    // Navigate to page 1 only - use in-page pagination for subsequent pages
+    const url = buildSearchUrl(options, 1);
+    console.log(`Scraping page 1: ${url}`);
 
-          if (token) {
-            // Inject the token and submit
-            await page.evaluate((captchaToken) => {
-              // Set the turnstile response
-              const input = document.querySelector('input[name="cf-turnstile-response"]') as HTMLInputElement;
-              if (input) {
-                input.value = captchaToken;
-              }
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await delay(3000); // Give Cloudflare time to pass through
 
-              // Try to trigger the callback if it exists
-              // @ts-ignore
-              if (window.turnstile && window.turnstile.getResponse) {
-                // @ts-ignore
-                window.turnstile.getResponse = () => captchaToken;
-              }
-
-              // Try to find and click submit button
-              const submitBtn = document.querySelector('button[type="submit"], input[type="submit"]') as HTMLElement;
-              if (submitBtn) {
-                submitBtn.click();
-              }
-            }, token);
-
-            // Wait for navigation after CAPTCHA
-            await delay(3000);
-            await page.waitForNetworkIdle({ timeout: 10000 }).catch(() => {});
-          }
+    // Check for Cloudflare challenge on initial load
+    let html = await page.content();
+    if (isCloudflareChallenge(html)) {
+      console.log('Cloudflare challenge on page 1 - waiting for it to resolve...');
+      // Wait up to 10 seconds for challenge to complete
+      for (let i = 0; i < 10; i++) {
+        await delay(1000);
+        html = await page.content();
+        if (!isCloudflareChallenge(html)) {
+          console.log('Cloudflare challenge passed');
+          break;
         }
+      }
+      if (isCloudflareChallenge(html)) {
+        console.log('ERROR: Cloudflare challenge did not resolve. Export fresh cookies from browser.');
+        return [];
+      }
+    }
 
-        // Wait for job listings to load
-        await page.waitForSelector('li[data-test="jobListing"], .JobsList_jobListItem__wjTHv, [data-job-id]', { timeout: 15000 }).catch(() => {
-          console.log('Job listings selector not found, trying to proceed anyway');
-        });
+    // Scrape pages using in-page pagination (clicking "Next" button)
+    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+      console.log(`Scraping page ${pageNum}...`);
 
-        // Get page HTML
-        const html = await page.content();
+      // Scroll down to trigger lazy loading
+      await page.evaluate(async () => {
+        const scrollStep = 400;
+        const scrollDelay = 200;
+        const maxScrolls = 5;
 
+        for (let i = 0; i < maxScrolls; i++) {
+          window.scrollBy(0, scrollStep);
+          await new Promise(r => setTimeout(r, scrollDelay));
+        }
+        // Scroll back to top
+        window.scrollTo(0, 0);
+      });
+
+      // Wait for job listings
+      await page.waitForSelector('li[data-test="jobListing"], [class*="JobCard_jobCardWrapper"], [data-job-id]', { timeout: 8000 }).catch(() => {});
+      await delay(500);
+
+      // Get page HTML
+      html = await page.content();
+
+      // Check for Cloudflare again
+      if (isCloudflareChallenge(html)) {
+        console.log(`Cloudflare challenge on page ${pageNum} - stopping`);
+        break;
+      }
+
+      const pageJobs = parseJobsFromHTML(html);
+      console.log(`Found ${pageJobs.length} jobs on page ${pageNum}`);
+
+      if (pageJobs.length === 0) {
         // Save debug HTML
         const fs = await import('fs');
-        fs.writeFileSync('/tmp/glassdoor-debug.html', html);
+        fs.writeFileSync(`/tmp/glassdoor-page${pageNum}.html`, html);
+        console.log(`No jobs found on page ${pageNum} - stopping`);
+        break;
+      }
 
-        const pageJobs = parseJobsFromHTML(html);
-        console.log(`Found ${pageJobs.length} jobs on page ${pageNum}`);
-        allJobs.push(...pageJobs);
+      allJobs.push(...pageJobs);
 
-        // If we got 0 jobs, page might be blocked or empty - stop early
-        if (pageJobs.length === 0) {
-          console.log('No jobs found on this page, stopping pagination');
+      // Try to go to next page by clicking pagination
+      if (pageNum < maxPages) {
+        const hasNextPage = await page.evaluate(() => {
+          // Look for "Next" button or page number link
+          const nextBtn = document.querySelector('button[data-test="pagination-next"], [class*="nextButton"], a[aria-label="Next"]');
+          if (nextBtn && !(nextBtn as HTMLButtonElement).disabled) {
+            (nextBtn as HTMLElement).click();
+            return true;
+          }
+          // Try clicking page number directly
+          const pageLinks = document.querySelectorAll('[class*="paginationLink"], button[data-test*="page"]');
+          for (let i = 0; i < pageLinks.length; i++) {
+            const link = pageLinks[i];
+            const text = link.textContent?.trim();
+            // This won't work without pageNum access, but keeping structure
+            if (text && /^\d+$/.test(text)) {
+              (link as HTMLElement).click();
+              return true;
+            }
+          }
+          return false;
+        });
+
+        if (!hasNextPage) {
+          console.log('No next page button found - stopping');
           break;
         }
 
-        // Rate limit between pages
-        if (pageNum < maxPages) {
-          await delay(2000 + Math.random() * 2000);
-        }
-
-      } catch (e) {
-        console.error(`Error scraping page ${pageNum}:`, e);
-        break;
+        // Wait for navigation/content update
+        await delay(2000 + Math.random() * 1000);
       }
     }
   } finally {
@@ -430,13 +516,40 @@ export function filterJobsByLocation(
   const stateLower = targetState.toLowerCase();
   const stateAbbrev = targetState.toUpperCase();
 
+  // State name mappings for common abbreviations
+  const stateNames: Record<string, string> = {
+    'GA': 'georgia', 'TX': 'texas', 'NY': 'new york', 'CA': 'california',
+    'FL': 'florida', 'IL': 'illinois', 'PA': 'pennsylvania', 'OH': 'ohio',
+    'MI': 'michigan', 'NC': 'north carolina', 'NJ': 'new jersey', 'VA': 'virginia',
+    'WA': 'washington', 'AZ': 'arizona', 'MA': 'massachusetts', 'TN': 'tennessee',
+    'IN': 'indiana', 'MO': 'missouri', 'MD': 'maryland', 'WI': 'wisconsin',
+    'CO': 'colorado', 'MN': 'minnesota', 'SC': 'south carolina', 'AL': 'alabama',
+    'LA': 'louisiana', 'KY': 'kentucky', 'OR': 'oregon', 'OK': 'oklahoma',
+    'CT': 'connecticut', 'UT': 'utah', 'NV': 'nevada', 'IA': 'iowa',
+    'AR': 'arkansas', 'MS': 'mississippi', 'KS': 'kansas', 'NM': 'new mexico',
+    'NE': 'nebraska', 'ID': 'idaho', 'WV': 'west virginia', 'HI': 'hawaii',
+    'NH': 'new hampshire', 'ME': 'maine', 'MT': 'montana', 'RI': 'rhode island',
+    'DE': 'delaware', 'SD': 'south dakota', 'ND': 'north dakota', 'AK': 'alaska',
+    'VT': 'vermont', 'WY': 'wyoming', 'DC': 'district of columbia'
+  };
+  const stateFullName = stateNames[stateAbbrev] || stateLower;
+
   return jobs.filter(job => {
+    if (!job.location) return false;
     const locationLower = job.location.toLowerCase();
+
+    // Check for city match
     const hasCity = locationLower.includes(cityLower);
+
+    // Check for state match (abbrev, full name, or comma+abbrev pattern)
     const hasState = locationLower.includes(stateLower) ||
-                     job.location.includes(stateAbbrev) ||
-                     job.location.includes(`, ${stateAbbrev}`);
-    return hasCity && hasState;
+                     locationLower.includes(stateFullName) ||
+                     job.location.includes(`, ${stateAbbrev}`) ||
+                     job.location.endsWith(stateAbbrev);
+
+    // Accept if city matches (even without explicit state) or if both match
+    // This handles cases like "Atlanta" without "GA" or "Atlanta, Georgia"
+    return hasCity || (hasCity && hasState);
   });
 }
 

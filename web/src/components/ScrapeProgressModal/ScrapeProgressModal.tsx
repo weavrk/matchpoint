@@ -14,6 +14,16 @@ export interface ScrapeProgressData {
   jobsFound: number;
   jobsMatched: number;
   elapsedSeconds: number;
+  // Real-time SSE fields
+  matchedRetailers?: number;
+  matchedJobs?: number;
+  // Multi-pass fields
+  currentPass?: number;
+  totalPasses?: number;
+  jobsSavedThisPass?: number;
+  newJobsThisPass?: number;
+  // Status message for real-time updates
+  statusMessage?: string;
 }
 
 interface ScrapeProgressModalProps {
@@ -55,11 +65,27 @@ export function ScrapeProgressModal({ isOpen, onClose, onCancel, progress }: Scr
 
         <div className="scrape-progress-header">
           <Loader2 size={20} className="scrape-progress-spinner" />
-          <span>{getPhaseLabel(progress.phase)}</span>
+          <div className="scrape-progress-header-text">
+            <span>{getPhaseLabel(progress.phase)}</span>
+            {progress.statusMessage && (
+              <span className="scrape-progress-status">{progress.statusMessage}</span>
+            )}
+          </div>
           <span className="scrape-progress-timer">{formatTime(progress.elapsedSeconds)}</span>
         </div>
 
         <div className="scrape-progress-details">
+          {progress.totalPasses && progress.totalPasses > 1 && (
+            <div className="scrape-progress-row">
+              <span className="scrape-progress-label">Pass:</span>
+              <span className="scrape-progress-value">
+                <strong>{progress.currentPass || 1}</strong> of {progress.totalPasses}
+                {progress.jobsSavedThisPass !== undefined && progress.jobsSavedThisPass > 0 && (
+                  <span className="scrape-progress-saved"> (+{progress.jobsSavedThisPass} saved)</span>
+                )}
+              </span>
+            </div>
+          )}
           <div className="scrape-progress-row">
             <span className="scrape-progress-label">Market:</span>
             <span className="scrape-progress-value">
@@ -78,15 +104,21 @@ export function ScrapeProgressModal({ isOpen, onClose, onCancel, progress }: Scr
         <div className="scrape-progress-stats">
           <div className="scrape-progress-stat">
             <span className="scrape-progress-stat-value">
-              {progress.phase === 'complete' ? progress.jobsFound : '—'}
+              {progress.jobsFound ?? 0}
             </span>
             <span className="scrape-progress-stat-label">JOBS FOUND</span>
           </div>
           <div className="scrape-progress-stat">
             <span className="scrape-progress-stat-value">
-              {progress.phase === 'complete' ? progress.jobsMatched : '—'}
+              {progress.matchedJobs ?? 0}
             </span>
-            <span className="scrape-progress-stat-label">MATCHED RETAILERS</span>
+            <span className="scrape-progress-stat-label">TOTAL MATCHED</span>
+          </div>
+          <div className="scrape-progress-stat">
+            <span className="scrape-progress-stat-value scrape-progress-stat-new">
+              {progress.newJobsThisPass !== undefined ? `+${progress.newJobsThisPass}` : '0'}
+            </span>
+            <span className="scrape-progress-stat-label">NEW JOBS</span>
           </div>
         </div>
 

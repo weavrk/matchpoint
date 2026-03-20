@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
 import './UnmatchedRolesModal.css';
 
 interface UnmatchedRole {
@@ -19,13 +18,13 @@ interface UnmatchedRolesModalProps {
   onClose: () => void;
   unmatchedRoles: UnmatchedRole[];
   existingRoles: ExistingRole[];
-  onAddRoles: (newRoles: { title: string; category: string }[]) => void;
+  onAddRoles: (newRoles: { title: string; category: string }[], originalTitles: string[]) => void;
   onMapRoles: (mappings: { unmatchedTitle: string; existingRoleId: string }[]) => void;
   onIgnoreRoles?: (titles: string[]) => void;
 }
 
 type RoleAction =
-  | { type: 'add'; category: 'Entry-Level' | 'Specialized' | 'Management' }
+  | { type: 'add'; category: 'Entry-Level' | 'Specialized' | 'Management'; customTitle?: string }
   | { type: 'map'; existingRoleId: string }
   | { type: 'ignore' }
   | { type: 'none' };
@@ -56,7 +55,8 @@ export function UnmatchedRolesModal({
 
   const handleAddCheck = (title: string, checked: boolean) => {
     if (checked) {
-      setAction(title, { type: 'add', category: 'Entry-Level' });
+      // Prepopulate the Title field with the scraped job title
+      setAction(title, { type: 'add', category: 'Entry-Level', customTitle: title });
     } else {
       setAction(title, { type: 'none' });
     }
@@ -65,7 +65,14 @@ export function UnmatchedRolesModal({
   const handleCategoryChange = (title: string, category: 'Entry-Level' | 'Specialized' | 'Management') => {
     const current = getAction(title);
     if (current.type === 'add') {
-      setAction(title, { type: 'add', category });
+      setAction(title, { type: 'add', category, customTitle: current.customTitle });
+    }
+  };
+
+  const handleCustomTitleChange = (title: string, customTitle: string) => {
+    const current = getAction(title);
+    if (current.type === 'add') {
+      setAction(title, { type: 'add', category: current.category, customTitle });
     }
   };
 
@@ -87,13 +94,17 @@ export function UnmatchedRolesModal({
 
   const handleConfirm = () => {
     const newRoles: { title: string; category: string }[] = [];
+    const originalTitles: string[] = [];  // Track original titles for job lookup
     const mappings: { unmatchedTitle: string; existingRoleId: string }[] = [];
     const ignoredTitles: string[] = [];
 
     for (const role of unmatchedRoles) {
       const action = getAction(role.title);
       if (action.type === 'add') {
-        newRoles.push({ title: role.title, category: action.category });
+        // Use customTitle if provided, otherwise use the original title
+        const titleToUse = action.customTitle?.trim() || role.title;
+        newRoles.push({ title: titleToUse, category: action.category });
+        originalTitles.push(role.title);  // Always track original for job lookup
       } else if (action.type === 'map') {
         mappings.push({ unmatchedTitle: role.title, existingRoleId: action.existingRoleId });
       } else if (action.type === 'ignore') {
@@ -102,7 +113,7 @@ export function UnmatchedRolesModal({
     }
 
     if (newRoles.length > 0) {
-      onAddRoles(newRoles);
+      onAddRoles(newRoles, originalTitles);
     }
     if (mappings.length > 0) {
       onMapRoles(mappings);
@@ -116,16 +127,13 @@ export function UnmatchedRolesModal({
   const hasActions = Array.from(actions.values()).some(a => a.type !== 'none');
 
   return (
-    <div className="unmatched-modal-overlay" onClick={onClose}>
-      <div className="unmatched-modal" onClick={e => e.stopPropagation()}>
+    <div className="unmatched-modal-overlay">
+      <div className="unmatched-modal">
         <div className="unmatched-modal-header">
           <h2>Unmatched Job Titles</h2>
           <p className="unmatched-modal-subtitle">
             These job titles don't match any roles in our database. Add them as new roles or map them to existing ones.
           </p>
-          <button className="unmatched-modal-close" onClick={onClose}>
-            <X size={20} />
-          </button>
         </div>
 
         <div className="unmatched-modal-body">
@@ -133,6 +141,7 @@ export function UnmatchedRolesModal({
             <span className="unmatched-col-title">Job Title</span>
             <span className="unmatched-col-add">Add</span>
             <span className="unmatched-col-category">Category</span>
+            <span className="unmatched-col-custom-title">Title</span>
             <span className="unmatched-col-divider"></span>
             <span className="unmatched-col-map">Map to Existing</span>
             <span className="unmatched-col-ignore"></span>
@@ -176,6 +185,17 @@ export function UnmatchedRolesModal({
                     </select>
                   </div>
 
+                  <div className="unmatched-col-custom-title">
+                    <input
+                      type="text"
+                      placeholder="e.g. Stylist"
+                      value={isAdding ? (action.customTitle || '') : ''}
+                      onChange={e => handleCustomTitleChange(role.title, e.target.value)}
+                      disabled={!isAdding || isIgnored}
+                      className={!isAdding || isIgnored ? 'disabled' : ''}
+                    />
+                  </div>
+
                   <div className="unmatched-col-divider"></div>
 
                   <div className="unmatched-col-map">
@@ -209,8 +229,8 @@ export function UnmatchedRolesModal({
         </div>
 
         <div className="unmatched-modal-footer">
-          <button className="unmatched-skip-btn" onClick={onClose}>
-            Skip
+          <button className="unmatched-ignore-all-btn" onClick={onClose}>
+            Ignore All
           </button>
           <button
             className="unmatched-confirm-btn"

@@ -158,26 +158,134 @@ app.post('/api/match', (req, res) => {
   }
 });
 
-// Fuzzy match a job title to our roles
-function matchJobToRole(jobTitle: string, roles: { id: string; title: string }[]): { roleId: string; roleTitle: string } | null {
+// Match a job title to our roles - stricter matching to avoid false positives
+// Uses priority scoring to pick the best match when multiple roles could match
+function matchJobToRole(jobTitle: string, roles: { id: string; title: string; match_keywords?: string[] }[]): { roleId: string; roleTitle: string } | null {
   const normalizedTitle = jobTitle.toLowerCase().trim();
+  // Remove common suffixes like (Part-Time), (Full-Time), etc. for matching
+  const cleanedTitle = normalizedTitle
+    .replace(/\s*\(.*?\)\s*/g, ' ')  // Remove parenthetical content
+    .replace(/\s*-\s*(part|full)[\s-]?time\s*/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Collect all potential matches with their scores
+  const matches: { roleId: string; roleTitle: string; score: number }[] = [];
+
+  // High-priority keyword mappings - check these first with highest scores
+  // "stock" and "stocking" should match Stock Associate, not Sales/Retail
+  const priorityKeywords: { pattern: RegExp; mustMatchRole: string }[] = [
+    { pattern: /\bstock(?:ing|er)?\b/i, mustMatchRole: 'stock' },
+    { pattern: /\bvisual\s*merchand/i, mustMatchRole: 'visual' },
+    { pattern: /\bbeauty|cosmetic/i, mustMatchRole: 'beauty' },
+    { pattern: /\bfitting\s*room/i, mustMatchRole: 'fitting' },
+    { pattern: /\bcashier\b/i, mustMatchRole: 'cashier' },
+  ];
+
+  // Words that MUST be present in job title if they're in the role title
+  // e.g., "Assistant Store Manager" should only match if job title contains "assistant"
+  const requiredWords = ['assistant', 'senior', 'lead', 'head', 'chief', 'deputy', 'junior'];
 
   for (const role of roles) {
-    const roleWords = role.title.toLowerCase().split(/[\s\/]+/);
-    // Check if any significant word from the role appears in the job title
-    const matches = roleWords.filter(word =>
-      word.length > 3 && normalizedTitle.includes(word)
-    );
-    // If at least one significant word matches, consider it a match
-    if (matches.length > 0) {
-      return { roleId: role.id, roleTitle: role.title };
+    const roleLower = role.title.toLowerCase();
+
+    // Check if role contains any required words - if so, job title MUST also contain them
+    const roleRequiredWords = requiredWords.filter(w => roleLower.includes(w));
+    const jobHasRequiredWords = roleRequiredWords.every(w => cleanedTitle.includes(w));
+
+    // Skip this role if it has required words that the job title doesn't have
+    if (roleRequiredWords.length > 0 && !jobHasRequiredWords) {
+      continue;
+    }
+
+    // Also check the reverse: if job title has "assistant" but role doesn't, penalize heavily
+    const jobHasAssistant = cleanedTitle.includes('assistant');
+    const roleHasAssistant = roleLower.includes('assistant');
+    if (jobHasAssistant && !roleHasAssistant) {
+      // Job is for an assistant role, but this role isn't - skip unless no better match exists
+      // We'll handle this by not boosting the score
+    }
+
+    // First check match_keywords if available - these are explicit matches (high priority)
+    if (role.match_keywords && role.match_keywords.length > 0) {
+      for (const keyword of role.match_keywords) {
+        const keywordLower = keyword.toLowerCase();
+        const keywordRegex = new RegExp(`\\b${keywordLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (keywordRegex.test(cleanedTitle)) {
+          matches.push({ roleId: role.id, roleTitle: role.title, score: 100 }); // Highest priority
+        }
+      }
+    }
+
+    // Check priority keywords - if job title has a priority keyword, boost that role type
+    let priorityBoost = 0;
+    for (const pk of priorityKeywords) {
+      if (pk.pattern.test(cleanedTitle) && role.title.toLowerCase().includes(pk.mustMatchRole)) {
+        priorityBoost = 50; // Significant boost for matching priority keywords
+        break;
+      }
+    }
+
+    // Split into individual role options (e.g., "Stock Associate / Stocker" -> ["Stock Associate", "Stocker"])
+    const roleOptions = role.title.toLowerCase().split(/\s*\/\s*/).map(s => s.trim());
+
+    for (const roleOption of roleOptions) {
+      const genericWords = ['associate', 'manager', 'supervisor', 'lead', 'worker', 'attendant', 'advisor', 'specialist', 'retail'];
+      const roleWords = roleOption.split(/\s+/).filter(w => w.length > 2);
+      const distinguishingWords = roleWords.filter(w => !genericWords.includes(w) && !requiredWords.includes(w));
+
+      if (distinguishingWords.length > 0) {
+        const allDistinguishingMatch = distinguishingWords.every(word => {
+          const wordRegex = new RegExp(`\\b${word}\\b`, 'i');
+          return wordRegex.test(cleanedTitle);
+        });
+
+        if (allDistinguishingMatch) {
+          const genericWordsInRole = roleWords.filter(w => genericWords.includes(w));
+          if (genericWordsInRole.length === 0 || genericWordsInRole.some(w => {
+            const wordRegex = new RegExp(`\\b${w}\\b`, 'i');
+            return wordRegex.test(cleanedTitle);
+          })) {
+            // Score based on specificity: more distinguishing words = higher score
+            // Bonus if required words match exactly
+            const requiredWordBonus = roleRequiredWords.length * 20;
+            const score = distinguishingWords.length * 10 + priorityBoost + requiredWordBonus;
+            matches.push({ roleId: role.id, roleTitle: role.title, score });
+          }
+        }
+      } else {
+        // Role only has generic words (e.g., "Cashier", "Stocker")
+        const roleRegex = new RegExp(`\\b${roleOption.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+        if (roleRegex.test(cleanedTitle)) {
+          matches.push({ roleId: role.id, roleTitle: role.title, score: 5 + priorityBoost });
+        }
+      }
     }
   }
+
+  // Return the highest-scoring match
+  if (matches.length > 0) {
+    matches.sort((a, b) => b.score - a.score);
+    return { roleId: matches[0].roleId, roleTitle: matches[0].roleTitle };
+  }
+
   return null;
 }
 
 // POST /api/scrape - Run job scraper with filters
+// SSE scrape endpoint - streams progress updates
+// For Indeed: runs 5 passes to capture more results (Indeed returns different results each time)
 app.post('/api/scrape', async (req, res) => {
+  // Set up SSE headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const sendProgress = (data: any) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+  };
+
   try {
     const {
       jobSites,
@@ -187,7 +295,7 @@ app.post('/api/scrape', async (req, res) => {
     } = req.body as {
       jobSites: string[];
       markets: { id: string; name: string; state: string }[];
-      roles: { id: string; title: string }[];
+      roles: { id: string; title: string; match_keywords?: string[] }[];
       retailers: { name: string; classification: string }[];
     };
 
@@ -195,10 +303,16 @@ app.post('/api/scrape', async (req, res) => {
     console.log(`Will filter by ${retailers.length} retailers`);
     console.log(`Will match against ${roles.length} roles`);
 
-    // Track all scraped jobs
-    const matchedJobs: any[] = [];
-    const unmatchedRoles: { title: string; company: string; count: number }[] = [];
-    const unmatchedRolesMap = new Map<string, { company: string; count: number }>();
+    // Track all scraped jobs across all passes (deduped by source_url)
+    const allMatchedJobsMap = new Map<string, any>(); // key = source_url
+    const unmatchedRolesMap = new Map<string, { company: string; count: number; jobs: any[] }>();
+
+    // Track unique retailers found
+    const matchedRetailers = new Set<string>();
+    let totalJobsFound = 0;
+
+    // Number of passes for Indeed (to capture more varied results)
+    const INDEED_PASSES = 5;
 
     // Loop through each selected job site
     for (const jobSite of jobSites) {
@@ -207,82 +321,174 @@ app.post('/api/scrape', async (req, res) => {
       const filterByRetailers = jobSiteLower === 'indeed' ? filterIndeedByRetailers : filterGlassdoorByRetailers;
       const filterByLocation = jobSiteLower === 'indeed' ? filterIndeedByLocation : filterGlassdoorByLocation;
 
-      // Scrape each market with generic "Retail" search
-      for (const market of markets) {
-        const location = `${market.name.toLowerCase().replace(/\s+/g, '-')}-${market.state.toLowerCase()}`;
-        const keyword = 'Retail';
+      // Determine number of passes (5 for Indeed, 1 for others)
+      const numPasses = jobSiteLower === 'indeed' ? INDEED_PASSES : 1;
 
-        console.log(`Scraping ${jobSiteLower}: ${keyword} jobs in ${market.name}, ${market.state}`);
+      for (let pass = 1; pass <= numPasses; pass++) {
+        // Track jobs found in this pass
+        const passMatchedJobs: any[] = [];
+        let passJobsFound = 0;
 
-        try {
-          const jobs = await scraper({
-            location,
-            keyword,
-            maxPages: 5,
-          });
+        // Send pass_start event
+        sendProgress({
+          type: 'pass_start',
+          pass,
+          totalPasses: numPasses,
+          jobSite: jobSiteLower,
+          jobsFound: totalJobsFound,
+          totalMatchedJobs: allMatchedJobsMap.size,
+        });
 
-          console.log(`Found ${jobs.length} total jobs in ${market.name}`);
+        console.log(`\n=== Pass ${pass}/${numPasses} for ${jobSiteLower} ===`);
 
-          // Filter to only jobs in the target location
-          const locationFilteredJobs = filterByLocation(jobs, market.name, market.state);
-          console.log(`${locationFilteredJobs.length} jobs actually in ${market.name}, ${market.state}`);
+        // Scrape each market with generic "Retail" search
+        for (let marketIndex = 0; marketIndex < markets.length; marketIndex++) {
+          const market = markets[marketIndex];
+          const location = `${market.name.toLowerCase().replace(/\s+/g, '-')}-${market.state.toLowerCase()}`;
+          const keyword = 'Retail';
 
-          // Filter to only jobs from our retailers
-          const filteredJobs = filterByRetailers(locationFilteredJobs, retailers);
+          console.log(`Scraping ${jobSiteLower}: ${keyword} jobs in ${market.name}, ${market.state}`);
 
-          console.log(`${filteredJobs.length} jobs from tracked retailers`);
+          try {
+            // Pass retailer names for Indeed to do targeted company searches
+            // Also pass passNum for varied results (different sort/filter each pass)
+            const retailerNames = retailers.map(r => r.name);
+            const jobs = await scraper({
+              location,
+              keyword,
+              maxPages: 5,
+              retailers: retailerNames,
+              passNum: pass,  // Pass number for varied results
+            });
 
-          // Match each job to a role
-          for (const job of filteredJobs) {
-            const roleMatch = matchJobToRole(job.title, roles);
+            console.log(`Found ${jobs.length} total jobs in ${market.name}`);
+            totalJobsFound += jobs.length;
+            passJobsFound += jobs.length;
 
-            if (roleMatch) {
-              matchedJobs.push({
-                ...job,
-                market: `${market.name}, ${market.state}`,
-                marketId: market.id,
-                role: roleMatch.roleTitle,
-                roleId: roleMatch.roleId,
-                source: jobSiteLower,
-              });
-            } else {
-              // Track unmatched role
-              const key = job.title.toLowerCase().trim();
-              if (unmatchedRolesMap.has(key)) {
-                unmatchedRolesMap.get(key)!.count++;
+            // Filter to only jobs in the target location
+            const locationFilteredJobs = filterByLocation(jobs, market.name, market.state);
+            console.log(`${locationFilteredJobs.length} jobs actually in ${market.name}, ${market.state}`);
+
+            // Filter to only jobs from our retailers
+            const filteredJobs = filterByRetailers(locationFilteredJobs, retailers);
+            console.log(`${filteredJobs.length} jobs from tracked retailers`);
+
+            // Send progress update after filtering with status message
+            const statusMessage = `Found ${jobs.length} jobs, ${locationFilteredJobs.length} in ${market.name}, ${filteredJobs.length} from tracked retailers`;
+            sendProgress({
+              type: 'progress',
+              pass,
+              totalPasses: numPasses,
+              jobsFound: totalJobsFound,
+              passJobsFound,
+              matchedRetailers: matchedRetailers.size,
+              matchedJobs: allMatchedJobsMap.size,
+              currentMarket: `${market.name}, ${market.state}`,
+              marketsCompleted: marketIndex,
+              totalMarkets: markets.length,
+              statusMessage,
+            });
+
+            // Match each job to a role
+            for (const job of filteredJobs) {
+              const roleMatch = matchJobToRole(job.title, roles);
+
+              // Track the retailer
+              matchedRetailers.add(job.company);
+
+              // Use source_url as dedupe key
+              const dedupeKey = job.sourceUrl || `${job.company}-${job.title}-${job.location}`;
+
+              if (roleMatch) {
+                // Only add if not already seen
+                if (!allMatchedJobsMap.has(dedupeKey)) {
+                  const matchedJob = {
+                    ...job,
+                    market: `${market.name}, ${market.state}`,
+                    marketId: market.id,
+                    role: roleMatch.roleTitle,
+                    roleId: roleMatch.roleId,
+                    source: jobSiteLower,
+                  };
+                  allMatchedJobsMap.set(dedupeKey, matchedJob);
+                  passMatchedJobs.push(matchedJob);
+                }
               } else {
-                unmatchedRolesMap.set(key, { company: job.company, count: 1 });
+                // Track unmatched role with full job data
+                const key = job.title.toLowerCase().trim();
+                const unmatchedJob = {
+                  ...job,
+                  market: `${market.name}, ${market.state}`,
+                  marketId: market.id,
+                  source: jobSiteLower,
+                };
+                if (unmatchedRolesMap.has(key)) {
+                  const entry = unmatchedRolesMap.get(key)!;
+                  // Only add job if not a duplicate
+                  if (!entry.jobs.some(j => (j.sourceUrl || `${j.company}-${j.title}`) === dedupeKey)) {
+                    entry.count++;
+                    entry.jobs.push(unmatchedJob);
+                  }
+                } else {
+                  unmatchedRolesMap.set(key, { company: job.company, count: 1, jobs: [unmatchedJob] });
+                }
               }
             }
-          }
 
-        } catch (err) {
-          console.error(`Error scraping ${market.name}, ${market.state} on ${jobSiteLower}:`, err);
+          } catch (err) {
+            console.error(`Error scraping ${market.name}, ${market.state} on ${jobSiteLower}:`, err);
+          }
+        }
+
+        // Send pass_complete event with jobs found in this pass
+        const newJobsThisPass = passMatchedJobs.length;
+        console.log(`Pass ${pass} complete: ${newJobsThisPass} new jobs found (${allMatchedJobsMap.size} total unique)`);
+
+        sendProgress({
+          type: 'pass_complete',
+          pass,
+          totalPasses: numPasses,
+          jobSite: jobSiteLower,
+          newJobsThisPass,
+          jobsFound: totalJobsFound,
+          totalMatchedJobs: allMatchedJobsMap.size,
+          passJobs: passMatchedJobs, // Jobs found in this pass for immediate DB save
+        });
+
+        // Small delay between passes to avoid rate limiting
+        if (pass < numPasses) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
     }
 
-    // Convert unmatched roles map to array
+    // Convert maps to arrays
+    const allMatchedJobs = Array.from(allMatchedJobsMap.values());
+    const unmatchedRoles: { title: string; company: string; count: number; jobs: any[] }[] = [];
     for (const [title, data] of unmatchedRolesMap) {
-      unmatchedRoles.push({ title, company: data.company, count: data.count });
+      unmatchedRoles.push({ title, company: data.company, count: data.count, jobs: data.jobs });
     }
 
     // Sort unmatched by count (most common first)
     unmatchedRoles.sort((a, b) => b.count - a.count);
 
-    console.log(`Total matched jobs: ${matchedJobs.length}`);
+    console.log(`\nTotal matched jobs: ${allMatchedJobs.length}`);
     console.log(`Unmatched role titles: ${unmatchedRoles.length}`);
 
-    res.json({
+    // Send final complete event via SSE
+    sendProgress({
+      type: 'complete',
       success: true,
-      jobCount: matchedJobs.length,
-      jobs: matchedJobs,
+      jobCount: allMatchedJobs.length,
+      jobs: allMatchedJobs,
       unmatchedRoles: unmatchedRoles.slice(0, 50), // Top 50 unmatched
     });
+    res.end();
 
   } catch (err: any) {
     console.error('Scrape error:', err);
-    res.status(500).json({ error: err.message || 'Scrape failed' });
+    sendProgress({ type: 'error', error: err.message || 'Scrape failed' });
+    res.end();
   }
 });
 

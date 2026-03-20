@@ -1,0 +1,152 @@
+[
+  {
+    "name": "hideSalaryCard",
+    "value": "true",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "gdId",
+    "value": "e7d78c8c-9cd6-4a10-a3f8-b3b8be81eabe",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "rl_page_init_referrer",
+    "value": "RS_ENC_v3_Imh0dHBzOi8vd3d3Lmdvb2dsZS5jb20vIg%3D%3D",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "rl_page_init_referring_domain",
+    "value": "RS_ENC_v3_Ind3dy5nb29nbGUuY29tIg%3D%3D",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "rl_anonymous_id",
+    "value": "RS_ENC_v3_ImU3ZDc4YzhjLTljZDYtNGExMC1hM2Y4LWIzYjhiZTgxZWFiZSI%3D",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "_optionalConsent",
+    "value": "true",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "otGeoUS",
+    "value": "true",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "ki_r",
+    "value": "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8%3D",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "g_state",
+    "value": "{\"i_l\":0,\"i_ll\":1773870880352,\"i_e\":{\"enable_itp_optimization\":0}}",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "rl_user_id",
+    "value": "RS_ENC_v3_Ijc4OTA1MTYzIg%3D%3D",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "rl_trait",
+    "value": "RS_ENC_v3_eyJsb2NrZWQgc3RhdGUiOiJvcGVuIiwiY29tbXVuaXR5IGlkIjoiNjVmOGY0N2YyMzFlZDQ5MTU5ZjY1MjNhIiwiY29sb3Igc2NoZW1lIjoiRGFyayIsImlzIHZhbGlkYXRlZCI6dHJ1ZSwiaXMgY29udHJpYnV0b3IiOnRydWV9",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "indeedCtk",
+    "value": "1jk1f41dt2o81n01",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "ki_s",
+    "value": "236936%3A0.0.0.0.2%3B237365%3A0.0.0.0.2%3B237367%3A0.0.0.0.2%3B237369%3A0.0.0.0.2%3B237370%3A0.0.0.0.2%3B237379%3A0.0.0.0.2%3B237380%3A0.0.0.0.2%3B237381%3A0.0.0.0.2%3B237382%3A0.0.0.0.2%3B237383%3A0.0.0.0.2%3B237384%3A0.0.0.0.2%3B237385%3A0.0.0.0.2%3B237386%3A0.0.0.0.2%3B237387%3A0.0.0.0.2%3B237388%3A0.0.0.0.2%3B237391%3A0.0.0.0.2%3B237396%3A0.0.0.0.2%3B237397%3A0.0.0.0.2%3B237446%3A0.0.0.0.2%3B237448%3A0.0.0.0.2%3B237449%3A0.0.0.0.2%3B237450%3A0.0.0.0.2%3B238990%3A0.0.0.0.0%3B238991%3A0.0.0.0.2%3B243943%3A0.0.0.0.0%3B243945%3A0.0.0.0.0%3B245567%3A0.0.0.0.0",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "trs",
+    "value": "https%3A%2F%2Fwww.google.com%2F:SEO:SEO:2018-08-24+07%3A17%3A22.207:undefined:undefined",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "muxData",
+    "value": "=undefined&mux_viewer_id=85faf2a3-ed72-4485-800f-c61b02f2635f&msn=0.42641880981299085&sid=ceb6723e-5352-46a0-8253-8a450373accd&sst=1773879405773&sex=1773880905826",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "hideProminentSourcingCTA",
+    "value": "true",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "AWSALB",
+    "value": "f+c9iK6AXdNCG+e6qoLfrz2nnE6YkHsFW6HqFbdSfesSFLV4Jplw4lu/Z5WvA6GWZAA57XchVbb7AIrglTYBhNdULX9seCvcoVWeLWf23YVnNudR7OmqBDVXFkEa",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "AWSALBCORS",
+    "value": "f+c9iK6AXdNCG+e6qoLfrz2nnE6YkHsFW6HqFbdSfesSFLV4Jplw4lu/Z5WvA6GWZAA57XchVbb7AIrglTYBhNdULX9seCvcoVWeLWf23YVnNudR7OmqBDVXFkEa",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "GSESSIONID",
+    "value": "B0B478C82C6027A5CE17646CC29AF3A2",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "cass",
+    "value": "0",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "OptanonConsent",
+    "value": "isGpcEnabled=0&datestamp=Thu+Mar+19+2026+19%3A15%3A41+GMT-0500+(Central+Daylight+Time)&version=202407.2.0&browserGpcFlag=0&isIABGlobal=false&hosts=&consentId=23aeb268-3d46-4c9f-b4e3-3e942859c190&interactionCount=1&isAnonUser=1&landingPath=NotLandingPage&groups=C0001%3A1%2CC0003%3A1%2CC0002%3A1%2CC0004%3A1%2CC0017%3A1&AwaitingReconsent=false",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "ki_t",
+    "value": "1773870840769%3B1773922578637%3B1773965742129%3B2%3B21",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "rl_session",
+    "value": "RS_ENC_v3_eyJhdXRvVHJhY2siOnRydWUsInRpbWVvdXQiOjE4MDAwMDAsImV4cGlyZXNBdCI6MTc3Mzk2NzU5NTM2OSwiaWQiOjE3NzM5NjU3Mzg2OTksInNlc3Npb25TdGFydCI6ZmFsc2V9",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "asst",
+    "value": "1773972492.0",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  },
+  {
+    "name": "_dd_s",
+    "value": "rum=0&expire=1773973497499",
+    "domain": ".glassdoor.com",
+    "path": "/"
+  }
+]
