@@ -1446,6 +1446,15 @@
   white-space: nowrap;
 }
 
+.oz-sortable-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.oz-sortable-header:hover {
+  background: var(--gray-100);
+}
+
 .oz-jobs-table td {
   padding: 10px 12px;
   border-bottom: 1px solid var(--black-alpha-50);

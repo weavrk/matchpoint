@@ -666,8 +666,8 @@ export function PermanentHiring() {
   // Oz tab state - data from Supabase
   const jobSitesInfoRef = useRef<HTMLDivElement>(null);
   const [ozMarkets, setOzMarkets] = useState<{ id?: string; name: string; state: string }[]>([]);
-  const [ozRoles, setOzRoles] = useState<{ id?: string; title: string; category?: string }[]>([]);
-  const [ozRetailers, setOzRetailers] = useState<{ id?: string; name: string; classification: 'Luxury' | 'Mid' | 'Big Box' }[]>([]);
+  const [ozRoles, setOzRoles] = useState<{ id?: string; title: string; category?: string; match_keywords?: string[] | null }[]>([]);
+  const [ozRetailers, setOzRetailers] = useState<{ id?: string; name: string; classification: 'Luxury' | 'Mid' | 'Big Box'; created_at?: string; updated_at?: string }[]>([]);
   const [newMarketState, setNewMarketState] = useState('');
 
   // Loading and saving states
@@ -898,17 +898,16 @@ export function PermanentHiring() {
   const [jpRoleFilter, setJpRoleFilter] = useState<string[]>([]);
   const [jpRetailerFilter, setJpRetailerFilter] = useState<string[]>([]);
   const [jpClassFilter, setJpClassFilter] = useState<string[]>([]);
-  const [jpSourceFilter, setJpSourceFilter] = useState<string[]>([]);
 
   // Filter search state
   const [marketFilterSearch, setMarketFilterSearch] = useState('');
   const [roleFilterSearch, setRoleFilterSearch] = useState('');
   const [retailerFilterSearch, setRetailerFilterSearch] = useState('');
   const [classFilterSearch, setClassFilterSearch] = useState('');
-  const [sourceFilterSearch, setSourceFilterSearch] = useState('');
 
-  // Available job sources
-  const JOB_SOURCES = ['Indeed + Glassdoor'];
+  // Sorting state for jobs table
+  const [jobSortColumn, setJobSortColumn] = useState<'source' | 'market' | 'retailer' | 'role' | 'salary' | 'employment_type'>('market');
+  const [jobSortDirection, setJobSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -1016,6 +1015,114 @@ export function PermanentHiring() {
   useEffect(() => {
     loadJobPostings();
   }, []);
+
+  // Get filter options from actual job data
+  const jobFilterOptions = useMemo(() => {
+    const markets = new Set<string>();
+    const retailers = new Set<string>();
+    const roles = new Set<string>();
+    const classes = new Set<string>();
+
+    jobPostings.forEach(job => {
+      if (job.market_name) markets.add(job.market_name);
+      if (job.company) {
+        retailers.add(job.company);
+        // Find retailer classification from ozRetailers
+        const retailer = ozRetailers.find(r => r.name.toLowerCase() === job.company?.toLowerCase());
+        if (retailer) classes.add(retailer.classification);
+      }
+      // Find role title from ozRoles using role_id
+      const role = ozRoles.find(r => r.id === job.role_id);
+      if (role) roles.add(role.title);
+    });
+
+    return {
+      markets: Array.from(markets).sort(),
+      retailers: Array.from(retailers).sort(),
+      roles: Array.from(roles).sort(),
+      classes: Array.from(classes).sort(),
+    };
+  }, [jobPostings, ozRetailers, ozRoles]);
+
+  // Filter and sort job postings
+  const filteredJobPostings = useMemo(() => {
+    let filtered = jobPostings.filter(job => {
+      // Market filter
+      if (jpMarketFilter.length > 0 && !jpMarketFilter.includes(job.market_name || '')) {
+        return false;
+      }
+      // Retailer filter
+      if (jpRetailerFilter.length > 0 && !jpRetailerFilter.includes(job.company || '')) {
+        return false;
+      }
+      // Role filter - match against role title from ozRoles
+      if (jpRoleFilter.length > 0) {
+        const role = ozRoles.find(r => r.id === job.role_id);
+        if (!role || !jpRoleFilter.includes(role.title)) {
+          return false;
+        }
+      }
+      // Class filter - get classification from ozRetailers
+      if (jpClassFilter.length > 0) {
+        const retailer = ozRetailers.find(r => r.name.toLowerCase() === job.company?.toLowerCase());
+        if (!retailer || !jpClassFilter.includes(retailer.classification)) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    // Sort
+    filtered.sort((a, b) => {
+      let aVal: string = '';
+      let bVal: string = '';
+
+      switch (jobSortColumn) {
+        case 'source':
+          aVal = a.source || '';
+          bVal = b.source || '';
+          break;
+        case 'market':
+          aVal = a.market_name || '';
+          bVal = b.market_name || '';
+          break;
+        case 'retailer':
+          aVal = a.company || '';
+          bVal = b.company || '';
+          break;
+        case 'role':
+          const roleA = ozRoles.find(r => r.id === a.role_id);
+          const roleB = ozRoles.find(r => r.id === b.role_id);
+          aVal = roleA?.title || '';
+          bVal = roleB?.title || '';
+          break;
+        case 'salary':
+          aVal = a.salary || '';
+          bVal = b.salary || '';
+          break;
+        case 'employment_type':
+          aVal = a.employment_type || '';
+          bVal = b.employment_type || '';
+          break;
+      }
+
+      const cmp = aVal.localeCompare(bVal);
+      return jobSortDirection === 'asc' ? cmp : -cmp;
+    });
+
+    return filtered;
+  }, [jobPostings, jpMarketFilter, jpRetailerFilter, jpRoleFilter, jpClassFilter, jobSortColumn, jobSortDirection, ozRoles, ozRetailers]);
+
+  // Handle column header click for sorting
+  const handleJobSort = (column: typeof jobSortColumn) => {
+    if (jobSortColumn === column) {
+      setJobSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setJobSortColumn(column);
+      setJobSortDirection('asc');
+    }
+  };
+
   const [scrapeProgress, setScrapeProgress] = useState<ScrapeProgressData | null>(null);
   const [showScrapeProgressModal, setShowScrapeProgressModal] = useState(false);
   const scrapeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1178,16 +1285,16 @@ export function PermanentHiring() {
                     jobsFound: eventData.jobsFound ?? prev.jobsFound,
                     matchedJobs: eventData.totalMatchedJobs ?? prev.matchedJobs,
                     jobsSavedThisPass: 0,
-                    newJobsThisPass: 0,
+                    // Don't reset newJobsThisPass - it should accumulate across passes
                     marketsCompleted: 0,
                   } : prev);
                 } else if (eventData.type === 'pass_complete') {
                   // Save jobs from this pass to database
                   console.log(`Pass ${eventData.pass} complete: ${eventData.newJobsThisPass} new jobs`);
-                  // Always update the UI with newJobsThisPass even if 0
+                  // Accumulate newJobsThisPass across all passes
                   setScrapeProgress(prev => prev ? {
                     ...prev,
-                    newJobsThisPass: eventData.newJobsThisPass || 0,
+                    newJobsThisPass: (prev.newJobsThisPass || 0) + (eventData.newJobsThisPass || 0),
                     currentPass: eventData.pass,
                     totalPasses: eventData.totalPasses,
                     jobsFound: eventData.jobsFound ?? prev.jobsFound,
@@ -1980,27 +2087,15 @@ export function PermanentHiring() {
             <div className="oz-filters-row">
               <FilterDropdown
                 label="Market"
-                options={[...ozMarkets]
-                  .sort((a, b) => a.name.localeCompare(b.name) || a.state.localeCompare(b.state))
-                  .map(m => `${m.name}, ${m.state}`)}
+                options={jobFilterOptions.markets}
                 selected={jpMarketFilter}
                 onSelect={setJpMarketFilter}
                 searchValue={marketFilterSearch}
                 onSearchChange={setMarketFilterSearch}
               />
               <FilterDropdown
-                label="Role"
-                options={[...ozRoles]
-                  .sort((a, b) => a.title.localeCompare(b.title))
-                  .map(r => r.title)}
-                selected={jpRoleFilter}
-                onSelect={setJpRoleFilter}
-                searchValue={roleFilterSearch}
-                onSearchChange={setRoleFilterSearch}
-              />
-              <FilterDropdown
                 label="Retailer"
-                options={ozRetailers.map(r => r.name)}
+                options={jobFilterOptions.retailers}
                 selected={jpRetailerFilter}
                 onSelect={setJpRetailerFilter}
                 searchValue={retailerFilterSearch}
@@ -2008,23 +2103,23 @@ export function PermanentHiring() {
               />
               <FilterDropdown
                 label="Retailer Class"
-                options={['Luxury', 'Mid', 'Big Box']}
+                options={jobFilterOptions.classes}
                 selected={jpClassFilter}
                 onSelect={setJpClassFilter}
                 searchValue={classFilterSearch}
                 onSearchChange={setClassFilterSearch}
               />
               <FilterDropdown
-                label="Job Site"
-                options={JOB_SOURCES}
-                selected={jpSourceFilter}
-                onSelect={setJpSourceFilter}
-                searchValue={sourceFilterSearch}
-                onSearchChange={setSourceFilterSearch}
+                label="Role"
+                options={jobFilterOptions.roles}
+                selected={jpRoleFilter}
+                onSelect={setJpRoleFilter}
+                searchValue={roleFilterSearch}
+                onSearchChange={setRoleFilterSearch}
               />
             </div>
             {/* Filter chips */}
-            {(jpMarketFilter.length > 0 || jpRoleFilter.length > 0 || jpRetailerFilter.length > 0 || jpClassFilter.length > 0 || jpSourceFilter.length > 0) && (
+            {(jpMarketFilter.length > 0 || jpRoleFilter.length > 0 || jpRetailerFilter.length > 0 || jpClassFilter.length > 0) && (
               <div className="oz-filter-chips">
                 {jpMarketFilter.map(v => (
                   <span key={`market-${v}`} className="oz-filter-chip">
@@ -2050,12 +2145,6 @@ export function PermanentHiring() {
                     <button onClick={() => setJpClassFilter(jpClassFilter.filter(x => x !== v))}><X size={12} /></button>
                   </span>
                 ))}
-                {jpSourceFilter.map(v => (
-                  <span key={`source-${v}`} className="oz-filter-chip">
-                    {v}
-                    <button onClick={() => setJpSourceFilter(jpSourceFilter.filter(x => x !== v))}><X size={12} /></button>
-                  </span>
-                ))}
                 <button
                   className="oz-clear-all-btn"
                   onClick={() => {
@@ -2063,7 +2152,6 @@ export function PermanentHiring() {
                     setJpRoleFilter([]);
                     setJpRetailerFilter([]);
                     setJpClassFilter([]);
-                    setJpSourceFilter([]);
                   }}
                 >
                   Clear All
@@ -2079,40 +2167,53 @@ export function PermanentHiring() {
                 <table className="oz-jobs-table">
                   <thead>
                     <tr>
-                      <th>Source</th>
-                      <th>Market</th>
-                      <th>Retailer</th>
-                      <th>Location</th>
-                      <th>Role</th>
-                      <th>Salary</th>
-                      <th>Employment Type</th>
+                      <th className="oz-sortable-header" onClick={() => handleJobSort('source')}>
+                        Source {jobSortColumn === 'source' && (jobSortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="oz-sortable-header" onClick={() => handleJobSort('market')}>
+                        Market {jobSortColumn === 'market' && (jobSortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="oz-sortable-header" onClick={() => handleJobSort('retailer')}>
+                        Retailer {jobSortColumn === 'retailer' && (jobSortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="oz-sortable-header" onClick={() => handleJobSort('role')}>
+                        Role {jobSortColumn === 'role' && (jobSortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="oz-sortable-header" onClick={() => handleJobSort('salary')}>
+                        Salary {jobSortColumn === 'salary' && (jobSortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="oz-sortable-header" onClick={() => handleJobSort('employment_type')}>
+                        Employment Type {jobSortColumn === 'employment_type' && (jobSortDirection === 'asc' ? '↑' : '↓')}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {jobPostings.map(job => (
-                      <tr key={job.id}>
-                        <td className="oz-job-source">
-                          {job.source || '—'}
-                          {job.source_url && (
-                            <button
-                              className="oz-job-source-link"
-                              onClick={() => {
-                                navigator.clipboard.writeText(job.source_url!);
-                              }}
-                              title="Copy URL to clipboard"
-                            >
-                              <Clipboard size={14} />
-                            </button>
-                          )}
-                        </td>
-                        <td>{job.market_name || '—'}</td>
-                        <td>{job.company || '—'}</td>
-                        <td>{job.location || '—'}</td>
-                        <td>{job.title}</td>
-                        <td>{job.salary || '—'}</td>
-                        <td>{job.employment_type || '—'}</td>
-                      </tr>
-                    ))}
+                    {filteredJobPostings.map(job => {
+                      const role = ozRoles.find(r => r.id === job.role_id);
+                      return (
+                        <tr key={job.id}>
+                          <td className="oz-job-source">
+                            {job.source || '—'}
+                            {job.source_url && (
+                              <button
+                                className="oz-job-source-link"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(job.source_url!);
+                                }}
+                                title="Copy URL to clipboard"
+                              >
+                                <Clipboard size={14} />
+                              </button>
+                            )}
+                          </td>
+                          <td>{job.market_name || '—'}</td>
+                          <td>{job.company || '—'}</td>
+                          <td>{role?.title || '—'}</td>
+                          <td>{job.salary || '—'}</td>
+                          <td>{job.employment_type || '—'}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -2175,7 +2276,8 @@ export function PermanentHiring() {
                   roleId: savedRole.id,
                 }));
                 console.log(`Saving ${jobsToSave.length} jobs for new role "${savedRole.title}"`);
-                await saveScrapedJobs(jobsToSave, ozRetailers);
+                const retailersWithIds = ozRetailers.filter((r): r is Retailer => !!r.id);
+                await saveScrapedJobs(jobsToSave, retailersWithIds);
                 await loadJobPostings();
               }
             } catch (err) {
@@ -2206,7 +2308,8 @@ export function PermanentHiring() {
                     roleId: existingRole.id,
                   }));
                   console.log(`Saving ${jobsToSave.length} jobs mapped to role "${existingRole.title}"`);
-                  await saveScrapedJobs(jobsToSave, ozRetailers);
+                  const retailersWithIds = ozRetailers.filter((r): r is Retailer => !!r.id);
+                  await saveScrapedJobs(jobsToSave, retailersWithIds);
                   await loadJobPostings();
                 }
               }
