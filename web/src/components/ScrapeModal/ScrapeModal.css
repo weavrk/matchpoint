@@ -87,36 +87,6 @@
   margin: 0 0 4px;
 }
 
-/* Single select chips (Job Sites) */
-.scrape-chips-single {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.scrape-chip-single {
-  padding: 0 8px;
-  height: 30px;
-  background: white;
-  border: 1px solid var(--black-alpha-200);
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  color: var(--app-primary);
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.scrape-chip-single:hover {
-  background: var(--gray-100);
-  border-color: var(--black-alpha-300);
-}
-
-.scrape-chip-single.selected {
-  background: var(--app-primary);
-  border-color: var(--app-primary);
-  color: white;
-}
 
 /* Multi select chips (Roles) */
 .scrape-chips-multi {

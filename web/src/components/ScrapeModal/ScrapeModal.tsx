@@ -48,14 +48,18 @@ interface ScrapeModalProps {
 }
 
 export interface ScrapeConfig {
-  jobSite: string;
+  jobSites: string[];
   markets: string[];
   roles: string[];
   retailers: string[];
   retailerClassifications: ('Luxury' | 'Mid' | 'Big Box')[];
 }
 
-const JOB_SITES = ['Indeed + Glassdoor'];
+// Job sites
+const JOB_SITES = [
+  { id: 'indeed', name: 'Indeed' },
+  { id: 'glassdoor', name: 'Glassdoor' },
+];
 
 // Helper to format seconds as M:SS
 function formatTime(seconds: number): string {
@@ -66,7 +70,7 @@ function formatTime(seconds: number): string {
 
 export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunScrape, isScraping = false, scrapeProgress = null, onCancelScrape }: ScrapeModalProps) {
   // Selected values
-  const [selectedJobSite, setSelectedJobSite] = useState<string>('');
+  const [selectedJobSites, setSelectedJobSites] = useState<string[]>([]);
   const [selectedMarkets, setSelectedMarkets] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedRetailers, setSelectedRetailers] = useState<string[]>([]);
@@ -101,7 +105,7 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
   // Reset state when modal opens - with defaults
   useEffect(() => {
     if (isOpen) {
-      setSelectedJobSite('Indeed + Glassdoor');
+      setSelectedJobSites(['indeed', 'glassdoor']);
       setSelectedMarkets([]);
       setSelectedRoles(roles.map(r => r.id));
       setSelectedRetailers([]);
@@ -110,6 +114,13 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
       setRetailerSearch('');
     }
   }, [isOpen, roles]);
+
+  // Toggle job site selection
+  const handleToggleJobSite = (id: string) => {
+    setSelectedJobSites(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
 
   if (!isOpen) return null;
 
@@ -175,7 +186,7 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
 
   const handleRunScrape = () => {
     onRunScrape({
-      jobSite: selectedJobSite,
+      jobSites: selectedJobSites,
       markets: selectedMarkets,
       roles: selectedRoles,
       retailers: selectedRetailers,
@@ -184,7 +195,7 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
     // Don't close - let isScraping prop control the UI state
   };
 
-  const canRunScrape = selectedJobSite && selectedMarkets.length > 0 && selectedRoles.length > 0;
+  const canRunScrape = selectedJobSites.length > 0 && selectedMarkets.length > 0 && selectedRoles.length > 0;
 
   return (
     <div className="scrape-modal-overlay" onClick={onClose}>
@@ -197,17 +208,17 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
         </div>
 
         <div className="scrape-modal-body">
-          {/* Job Site - Single Select Chips */}
+          {/* Job Sites - Multi-select chips */}
           <div className="scrape-field">
-            <label className="scrape-field-label">Job Site</label>
-            <div className="scrape-chips-single">
+            <label className="scrape-field-label">Job Sites</label>
+            <div className="scrape-chips-multi">
               {JOB_SITES.map(site => (
                 <button
-                  key={site}
-                  className={`scrape-chip-single ${selectedJobSite === site ? 'selected' : ''}`}
-                  onClick={() => setSelectedJobSite(site)}
+                  key={site.id}
+                  className={`scrape-chip-multi ${selectedJobSites.includes(site.id) ? 'selected' : ''}`}
+                  onClick={() => handleToggleJobSite(site.id)}
                 >
-                  {site}
+                  {site.name}
                 </button>
               ))}
             </div>

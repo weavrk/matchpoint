@@ -6,7 +6,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { loadWorkers, loadRetailer } from './data';
 import { matchWorkers } from './matching';
 import { JobSpec } from './types';
-import { scrapeGlassdoor, filterJobsByRetailers, filterJobsByLocation } from './scrapers/glassdoor';
+import { scrapeGlassdoor, filterJobsByRetailers as filterGlassdoorByRetailers, filterJobsByLocation as filterGlassdoorByLocation } from './scrapers/glassdoor';
+import { scrapeIndeed, filterJobsByRetailers as filterIndeedByRetailers, filterJobsByLocation as filterIndeedByLocation } from './scrapers/indeed';
 
 dotenv.config();
 
@@ -179,18 +180,18 @@ function matchJobToRole(jobTitle: string, roles: { id: string; title: string }[]
 app.post('/api/scrape', async (req, res) => {
   try {
     const {
-      jobSite,
+      jobSites,
       markets,
       roles,
       retailers,
     } = req.body as {
-      jobSite: string;
+      jobSites: string[];
       markets: { id: string; name: string; state: string }[];
       roles: { id: string; title: string }[];
       retailers: { name: string; classification: string }[];
     };
 
-    console.log(`Starting scrape for ${markets.length} markets`);
+    console.log(`Starting scrape for ${markets.length} markets on ${jobSites.join(', ')}`);
     console.log(`Will filter by ${retailers.length} retailers`);
     console.log(`Will match against ${roles.length} roles`);
 
@@ -199,57 +200,65 @@ app.post('/api/scrape', async (req, res) => {
     const unmatchedRoles: { title: string; company: string; count: number }[] = [];
     const unmatchedRolesMap = new Map<string, { company: string; count: number }>();
 
-    // Scrape each market with generic "Retail" search
-    for (const market of markets) {
-      const location = `${market.name.toLowerCase().replace(/\s+/g, '-')}-${market.state.toLowerCase()}`;
-      const keyword = 'Retail';
+    // Loop through each selected job site
+    for (const jobSite of jobSites) {
+      const jobSiteLower = jobSite.toLowerCase();
+      const scraper = jobSiteLower === 'indeed' ? scrapeIndeed : scrapeGlassdoor;
+      const filterByRetailers = jobSiteLower === 'indeed' ? filterIndeedByRetailers : filterGlassdoorByRetailers;
+      const filterByLocation = jobSiteLower === 'indeed' ? filterIndeedByLocation : filterGlassdoorByLocation;
 
-      console.log(`Scraping: ${keyword} jobs in ${market.name}, ${market.state}`);
+      // Scrape each market with generic "Retail" search
+      for (const market of markets) {
+        const location = `${market.name.toLowerCase().replace(/\s+/g, '-')}-${market.state.toLowerCase()}`;
+        const keyword = 'Retail';
 
-      try {
-        const jobs = await scrapeGlassdoor({
-          location,
-          keyword,
-          maxPages: 5, // More pages since we're doing one search per market
-          headless: true,
-        });
+        console.log(`Scraping ${jobSiteLower}: ${keyword} jobs in ${market.name}, ${market.state}`);
 
-        console.log(`Found ${jobs.length} total jobs in ${market.name}`);
+        try {
+          const jobs = await scraper({
+            location,
+            keyword,
+            maxPages: 5,
+          });
 
-        // Filter to only jobs in the target location
-        const locationFilteredJobs = filterJobsByLocation(jobs, market.name, market.state);
-        console.log(`${locationFilteredJobs.length} jobs actually in ${market.name}, ${market.state}`);
+          console.log(`Found ${jobs.length} total jobs in ${market.name}`);
 
-        // Filter to only jobs from our retailers
-        const filteredJobs = filterJobsByRetailers(locationFilteredJobs, retailers);
+          // Filter to only jobs in the target location
+          const locationFilteredJobs = filterByLocation(jobs, market.name, market.state);
+          console.log(`${locationFilteredJobs.length} jobs actually in ${market.name}, ${market.state}`);
 
-        console.log(`${filteredJobs.length} jobs from tracked retailers`);
+          // Filter to only jobs from our retailers
+          const filteredJobs = filterByRetailers(locationFilteredJobs, retailers);
 
-        // Match each job to a role
-        for (const job of filteredJobs) {
-          const roleMatch = matchJobToRole(job.title, roles);
+          console.log(`${filteredJobs.length} jobs from tracked retailers`);
 
-          if (roleMatch) {
-            matchedJobs.push({
-              ...job,
-              market: `${market.name}, ${market.state}`,
-              marketId: market.id,
-              role: roleMatch.roleTitle,
-              roleId: roleMatch.roleId,
-            });
-          } else {
-            // Track unmatched role
-            const key = job.title.toLowerCase().trim();
-            if (unmatchedRolesMap.has(key)) {
-              unmatchedRolesMap.get(key)!.count++;
+          // Match each job to a role
+          for (const job of filteredJobs) {
+            const roleMatch = matchJobToRole(job.title, roles);
+
+            if (roleMatch) {
+              matchedJobs.push({
+                ...job,
+                market: `${market.name}, ${market.state}`,
+                marketId: market.id,
+                role: roleMatch.roleTitle,
+                roleId: roleMatch.roleId,
+                source: jobSiteLower,
+              });
             } else {
-              unmatchedRolesMap.set(key, { company: job.company, count: 1 });
+              // Track unmatched role
+              const key = job.title.toLowerCase().trim();
+              if (unmatchedRolesMap.has(key)) {
+                unmatchedRolesMap.get(key)!.count++;
+              } else {
+                unmatchedRolesMap.set(key, { company: job.company, count: 1 });
+              }
             }
           }
-        }
 
-      } catch (err) {
-        console.error(`Error scraping ${market.name}, ${market.state}:`, err);
+        } catch (err) {
+          console.error(`Error scraping ${market.name}, ${market.state} on ${jobSiteLower}:`, err);
+        }
       }
     }
 

@@ -1018,8 +1018,8 @@ export function PermanentHiring() {
   }, []);
   const [scrapeProgress, setScrapeProgress] = useState<ScrapeProgressData | null>(null);
   const [showScrapeProgressModal, setShowScrapeProgressModal] = useState(false);
-  const scrapeTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const scrapeProgressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const scrapeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrapeProgressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const scrapeAbortRef = useRef<AbortController | null>(null);
   const scrapeStartTimeRef = useRef<number>(0);
 
@@ -1129,7 +1129,7 @@ export function PermanentHiring() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          jobSite: config.jobSite,
+          jobSites: config.jobSites,
           markets: selectedMarketObjects.map(m => ({ id: m.id, name: m.name, state: m.state })),
           roles: selectedRoleObjects.map(r => ({ id: r.id, title: r.title })),
           retailers: retailersToFilter.map(r => ({ name: r.name, classification: r.classification })),
@@ -1996,7 +1996,7 @@ export function PermanentHiring() {
                   <tbody>
                     {jobPostings.map(job => (
                       <tr key={job.id}>
-                        <td className="oz-job-source">{job.source || '—'}</td>
+                        <td className="oz-job-source">glassdoor</td>
                         <td>{job.market_name || '—'}</td>
                         <td>{job.company || '—'}</td>
                         <td>{job.location || '—'}</td>

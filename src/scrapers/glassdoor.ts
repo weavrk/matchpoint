@@ -1,9 +1,10 @@
+import puppeteer, { Page } from 'puppeteer';
 import * as cheerio from 'cheerio';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SCRAPERAPI_KEY = process.env.SCRAPERAPI_KEY;
+const TWOCAPTCHA_API_KEY = process.env.TWOCAPTCHA_API_KEY;
 
 interface ScrapedJob {
   title: string;
@@ -104,28 +105,100 @@ function buildSearchUrl(options: ScrapeOptions, page: number = 1): string {
   return url;
 }
 
-// Fetch page HTML using ScraperAPI
-async function fetchWithScraperAPI(url: string): Promise<string> {
-  if (!SCRAPERAPI_KEY) {
-    throw new Error('SCRAPERAPI_KEY not set in .env');
+// Solve Cloudflare Turnstile CAPTCHA using 2Captcha HTTP API
+async function solveTurnstileCaptcha(pageUrl: string, siteKey: string): Promise<string | null> {
+  if (!TWOCAPTCHA_API_KEY) {
+    console.log('WARNING: TWOCAPTCHA_API_KEY not set - cannot solve CAPTCHA');
+    return null;
   }
 
-  const apiUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(url)}&render=true&country_code=us`;
+  console.log(`Solving Turnstile CAPTCHA for ${pageUrl}...`);
 
-  console.log(`Fetching via ScraperAPI: ${url}`);
+  try {
+    // Step 1: Submit the CAPTCHA to 2Captcha
+    const submitUrl = `https://2captcha.com/in.php?key=${TWOCAPTCHA_API_KEY}&method=turnstile&sitekey=${siteKey}&pageurl=${encodeURIComponent(pageUrl)}&json=1`;
 
-  const response = await fetch(apiUrl, {
-    method: 'GET',
-    headers: {
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    },
-  });
+    const submitResponse = await fetch(submitUrl);
+    const submitResult = await submitResponse.json() as { status: number; request: string };
 
-  if (!response.ok) {
-    throw new Error(`ScraperAPI request failed: ${response.status} ${response.statusText}`);
+    if (submitResult.status !== 1) {
+      console.error('Failed to submit CAPTCHA:', submitResult.request);
+      return null;
+    }
+
+    const taskId = submitResult.request;
+    console.log(`CAPTCHA submitted, task ID: ${taskId}`);
+
+    // Step 2: Poll for the result
+    let attempts = 0;
+    const maxAttempts = 60; // Up to 2 minutes
+
+    while (attempts < maxAttempts) {
+      await delay(2000); // Wait 2 seconds between polls
+
+      const resultUrl = `https://2captcha.com/res.php?key=${TWOCAPTCHA_API_KEY}&action=get&id=${taskId}&json=1`;
+      const resultResponse = await fetch(resultUrl);
+      const result = await resultResponse.json() as { status: number; request: string };
+
+      if (result.status === 1) {
+        console.log('CAPTCHA solved successfully');
+        return result.request;
+      }
+
+      if (result.request !== 'CAPCHA_NOT_READY') {
+        console.error('CAPTCHA solve failed:', result.request);
+        return null;
+      }
+
+      attempts++;
+      console.log(`Waiting for CAPTCHA solution... (${attempts}/${maxAttempts})`);
+    }
+
+    console.error('CAPTCHA solve timed out');
+    return null;
+  } catch (err) {
+    console.error('Failed to solve CAPTCHA:', err);
+    return null;
   }
+}
 
-  return response.text();
+// Detect if page has Cloudflare challenge
+async function detectCloudflareTurnstile(page: Page): Promise<string | null> {
+  try {
+    // Look for Turnstile iframe or challenge elements
+    const siteKey = await page.evaluate(() => {
+      // Check for Turnstile widget
+      const turnstileDiv = document.querySelector('[data-sitekey]');
+      if (turnstileDiv) {
+        return turnstileDiv.getAttribute('data-sitekey');
+      }
+
+      // Check in iframe
+      const iframe = document.querySelector('iframe[src*="challenges.cloudflare.com"]');
+      if (iframe) {
+        const src = iframe.getAttribute('src') || '';
+        const match = src.match(/sitekey=([^&]+)/);
+        if (match) return match[1];
+      }
+
+      // Check if Cloudflare challenge page
+      if (document.title.includes('Just a moment') ||
+          document.body.innerText.includes('Checking your browser')) {
+        // Try to find sitekey in page source
+        const scripts = Array.from(document.querySelectorAll('script'));
+        for (const script of scripts) {
+          const match = script.textContent?.match(/sitekey['":\s]+['"]([^'"]+)['"]/);
+          if (match) return match[1];
+        }
+      }
+
+      return null;
+    });
+
+    return siteKey;
+  } catch {
+    return null;
+  }
 }
 
 // Parse job listings from HTML using Cheerio
@@ -136,7 +209,7 @@ function parseJobsFromHTML(html: string): ScrapedJob[] {
   // Debug: check if we got blocked
   if (html.toLowerCase().includes('verify you are human') ||
       html.toLowerCase().includes('help us protect glassdoor')) {
-    console.log('WARNING: Still getting CAPTCHA page from ScraperAPI');
+    console.log('WARNING: Still getting CAPTCHA page');
     return jobs;
   }
 
@@ -212,39 +285,109 @@ export async function scrapeGlassdoor(options: ScrapeOptions): Promise<ScrapedJo
   const allJobs: ScrapedJob[] = [];
 
   console.log(`Starting Glassdoor scrape for "${options.keyword}" in ${options.location}`);
-  console.log(`Using ScraperAPI for CAPTCHA bypass`);
+  console.log(`Using Puppeteer with 2Captcha for CAPTCHA bypass`);
 
-  for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
-    const url = buildSearchUrl(options, pageNum);
-    console.log(`Scraping page ${pageNum}: ${url}`);
+  // Launch browser
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--disable-gpu',
+      '--window-size=1920,1080',
+    ],
+  });
 
-    try {
-      const html = await fetchWithScraperAPI(url);
+  try {
+    const page = await browser.newPage();
 
-      // Save debug HTML
-      const fs = await import('fs');
-      fs.writeFileSync('/tmp/glassdoor-debug.html', html);
-      console.log('Debug HTML saved to /tmp/glassdoor-debug.html');
+    // Set a realistic user agent
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-      const pageJobs = parseJobsFromHTML(html);
-      console.log(`Found ${pageJobs.length} jobs on page ${pageNum}`);
-      allJobs.push(...pageJobs);
+    // Set viewport
+    await page.setViewport({ width: 1920, height: 1080 });
 
-      // If we got 0 jobs, page might be blocked or empty - stop early
-      if (pageJobs.length === 0) {
-        console.log('No jobs found on this page, stopping pagination');
+    for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+      const url = buildSearchUrl(options, pageNum);
+      console.log(`Scraping page ${pageNum}: ${url}`);
+
+      try {
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+
+        // Check for Cloudflare challenge
+        const siteKey = await detectCloudflareTurnstile(page);
+
+        if (siteKey) {
+          console.log(`Detected Cloudflare Turnstile CAPTCHA (sitekey: ${siteKey.substring(0, 10)}...)`);
+
+          // Solve CAPTCHA
+          const token = await solveTurnstileCaptcha(page.url(), siteKey);
+
+          if (token) {
+            // Inject the token and submit
+            await page.evaluate((captchaToken) => {
+              // Set the turnstile response
+              const input = document.querySelector('input[name="cf-turnstile-response"]') as HTMLInputElement;
+              if (input) {
+                input.value = captchaToken;
+              }
+
+              // Try to trigger the callback if it exists
+              // @ts-ignore
+              if (window.turnstile && window.turnstile.getResponse) {
+                // @ts-ignore
+                window.turnstile.getResponse = () => captchaToken;
+              }
+
+              // Try to find and click submit button
+              const submitBtn = document.querySelector('button[type="submit"], input[type="submit"]') as HTMLElement;
+              if (submitBtn) {
+                submitBtn.click();
+              }
+            }, token);
+
+            // Wait for navigation after CAPTCHA
+            await delay(3000);
+            await page.waitForNetworkIdle({ timeout: 10000 }).catch(() => {});
+          }
+        }
+
+        // Wait for job listings to load
+        await page.waitForSelector('li[data-test="jobListing"], .JobsList_jobListItem__wjTHv, [data-job-id]', { timeout: 15000 }).catch(() => {
+          console.log('Job listings selector not found, trying to proceed anyway');
+        });
+
+        // Get page HTML
+        const html = await page.content();
+
+        // Save debug HTML
+        const fs = await import('fs');
+        fs.writeFileSync('/tmp/glassdoor-debug.html', html);
+
+        const pageJobs = parseJobsFromHTML(html);
+        console.log(`Found ${pageJobs.length} jobs on page ${pageNum}`);
+        allJobs.push(...pageJobs);
+
+        // If we got 0 jobs, page might be blocked or empty - stop early
+        if (pageJobs.length === 0) {
+          console.log('No jobs found on this page, stopping pagination');
+          break;
+        }
+
+        // Rate limit between pages
+        if (pageNum < maxPages) {
+          await delay(2000 + Math.random() * 2000);
+        }
+
+      } catch (e) {
+        console.error(`Error scraping page ${pageNum}:`, e);
         break;
       }
-
-      // Rate limit between pages
-      if (pageNum < maxPages) {
-        await delay(2000);
-      }
-
-    } catch (e) {
-      console.error(`Error scraping page ${pageNum}:`, e);
-      break;
     }
+  } finally {
+    await browser.close();
   }
 
   // Deduplicate jobs by URL
