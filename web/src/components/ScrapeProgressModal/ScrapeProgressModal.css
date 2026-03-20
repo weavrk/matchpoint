@@ -1,0 +1,162 @@
+.scrape-progress-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.scrape-progress-modal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 480px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.scrape-progress-top {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.scrape-progress-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--app-primary);
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.scrape-progress-close:hover {
+  background: var(--gray-100);
+}
+
+.scrape-progress-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--gray-900);
+  margin-bottom: 20px;
+}
+
+.scrape-progress-spinner {
+  animation: spin 1s linear infinite;
+  color: var(--gray-500);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.scrape-progress-timer {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-500);
+}
+
+.scrape-progress-details {
+  background: var(--gray-50);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.scrape-progress-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 6px 0;
+}
+
+.scrape-progress-row:first-child {
+  padding-top: 0;
+}
+
+.scrape-progress-row:last-child {
+  padding-bottom: 0;
+}
+
+.scrape-progress-label {
+  font-size: 14px;
+  color: var(--gray-500);
+  min-width: 60px;
+}
+
+.scrape-progress-value {
+  font-size: 14px;
+  color: var(--gray-900);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.scrape-progress-value strong {
+  font-weight: 600;
+}
+
+.scrape-progress-count {
+  font-size: 13px;
+  color: var(--gray-400);
+  font-weight: 400;
+}
+
+.scrape-progress-stats {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.scrape-progress-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.scrape-progress-stat-value {
+  font-size: 36px;
+  font-weight: 300;
+  color: var(--gray-700);
+  line-height: 1;
+}
+
+.scrape-progress-stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scrape-progress-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.scrape-progress-cancel {
+  padding: 10px 20px;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.scrape-progress-cancel:hover {
+  background: #fef2f2;
+}

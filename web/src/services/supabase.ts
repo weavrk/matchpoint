@@ -19,6 +19,7 @@ export interface Role {
   title: string;
   category: string;
   description: string | null;
+  match_keywords: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -33,19 +34,19 @@ export interface Retailer {
 
 export interface JobPosting {
   id: string;
+  market_name: string | null;
+  company: string | null;
+  location: string | null;
   title: string;
-  retailer_id: string;
-  market_id: string;
-  role_id: string;
-  source: string;
-  source_url: string | null;
+  employment_type: string | null;
+  salary_type: string | null;
   salary_min: number | null;
   salary_max: number | null;
-  employment_type: string | null;
-  posted_date: string | null;
+  benefits: string | null;
+  market_id: string;
+  retailer_id: string | null;
+  role_id: string;
   scraped_at: string;
-  created_at: string;
-  updated_at: string;
 }
 
 // Markets API
@@ -167,6 +168,45 @@ export async function deleteRole(id: string): Promise<void> {
     console.error('Error deleting role:', error);
     throw error;
   }
+}
+
+export async function addKeywordToRole(roleId: string, keyword: string): Promise<Role> {
+  // First get current keywords
+  const { data: role, error: fetchError } = await supabase
+    .from('roles')
+    .select('match_keywords')
+    .eq('id', roleId)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching role:', fetchError);
+    throw fetchError;
+  }
+
+  const currentKeywords = role?.match_keywords || [];
+  const normalizedKeyword = keyword.toLowerCase().trim();
+
+  // Don't add duplicates
+  if (currentKeywords.includes(normalizedKeyword)) {
+    const { data } = await supabase.from('roles').select('*').eq('id', roleId).single();
+    return data as Role;
+  }
+
+  const { data, error } = await supabase
+    .from('roles')
+    .update({
+      match_keywords: [...currentKeywords, normalizedKeyword],
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', roleId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error adding keyword to role:', error);
+    throw error;
+  }
+  return data;
 }
 
 export async function syncRoles(roles: { title: string; category?: string }[]): Promise<void> {
@@ -334,4 +374,70 @@ export async function fetchJobPostings(): Promise<JobPosting[]> {
     throw error;
   }
   return data || [];
+}
+
+export interface ScrapedJob {
+  title: string;
+  company: string;
+  location?: string;
+  salaryType?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  benefits?: string;
+  employmentType?: string;
+  link?: string;
+  sourceUrl?: string;
+  market: string;
+  marketId: string;
+  role: string;
+  roleId: string;
+}
+
+export async function saveScrapedJobs(jobs: ScrapedJob[], retailers: Retailer[]): Promise<{ saved: number; errors: number }> {
+  // Create a map of retailer name to id (case-insensitive)
+  const retailerMap = new Map(retailers.map(r => [r.name.toLowerCase(), r.id]));
+
+  let saved = 0;
+  let errors = 0;
+
+  // Insert jobs in batches of 50 to avoid hitting limits
+  const batchSize = 50;
+  for (let i = 0; i < jobs.length; i += batchSize) {
+    const batch = jobs.slice(i, i + batchSize);
+
+    const jobsToInsert = batch.map(job => {
+      // Try to find retailer ID by matching company name
+      const retailerId = retailerMap.get(job.company.toLowerCase()) || null;
+
+      return {
+        market_name: job.market,
+        company: job.company,
+        location: job.location || null,
+        title: job.title,
+        employment_type: job.employmentType || null,
+        salary_type: job.salaryType || null,
+        salary_min: job.salaryMin || null,
+        salary_max: job.salaryMax || null,
+        benefits: job.benefits || null,
+        market_id: job.marketId,
+        retailer_id: retailerId,
+        role_id: job.roleId,
+        scraped_at: new Date().toISOString(),
+      };
+    });
+
+    const { error } = await supabase
+      .from('job_postings')
+      .insert(jobsToInsert);
+
+    if (error) {
+      console.error('Error inserting job batch:', error);
+      errors += batch.length;
+    } else {
+      saved += batch.length;
+    }
+  }
+
+  console.log(`Saved ${saved} jobs to Supabase, ${errors} errors`);
+  return { saved, errors };
 }

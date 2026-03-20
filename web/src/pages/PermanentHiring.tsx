@@ -2,18 +2,27 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Briefcase, Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Play, Check, Info, Loader2 } from 'lucide-react';
 import { ChatInterface } from '../components/Chat';
 import { WorkerGrid } from '../components/Workers';
-import { MockGeminiService } from '../services/gemini';
+import { ScrapeModal, type ScrapeConfig } from '../components/ScrapeModal';
+import { ScrapeProgressModal, type ScrapeProgressData } from '../components/ScrapeProgressModal';
+import { UnmatchedRolesModal } from '../components/UnmatchedRolesModal';
+import { GeminiService, MockGeminiService } from '../services/gemini';
 import { matchWorkers } from '../services/matching';
 import {
   fetchMarkets,
   fetchRoles,
   fetchRetailers,
+  fetchJobPostings,
   syncMarkets,
   syncRoles,
   syncRetailers,
+  saveScrapedJobs,
+  addRole,
+  addKeywordToRole,
   type Market,
   type Role,
   type Retailer,
+  type ScrapedJob,
+  type JobPosting,
 } from '../services/supabase';
 import { SAMPLE_WORKERS } from '../data/workers';
 import { SAMPLE_RETAILER } from '../data/retailer';
@@ -29,16 +38,12 @@ const ALL_ROLES = [
   'Stock Associate / Stocker',
   'Fitting Room Attendant',
   'Visual Merchandiser',
-  'Inventory Specialist',
   'Beauty Advisor / Cosmetics Associate',
   'Key Holder / Lead Associate',
   'Department Supervisor',
   'Assistant Store Manager',
   'Store Manager',
   'District / Area Manager',
-  'Holiday Seasonal Associate',
-  'Weekend Associate',
-  'Early Morning Stocker',
 ];
 
 // Job roles by category with descriptions
@@ -51,7 +56,6 @@ const JOB_ROLES = {
   ],
   specialized: [
     { title: 'Visual Merchandiser', description: 'Displays, store layout, product presentation' },
-    { title: 'Inventory Specialist', description: 'Stock counts, inventory management systems' },
     { title: 'Beauty Advisor / Cosmetics Associate', description: 'Product expertise, demos (Sephora, Ulta, department stores)' },
   ],
   management: [
@@ -60,11 +64,6 @@ const JOB_ROLES = {
     { title: 'Assistant Store Manager', description: 'Operations support, staff scheduling' },
     { title: 'Store Manager', description: 'Full P&L responsibility, hiring, performance' },
     { title: 'District / Area Manager', description: 'Multi-store oversight' },
-  ],
-  seasonal: [
-    { title: 'Holiday Seasonal Associate', description: 'Temp positions for peak seasons' },
-    { title: 'Weekend Associate', description: 'Dedicated weekend availability' },
-    { title: 'Early Morning Stocker', description: 'Pre-open inventory work' },
   ],
 };
 
@@ -427,42 +426,6 @@ const RETAILERS: { name: string; classification: 'Luxury' | 'Mid' | 'Big Box' }[
   { name: 'Zales', classification: 'Big Box' },
 ];
 
-// State abbreviation to full name mapping
-const STATE_NAMES: Record<string, string> = {
-  'AZ': 'Arizona',
-  'CA': 'California',
-  'CO': 'Colorado',
-  'CT': 'Connecticut',
-  'DC': 'Washington DC',
-  'DE': 'Delaware',
-  'FL': 'Florida',
-  'GA': 'Georgia',
-  'IL': 'Illinois',
-  'IN': 'Indiana',
-  'LA': 'Louisiana',
-  'MA': 'Massachusetts',
-  'MI': 'Michigan',
-  'MN': 'Minnesota',
-  'MO': 'Missouri',
-  'MS': 'Mississippi',
-  'NC': 'North Carolina',
-  'NE': 'Nebraska',
-  'NH': 'New Hampshire',
-  'NJ': 'New Jersey',
-  'NV': 'Nevada',
-  'NY': 'New York',
-  'OH': 'Ohio',
-  'OK': 'Oklahoma',
-  'OR': 'Oregon',
-  'PA': 'Pennsylvania',
-  'SC': 'South Carolina',
-  'TN': 'Tennessee',
-  'TX': 'Texas',
-  'UT': 'Utah',
-  'WA': 'Washington',
-  'WI': 'Wisconsin',
-};
-
 // All available markets - sorted by state then city
 const MARKETS = [
   // AZ
@@ -612,6 +575,7 @@ function FilterDropdown({ label, options, selected, onSelect, searchValue, onSea
     } else {
       onSelect([...selected, value]);
     }
+    setIsOpen(false);
   };
 
   const handleShowAll = () => {
@@ -697,6 +661,7 @@ export function PermanentHiring() {
   const [activeTab, setActiveTab] = useState<TabId>('ask-reflex');
   const [chatStarted, setChatStarted] = useState(false);
   const [showJobSitesInfo, setShowJobSitesInfo] = useState(false);
+  const [showScrapeModal, setShowScrapeModal] = useState(false);
 
   // Oz tab state - data from Supabase
   const jobSitesInfoRef = useRef<HTMLDivElement>(null);
@@ -950,12 +915,12 @@ export function PermanentHiring() {
   const [matchedWorkers, setMatchedWorkers] = useState<MatchedWorker[]>([]);
   const [jobSpec, setJobSpec] = useState<JobSpec | null>(null);
   const [geminiService] = useState(() => {
-    // TODO: Re-enable GeminiService once quota resets or billing is enabled
-    // const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    // if (apiKey) {
-    //   return new GeminiService(apiKey);
-    // }
-    console.log('Using mock service (Gemini quota exceeded)');
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (apiKey) {
+      console.log('Using real Gemini service');
+      return new GeminiService(apiKey);
+    }
+    console.log('No API key found, using mock service');
     return new MockGeminiService();
   });
 
@@ -1029,6 +994,198 @@ export function PermanentHiring() {
     }
 
     setIsLoading(false);
+  };
+
+  // Scrape state (will be used for UI feedback)
+  const [isScraping, setIsScraping] = useState(false);
+  const [jobPostings, setJobPostings] = useState<JobPosting[]>([]);
+  const [unmatchedRoles, setUnmatchedRoles] = useState<{ title: string; company: string; count: number }[]>([]);
+  const [showUnmatchedModal, setShowUnmatchedModal] = useState(false);
+
+  // Load job postings from Supabase
+  const loadJobPostings = async () => {
+    try {
+      const jobs = await fetchJobPostings();
+      setJobPostings(jobs);
+    } catch (err) {
+      console.error('Error loading job postings:', err);
+    }
+  };
+
+  // Load job postings on mount
+  useEffect(() => {
+    loadJobPostings();
+  }, []);
+  const [scrapeProgress, setScrapeProgress] = useState<ScrapeProgressData | null>(null);
+  const [showScrapeProgressModal, setShowScrapeProgressModal] = useState(false);
+  const scrapeTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const scrapeProgressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const scrapeAbortRef = useRef<AbortController | null>(null);
+  const scrapeStartTimeRef = useRef<number>(0);
+
+  // Cancel scrape handler
+  const handleCancelScrape = () => {
+    if (scrapeAbortRef.current) {
+      scrapeAbortRef.current.abort();
+    }
+    if (scrapeTimerRef.current) {
+      clearInterval(scrapeTimerRef.current);
+    }
+    if (scrapeProgressIntervalRef.current) {
+      clearInterval(scrapeProgressIntervalRef.current);
+    }
+    setIsScraping(false);
+    setScrapeProgress(null);
+    setShowScrapeProgressModal(false);
+  };
+
+  // Handle scrape configuration
+  const handleRunScrape = async (config: ScrapeConfig) => {
+    console.log('Running scrape with config:', config);
+
+    // Get the actual market/role/retailer objects for the selected IDs
+    const selectedMarketObjects = ozMarkets.filter(m => m.id && config.markets.includes(m.id));
+    const selectedRoleObjects = ozRoles.filter(r => r.id && config.roles.includes(r.id));
+    const selectedRetailerObjects = ozRetailers.filter(r => r.id && config.retailers.includes(r.id));
+
+    // Also include retailers matching selected classifications
+    const classificationRetailers = ozRetailers.filter(r =>
+      config.retailerClassifications.includes(r.classification)
+    );
+
+    // Combine and dedupe retailers
+    const allSelectedRetailers = [
+      ...selectedRetailerObjects,
+      ...classificationRetailers.filter(r => !selectedRetailerObjects.some(sr => sr.id === r.id))
+    ];
+
+    // If no retailers selected, include all
+    const retailersToFilter = allSelectedRetailers.length > 0 ? allSelectedRetailers : ozRetailers;
+
+    console.log('Markets to scrape:', selectedMarketObjects.map(m => `${m.name}, ${m.state}`));
+    console.log('Roles to search:', selectedRoleObjects.map(r => r.title));
+    console.log('Retailers to filter:', retailersToFilter.map(r => r.name));
+
+    setIsScraping(true);
+    setShowScrapeModal(false);
+    setShowScrapeProgressModal(true);
+
+    // Initialize progress tracking
+    const totalMarkets = selectedMarketObjects.length;
+    const totalRoles = selectedRoleObjects.length;
+    const firstMarket = selectedMarketObjects[0];
+    const firstRole = selectedRoleObjects[0];
+
+    scrapeStartTimeRef.current = Date.now();
+
+    // Set initial progress
+    setScrapeProgress({
+      phase: 'initializing',
+      currentMarket: firstMarket ? `${firstMarket.name}, ${firstMarket.state}` : '',
+      currentRole: firstRole?.title || '',
+      currentPage: 0,
+      totalPages: 0,
+      marketsCompleted: 0,
+      totalMarkets,
+      rolesCompleted: 0,
+      totalRoles,
+      jobsFound: 0,
+      jobsMatched: 0,
+      elapsedSeconds: 0,
+    });
+
+    // Start timer that updates elapsed time
+    scrapeTimerRef.current = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - scrapeStartTimeRef.current) / 1000);
+      setScrapeProgress(prev => prev ? { ...prev, elapsedSeconds: elapsed } : prev);
+    }, 1000);
+
+    // Simulate phase progression while waiting for API response
+    // Phase 1: Initializing (immediate)
+    // Phase 2: Launching browser (after 1s)
+    setTimeout(() => {
+      setScrapeProgress(prev => prev ? { ...prev, phase: 'launching' } : prev);
+    }, 1000);
+
+    // Phase 3: Navigating (after 3s)
+    setTimeout(() => {
+      setScrapeProgress(prev => prev ? { ...prev, phase: 'navigating', currentPage: 1, totalPages: 5 } : prev);
+    }, 3000);
+
+    // Phase 4: Scraping (after 5s)
+    setTimeout(() => {
+      setScrapeProgress(prev => prev ? { ...prev, phase: 'scraping' } : prev);
+    }, 5000);
+
+    // No simulated counters - just show elapsed time and phase
+    // Real job counts will come from the API response
+
+    // Create abort controller
+    scrapeAbortRef.current = new AbortController();
+
+    try {
+      const response = await fetch('http://localhost:3001/api/scrape', {
+        signal: scrapeAbortRef.current.signal,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobSite: config.jobSite,
+          markets: selectedMarketObjects.map(m => ({ id: m.id, name: m.name, state: m.state })),
+          roles: selectedRoleObjects.map(r => ({ id: r.id, title: r.title })),
+          retailers: retailersToFilter.map(r => ({ name: r.name, classification: r.classification })),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        console.log(`Scrape complete: ${data.jobCount} jobs found`);
+
+        // Save jobs to Supabase
+        if (data.jobs && data.jobs.length > 0) {
+          console.log('Saving jobs to Supabase...');
+          try {
+            // Get all retailers with valid IDs for mapping
+            const retailersWithIds = ozRetailers.filter((r): r is Retailer => !!r.id);
+            const saveResult = await saveScrapedJobs(data.jobs as ScrapedJob[], retailersWithIds);
+            console.log(`Saved ${saveResult.saved} jobs to database`);
+
+            // Reload jobs from Supabase to show the latest
+            await loadJobPostings();
+          } catch (saveErr) {
+            console.error('Error saving jobs to Supabase:', saveErr);
+          }
+        }
+
+        // Check for unmatched roles
+        if (data.unmatchedRoles && data.unmatchedRoles.length > 0) {
+          console.log(`Found ${data.unmatchedRoles.length} unmatched role titles`);
+          setUnmatchedRoles(data.unmatchedRoles);
+          setShowUnmatchedModal(true);
+        } else {
+          alert(`Scrape complete!\n\nFound ${data.jobCount} jobs from tracked retailers.`);
+        }
+      } else {
+        console.error('Scrape failed:', data.error);
+        alert(`Scrape failed: ${data.error}`);
+      }
+    } catch (err: any) {
+      console.error('Scrape error:', err);
+      alert(`Scrape error: ${err.message}`);
+    } finally {
+      // Clean up timers
+      if (scrapeTimerRef.current) {
+        clearInterval(scrapeTimerRef.current);
+        scrapeTimerRef.current = null;
+      }
+      if (scrapeProgressIntervalRef.current) {
+        clearInterval(scrapeProgressIntervalRef.current);
+        scrapeProgressIntervalRef.current = null;
+      }
+      setIsScraping(false);
+      setShowScrapeProgressModal(false);
+      setScrapeProgress(null);
+    }
   };
 
   return (
@@ -1445,17 +1602,6 @@ export function PermanentHiring() {
                       ))}
                     </div>
                   </div>
-                  <div className="oz-job-roles-category">
-                    <h4 className="oz-category-title">Seasonal / Part-Time</h4>
-                    <div className="oz-job-roles-list">
-                      {JOB_ROLES.seasonal.map((role, idx) => (
-                        <div key={idx} className="oz-job-role-item">
-                          <span className="oz-job-role-title">{role.title}</span>
-                          <span className="oz-job-role-desc">{role.description}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               </div>
           </section>
@@ -1718,6 +1864,22 @@ export function PermanentHiring() {
                 </div>
               </div>
               <div className="oz-section-actions">
+                {!isScraping ? (
+                  <button
+                    className="oz-run-scrape-btn"
+                    onClick={() => setShowScrapeModal(true)}
+                  >
+                    Run Scrape
+                  </button>
+                ) : (
+                  <button
+                    className="oz-run-scrape-btn oz-run-scrape-btn--in-progress"
+                    onClick={() => setShowScrapeProgressModal(true)}
+                  >
+                    <Loader2 size={14} className="oz-spinner" />
+                    Scraping...
+                  </button>
+                )}
               </div>
             </div>
             <div className="oz-filters-row">
@@ -1813,15 +1975,112 @@ export function PermanentHiring() {
                 </button>
               </div>
             )}
-            <div className="oz-job-postings-placeholder">
-              <p>Job postings will appear here once connected to Supabase</p>
-            </div>
+            {jobPostings.length === 0 ? (
+              <div className="oz-job-postings-placeholder">
+                <p>Job postings will appear here once you run a scrape</p>
+              </div>
+            ) : (
+              <div className="oz-jobs-table-container">
+                <table className="oz-jobs-table">
+                  <thead>
+                    <tr>
+                      <th>Source</th>
+                      <th>Market</th>
+                      <th>Retailer</th>
+                      <th>Location</th>
+                      <th>Role</th>
+                      <th>Salary</th>
+                      <th>Benefits</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {jobPostings.map(job => (
+                      <tr key={job.id}>
+                        <td className="oz-job-source">{job.source || '—'}</td>
+                        <td>{job.market_name || '—'}</td>
+                        <td>{job.company || '—'}</td>
+                        <td>{job.location || '—'}</td>
+                        <td>{job.title}</td>
+                        <td>
+                          {job.salary_min && job.salary_max
+                            ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`
+                            : job.salary_min
+                            ? `$${job.salary_min.toLocaleString()}+`
+                            : '—'}
+                        </td>
+                        <td>{job.benefits || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </section>
 
           </>
           )}
         </div>
       )}
+
+      {/* Scrape Config Modal */}
+      <ScrapeModal
+        isOpen={showScrapeModal}
+        onClose={() => setShowScrapeModal(false)}
+        markets={ozMarkets.filter((m): m is Market => !!m.id) as Market[]}
+        roles={ozRoles.filter((r): r is Role => !!r.id) as Role[]}
+        retailers={ozRetailers.filter((r): r is Retailer => !!r.id) as Retailer[]}
+        onRunScrape={handleRunScrape}
+      />
+
+      {/* Scrape Progress Modal */}
+      <ScrapeProgressModal
+        isOpen={showScrapeProgressModal}
+        onClose={() => setShowScrapeProgressModal(false)}
+        onCancel={handleCancelScrape}
+        progress={scrapeProgress}
+      />
+
+      <UnmatchedRolesModal
+        isOpen={showUnmatchedModal}
+        onClose={() => {
+          setShowUnmatchedModal(false);
+          setUnmatchedRoles([]);
+        }}
+        unmatchedRoles={unmatchedRoles}
+        existingRoles={ozRoles.filter((r): r is { id: string; title: string; category: string } =>
+          !!r.id && !!r.category
+        )}
+        onAddRoles={async (newRoles) => {
+          // Add new roles to Supabase and state
+          console.log('Adding new roles:', newRoles);
+          for (const role of newRoles) {
+            try {
+              const savedRole = await addRole(role.title, role.category);
+              setOzRoles(prev => [...prev, savedRole]);
+            } catch (err) {
+              console.error('Failed to add role:', role.title, err);
+            }
+          }
+        }}
+        onMapRoles={async (mappings) => {
+          // Add keywords to existing roles for future matching
+          console.log('Mapping roles:', mappings);
+          for (const mapping of mappings) {
+            try {
+              await addKeywordToRole(mapping.existingRoleId, mapping.unmatchedTitle);
+              // Refresh roles to get updated keywords
+              const updatedRoles = await fetchRoles();
+              setOzRoles(updatedRoles);
+            } catch (err) {
+              console.error('Failed to add keyword:', mapping.unmatchedTitle, err);
+            }
+          }
+        }}
+        onIgnoreRoles={(titles) => {
+          // Just log ignored roles for now
+          console.log('Ignored roles:', titles);
+        }}
+      />
     </div>
   );
 }

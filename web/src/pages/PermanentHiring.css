@@ -213,7 +213,7 @@
 }
 
 .section-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--app-primary);
   margin: 0;
@@ -1094,7 +1094,7 @@
   top: 0;
   left: calc(100% + 8px);
   margin-top: 0;
-  width: 300px;
+  width: 360px;
   height: 280px;
   max-height: 400px;
   overflow: hidden;
@@ -1415,6 +1415,61 @@
   font-size: 14px;
 }
 
+/* Jobs Table */
+.oz-jobs-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--black-alpha-100);
+  border-radius: var(--radius-md);
+  background: var(--main-white);
+}
+
+.oz-jobs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.oz-jobs-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--gray-50);
+  z-index: 1;
+}
+
+.oz-jobs-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--app-primary);
+  border-bottom: 1px solid var(--black-alpha-100);
+  white-space: nowrap;
+}
+
+.oz-jobs-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--black-alpha-50);
+  color: var(--app-secondary);
+}
+
+.oz-jobs-table tbody tr:hover {
+  background: var(--blue-50);
+}
+
+.oz-jobs-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.oz-jobs-table th:first-child,
+.oz-jobs-table td:first-child {
+  padding-left: 16px;
+}
+
+.oz-jobs-table th:last-child,
+.oz-jobs-table td:last-child {
+  padding-right: 16px;
+}
+
 @media (max-width: 900px) {
   .oz-filters-row {
     flex-direction: column;
@@ -1493,7 +1548,7 @@
 /* Job Roles grid in Oz tab */
 .oz-job-roles-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-top: 20px;
   padding-top: 20px;
@@ -1597,5 +1652,81 @@
   padding: 8px 12px;
   background: var(--red-50);
   border-radius: var(--radius-md);
+}
+
+/* Run Scrape button */
+.oz-run-scrape-btn {
+  padding: 8px 16px;
+  background: var(--app-primary);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.oz-run-scrape-btn:hover {
+  background: var(--app-primary-dark, #1a1a2e);
+}
+
+.oz-run-scrape-btn--in-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gray-500);
+  cursor: not-allowed;
+}
+
+.oz-run-scrape-btn--in-progress:hover {
+  background: var(--gray-500);
+}
+
+.oz-cancel-scrape-btn {
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid var(--red-400);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--red-600);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.oz-cancel-scrape-btn:hover {
+  background: var(--red-50);
+  border-color: var(--red-500);
+}
+
+.oz-scrape-status {
+  font-size: 14px;
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.oz-scrape-timer {
+  color: var(--gray-400);
+  font-family: monospace;
+}
+
+.oz-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.oz-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 

@@ -193,3 +193,37 @@ GEMINI_API_KEY=your_key_here
 - `npm start` - Run Express server with ts-node ([http://localhost:3000](http://localhost:3000))
 - `npm run build` - Compile TypeScript to JavaScript
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

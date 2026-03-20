@@ -1,0 +1,246 @@
+.unmatched-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.unmatched-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.unmatched-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--black-alpha-100);
+  position: relative;
+}
+
+.unmatched-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.unmatched-modal-subtitle {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: var(--gray-600);
+}
+
+.unmatched-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-500);
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.unmatched-modal-close:hover {
+  background: var(--black-alpha-50);
+}
+
+.unmatched-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.unmatched-list-header {
+  display: grid;
+  grid-template-columns: 1fr 60px 140px 1px 180px 80px;
+  gap: 12px;
+  padding: 12px 24px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--black-alpha-100);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+}
+
+.unmatched-col-divider {
+  background: var(--black-alpha-200);
+}
+
+.unmatched-list {
+  padding: 0;
+}
+
+.unmatched-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 140px 1px 180px 80px;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--black-alpha-50);
+  align-items: center;
+}
+
+.unmatched-row--ignored {
+  opacity: 0.5;
+  background: var(--gray-50);
+}
+
+.unmatched-row:last-child {
+  border-bottom: none;
+}
+
+.unmatched-row:hover {
+  background: var(--gray-50);
+}
+
+.unmatched-col-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.unmatched-role-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-900);
+  text-transform: capitalize;
+}
+
+.unmatched-role-meta {
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+.unmatched-col-add {
+  display: flex;
+  justify-content: center;
+}
+
+.unmatched-col-add input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--app-primary);
+}
+
+.unmatched-col-category select,
+.unmatched-col-map select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--black-alpha-200);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.unmatched-col-category select:focus,
+.unmatched-col-map select:focus {
+  outline: none;
+  border-color: var(--app-primary);
+}
+
+.unmatched-col-category select.disabled,
+.unmatched-col-map select.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: var(--gray-100);
+}
+
+.unmatched-col-divider {
+  width: 1px;
+  height: 100%;
+  background: var(--black-alpha-200);
+}
+
+.unmatched-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--black-alpha-100);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.unmatched-skip-btn {
+  padding: 10px 20px;
+  border: 1px solid var(--black-alpha-200);
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.unmatched-skip-btn:hover {
+  background: var(--gray-50);
+  border-color: var(--black-alpha-300);
+}
+
+.unmatched-confirm-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--app-primary);
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.unmatched-confirm-btn:hover {
+  background: #2563eb;
+}
+
+.unmatched-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.unmatched-col-ignore {
+  display: flex;
+  justify-content: center;
+}
+
+.unmatched-ignore-btn {
+  padding: 6px 12px;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  background: white;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.unmatched-ignore-btn:hover {
+  background: #fef2f2;
+}
+
+.unmatched-ignore-btn--active {
+  background: #ef4444;
+  color: white;
+}
+
+.unmatched-ignore-btn--active:hover {
+  background: #dc2626;
+}

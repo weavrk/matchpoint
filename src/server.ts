@@ -1,14 +1,17 @@
 import express from 'express';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
+import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { loadWorkers, loadRetailer } from './data';
 import { matchWorkers } from './matching';
 import { JobSpec } from './types';
+import { scrapeGlassdoor, filterJobsByRetailers, filterJobsByLocation } from './scrapers/glassdoor';
 
 dotenv.config();
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -154,12 +157,132 @@ app.post('/api/match', (req, res) => {
   }
 });
 
+// Fuzzy match a job title to our roles
+function matchJobToRole(jobTitle: string, roles: { id: string; title: string }[]): { roleId: string; roleTitle: string } | null {
+  const normalizedTitle = jobTitle.toLowerCase().trim();
+
+  for (const role of roles) {
+    const roleWords = role.title.toLowerCase().split(/[\s\/]+/);
+    // Check if any significant word from the role appears in the job title
+    const matches = roleWords.filter(word =>
+      word.length > 3 && normalizedTitle.includes(word)
+    );
+    // If at least one significant word matches, consider it a match
+    if (matches.length > 0) {
+      return { roleId: role.id, roleTitle: role.title };
+    }
+  }
+  return null;
+}
+
+// POST /api/scrape - Run job scraper with filters
+app.post('/api/scrape', async (req, res) => {
+  try {
+    const {
+      jobSite,
+      markets,
+      roles,
+      retailers,
+    } = req.body as {
+      jobSite: string;
+      markets: { id: string; name: string; state: string }[];
+      roles: { id: string; title: string }[];
+      retailers: { name: string; classification: string }[];
+    };
+
+    console.log(`Starting scrape for ${markets.length} markets`);
+    console.log(`Will filter by ${retailers.length} retailers`);
+    console.log(`Will match against ${roles.length} roles`);
+
+    // Track all scraped jobs
+    const matchedJobs: any[] = [];
+    const unmatchedRoles: { title: string; company: string; count: number }[] = [];
+    const unmatchedRolesMap = new Map<string, { company: string; count: number }>();
+
+    // Scrape each market with generic "Retail" search
+    for (const market of markets) {
+      const location = `${market.name.toLowerCase().replace(/\s+/g, '-')}-${market.state.toLowerCase()}`;
+      const keyword = 'Retail';
+
+      console.log(`Scraping: ${keyword} jobs in ${market.name}, ${market.state}`);
+
+      try {
+        const jobs = await scrapeGlassdoor({
+          location,
+          keyword,
+          maxPages: 5, // More pages since we're doing one search per market
+          headless: true,
+        });
+
+        console.log(`Found ${jobs.length} total jobs in ${market.name}`);
+
+        // Filter to only jobs in the target location
+        const locationFilteredJobs = filterJobsByLocation(jobs, market.name, market.state);
+        console.log(`${locationFilteredJobs.length} jobs actually in ${market.name}, ${market.state}`);
+
+        // Filter to only jobs from our retailers
+        const filteredJobs = filterJobsByRetailers(locationFilteredJobs, retailers);
+
+        console.log(`${filteredJobs.length} jobs from tracked retailers`);
+
+        // Match each job to a role
+        for (const job of filteredJobs) {
+          const roleMatch = matchJobToRole(job.title, roles);
+
+          if (roleMatch) {
+            matchedJobs.push({
+              ...job,
+              market: `${market.name}, ${market.state}`,
+              marketId: market.id,
+              role: roleMatch.roleTitle,
+              roleId: roleMatch.roleId,
+            });
+          } else {
+            // Track unmatched role
+            const key = job.title.toLowerCase().trim();
+            if (unmatchedRolesMap.has(key)) {
+              unmatchedRolesMap.get(key)!.count++;
+            } else {
+              unmatchedRolesMap.set(key, { company: job.company, count: 1 });
+            }
+          }
+        }
+
+      } catch (err) {
+        console.error(`Error scraping ${market.name}, ${market.state}:`, err);
+      }
+    }
+
+    // Convert unmatched roles map to array
+    for (const [title, data] of unmatchedRolesMap) {
+      unmatchedRoles.push({ title, company: data.company, count: data.count });
+    }
+
+    // Sort unmatched by count (most common first)
+    unmatchedRoles.sort((a, b) => b.count - a.count);
+
+    console.log(`Total matched jobs: ${matchedJobs.length}`);
+    console.log(`Unmatched role titles: ${unmatchedRoles.length}`);
+
+    res.json({
+      success: true,
+      jobCount: matchedJobs.length,
+      jobs: matchedJobs,
+      unmatchedRoles: unmatchedRoles.slice(0, 50), // Top 50 unmatched
+    });
+
+  } catch (err: any) {
+    console.error('Scrape error:', err);
+    res.status(500).json({ error: err.message || 'Scrape failed' });
+  }
+});
+
 // Fallback: serve index.html for any non-API route
 app.get('/{*splat}', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-const PORT = 3000;
+const PORT = 3001;
 app.listen(PORT, () => {
-  console.log(`\nMatchpoint running at http://localhost:${PORT}\n`);
+  console.log(`\nMatchpoint API running at http://localhost:${PORT}\n`);
 });
