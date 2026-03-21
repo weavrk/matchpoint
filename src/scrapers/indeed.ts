@@ -70,32 +70,55 @@ function buildSearchUrl(options: ScrapeOptions, start: number = 0, passNum: numb
 }
 
 // Fetch page HTML using ScraperAPI with session rotation for varied results
-async function fetchWithScraperAPI(url: string, passNum: number = 1): Promise<string> {
+async function fetchWithScraperAPI(url: string, passNum: number = 1, sessionId?: string): Promise<string> {
   if (!SCRAPERAPI_KEY) {
     throw new Error('SCRAPERAPI_KEY not set in .env');
   }
 
   // Use premium=true for residential proxies which helps with Indeed
-  // Add session_number to rotate IP/session between passes for different results
-  // Generate a unique session number based on pass + timestamp to ensure fresh results
-  const sessionNumber = `pass${passNum}_${Date.now()}`;
+  // Use consistent session ID for all pages in a scrape (keeps same proxy/IP)
+  // Only rotate session between different passes
+  const sessionNumber = sessionId || `pass${passNum}_${Date.now()}`;
   const apiUrl = `http://api.scraperapi.com?api_key=${SCRAPERAPI_KEY}&url=${encodeURIComponent(url)}&country_code=us&premium=true&session_number=${sessionNumber}`;
 
   console.log(`Fetching via ScraperAPI (pass ${passNum}): ${url}`);
 
-  const response = await fetch(apiUrl, {
-    method: 'GET',
-    headers: {
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Cache-Control': 'no-cache',
-    },
-  });
+  // Retry logic for transient errors (500, 502, 503)
+  const maxRetries = 3;
+  let lastError: Error | null = null;
 
-  if (!response.ok) {
-    throw new Error(`ScraperAPI request failed: ${response.status} ${response.statusText}`);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Cache-Control': 'no-cache',
+        },
+      });
+
+      if (response.ok) {
+        return response.text();
+      }
+
+      // Retry on server errors
+      if (response.status >= 500 && attempt < maxRetries) {
+        console.log(`  ScraperAPI returned ${response.status}, retrying (attempt ${attempt + 1}/${maxRetries})...`);
+        await delay(3000 * attempt); // Exponential backoff: 3s, 6s, 9s
+        continue;
+      }
+
+      throw new Error(`ScraperAPI request failed: ${response.status} ${response.statusText}`);
+    } catch (e) {
+      lastError = e as Error;
+      if (attempt < maxRetries) {
+        console.log(`  Request failed, retrying (attempt ${attempt + 1}/${maxRetries})...`);
+        await delay(3000 * attempt);
+      }
+    }
   }
 
-  return response.text();
+  throw lastError || new Error('ScraperAPI request failed after retries');
 }
 
 // Clean job title - remove location suffixes
@@ -338,6 +361,9 @@ async function scrapeKeyword(options: ScrapeOptions): Promise<ScrapedJob[]> {
   const { maxPages = 3, passNum = 1 } = options;
   const allJobs: ScrapedJob[] = [];
 
+  // Use consistent session ID for all pages in this scrape (keeps same proxy)
+  const sessionId = `pass${passNum}_${Date.now()}`;
+
   // Indeed uses start=0, 10, 20, etc. for pagination (10 jobs per page)
   for (let pageNum = 0; pageNum < maxPages; pageNum++) {
     const start = pageNum * 10;
@@ -345,7 +371,7 @@ async function scrapeKeyword(options: ScrapeOptions): Promise<ScrapedJob[]> {
     console.log(`  Scraping page ${pageNum + 1} (pass ${passNum}): ${url}`);
 
     try {
-      const html = await fetchWithScraperAPI(url, passNum);
+      const html = await fetchWithScraperAPI(url, passNum, sessionId);
 
       // Save debug HTML
       const fs = await import('fs');
@@ -361,9 +387,9 @@ async function scrapeKeyword(options: ScrapeOptions): Promise<ScrapedJob[]> {
         break;
       }
 
-      // Rate limit between pages
+      // Rate limit between pages - give ScraperAPI time to avoid 500s
       if (pageNum < maxPages - 1) {
-        await delay(2000);
+        await delay(4000);
       }
 
     } catch (e) {
