@@ -285,7 +285,7 @@ function matchJobToRole(jobTitle: string, roles: { id: string; title: string; ma
 
 // POST /api/scrape - Run job scraper with filters
 // SSE scrape endpoint - streams progress updates
-// For Indeed: runs 5 passes to capture more results (Indeed returns different results each time)
+// For Indeed: runs 5 passes PER MARKET to capture varied results, then saves after each market
 app.post('/api/scrape', async (req, res) => {
   // Set up SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
@@ -314,7 +314,7 @@ app.post('/api/scrape', async (req, res) => {
     console.log(`Will filter by ${retailers.length} retailers`);
     console.log(`Will match against ${roles.length} roles`);
 
-    // Track all scraped jobs across all passes (deduped by source_url)
+    // Track all scraped jobs across all markets (deduped by source_url)
     const allMatchedJobsMap = new Map<string, any>(); // key = source_url
     const unmatchedRolesMap = new Map<string, { company: string; count: number; jobs: any[] }>();
 
@@ -322,7 +322,7 @@ app.post('/api/scrape', async (req, res) => {
     const matchedRetailers = new Set<string>();
     let totalJobsFound = 0;
 
-    // Number of passes for Indeed (to capture more varied results)
+    // Number of passes per market for Indeed (to capture varied results)
     const INDEED_PASSES = 5;
 
     // Loop through each selected job site
@@ -332,73 +332,59 @@ app.post('/api/scrape', async (req, res) => {
       const filterByRetailers = jobSiteLower === 'indeed' ? filterIndeedByRetailers : filterGlassdoorByRetailers;
       const filterByLocation = jobSiteLower === 'indeed' ? filterIndeedByLocation : filterGlassdoorByLocation;
 
-      // Determine number of passes (5 for Indeed, 1 for others)
-      const numPasses = jobSiteLower === 'indeed' ? INDEED_PASSES : 1;
+      // Number of passes per market (5 for Indeed, 1 for others)
+      const passesPerMarket = jobSiteLower === 'indeed' ? INDEED_PASSES : 1;
 
-      for (let pass = 1; pass <= numPasses; pass++) {
-        // Track jobs found in this pass
-        const passMatchedJobs: any[] = [];
-        let passJobsFound = 0;
+      // Loop through each market ONCE
+      for (let marketIndex = 0; marketIndex < markets.length; marketIndex++) {
+        const market = markets[marketIndex];
+        const location = `${market.name.toLowerCase().replace(/\s+/g, '-')}-${market.state.toLowerCase()}`;
+        const keyword = 'Retail';
 
-        // Send pass_start event
-        sendProgress({
-          type: 'pass_start',
-          pass,
-          totalPasses: numPasses,
-          jobSite: jobSiteLower,
-          jobsFound: totalJobsFound,
-          totalMatchedJobs: allMatchedJobsMap.size,
-        });
+        // Track jobs found for THIS market (across all passes)
+        const marketMatchedJobsMap = new Map<string, any>();
+        let marketJobsFound = 0;
 
-        console.log(`\n=== Pass ${pass}/${numPasses} for ${jobSiteLower} ===`);
+        console.log(`\n=== Market ${marketIndex + 1}/${markets.length}: ${market.name}, ${market.state} ===`);
 
-        // Scrape each market with generic "Retail" search
-        for (let marketIndex = 0; marketIndex < markets.length; marketIndex++) {
-          const market = markets[marketIndex];
-          const location = `${market.name.toLowerCase().replace(/\s+/g, '-')}-${market.state.toLowerCase()}`;
-          const keyword = 'Retail';
+        // Run multiple passes for this market
+        for (let pass = 1; pass <= passesPerMarket; pass++) {
+          console.log(`  Pass ${pass}/${passesPerMarket}`);
 
-          console.log(`Scraping ${jobSiteLower}: ${keyword} jobs in ${market.name}, ${market.state}`);
+          // Send progress update
+          sendProgress({
+            type: 'progress',
+            pass,
+            totalPasses: passesPerMarket,
+            jobsFound: totalJobsFound,
+            matchedRetailers: matchedRetailers.size,
+            matchedJobs: allMatchedJobsMap.size,
+            currentMarket: `${market.name}, ${market.state}`,
+            marketIndex,
+            totalMarkets: markets.length,
+          });
 
           try {
-            // Pass retailer names for Indeed to do targeted company searches
-            // Also pass passNum for varied results (different sort/filter each pass)
             const retailerNames = retailers.map(r => r.name);
             const jobs = await scraper({
               location,
               keyword,
-              maxPages: 1,  // Page 1 returns ~45 jobs; pages 2+ blocked by Indeed
+              maxPages: 1,  // Page 1 only
               retailers: retailerNames,
               passNum: pass,  // Pass number for varied results
             });
 
-            console.log(`Found ${jobs.length} total jobs in ${market.name}`);
+            console.log(`    Found ${jobs.length} total jobs`);
             totalJobsFound += jobs.length;
-            passJobsFound += jobs.length;
+            marketJobsFound += jobs.length;
 
             // Filter to only jobs in the target location
             const locationFilteredJobs = filterByLocation(jobs, market.name, market.state);
-            console.log(`${locationFilteredJobs.length} jobs actually in ${market.name}, ${market.state}`);
+            console.log(`    ${locationFilteredJobs.length} in ${market.name}, ${market.state}`);
 
             // Filter to only jobs from our retailers
             const filteredJobs = filterByRetailers(locationFilteredJobs, retailers);
-            console.log(`${filteredJobs.length} jobs from tracked retailers`);
-
-            // Send progress update after filtering with status message
-            const statusMessage = `Found ${jobs.length} jobs, ${locationFilteredJobs.length} in ${market.name}, ${filteredJobs.length} from tracked retailers`;
-            sendProgress({
-              type: 'progress',
-              pass,
-              totalPasses: numPasses,
-              jobsFound: totalJobsFound,
-              passJobsFound,
-              matchedRetailers: matchedRetailers.size,
-              matchedJobs: allMatchedJobsMap.size,
-              currentMarket: `${market.name}, ${market.state}`,
-              marketsCompleted: marketIndex,
-              totalMarkets: markets.length,
-              statusMessage,
-            });
+            console.log(`    ${filteredJobs.length} from tracked retailers`);
 
             // Match each job to a role
             for (const job of filteredJobs) {
@@ -411,8 +397,8 @@ app.post('/api/scrape', async (req, res) => {
               const dedupeKey = job.sourceUrl || `${job.company}-${job.title}-${job.location}`;
 
               if (roleMatch) {
-                // Only add if not already seen
-                if (!allMatchedJobsMap.has(dedupeKey)) {
+                // Only add if not already seen in this market
+                if (!marketMatchedJobsMap.has(dedupeKey)) {
                   const matchedJob = {
                     ...job,
                     market: `${market.name}, ${market.state}`,
@@ -421,8 +407,11 @@ app.post('/api/scrape', async (req, res) => {
                     roleId: roleMatch.roleId,
                     source: jobSiteLower,
                   };
-                  allMatchedJobsMap.set(dedupeKey, matchedJob);
-                  passMatchedJobs.push(matchedJob);
+                  marketMatchedJobsMap.set(dedupeKey, matchedJob);
+                  // Also add to global map
+                  if (!allMatchedJobsMap.has(dedupeKey)) {
+                    allMatchedJobsMap.set(dedupeKey, matchedJob);
+                  }
                 }
               } else {
                 // Track unmatched role with full job data
@@ -435,7 +424,6 @@ app.post('/api/scrape', async (req, res) => {
                 };
                 if (unmatchedRolesMap.has(key)) {
                   const entry = unmatchedRolesMap.get(key)!;
-                  // Only add job if not a duplicate
                   if (!entry.jobs.some(j => (j.sourceUrl || `${j.company}-${j.title}`) === dedupeKey)) {
                     entry.count++;
                     entry.jobs.push(unmatchedJob);
@@ -447,29 +435,37 @@ app.post('/api/scrape', async (req, res) => {
             }
 
           } catch (err) {
-            console.error(`Error scraping ${market.name}, ${market.state} on ${jobSiteLower}:`, err);
+            console.error(`    Error on pass ${pass}:`, err);
+          }
+
+          // Small delay between passes
+          if (pass < passesPerMarket) {
+            await new Promise(resolve => setTimeout(resolve, 500));
           }
         }
 
-        // Send pass_complete event with jobs found in this pass
-        const newJobsThisPass = passMatchedJobs.length;
-        console.log(`Pass ${pass} complete: ${newJobsThisPass} new jobs found (${allMatchedJobsMap.size} total unique)`);
+        // After all passes for this market, send market_complete with jobs to save
+        const marketJobs = Array.from(marketMatchedJobsMap.values());
+        console.log(`  Market complete: ${marketJobs.length} unique matched jobs`);
+
+        // Convert unmatched roles to array for this event (so frontend can track them on cancel)
+        const currentUnmatchedRoles: { title: string; company: string; count: number; jobs: any[] }[] = [];
+        for (const [title, data] of unmatchedRolesMap) {
+          currentUnmatchedRoles.push({ title, company: data.company, count: data.count, jobs: data.jobs });
+        }
+        currentUnmatchedRoles.sort((a, b) => b.count - a.count);
 
         sendProgress({
-          type: 'pass_complete',
-          pass,
-          totalPasses: numPasses,
-          jobSite: jobSiteLower,
-          newJobsThisPass,
+          type: 'market_complete',
+          market: `${market.name}, ${market.state}`,
+          marketIndex,
+          totalMarkets: markets.length,
           jobsFound: totalJobsFound,
-          totalMatchedJobs: allMatchedJobsMap.size,
-          passJobs: passMatchedJobs, // Jobs found in this pass for immediate DB save
+          matchedRetailers: matchedRetailers.size,
+          matchedJobs: allMatchedJobsMap.size,
+          marketJobs, // Jobs from this market to save to DB
+          unmatchedRoles: currentUnmatchedRoles.slice(0, 50), // Current unmatched roles
         });
-
-        // Small delay between passes to avoid rate limiting
-        if (pass < numPasses) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
       }
     }
 

@@ -206,7 +206,7 @@ export function UnmatchedRolesModal({
                       className={isAdding || isIgnored ? 'disabled' : ''}
                     >
                       <option value="">Select</option>
-                      {existingRoles.map(er => (
+                      {[...existingRoles].sort((a, b) => a.title.localeCompare(b.title)).map(er => (
                         <option key={er.id} value={er.id}>
                           {er.title}
                         </option>

@@ -466,6 +466,6 @@ export async function saveScrapedJobs(jobs: ScrapedJob[], retailers: Retailer[])
     }
   }
 
-  console.log(`Saved ${saved} jobs to Supabase, ${errors} errors, ${skipped} skipped (duplicates)`);
+  console.log(`Saved ${saved} NEW jobs to Supabase, ${errors} errors, ${skipped} skipped (duplicates)`);
   return { saved, errors, skipped };
 }

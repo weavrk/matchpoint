@@ -244,3 +244,5 @@ matchpoint/
 - `npm start` - Run Express server with ts-node ([http://localhost:3000](http://localhost:3000))
 - `npm run build` - Compile TypeScript to JavaScript
 
+## Chat Model and Interface
+

@@ -1127,7 +1127,7 @@ export function PermanentHiring() {
   const scrapeStartTimeRef = useRef<number>(0);
 
   // Cancel scrape handler
-  const handleCancelScrape = () => {
+  const handleCancelScrape = async () => {
     if (scrapeAbortRef.current) {
       scrapeAbortRef.current.abort();
     }
@@ -1140,6 +1140,14 @@ export function PermanentHiring() {
     setIsScraping(false);
     setScrapeProgress(null);
     setShowScrapeProgressModal(false);
+
+    // Reload job postings to show any jobs that were saved before cancel
+    await loadJobPostings();
+
+    // Show unmatched roles modal if there are any unmatched roles collected so far
+    if (unmatchedRoles.length > 0) {
+      setShowUnmatchedModal(true);
+    }
   };
 
   // Handle scrape configuration
@@ -1259,13 +1267,15 @@ export function PermanentHiring() {
 
                 if (eventData.type === 'progress') {
                   // Update progress in real-time
+                  // marketIndex is current market (0-based), display as "X of Y" where X = marketIndex + 1
                   setScrapeProgress(prev => prev ? {
                     ...prev,
                     currentMarket: eventData.currentMarket,
                     jobsFound: eventData.jobsFound,
                     matchedRetailers: eventData.matchedRetailers,
                     matchedJobs: eventData.matchedJobs,
-                    marketsCompleted: eventData.marketsCompleted,
+                    // Show current market number (1-based) - this is "working on market X"
+                    marketsCompleted: typeof eventData.marketIndex === 'number' ? eventData.marketIndex : prev.marketsCompleted,
                     totalMarkets: eventData.totalMarkets,
                     currentPass: eventData.pass,
                     totalPasses: eventData.totalPasses,
@@ -1311,24 +1321,34 @@ export function PermanentHiring() {
                   }
                 } else if (eventData.type === 'market_complete') {
                   // Save this market's jobs immediately to the database
-                  if (eventData.jobs && eventData.jobs.length > 0) {
+                  const marketJobs = eventData.marketJobs || eventData.jobs || [];
+                  let newJobsSaved = 0;
+                  if (marketJobs.length > 0) {
                     const retailersWithIds = ozRetailers.filter((r): r is Retailer => !!r.id);
                     try {
-                      const saveResult = await saveScrapedJobs(eventData.jobs as ScrapedJob[], retailersWithIds);
-                      console.log(`Saved ${saveResult.saved} jobs from ${eventData.market}`);
+                      const saveResult = await saveScrapedJobs(marketJobs as ScrapedJob[], retailersWithIds);
+                      newJobsSaved = saveResult.saved;
+                      console.log(`Saved ${saveResult.saved} NEW jobs from ${eventData.market} (${saveResult.skipped} duplicates skipped)`);
                     } catch (saveErr) {
                       console.error(`Error saving jobs from ${eventData.market}:`, saveErr);
                     }
                   }
+                  // Track unmatched roles as they come in (for cancel handling)
+                  if (eventData.unmatchedRoles && eventData.unmatchedRoles.length > 0) {
+                    setUnmatchedRoles(eventData.unmatchedRoles);
+                  }
                   // Update progress to show market completed
+                  // marketIndex is 0-based, modal displays marketsCompleted + 1
                   setScrapeProgress(prev => prev ? {
                     ...prev,
                     currentMarket: eventData.market,
-                    marketsCompleted: eventData.marketIndex + 1,
+                    marketsCompleted: eventData.marketIndex,
                     totalMarkets: eventData.totalMarkets,
                     jobsFound: eventData.jobsFound,
                     matchedRetailers: eventData.matchedRetailers,
                     matchedJobs: eventData.matchedJobs,
+                    // Accumulate new jobs saved
+                    newJobsThisPass: (prev.newJobsThisPass || 0) + newJobsSaved,
                   } : prev);
                 } else if (eventData.type === 'complete') {
                   finalData = eventData;
@@ -1997,7 +2017,7 @@ export function PermanentHiring() {
           <section className="oz-section">
             <div className="oz-section-header">
               <div className="oz-title-with-info">
-                <h2 className="section-title">Jobs Database</h2>
+                <h2 className="section-title">Jobs Database ({filteredJobPostings.length})</h2>
                 <div className="oz-info-wrapper" ref={jobSitesInfoRef}>
                   <button
                     className="oz-info-btn"
