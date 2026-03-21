@@ -58,7 +58,6 @@ export interface ScrapeConfig {
 // Job sites
 const JOB_SITES = [
   { id: 'indeed', name: 'Indeed' },
-  { id: 'glassdoor', name: 'Glassdoor' },
 ];
 
 // Helper to format seconds as M:SS
@@ -105,7 +104,7 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
   // Reset state when modal opens - with defaults
   useEffect(() => {
     if (isOpen) {
-      setSelectedJobSites(['indeed', 'glassdoor']);
+      setSelectedJobSites(['indeed']);
       setSelectedMarkets([]);
       setSelectedRoles(roles.map(r => r.id));
       setSelectedRetailers([]);

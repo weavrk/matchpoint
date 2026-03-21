@@ -112,33 +112,37 @@ Scrapers live in `src/scrapers/`. Common behavior:
 ### Indeed (`src/scrapers/indeed.ts`)
 
 - **Proxy:** ScraperAPI for anti-bot bypass (`SCRAPERAPI_KEY`)
-- **HTML Parsing:** Cheerio
+- **HTML Parsing:** Cheerio (extracts from embedded JSON `window.mosaic.providerData`)
 - **Pagination:** `?start=0,10,20...` (10 jobs per page)
 - **URL format:** `https://www.indeed.com/jobs?q=Retail&l=Austin,+TX`
+- **Multi-pass scraping:** Runs 5 passes per market with varied sort/filter params to capture more results
+  - Pass 1: Relevance sort, no date filter
+  - Pass 2: Date sort
+  - Pass 3: Relevance sort, last 7 days
+  - Pass 4: Date sort, last 3 days
+  - Pass 5: Relevance sort, last 14 days
+- **Session rotation:** Each pass uses a unique session number for fresh results
+- **Salary cleanup:** Spanish text auto-converted to English (e.g., "por hora" → "an hour")
 
-### Glassdoor (`src/scrapers/glassdoor.ts`)
+### Glassdoor (`src/scrapers/glassdoor.ts`)- NOPE! Scrape is ridiculous
 
 - **Browser:** Puppeteer (headless Chrome)
 - **CAPTCHA Bypass:** Session cookie injection from logged-in browser
 - **HTML Parsing:** Cheerio after page load
 - **Pagination:** `?p=1,2,3...`
 - **URL format:** `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=Retail&locKeyword=AUSTIN,+TX`
-
-#### Cookie Injection Setup
-
-The scraper loads cookies from `glassdoor-cookies.json` to bypass CAPTCHA. To refresh cookies:
-
-1. Log into Glassdoor in Chrome
-2. Open DevTools Console (Cmd+Option+J)
-3. Run this command to export cookies:
-  ```javascript
-   JSON.stringify(document.cookie.split('; ').map(c => {
-     const [name, ...v] = c.split('=');
-     return { name, value: v.join('='), domain: '.glassdoor.com', path: '/' };
-   }), null, 2)
-  ```
-4. Copy the output and save to `glassdoor-cookies.json` in project root
-5. Cookies typically last a few days before needing refresh
+- **Cookie Injection Setup:** The scraper loads cookies from `glassdoor-cookies.json` to bypass CAPTCHA. To refresh:
+  1. Log into Glassdoor in Chrome
+  2. Open DevTools Console (Cmd+Option+J)
+  3. Run this command to export cookies:
+    ```javascript
+     JSON.stringify(document.cookie.split('; ').map(c => {
+       const [name, ...v] = c.split('=');
+       return { name, value: v.join('='), domain: '.glassdoor.com', path: '/' };
+     }), null, 2)
+    ```
+  4. Copy the output and save to `glassdoor-cookies.json` in project root
+  5. Cookies typically last a few days before needing refresh
 
 ## Environment Variables
 
@@ -239,6 +243,4 @@ matchpoint/
 
 - `npm start` - Run Express server with ts-node ([http://localhost:3000](http://localhost:3000))
 - `npm run build` - Compile TypeScript to JavaScript
-
- 
 

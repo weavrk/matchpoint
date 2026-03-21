@@ -1,10 +1,17 @@
-import puppeteer, { Page } from 'puppeteer';
+import puppeteer, { Page, Browser } from 'puppeteer';
+import puppeteerCore from 'puppeteer-core';
 import * as cheerio from 'cheerio';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const TWOCAPTCHA_API_KEY = process.env.TWOCAPTCHA_API_KEY;
+const GLASSDOOR_EMAIL = process.env.GLASSDOOR_EMAIL;
+const GLASSDOOR_PASSWORD = process.env.GLASSDOOR_PASSWORD;
+
+// Chrome user data directory for using existing browser session
+const CHROME_USER_DATA_DIR = '/Users/katherine_1/Library/Application Support/Google/Chrome';
+const CHROME_PROFILE = 'Default';
 
 interface ScrapedJob {
   title: string;
@@ -314,25 +321,215 @@ async function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Auto-login to Glassdoor and save fresh cookies
+async function loginAndSaveCookies(page: Page): Promise<boolean> {
+  if (!GLASSDOOR_EMAIL || !GLASSDOOR_PASSWORD) {
+    console.log('GLASSDOOR_EMAIL or GLASSDOOR_PASSWORD not set in .env - cannot auto-login');
+    return false;
+  }
+
+  console.log('Attempting auto-login to Glassdoor...');
+
+  try {
+    // Go to login page
+    await page.goto('https://www.glassdoor.com/profile/login_input.htm', {
+      waitUntil: 'networkidle2',
+      timeout: 30000
+    });
+    await delay(2000);
+
+    // Check for Cloudflare challenge on login page
+    let html = await page.content();
+    if (isCloudflareChallenge(html)) {
+      console.log('Cloudflare challenge on login page - waiting...');
+      for (let i = 0; i < 15; i++) {
+        await delay(1000);
+        html = await page.content();
+        if (!isCloudflareChallenge(html)) {
+          console.log('Cloudflare challenge passed');
+          break;
+        }
+      }
+      if (isCloudflareChallenge(html)) {
+        console.log('ERROR: Cloudflare challenge on login page did not resolve');
+        return false;
+      }
+    }
+
+    // Wait for email input field
+    await page.waitForSelector('input[name="username"], input[type="email"], #inlineUserEmail', { timeout: 10000 });
+
+    // Enter email
+    const emailSelector = await page.$('input[name="username"]') ||
+                          await page.$('input[type="email"]') ||
+                          await page.$('#inlineUserEmail');
+    if (!emailSelector) {
+      console.log('Could not find email input field');
+      return false;
+    }
+
+    await emailSelector.click({ clickCount: 3 }); // Select all
+    await emailSelector.type(GLASSDOOR_EMAIL, { delay: 50 });
+    console.log('Entered email');
+
+    // Look for password field or "Continue" button
+    const passwordField = await page.$('input[name="password"], input[type="password"], #inlineUserPassword');
+
+    if (passwordField) {
+      // Password field visible, enter it directly
+      await passwordField.click({ clickCount: 3 });
+      await passwordField.type(GLASSDOOR_PASSWORD, { delay: 50 });
+      console.log('Entered password');
+    } else {
+      // Click continue/next to get to password step
+      const continueBtn = await page.$('button[type="submit"], button[data-test="email-form-button"]');
+      if (continueBtn) {
+        await continueBtn.click();
+        console.log('Clicked continue button');
+        await delay(2000);
+
+        // Now look for password field
+        await page.waitForSelector('input[name="password"], input[type="password"]', { timeout: 10000 });
+        const pwdField = await page.$('input[name="password"]') || await page.$('input[type="password"]');
+        if (pwdField) {
+          await pwdField.click({ clickCount: 3 });
+          await pwdField.type(GLASSDOOR_PASSWORD, { delay: 50 });
+          console.log('Entered password');
+        }
+      }
+    }
+
+    // Click sign in button
+    await delay(500);
+    const signInBtn = await page.$('button[type="submit"], button[data-test="sign-in-button"], button[name="submit"]');
+    if (signInBtn) {
+      await signInBtn.click();
+      console.log('Clicked sign in button');
+    } else {
+      // Try pressing Enter
+      await page.keyboard.press('Enter');
+    }
+
+    // Wait for login to complete
+    await delay(5000);
+
+    // Check if login was successful by looking for logged-in indicators
+    html = await page.content();
+    const isLoggedIn = html.includes('Sign Out') ||
+                       html.includes('signOut') ||
+                       html.includes('account-menu') ||
+                       !html.includes('Sign In');
+
+    if (!isLoggedIn) {
+      // Check for error messages
+      const errorText = await page.evaluate(() => {
+        const errorEl = document.querySelector('[data-test="error-message"], .error-message, .alert-error');
+        return errorEl?.textContent || null;
+      });
+      if (errorText) {
+        console.log(`Login error: ${errorText}`);
+      }
+      console.log('Login may have failed - checking if we can proceed anyway');
+    }
+
+    // Extract and save cookies
+    const cookies = await page.cookies();
+    if (cookies.length > 0) {
+      const fs = await import('fs');
+      const path = await import('path');
+      const cookiesPath = path.join(process.cwd(), 'glassdoor-cookies.json');
+
+      // Format cookies for storage
+      const cookiesToSave = cookies.map(c => ({
+        name: c.name,
+        value: c.value,
+        domain: c.domain,
+        path: c.path,
+      }));
+
+      fs.writeFileSync(cookiesPath, JSON.stringify(cookiesToSave, null, 2));
+      console.log(`Saved ${cookies.length} fresh cookies to glassdoor-cookies.json`);
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('Auto-login failed:', error);
+    return false;
+  }
+}
+
 export async function scrapeGlassdoor(options: ScrapeOptions): Promise<ScrapedJob[]> {
   const { maxPages = 3 } = options;
   const allJobs: ScrapedJob[] = [];
 
   console.log(`Starting Glassdoor scrape for "${options.keyword}" in ${options.location}`);
-  console.log(`Using Puppeteer with 2Captcha for CAPTCHA bypass`);
 
-  // Launch browser
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--disable-gpu',
-      '--window-size=1920,1080',
-    ],
-  });
+  // Try to use real Chrome profile first for authenticated session
+  let browser: Browser;
+  let usingRealChrome = false;
+  const fs = await import('fs');
+  const path = await import('path');
+
+  // Create a separate profile directory that copies cookies from main Chrome
+  const scrapeProfileDir = path.join(process.cwd(), '.glassdoor-profile');
+
+  try {
+    // Check if Chrome is already running - need to check both lock files
+    const lockFile = `${CHROME_USER_DATA_DIR}/SingletonLock`;
+    const socketFile = `${CHROME_USER_DATA_DIR}/SingletonSocket`;
+    const chromeRunning = fs.existsSync(lockFile) || fs.existsSync(socketFile);
+
+    console.log(`Chrome running: ${chromeRunning}`);
+
+    if (!chromeRunning) {
+      // Chrome not running - can use real profile directly
+      console.log('Using real Chrome with authenticated profile');
+      browser = await puppeteerCore.launch({
+        executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+        headless: true,
+        userDataDir: CHROME_USER_DATA_DIR,
+        args: [
+          `--profile-directory=${CHROME_PROFILE}`,
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--window-size=1920,1080',
+        ],
+      }) as unknown as Browser;
+      usingRealChrome = true;
+    } else {
+      // Chrome is running - use Puppeteer bundled browser with cookies from JSON file
+      // The cookie copying approach doesn't work because Chrome encrypts cookies
+      console.log('Chrome is running - using bundled browser with cookie file');
+      console.log('NOTE: For best results, close Chrome before scraping OR refresh glassdoor-cookies.json');
+
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu',
+          '--window-size=1920,1080',
+        ],
+      });
+    }
+  } catch (err) {
+    console.log('Failed to use Chrome profile, falling back to Puppeteer:', err);
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--disable-gpu',
+        '--window-size=1920,1080',
+      ],
+    });
+  }
 
   try {
     const page = await browser.newPage();
@@ -343,31 +540,35 @@ export async function scrapeGlassdoor(options: ScrapeOptions): Promise<ScrapedJo
     // Set viewport
     await page.setViewport({ width: 1920, height: 1080 });
 
-    // Load session cookies from file to bypass login/CAPTCHA
-    try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const cookiesPath = path.join(process.cwd(), 'glassdoor-cookies.json');
+    // Load session cookies from file ONLY if not using real Chrome profile
+    if (!usingRealChrome) {
+      try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const cookiesPath = path.join(process.cwd(), 'glassdoor-cookies.json');
 
-      if (fs.existsSync(cookiesPath)) {
-        const cookiesJson = fs.readFileSync(cookiesPath, 'utf-8');
-        const cookies = JSON.parse(cookiesJson);
+        if (fs.existsSync(cookiesPath)) {
+          const cookiesJson = fs.readFileSync(cookiesPath, 'utf-8');
+          const cookies = JSON.parse(cookiesJson);
 
-        // Convert to Puppeteer cookie format
-        const puppeteerCookies = cookies.map((c: any) => ({
-          name: c.name,
-          value: c.value,
-          domain: c.domain,
-          path: c.path || '/',
-        }));
+          // Convert to Puppeteer cookie format
+          const puppeteerCookies = cookies.map((c: any) => ({
+            name: c.name,
+            value: c.value,
+            domain: c.domain,
+            path: c.path || '/',
+          }));
 
-        await page.setCookie(...puppeteerCookies);
-        console.log(`Loaded ${puppeteerCookies.length} session cookies from glassdoor-cookies.json`);
-      } else {
-        console.log('No glassdoor-cookies.json found, proceeding without session cookies');
+          await page.setCookie(...puppeteerCookies);
+          console.log(`Loaded ${puppeteerCookies.length} session cookies from glassdoor-cookies.json`);
+        } else {
+          console.log('No glassdoor-cookies.json found, proceeding without session cookies');
+        }
+      } catch (cookieError) {
+        console.log('Failed to load cookies:', cookieError);
       }
-    } catch (cookieError) {
-      console.log('Failed to load cookies:', cookieError);
+    } else {
+      console.log('Using authenticated Chrome profile - no need to load cookies');
     }
 
     // Navigate to page 1 only - use in-page pagination for subsequent pages
@@ -391,8 +592,34 @@ export async function scrapeGlassdoor(options: ScrapeOptions): Promise<ScrapedJo
         }
       }
       if (isCloudflareChallenge(html)) {
-        console.log('ERROR: Cloudflare challenge did not resolve. Export fresh cookies from browser.');
-        return [];
+        console.log('Cookies expired - attempting auto-login...');
+
+        // Try auto-login
+        const loginSuccess = await loginAndSaveCookies(page);
+        if (loginSuccess) {
+          // Retry navigation with fresh cookies
+          console.log('Retrying with fresh session...');
+          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+          await delay(3000);
+
+          html = await page.content();
+          if (isCloudflareChallenge(html)) {
+            // Wait again
+            for (let i = 0; i < 10; i++) {
+              await delay(1000);
+              html = await page.content();
+              if (!isCloudflareChallenge(html)) break;
+            }
+          }
+
+          if (isCloudflareChallenge(html)) {
+            console.log('ERROR: Still blocked after login. Check credentials.');
+            return [];
+          }
+        } else {
+          console.log('ERROR: Auto-login failed. Add GLASSDOOR_EMAIL and GLASSDOOR_PASSWORD to .env');
+          return [];
+        }
       }
     }
 

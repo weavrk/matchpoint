@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Briefcase, Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Play, Check, Info, Loader2, Clipboard } from 'lucide-react';
+import { Briefcase, Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Play, Check, Info, Loader2, Clipboard, CircleMinus } from 'lucide-react';
 import { ChatInterface } from '../components/Chat';
 import { WorkerGrid } from '../components/Workers';
 import { ScrapeModal, type ScrapeConfig } from '../components/ScrapeModal';
@@ -523,20 +523,16 @@ const MARKETS = [
 
 const JOB_SITES = {
   general: [
-    { name: 'Indeed + Glassdoor', description: 'Largest job board, strong for hourly/retail roles, salary data' },
-    { name: 'ZipRecruiter', description: 'AI matching, good retail coverage' },
-    { name: 'LinkedIn', description: 'Better for management/supervisor roles' },
+    { name: 'Indeed', description: 'Largest job board, strong for hourly/retail roles, salary data' },
+    { name: 'Glassdoor', description: 'Job listings with company reviews and salary data', protected: true },
+    { name: 'ZipRecruiter', description: 'AI matching, good retail coverage', protected: true },
+    { name: 'LinkedIn', description: 'Better for management/supervisor roles', protected: true },
     { name: 'CareerBuilder', description: 'General board with retail category' },
   ],
   retailSpecific: [
     { name: 'AllRetailJobs.com', description: 'Dedicated retail job board' },
     { name: 'RetailJobsWeb.com', description: 'Retail-focused, management + hourly' },
     { name: 'RetailCareersNow', description: 'Retail industry specific' },
-  ],
-  hourlyShift: [
-    { name: 'Snagajob', description: 'Built for hourly work, pre-screens availability' },
-    { name: 'Wonolo', description: 'On-demand staffing, retail/warehouse' },
-    { name: 'Instawork', description: 'Gig-style retail/hospitality shifts' },
   ],
 };
 
@@ -2026,10 +2022,16 @@ export function PermanentHiring() {
                               <div key={idx} className="oz-job-site-item">
                                 <span className="oz-job-site-name">
                                   {site.name}
-                                  {site.name === 'Indeed + Glassdoor' && (
+                                  {site.name === 'Indeed' && (
                                     <span className="oz-connected-badge">
                                       <Link size={12} />
                                       Connected
+                                    </span>
+                                  )}
+                                  {site.protected && (
+                                    <span className="oz-protected-badge">
+                                      <CircleMinus size={12} />
+                                      Heavily Protected
                                     </span>
                                   )}
                                 </span>
@@ -2042,17 +2044,6 @@ export function PermanentHiring() {
                           <h4 className="oz-job-sites-group-title">Retail-Specific</h4>
                           <div className="oz-job-sites-list">
                             {JOB_SITES.retailSpecific.map((site, idx) => (
-                              <div key={idx} className="oz-job-site-item">
-                                <span className="oz-job-site-name">{site.name}</span>
-                                <span className="oz-job-site-desc">{site.description}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="oz-job-sites-group">
-                          <h4 className="oz-job-sites-group-title">Hourly/Shift-Based</h4>
-                          <div className="oz-job-sites-list">
-                            {JOB_SITES.hourlyShift.map((site, idx) => (
                               <div key={idx} className="oz-job-site-item">
                                 <span className="oz-job-site-name">{site.name}</span>
                                 <span className="oz-job-site-desc">{site.description}</span>

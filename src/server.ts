@@ -159,7 +159,7 @@ app.post('/api/match', (req, res) => {
 });
 
 // Match a job title to our roles - stricter matching to avoid false positives
-// Uses priority scoring to pick the best match when multiple roles could match
+// Uses sequential logic for specific roles, then falls back to general matching
 function matchJobToRole(jobTitle: string, roles: { id: string; title: string; match_keywords?: string[] }[]): { roleId: string; roleTitle: string } | null {
   const normalizedTitle = jobTitle.toLowerCase().trim();
   // Remove common suffixes like (Part-Time), (Full-Time), etc. for matching
@@ -169,11 +169,43 @@ function matchJobToRole(jobTitle: string, roles: { id: string; title: string; ma
     .replace(/\s+/g, ' ')
     .trim();
 
+  // Helper to find a role by title pattern
+  const findRole = (pattern: string) => {
+    return roles.find(r => r.title.toLowerCase().includes(pattern.toLowerCase()));
+  };
+
+  // ============================================
+  // SEQUENTIAL LOGIC FOR SPECIFIC ROLES
+  // Handle these FIRST before general matching
+  // ============================================
+
+  // STORE MANAGER logic:
+  // If job title contains "store manager", check if it also has "assistant"
+  if (/\bstore\s*manager\b/i.test(cleanedTitle)) {
+    if (/\bassistant\b/i.test(cleanedTitle)) {
+      // Has "assistant" -> use Assistant Store Manager
+      const role = findRole('assistant store manager');
+      if (role) return { roleId: role.id, roleTitle: role.title };
+    } else {
+      // No "assistant" -> use Store Manager
+      const role = findRole('store manager');
+      // Make sure we get the non-assistant one
+      const storeManagerRole = roles.find(r =>
+        r.title.toLowerCase().includes('store manager') &&
+        !r.title.toLowerCase().includes('assistant')
+      );
+      if (storeManagerRole) return { roleId: storeManagerRole.id, roleTitle: storeManagerRole.title };
+    }
+  }
+
+  // ============================================
+  // GENERAL MATCHING LOGIC
+  // ============================================
+
   // Collect all potential matches with their scores
   const matches: { roleId: string; roleTitle: string; score: number }[] = [];
 
-  // High-priority keyword mappings - check these first with highest scores
-  // "stock" and "stocking" should match Stock Associate, not Sales/Retail
+  // High-priority keyword mappings
   const priorityKeywords: { pattern: RegExp; mustMatchRole: string }[] = [
     { pattern: /\bstock(?:ing|er)?\b/i, mustMatchRole: 'stock' },
     { pattern: /\bvisual\s*merchand/i, mustMatchRole: 'visual' },
@@ -182,29 +214,11 @@ function matchJobToRole(jobTitle: string, roles: { id: string; title: string; ma
     { pattern: /\bcashier\b/i, mustMatchRole: 'cashier' },
   ];
 
-  // Words that MUST be present in job title if they're in the role title
-  // e.g., "Assistant Store Manager" should only match if job title contains "assistant"
-  const requiredWords = ['assistant', 'senior', 'lead', 'head', 'chief', 'deputy', 'junior'];
-
   for (const role of roles) {
     const roleLower = role.title.toLowerCase();
 
-    // Check if role contains any required words - if so, job title MUST also contain them
-    const roleRequiredWords = requiredWords.filter(w => roleLower.includes(w));
-    const jobHasRequiredWords = roleRequiredWords.every(w => cleanedTitle.includes(w));
-
-    // Skip this role if it has required words that the job title doesn't have
-    if (roleRequiredWords.length > 0 && !jobHasRequiredWords) {
-      continue;
-    }
-
-    // Also check the reverse: if job title has "assistant" but role doesn't, penalize heavily
-    const jobHasAssistant = cleanedTitle.includes('assistant');
-    const roleHasAssistant = roleLower.includes('assistant');
-    if (jobHasAssistant && !roleHasAssistant) {
-      // Job is for an assistant role, but this role isn't - skip unless no better match exists
-      // We'll handle this by not boosting the score
-    }
+    // Skip store manager roles here - already handled above
+    if (roleLower.includes('store manager')) continue;
 
     // First check match_keywords if available - these are explicit matches (high priority)
     if (role.match_keywords && role.match_keywords.length > 0) {
@@ -212,27 +226,27 @@ function matchJobToRole(jobTitle: string, roles: { id: string; title: string; ma
         const keywordLower = keyword.toLowerCase();
         const keywordRegex = new RegExp(`\\b${keywordLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
         if (keywordRegex.test(cleanedTitle)) {
-          matches.push({ roleId: role.id, roleTitle: role.title, score: 100 }); // Highest priority
+          matches.push({ roleId: role.id, roleTitle: role.title, score: 100 });
         }
       }
     }
 
-    // Check priority keywords - if job title has a priority keyword, boost that role type
+    // Check priority keywords
     let priorityBoost = 0;
     for (const pk of priorityKeywords) {
-      if (pk.pattern.test(cleanedTitle) && role.title.toLowerCase().includes(pk.mustMatchRole)) {
-        priorityBoost = 50; // Significant boost for matching priority keywords
+      if (pk.pattern.test(cleanedTitle) && roleLower.includes(pk.mustMatchRole)) {
+        priorityBoost = 50;
         break;
       }
     }
 
     // Split into individual role options (e.g., "Stock Associate / Stocker" -> ["Stock Associate", "Stocker"])
-    const roleOptions = role.title.toLowerCase().split(/\s*\/\s*/).map(s => s.trim());
+    const roleOptions = roleLower.split(/\s*\/\s*/).map(s => s.trim());
 
     for (const roleOption of roleOptions) {
-      const genericWords = ['associate', 'manager', 'supervisor', 'lead', 'worker', 'attendant', 'advisor', 'specialist', 'retail'];
+      const genericWords = ['associate', 'assistant', 'manager', 'supervisor', 'lead', 'worker', 'attendant', 'advisor', 'specialist', 'retail'];
       const roleWords = roleOption.split(/\s+/).filter(w => w.length > 2);
-      const distinguishingWords = roleWords.filter(w => !genericWords.includes(w) && !requiredWords.includes(w));
+      const distinguishingWords = roleWords.filter(w => !genericWords.includes(w));
 
       if (distinguishingWords.length > 0) {
         const allDistinguishingMatch = distinguishingWords.every(word => {
@@ -246,10 +260,7 @@ function matchJobToRole(jobTitle: string, roles: { id: string; title: string; ma
             const wordRegex = new RegExp(`\\b${w}\\b`, 'i');
             return wordRegex.test(cleanedTitle);
           })) {
-            // Score based on specificity: more distinguishing words = higher score
-            // Bonus if required words match exactly
-            const requiredWordBonus = roleRequiredWords.length * 20;
-            const score = distinguishingWords.length * 10 + priorityBoost + requiredWordBonus;
+            const score = distinguishingWords.length * 10 + priorityBoost;
             matches.push({ roleId: role.id, roleTitle: role.title, score });
           }
         }
@@ -356,7 +367,7 @@ app.post('/api/scrape', async (req, res) => {
             const jobs = await scraper({
               location,
               keyword,
-              maxPages: 5,
+              maxPages: 3,
               retailers: retailerNames,
               passNum: pass,  // Pass number for varied results
             });
