@@ -285,7 +285,7 @@ function matchJobToRole(jobTitle: string, roles: { id: string; title: string; ma
 
 // POST /api/scrape - Run job scraper with filters
 // SSE scrape endpoint - streams progress updates
-// For Indeed: runs 3 passes to capture more results (Indeed returns different results each time)
+// For Indeed: runs 5 passes to capture more results (Indeed returns different results each time)
 app.post('/api/scrape', async (req, res) => {
   // Set up SSE headers
   res.setHeader('Content-Type', 'text/event-stream');
@@ -323,7 +323,7 @@ app.post('/api/scrape', async (req, res) => {
     let totalJobsFound = 0;
 
     // Number of passes for Indeed (to capture more varied results)
-    const INDEED_PASSES = 3;
+    const INDEED_PASSES = 5;
 
     // Loop through each selected job site
     for (const jobSite of jobSites) {
@@ -332,7 +332,7 @@ app.post('/api/scrape', async (req, res) => {
       const filterByRetailers = jobSiteLower === 'indeed' ? filterIndeedByRetailers : filterGlassdoorByRetailers;
       const filterByLocation = jobSiteLower === 'indeed' ? filterIndeedByLocation : filterGlassdoorByLocation;
 
-      // Determine number of passes (3 for Indeed, 1 for others)
+      // Determine number of passes (5 for Indeed, 1 for others)
       const numPasses = jobSiteLower === 'indeed' ? INDEED_PASSES : 1;
 
       for (let pass = 1; pass <= numPasses; pass++) {
@@ -367,7 +367,7 @@ app.post('/api/scrape', async (req, res) => {
             const jobs = await scraper({
               location,
               keyword,
-              maxPages: 3,
+              maxPages: 1,  // Page 1 returns ~45 jobs; pages 2+ blocked by Indeed
               retailers: retailerNames,
               passNum: pass,  // Pass number for varied results
             });
