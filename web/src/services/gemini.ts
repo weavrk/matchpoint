@@ -1,66 +1,339 @@
 import { GoogleGenerativeAI, ChatSession } from '@google/generative-ai';
 import type { JobSpec } from '../types';
+import { supabase } from './supabase';
 
-const SYSTEM_PROMPT = `You are a friendly hiring assistant for Reflex, a retail labor marketplace. You're helping a retailer create a job posting for a permanent hire.
+// Role groupings - when querying, pull from entire group
+export const ROLE_GROUPS: Record<string, string[]> = {
+  'Sales Floor': ['Sales Associate / Retail Associate', 'Store Associate'],
+  'Sales Support': ['Cashier', 'Sales Assistant', 'Fitting Room Attendant', 'Team Member', 'Retail Customer Service'],
+  'Back of House': ['Stock Associate / Stocker', 'Inventory Associate', 'Operations Associate'],
+  'Specialized': ['Beauty Advisor / Cosmetics Associate', 'Stylist', 'Visual Merchandiser', 'Pop Up'],
+  'Management': ['Store Manager', 'Store Team Leader', 'Supervisor', 'Key Holder', 'Department Supervisor', 'Assistant Store Manager'],
+  'Regional': ['District / Area Manager'],
+};
 
-Your goal is to have a natural conversation to understand what they're looking for, then output a structured job spec when ready.
+// Get group name for a role
+export function getRoleGroup(role: string): string | null {
+  for (const [group, roles] of Object.entries(ROLE_GROUPS)) {
+    if (roles.some(r => r.toLowerCase() === role.toLowerCase())) {
+      return group;
+    }
+  }
+  return null;
+}
 
-Information to gather (conversationally, not as a checklist):
-- What type of retail role? (footwear, apparel, beauty, sporting goods, home, general retail)
-- What brand tier experience? (mid-tier like Gap/H&M, elevated like Nordstrom/J.Crew, or luxury like Gucci/Neiman Marcus)
-- Full-time, part-time, or open to both?
-- Any specific skills or qualities needed?
-- Basic job details (title, key responsibilities)
+// Get all roles in same group
+export function getRelatedRoles(role: string): string[] {
+  const group = getRoleGroup(role);
+  return group ? ROLE_GROUPS[group] : [role];
+}
 
-Keep responses short and conversational (2-3 sentences max). Ask one question at a time. Be encouraging but not overly enthusiastic.
+// Data Summary Generator
+export interface SalarySummary {
+  role: string;
+  market: string;
+  retailerClass: string;
+  minHourly: number | null;
+  maxHourly: number | null;
+  minSalary: number | null;
+  maxSalary: number | null;
+  postingCount: number;
+  retailers: string[];
+}
 
-When you have enough information to create a job spec, respond with EXACTLY this format (the system will parse it):
+// Parse salary string into hourly/annual values
+function parseSalary(salary: string): { minHourly?: number; maxHourly?: number; minSalary?: number; maxSalary?: number } {
+  if (!salary) return {};
+  const normalized = salary.toLowerCase().replace(/,/g, '');
+  const numbers = normalized.match(/\d+\.?\d*/g)?.map(Number) || [];
+  if (numbers.length === 0) return {};
+
+  const isHourly = /hour|hr|\/h/i.test(normalized);
+  const isAnnual = /year|annual|salary/i.test(normalized) || numbers[0] > 1000;
+
+  if (isHourly) return { minHourly: numbers[0], maxHourly: numbers[1] || numbers[0] };
+  if (isAnnual) return { minSalary: numbers[0], maxSalary: numbers[1] || numbers[0] };
+  if (numbers[0] < 200) return { minHourly: numbers[0], maxHourly: numbers[1] || numbers[0] };
+  return { minSalary: numbers[0], maxSalary: numbers[1] || numbers[0] };
+}
+
+export async function generateSalarySummary(
+  roleId?: string,
+  marketId?: string,
+  retailerClass?: 'Luxury' | 'Specialty' | 'Big Box'
+): Promise<SalarySummary[]> {
+  let query = supabase
+    .from('job_postings')
+    .select(`salary, role_id, market_id, retailer_id, company, roles(title, category), markets(name), retailers(name, classification)`);
+
+  if (roleId) query = query.eq('role_id', roleId);
+  if (marketId) query = query.eq('market_id', marketId);
+
+  const { data: jobs, error } = await query;
+  if (error) throw error;
+
+  const groups = new Map<string, { role: string; market: string; retailerClass: string; hourlies: number[]; salaries: number[]; retailers: Set<string> }>();
+
+  for (const job of jobs || []) {
+    const role = (job.roles as any)?.title || 'Unknown';
+    const market = (job.markets as any)?.name || 'Unknown';
+    const rClass = (job.retailers as any)?.classification || 'Unknown';
+    if (retailerClass && rClass !== retailerClass) continue;
+
+    const key = `${role}|${market}|${rClass}`;
+    if (!groups.has(key)) groups.set(key, { role, market, retailerClass: rClass, hourlies: [], salaries: [], retailers: new Set() });
+
+    const group = groups.get(key)!;
+    if (job.company) group.retailers.add(job.company);
+    if (job.salary) {
+      const parsed = parseSalary(job.salary);
+      if (parsed.minHourly) group.hourlies.push(parsed.minHourly);
+      if (parsed.maxHourly) group.hourlies.push(parsed.maxHourly);
+      if (parsed.minSalary) group.salaries.push(parsed.minSalary);
+      if (parsed.maxSalary) group.salaries.push(parsed.maxSalary);
+    }
+  }
+
+  return Array.from(groups.values()).map(g => ({
+    role: g.role, market: g.market, retailerClass: g.retailerClass,
+    minHourly: g.hourlies.length ? Math.min(...g.hourlies) : null,
+    maxHourly: g.hourlies.length ? Math.max(...g.hourlies) : null,
+    minSalary: g.salaries.length ? Math.min(...g.salaries) : null,
+    maxSalary: g.salaries.length ? Math.max(...g.salaries) : null,
+    postingCount: g.retailers.size, retailers: Array.from(g.retailers),
+  }));
+}
+
+// Get grouped salary summary (aggregates related roles)
+export async function getGroupedSalarySummary(
+  role: string,
+  market: string,
+  retailerClass: 'Luxury' | 'Specialty' | 'Big Box'
+): Promise<{ roleGroup: string; roles: SalarySummary[]; nationalAvg: { minHourly: number | null; maxHourly: number | null } }> {
+  const roleGroup = getRoleGroup(role) || 'Other';
+  const relatedRoles = getRelatedRoles(role);
+
+  const allSummaries = await generateSalarySummary(undefined, undefined, retailerClass);
+
+  // Filter to related roles in this market
+  const marketRoles = allSummaries.filter(s =>
+    s.market.toLowerCase() === market.toLowerCase() &&
+    relatedRoles.some(r => r.toLowerCase() === s.role.toLowerCase())
+  );
+
+  // Calculate national average for this role group
+  const nationalRoles = allSummaries.filter(s =>
+    relatedRoles.some(r => r.toLowerCase() === s.role.toLowerCase())
+  );
+  const allHourlies = nationalRoles.flatMap(s => [s.minHourly, s.maxHourly].filter((n): n is number => n !== null));
+
+  return {
+    roleGroup,
+    roles: marketRoles,
+    nationalAvg: {
+      minHourly: allHourlies.length ? Math.min(...allHourlies) : null,
+      maxHourly: allHourlies.length ? Math.max(...allHourlies) : null,
+    }
+  };
+}
+
+// Human-readable summary for AI (with role grouping + national comparison)
+export async function getMarketSummaryText(market: string, retailerClass: 'Luxury' | 'Specialty' | 'Big Box', role?: string): Promise<string> {
+  if (role) {
+    const grouped = await getGroupedSalarySummary(role, market, retailerClass);
+    if (grouped.roles.length === 0) return `No salary data for ${role} in ${market}.`;
+
+    const lines = grouped.roles.map(s => {
+      const range = s.minHourly && s.maxHourly ? `$${s.minHourly}-${s.maxHourly}/hr`
+        : s.minSalary && s.maxSalary ? `$${(s.minSalary/1000).toFixed(0)}k-${(s.maxSalary/1000).toFixed(0)}k`
+        : 'salary not reported';
+      return `${s.role}: ${range} (${s.postingCount} postings)`;
+    });
+
+    const nationalRange = grouped.nationalAvg.minHourly && grouped.nationalAvg.maxHourly
+      ? `$${grouped.nationalAvg.minHourly}-${grouped.nationalAvg.maxHourly}/hr`
+      : 'N/A';
+
+    return `${grouped.roleGroup} roles in ${market} (${retailerClass}):\n${lines.join('\n')}\n\nNational ${retailerClass} average: ${nationalRange}`;
+  }
+
+  // Original behavior - all roles in market
+  const summaries = await generateSalarySummary(undefined, undefined, retailerClass);
+  const marketSummaries = summaries.filter(s => s.market.toLowerCase() === market.toLowerCase());
+  if (marketSummaries.length === 0) return `No salary data available for ${market} ${retailerClass} retailers.`;
+
+  const lines = marketSummaries.map(s => {
+    const range = s.minHourly && s.maxHourly ? `$${s.minHourly}-${s.maxHourly}/hr`
+      : s.minSalary && s.maxSalary ? `$${(s.minSalary/1000).toFixed(0)}k-${(s.maxSalary/1000).toFixed(0)}k`
+      : 'salary not reported';
+    return `${s.role}: ${range} (${s.postingCount} postings)`;
+  });
+  return `${market} ${retailerClass} retailers:\n${lines.join('\n')}`;
+}
+
+// Quick-select prompt templates for UI
+// Greeting response chips - match the two branches in the greeting
+export const GREETING_CHIPS = [
+  { id: 'create-posting', label: 'Create a job posting' },
+  { id: 'explore-market', label: 'Explore the market' },
+];
+
+// Follow-up prompts shown after user picks a branch
+export const QUICK_PROMPTS = [
+  {
+    id: 'hire',
+    label: 'Create job posting',
+    template: "I'm looking for a {role} for {employmentType} around {salary}",
+    variables: ['role', 'employmentType', 'salary'],
+  },
+  {
+    id: 'avg-rate',
+    label: 'Average rate',
+    template: "What's the average hourly rate for {role}?",
+    variables: ['role'],
+  },
+  {
+    id: 'min-rate',
+    label: 'Minimum rate',
+    template: "What's the minimum hourly rate we can set for {role}?",
+    variables: ['role'],
+  },
+  {
+    id: 'seasoned-rate',
+    label: 'Seasoned rate',
+    template: "What would a seasoned {role} expect at comparable brands?",
+    variables: ['role'],
+  },
+  {
+    id: 'ft-vs-pt',
+    label: 'FT vs PT candidates',
+    template: "What's the difference in candidates looking for part-time vs full-time for {role}?",
+    variables: ['role'],
+  },
+];
+
+// Role options grouped by category for quick-select UI
+export const ROLE_OPTIONS = {
+  'Sales Floor': ['Sales Associate', 'Store Associate', 'Brand Representative'],
+  'Sales Support': ['Cashier', 'Sales Assistant', 'Fitting Room Attendant', 'Team Member', 'Retail Customer Service'],
+  'Back of House': ['Stock Associate', 'Inventory Associate', 'Operations Associate', 'Loss Prevention'],
+  'Specialized': ['Beauty Advisor', 'Stylist', 'Visual Merchandiser', 'Pop Up'],
+  'Management': ['Store Manager', 'Assistant Store Manager', 'Department Supervisor', 'Key Holder', 'Supervisor', 'Store Team Leader'],
+  'Regional': ['District Manager', 'Area Manager'],
+};
+
+// Employment type options
+export const EMPLOYMENT_OPTIONS = ['Full-time', 'Part-time', 'Both'];
+
+// Salary range options
+export const SALARY_OPTIONS = [
+  '$15-18/hr',
+  '$18-22/hr',
+  '$22-26/hr',
+  '$26-30/hr',
+  '$40k-50k',
+  '$50k-65k',
+  '$65k-80k',
+  '$80k+',
+];
+
+// System prompt for Reflex hiring assistant
+const SYSTEM_PROMPT = `You are a hiring advisor for Reflex, a retail labor marketplace. You help retailers understand market salaries and create competitive job postings.
+
+## Context
+- User's name: {{USER_NAME}}
+- User's brand: {{RETAILER_NAME}} ({{RETAILER_CLASS}})
+- User's market: {{MARKET}}
+- You have access to real salary data from job postings in their market
+
+## Role Categories
+When discussing salaries, group related roles:
+- Sales Floor: Sales Associate, Store Associate, Brand Representative
+- Sales Support: Cashier, Sales Assistant, Fitting Room Attendant, Team Member
+- Back of House: Stock Associate, Inventory Associate, Operations Associate, Loss Prevention
+- Specialized: Beauty Advisor, Stylist, Visual Merchandiser, Pop Up
+- Management: Store Manager, Assistant Store Manager, Department Supervisor, Key Holder, Supervisor
+
+## How to respond
+
+### For salary questions
+- Show the specific market range for their retailer class ({{RETAILER_CLASS}})
+- Include related roles in the same category
+- Compare to national average
+- Example: "Sales Associates at {{RETAILER_CLASS}} retailers in {{MARKET}}: $18-22/hr. Similar roles like Cashier and Team Member: $16-19/hr. This is slightly above the national {{RETAILER_CLASS}} average of $17-21/hr."
+
+### For Management roles
+Query the specific role asked, then list other management salaries separately.
+- Example: "Store Managers at {{RETAILER_CLASS}} retailers in {{MARKET}}: $55k-70k. Other management roles: Assistant Store Manager $42k-52k, Department Supervisor $38k-46k."
+
+### For job posting help
+Guide them through: role, full-time/part-time, salary range, key requirements.
+When ready, output the job spec in this format:
 
 ---JOB_SPEC_START---
-{
-  "title": "...",
-  "market": "New York City",
-  "brandTier": ["mid" | "elevated" | "luxury"],
-  "preference": "FT" | "PT" | "Both",
-  "requirements": ["..."],
-  "description": "..."
-}
+{"title": "...", "market": "...", "employmentType": "FT|PT|Both", "salaryRange": "...", "requirements": [...], "description": "..."}
 ---JOB_SPEC_END---
 
-After outputting the spec, briefly confirm what you've created and ask if they'd like to adjust anything.`;
+## Rules
+- Keep responses concise (2-3 sentences)
+- Use real data when available, say "based on X postings"
+- If no data, say so honestly
+- Focus on {{RETAILER_CLASS}} retailers for salary comparisons
+- Don't make up numbers`;
+
+// Build system prompt with context
+function buildSystemPrompt(userName: string, retailerName: string, retailerClass: string, market: string): string {
+  return SYSTEM_PROMPT
+    .replace(/\{\{USER_NAME\}\}/g, userName)
+    .replace(/\{\{RETAILER_NAME\}\}/g, retailerName)
+    .replace(/\{\{RETAILER_CLASS\}\}/g, retailerClass)
+    .replace(/\{\{MARKET\}\}/g, market);
+}
 
 export class GeminiService {
   private genAI: GoogleGenerativeAI | null = null;
   private chat: ChatSession | null = null;
-
   constructor(apiKey: string) {
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
     }
   }
 
-  async startChat(retailerName: string, storeType: string): Promise<string> {
+  async startChat(
+    userName: string,
+    retailerName: string,
+    retailerClass: 'Luxury' | 'Specialty' | 'Big Box' = 'Luxury',
+    market: string = 'Austin',
+    existingHistory?: { role: 'user' | 'model'; content: string }[]
+  ): Promise<string> {
     if (!this.genAI) {
       throw new Error('API key not configured');
     }
 
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const prompt = buildSystemPrompt(userName, retailerName, retailerClass, market);
 
-    this.chat = model.startChat({
-      history: [
-        { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
-        {
-          role: 'model',
-          parts: [{ text: "Understood. I'll help create a job posting through natural conversation." }],
-        },
-      ],
-    });
+    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const initial = await this.chat.sendMessage(
-      `The retailer "${retailerName}" is creating a permanent hire job posting. They specialize in ${storeType}. Start the conversation with a friendly greeting and first question.`
-    );
+    // Build history: system prompt + any existing conversation
+    const history: { role: 'user' | 'model'; parts: { text: string }[] }[] = [
+      { role: 'user', parts: [{ text: prompt }] },
+      { role: 'model', parts: [{ text: "Understood. I'm ready to help with salary insights and job postings." }] },
+    ];
 
-    return initial.response.text();
+    // Append existing conversation history if provided
+    if (existingHistory && existingHistory.length > 0) {
+      for (const msg of existingHistory) {
+        history.push({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.content }],
+        });
+      }
+    }
+
+    this.chat = model.startChat({ history });
+
+    // Static greeting - no API call needed
+    return `Hey ${userName}, I'm here to connect you with retail talent. Want to create a job posting or explore the ${market} market first?`;
   }
 
   async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec }> {
@@ -92,7 +365,7 @@ export class GeminiService {
 }
 
 // Mock service for when no API key is available
-// Simulates realistic conversation by tracking what info has been gathered
+// Simulates realistic conversation with salary data
 export class MockGeminiService {
   private gathered: {
     roleType?: string;
@@ -102,9 +375,15 @@ export class MockGeminiService {
     title?: string;
   } = {};
 
-  async startChat(_retailerName: string, _storeType: string): Promise<string> {
+  async startChat(
+    userName: string,
+    retailerName: string,
+    _retailerClass: 'Luxury' | 'Specialty' | 'Big Box' = 'Luxury',
+    market: string = 'Austin',
+    _existingHistory?: { role: 'user' | 'model'; content: string }[]
+  ): Promise<string> {
     this.gathered = {};
-    return "Hi! I'm here to help you create a job posting for a permanent hire. What type of retail role are you looking to fill?";
+    return `Hi ${userName}! I can help you with salary insights and job postings for ${retailerName} in ${market}. What role are you looking to hire for, or would you like to see current market rates?`;
   }
 
   async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec }> {

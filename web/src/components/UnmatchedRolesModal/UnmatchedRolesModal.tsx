@@ -24,7 +24,7 @@ interface UnmatchedRolesModalProps {
 }
 
 type RoleAction =
-  | { type: 'add'; category: 'Entry-Level' | 'Specialized' | 'Management'; customTitle?: string }
+  | { type: 'add'; category: 'Sales Floor' | 'Sales Support' | 'Back of House' | 'Specialized' | 'Management'; customTitle?: string }
   | { type: 'map'; existingRoleId: string }
   | { type: 'ignore' }
   | { type: 'none' };
@@ -56,13 +56,13 @@ export function UnmatchedRolesModal({
   const handleAddCheck = (title: string, checked: boolean) => {
     if (checked) {
       // Prepopulate the Title field with the scraped job title
-      setAction(title, { type: 'add', category: 'Entry-Level', customTitle: title });
+      setAction(title, { type: 'add', category: 'Sales Floor', customTitle: title });
     } else {
       setAction(title, { type: 'none' });
     }
   };
 
-  const handleCategoryChange = (title: string, category: 'Entry-Level' | 'Specialized' | 'Management') => {
+  const handleCategoryChange = (title: string, category: 'Sales Floor' | 'Sales Support' | 'Back of House' | 'Specialized' | 'Management') => {
     const current = getAction(title);
     if (current.type === 'add') {
       setAction(title, { type: 'add', category, customTitle: current.customTitle });
@@ -179,7 +179,9 @@ export function UnmatchedRolesModal({
                       disabled={!isAdding || isIgnored}
                       className={!isAdding || isIgnored ? 'disabled' : ''}
                     >
-                      <option value="Entry-Level">Entry-Level</option>
+                      <option value="Sales Floor">Sales Floor</option>
+                      <option value="Sales Support">Sales Support</option>
+                      <option value="Back of House">Back of House</option>
                       <option value="Specialized">Specialized</option>
                       <option value="Management">Management</option>
                     </select>

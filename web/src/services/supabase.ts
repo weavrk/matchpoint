@@ -27,7 +27,7 @@ export interface Role {
 export interface Retailer {
   id: string;
   name: string;
-  classification: 'Luxury' | 'Mid' | 'Big Box';
+  classification: 'Luxury' | 'Specialty' | 'Big Box';
   created_at: string;
   updated_at: string;
 }
@@ -134,7 +134,6 @@ export async function fetchRoles(): Promise<Role[]> {
   const { data, error } = await supabase
     .from('roles')
     .select('*')
-    .order('category')
     .order('title');
 
   if (error) {
@@ -272,7 +271,7 @@ export async function fetchRetailers(): Promise<Retailer[]> {
   return data || [];
 }
 
-export async function addRetailer(name: string, classification: 'Luxury' | 'Mid' | 'Big Box'): Promise<Retailer> {
+export async function addRetailer(name: string, classification: 'Luxury' | 'Specialty' | 'Big Box'): Promise<Retailer> {
   const { data, error } = await supabase
     .from('retailers')
     .insert({ name, classification })
@@ -313,7 +312,7 @@ export async function deleteRetailer(id: string): Promise<void> {
   }
 }
 
-export async function syncRetailers(retailers: { name: string; classification: 'Luxury' | 'Mid' | 'Big Box' }[]): Promise<void> {
+export async function syncRetailers(retailers: { name: string; classification: 'Luxury' | 'Specialty' | 'Big Box' }[]): Promise<void> {
   // Get existing retailers
   const { data: existing, error: fetchError } = await supabase
     .from('retailers')

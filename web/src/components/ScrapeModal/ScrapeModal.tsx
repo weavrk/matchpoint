@@ -32,7 +32,7 @@ interface SimpleRole {
 interface SimpleRetailer {
   id: string;
   name: string;
-  classification: 'Luxury' | 'Mid' | 'Big Box';
+  classification: 'Luxury' | 'Specialty' | 'Big Box';
 }
 
 interface ScrapeModalProps {
@@ -52,7 +52,7 @@ export interface ScrapeConfig {
   markets: string[];
   roles: string[];
   retailers: string[];
-  retailerClassifications: ('Luxury' | 'Mid' | 'Big Box')[];
+  retailerClassifications: ('Luxury' | 'Specialty' | 'Big Box')[];
 }
 
 // Job sites
@@ -73,7 +73,7 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
   const [selectedMarkets, setSelectedMarkets] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [selectedRetailers, setSelectedRetailers] = useState<string[]>([]);
-  const [selectedClassifications, setSelectedClassifications] = useState<('Luxury' | 'Mid' | 'Big Box')[]>([]);
+  const [selectedClassifications, setSelectedClassifications] = useState<('Luxury' | 'Specialty' | 'Big Box')[]>([]);
 
   // Search values
   const [marketSearch, setMarketSearch] = useState('');
@@ -108,7 +108,7 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
       setSelectedMarkets([]);
       setSelectedRoles(roles.map(r => r.id));
       setSelectedRetailers([]);
-      setSelectedClassifications(['Luxury', 'Mid', 'Big Box']);
+      setSelectedClassifications(['Luxury', 'Specialty', 'Big Box']);
       setMarketSearch('');
       setRetailerSearch('');
     }
@@ -175,7 +175,7 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
     setSelectedRetailers(prev => prev.filter(x => x !== id));
   };
 
-  const handleToggleClassification = (classification: 'Luxury' | 'Mid' | 'Big Box') => {
+  const handleToggleClassification = (classification: 'Luxury' | 'Specialty' | 'Big Box') => {
     setSelectedClassifications(prev =>
       prev.includes(classification)
         ? prev.filter(x => x !== classification)
@@ -308,7 +308,7 @@ export function ScrapeModal({ isOpen, onClose, markets, roles, retailers, onRunS
                   />
                 </div>
                 <div className="scrape-dropdown-actions">
-                  {(['Luxury', 'Mid', 'Big Box'] as const).map(classification => (
+                  {(['Luxury', 'Specialty', 'Big Box'] as const).map(classification => (
                     <button
                       key={classification}
                       disabled={selectedClassifications.includes(classification)}

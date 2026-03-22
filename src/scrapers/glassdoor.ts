@@ -715,7 +715,7 @@ export async function scrapeGlassdoor(options: ScrapeOptions): Promise<ScrapedJo
 // Filter configuration for scraping
 export interface ScrapeFilterConfig {
   retailers?: string[];
-  retailerClassifications?: ('Luxury' | 'Mid' | 'Big Box')[];
+  retailerClassifications?: ('Luxury' | 'Specialty' | 'Big Box')[];
 }
 
 // Filter scraped jobs to only those matching specified retailers

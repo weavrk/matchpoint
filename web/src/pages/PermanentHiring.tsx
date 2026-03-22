@@ -1,12 +1,11 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Briefcase, Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Play, Check, Info, Loader2, Clipboard, CircleMinus } from 'lucide-react';
+import { Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Check, Info, Loader2, Clipboard, CircleMinus, BotOff, BotMessageSquare, RefreshCw, RefreshCwOff } from 'lucide-react';
 import { ChatInterface } from '../components/Chat';
-import { WorkerGrid } from '../components/Workers';
 import { ScrapeModal, type ScrapeConfig } from '../components/ScrapeModal';
 import { ScrapeProgressModal, type ScrapeProgressData } from '../components/ScrapeProgressModal';
 import { UnmatchedRolesModal } from '../components/UnmatchedRolesModal';
 import { GeminiService, MockGeminiService } from '../services/gemini';
-import { matchWorkers } from '../services/matching';
+import { matchWorkers } from '../services/workerMatching';
 import {
   fetchMarkets,
   fetchRoles,
@@ -33,12 +32,28 @@ type TabId = 'ask-reflex' | 'published-jobs' | 'oz';
 
 // All job roles flattened for the Oz admin
 const ALL_ROLES = [
+  // Sales Floor
   'Sales Associate / Retail Associate',
+  'Store Associate',
+  'Brand Representative',
+  // Sales Support
+  'Sales Assistant',
   'Cashier',
-  'Stock Associate / Stocker',
   'Fitting Room Attendant',
-  'Visual Merchandiser',
+  'Team Member',
+  'Retail Customer Service',
+  // Back of House
+  'Stock Associate / Stocker',
+  'Inventory Associate',
+  'Operations Associate',
+  // Specialized
   'Beauty Advisor / Cosmetics Associate',
+  'Stylist',
+  'Visual Merchandiser',
+  'Pop Up',
+  // Management
+  'Store Team Leader',
+  'Supervisor',
   'Key Holder / Lead Associate',
   'Department Supervisor',
   'Assistant Store Manager',
@@ -48,17 +63,32 @@ const ALL_ROLES = [
 
 // Job roles by category with descriptions
 const JOB_ROLES = {
-  entryLevel: [
+  salesFloor: [
     { title: 'Sales Associate / Retail Associate', description: 'Customer service, sales floor support, POS transactions' },
+    { title: 'Store Associate', description: 'General sales floor support and customer assistance' },
+    { title: 'Brand Representative', description: 'Brand ambassador, product expertise, customer engagement' },
+  ],
+  salesSupport: [
+    { title: 'Sales Assistant', description: 'Support sales team, customer service backup' },
     { title: 'Cashier', description: 'Checkout operations, handling payments' },
-    { title: 'Stock Associate / Stocker', description: 'Receiving, organizing, replenishing inventory' },
     { title: 'Fitting Room Attendant', description: 'Managing dressing rooms, returning items to floor' },
+    { title: 'Team Member', description: 'General retail support, multi-functional role' },
+    { title: 'Retail Customer Service', description: 'Customer inquiries, returns, service desk' },
+  ],
+  backOfHouse: [
+    { title: 'Stock Associate / Stocker', description: 'Receiving, organizing, replenishing inventory' },
+    { title: 'Inventory Associate', description: 'Inventory management, cycle counts, stock accuracy' },
+    { title: 'Operations Associate', description: 'Store operations, logistics, back-office support' },
   ],
   specialized: [
-    { title: 'Visual Merchandiser', description: 'Displays, store layout, product presentation' },
     { title: 'Beauty Advisor / Cosmetics Associate', description: 'Product expertise, demos (Sephora, Ulta, department stores)' },
+    { title: 'Stylist', description: 'Personal styling, outfit consultation, clienteling' },
+    { title: 'Visual Merchandiser', description: 'Displays, store layout, product presentation' },
+    { title: 'Pop Up', description: 'Temporary retail events, brand activations' },
   ],
   management: [
+    { title: 'Store Team Leader', description: 'Team leadership, shift coordination' },
+    { title: 'Supervisor', description: 'Floor supervision, team oversight' },
     { title: 'Key Holder / Lead Associate', description: 'Opening/closing, shift supervision' },
     { title: 'Department Supervisor', description: 'Oversees specific section (shoes, menswear, etc.)' },
     { title: 'Assistant Store Manager', description: 'Operations support, staff scheduling' },
@@ -68,7 +98,7 @@ const JOB_ROLES = {
 };
 
 // Retailers by classification
-const RETAILERS: { name: string; classification: 'Luxury' | 'Mid' | 'Big Box' }[] = [
+const RETAILERS: { name: string; classification: 'Luxury' | 'Specialty' | 'Big Box' }[] = [
   // Luxury
   { name: '7 For All Mankind', classification: 'Luxury' },
   { name: 'Aerin', classification: 'Luxury' },
@@ -224,158 +254,158 @@ const RETAILERS: { name: string; classification: 'Luxury' | 'Mid' | 'Big Box' }[
   { name: 'Y-3', classification: 'Luxury' },
   { name: 'Yonex', classification: 'Luxury' },
   { name: 'Zadig & Voltaire', classification: 'Luxury' },
-  // Mid
-  { name: 'Abercrombie & Fitch', classification: 'Mid' },
-  { name: 'Adidas', classification: 'Mid' },
-  { name: 'Aerie', classification: 'Mid' },
-  { name: 'Aeropostale', classification: 'Mid' },
-  { name: 'Aldo', classification: 'Mid' },
-  { name: 'Allbirds', classification: 'Mid' },
-  { name: 'Alo Yoga', classification: 'Mid' },
-  { name: 'Altar\'d State', classification: 'Mid' },
-  { name: 'American Eagle', classification: 'Mid' },
-  { name: 'Ann Taylor', classification: 'Mid' },
-  { name: 'Anthropologie', classification: 'Mid' },
-  { name: 'Apple', classification: 'Mid' },
-  { name: 'Athleta', classification: 'Mid' },
-  { name: 'Aveda', classification: 'Mid' },
-  { name: 'Banana Republic', classification: 'Mid' },
-  { name: 'Bare Minerals', classification: 'Mid' },
-  { name: 'Bath & Body Works', classification: 'Mid' },
-  { name: 'Belk', classification: 'Mid' },
-  { name: 'Beyond Yoga', classification: 'Mid' },
-  { name: 'Bobbi Brown', classification: 'Mid' },
-  { name: 'Brighton', classification: 'Mid' },
-  { name: 'Buckle', classification: 'Mid' },
-  { name: 'Buffalo Exchange', classification: 'Mid' },
-  { name: 'Build-A-Bear Workshop', classification: 'Mid' },
-  { name: 'Burlington', classification: 'Mid' },
-  { name: 'Carter\'s', classification: 'Mid' },
-  { name: 'Cato', classification: 'Mid' },
-  { name: 'Cavender\'s', classification: 'Mid' },
-  { name: 'Charlotte Russe', classification: 'Mid' },
-  { name: 'Chico\'s', classification: 'Mid' },
-  { name: 'Claire\'s', classification: 'Mid' },
-  { name: 'Clarks', classification: 'Mid' },
-  { name: 'Clinique', classification: 'Mid' },
-  { name: 'Coach', classification: 'Mid' },
-  { name: 'Columbia', classification: 'Mid' },
-  { name: 'Converse', classification: 'Mid' },
-  { name: 'Cotton On', classification: 'Mid' },
-  { name: 'Crate & Barrel', classification: 'Mid' },
-  { name: 'Crocs', classification: 'Mid' },
-  { name: 'David\'s Bridal', classification: 'Mid' },
-  { name: 'Dillard\'s', classification: 'Mid' },
-  { name: 'DKNY', classification: 'Mid' },
-  { name: 'DSW', classification: 'Mid' },
-  { name: 'Easy Spirit', classification: 'Mid' },
-  { name: 'Ecco', classification: 'Mid' },
-  { name: 'Eddie Bauer', classification: 'Mid' },
-  { name: 'Everlane', classification: 'Mid' },
-  { name: 'Express', classification: 'Mid' },
-  { name: 'Fabletics', classification: 'Mid' },
-  { name: 'Finish Line', classification: 'Mid' },
-  { name: 'Foot Locker', classification: 'Mid' },
-  { name: 'Forever 21', classification: 'Mid' },
-  { name: 'Fossil', classification: 'Mid' },
-  { name: 'Francesca\'s', classification: 'Mid' },
-  { name: 'Gap', classification: 'Mid' },
-  { name: 'Glossier', classification: 'Mid' },
-  { name: 'Gorjana', classification: 'Mid' },
-  { name: 'H&M', classification: 'Mid' },
-  { name: 'Hallmark', classification: 'Mid' },
-  { name: 'Hobby Lobby', classification: 'Mid' },
-  { name: 'Hollister', classification: 'Mid' },
-  { name: 'Hot Topic', classification: 'Mid' },
-  { name: 'J. Crew Factory', classification: 'Mid' },
-  { name: 'J. Jill', classification: 'Mid' },
-  { name: 'James Avery', classification: 'Mid' },
-  { name: 'Janie and Jack', classification: 'Mid' },
-  { name: 'Jared Jewelry', classification: 'Mid' },
-  { name: 'JCPenney', classification: 'Mid' },
-  { name: 'Johnston & Murphy', classification: 'Mid' },
-  { name: 'Jos. A. Bank', classification: 'Mid' },
-  { name: 'Journey\'s', classification: 'Mid' },
-  { name: 'Justice', classification: 'Mid' },
-  { name: 'Kate Spade', classification: 'Mid' },
-  { name: 'Kendra Scott', classification: 'Mid' },
-  { name: 'L.L.Bean', classification: 'Mid' },
-  { name: 'La Mer', classification: 'Mid' },
-  { name: 'Lane Bryant', classification: 'Mid' },
-  { name: 'LensCrafters', classification: 'Mid' },
-  { name: 'Levi\'s', classification: 'Mid' },
-  { name: 'Lids', classification: 'Mid' },
-  { name: 'LOFT', classification: 'Mid' },
-  { name: 'Lord & Taylor', classification: 'Mid' },
-  { name: 'Lucky Brand', classification: 'Mid' },
-  { name: 'Lululemon', classification: 'Mid' },
-  { name: 'LUSH Cosmetics', classification: 'Mid' },
-  { name: 'MAC Cosmetics', classification: 'Mid' },
-  { name: 'Macy\'s', classification: 'Mid' },
-  { name: 'Madewell', classification: 'Mid' },
-  { name: 'Mango', classification: 'Mid' },
-  { name: 'Maurices', classification: 'Mid' },
-  { name: 'Men\'s Wearhouse', classification: 'Mid' },
-  { name: 'Neiman Marcus', classification: 'Mid' },
-  { name: 'New Balance', classification: 'Mid' },
-  { name: 'New York & Company', classification: 'Mid' },
-  { name: 'Nike', classification: 'Mid' },
-  { name: 'Nordstrom', classification: 'Mid' },
-  { name: 'Nordstrom Rack', classification: 'Mid' },
-  { name: 'North Face', classification: 'Mid' },
-  { name: 'Oakley', classification: 'Mid' },
-  { name: 'Old Navy', classification: 'Mid' },
-  { name: 'OshKosh B\'gosh', classification: 'Mid' },
-  { name: 'PacSun', classification: 'Mid' },
-  { name: 'Pandora', classification: 'Mid' },
-  { name: 'Patagonia', classification: 'Mid' },
-  { name: 'Perry Ellis', classification: 'Mid' },
-  { name: 'PINK', classification: 'Mid' },
-  { name: 'Plato\'s Closet', classification: 'Mid' },
-  { name: 'Pottery Barn', classification: 'Mid' },
-  { name: 'Puma', classification: 'Mid' },
-  { name: 'Quay', classification: 'Mid' },
-  { name: 'Ray Ban', classification: 'Mid' },
-  { name: 'Reebok', classification: 'Mid' },
-  { name: 'Reformation', classification: 'Mid' },
-  { name: 'REI', classification: 'Mid' },
-  { name: 'Restoration Hardware', classification: 'Mid' },
-  { name: 'Rue 21', classification: 'Mid' },
-  { name: 'Sally Beauty', classification: 'Mid' },
-  { name: 'Sephora', classification: 'Mid' },
-  { name: 'Shoe Carnival', classification: 'Mid' },
-  { name: 'Skechers', classification: 'Mid' },
-  { name: 'SKIMS', classification: 'Mid' },
-  { name: 'Soma', classification: 'Mid' },
-  { name: 'Sperry', classification: 'Mid' },
-  { name: 'Steve Madden', classification: 'Mid' },
-  { name: 'Stitch Fix', classification: 'Mid' },
-  { name: 'Sunglass Hut', classification: 'Mid' },
-  { name: 'Swarovski', classification: 'Mid' },
-  { name: 'Talbots', classification: 'Mid' },
-  { name: 'The Children\'s Place', classification: 'Mid' },
-  { name: 'The Container Store', classification: 'Mid' },
-  { name: 'The RealReal', classification: 'Mid' },
-  { name: 'Tilly\'s', classification: 'Mid' },
-  { name: 'Timberland', classification: 'Mid' },
-  { name: 'Tommy John', classification: 'Mid' },
-  { name: 'Too Faced Cosmetics', classification: 'Mid' },
-  { name: 'True Religion Apparel', classification: 'Mid' },
-  { name: 'UGG', classification: 'Mid' },
-  { name: 'Ulta Beauty', classification: 'Mid' },
-  { name: 'Under Armour', classification: 'Mid' },
-  { name: 'UNIQLO', classification: 'Mid' },
-  { name: 'Urban Outfitters', classification: 'Mid' },
-  { name: 'Vans', classification: 'Mid' },
-  { name: 'Vera Bradley', classification: 'Mid' },
-  { name: 'Victoria\'s Secret', classification: 'Mid' },
-  { name: 'Vineyard Vines', classification: 'Mid' },
-  { name: 'Vuori', classification: 'Mid' },
-  { name: 'White House Black Market', classification: 'Mid' },
-  { name: 'World Market', classification: 'Mid' },
-  { name: 'Yankee Candle', classification: 'Mid' },
-  { name: 'Zara', classification: 'Mid' },
-  { name: 'Zumiez', classification: 'Mid' },
+  // Specialty
+  { name: 'Abercrombie & Fitch', classification: 'Specialty' },
+  { name: 'Adidas', classification: 'Specialty' },
+  { name: 'Aerie', classification: 'Specialty' },
+  { name: 'Aeropostale', classification: 'Specialty' },
+  { name: 'Aldo', classification: 'Specialty' },
+  { name: 'Allbirds', classification: 'Specialty' },
+  { name: 'Alo Yoga', classification: 'Specialty' },
+  { name: 'Altar\'d State', classification: 'Specialty' },
+  { name: 'American Eagle', classification: 'Specialty' },
+  { name: 'Ann Taylor', classification: 'Specialty' },
+  { name: 'Anthropologie', classification: 'Specialty' },
+  { name: 'Apple', classification: 'Specialty' },
+  { name: 'Athleta', classification: 'Specialty' },
+  { name: 'Aveda', classification: 'Specialty' },
+  { name: 'Banana Republic', classification: 'Specialty' },
+  { name: 'Bare Minerals', classification: 'Specialty' },
+  { name: 'Bath & Body Works', classification: 'Specialty' },
+  { name: 'Belk', classification: 'Specialty' },
+  { name: 'Beyond Yoga', classification: 'Specialty' },
+  { name: 'Bobbi Brown', classification: 'Specialty' },
+  { name: 'Brighton', classification: 'Specialty' },
+  { name: 'Buckle', classification: 'Specialty' },
+  { name: 'Buffalo Exchange', classification: 'Specialty' },
+  { name: 'Build-A-Bear Workshop', classification: 'Specialty' },
+  { name: 'Burlington', classification: 'Specialty' },
+  { name: 'Carter\'s', classification: 'Specialty' },
+  { name: 'Cato', classification: 'Specialty' },
+  { name: 'Cavender\'s', classification: 'Specialty' },
+  { name: 'Charlotte Russe', classification: 'Specialty' },
+  { name: 'Chico\'s', classification: 'Specialty' },
+  { name: 'Claire\'s', classification: 'Specialty' },
+  { name: 'Clarks', classification: 'Specialty' },
+  { name: 'Clinique', classification: 'Specialty' },
+  { name: 'Coach', classification: 'Specialty' },
+  { name: 'Columbia', classification: 'Specialty' },
+  { name: 'Converse', classification: 'Specialty' },
+  { name: 'Cotton On', classification: 'Specialty' },
+  { name: 'Crate & Barrel', classification: 'Specialty' },
+  { name: 'Crocs', classification: 'Specialty' },
+  { name: 'David\'s Bridal', classification: 'Specialty' },
+  { name: 'Dillard\'s', classification: 'Specialty' },
+  { name: 'DKNY', classification: 'Specialty' },
+  { name: 'DSW', classification: 'Specialty' },
+  { name: 'Easy Spirit', classification: 'Specialty' },
+  { name: 'Ecco', classification: 'Specialty' },
+  { name: 'Eddie Bauer', classification: 'Specialty' },
+  { name: 'Everlane', classification: 'Specialty' },
+  { name: 'Express', classification: 'Specialty' },
+  { name: 'Fabletics', classification: 'Specialty' },
+  { name: 'Finish Line', classification: 'Specialty' },
+  { name: 'Foot Locker', classification: 'Specialty' },
+  { name: 'Forever 21', classification: 'Specialty' },
+  { name: 'Fossil', classification: 'Specialty' },
+  { name: 'Francesca\'s', classification: 'Specialty' },
+  { name: 'Gap', classification: 'Specialty' },
+  { name: 'Glossier', classification: 'Specialty' },
+  { name: 'Gorjana', classification: 'Specialty' },
+  { name: 'H&M', classification: 'Specialty' },
+  { name: 'Hallmark', classification: 'Specialty' },
+  { name: 'Hobby Lobby', classification: 'Specialty' },
+  { name: 'Hollister', classification: 'Specialty' },
+  { name: 'Hot Topic', classification: 'Specialty' },
+  { name: 'J. Crew Factory', classification: 'Specialty' },
+  { name: 'J. Jill', classification: 'Specialty' },
+  { name: 'James Avery', classification: 'Specialty' },
+  { name: 'Janie and Jack', classification: 'Specialty' },
+  { name: 'Jared Jewelry', classification: 'Specialty' },
+  { name: 'JCPenney', classification: 'Specialty' },
+  { name: 'Johnston & Murphy', classification: 'Specialty' },
+  { name: 'Jos. A. Bank', classification: 'Specialty' },
+  { name: 'Journey\'s', classification: 'Specialty' },
+  { name: 'Justice', classification: 'Specialty' },
+  { name: 'Kate Spade', classification: 'Specialty' },
+  { name: 'Kendra Scott', classification: 'Specialty' },
+  { name: 'L.L.Bean', classification: 'Specialty' },
+  { name: 'La Mer', classification: 'Specialty' },
+  { name: 'Lane Bryant', classification: 'Specialty' },
+  { name: 'LensCrafters', classification: 'Specialty' },
+  { name: 'Levi\'s', classification: 'Specialty' },
+  { name: 'Lids', classification: 'Specialty' },
+  { name: 'LOFT', classification: 'Specialty' },
+  { name: 'Lord & Taylor', classification: 'Specialty' },
+  { name: 'Lucky Brand', classification: 'Specialty' },
+  { name: 'Lululemon', classification: 'Specialty' },
+  { name: 'LUSH Cosmetics', classification: 'Specialty' },
+  { name: 'MAC Cosmetics', classification: 'Specialty' },
+  { name: 'Macy\'s', classification: 'Specialty' },
+  { name: 'Madewell', classification: 'Specialty' },
+  { name: 'Mango', classification: 'Specialty' },
+  { name: 'Maurices', classification: 'Specialty' },
+  { name: 'Men\'s Wearhouse', classification: 'Specialty' },
+  { name: 'Neiman Marcus', classification: 'Specialty' },
+  { name: 'New Balance', classification: 'Specialty' },
+  { name: 'New York & Company', classification: 'Specialty' },
+  { name: 'Nike', classification: 'Specialty' },
+  { name: 'Nordstrom', classification: 'Specialty' },
+  { name: 'Nordstrom Rack', classification: 'Specialty' },
+  { name: 'North Face', classification: 'Specialty' },
+  { name: 'Oakley', classification: 'Specialty' },
+  { name: 'Old Navy', classification: 'Specialty' },
+  { name: 'OshKosh B\'gosh', classification: 'Specialty' },
+  { name: 'PacSun', classification: 'Specialty' },
+  { name: 'Pandora', classification: 'Specialty' },
+  { name: 'Patagonia', classification: 'Specialty' },
+  { name: 'Perry Ellis', classification: 'Specialty' },
+  { name: 'PINK', classification: 'Specialty' },
+  { name: 'Plato\'s Closet', classification: 'Specialty' },
+  { name: 'Pottery Barn', classification: 'Specialty' },
+  { name: 'Puma', classification: 'Specialty' },
+  { name: 'Quay', classification: 'Specialty' },
+  { name: 'Ray Ban', classification: 'Specialty' },
+  { name: 'Reebok', classification: 'Specialty' },
+  { name: 'Reformation', classification: 'Specialty' },
+  { name: 'REI', classification: 'Specialty' },
+  { name: 'Restoration Hardware', classification: 'Specialty' },
+  { name: 'Rue 21', classification: 'Specialty' },
+  { name: 'Sally Beauty', classification: 'Specialty' },
+  { name: 'Sephora', classification: 'Specialty' },
+  { name: 'Shoe Carnival', classification: 'Specialty' },
+  { name: 'Skechers', classification: 'Specialty' },
+  { name: 'SKIMS', classification: 'Specialty' },
+  { name: 'Soma', classification: 'Specialty' },
+  { name: 'Sperry', classification: 'Specialty' },
+  { name: 'Steve Madden', classification: 'Specialty' },
+  { name: 'Stitch Fix', classification: 'Specialty' },
+  { name: 'Sunglass Hut', classification: 'Specialty' },
+  { name: 'Swarovski', classification: 'Specialty' },
+  { name: 'Talbots', classification: 'Specialty' },
+  { name: 'The Children\'s Place', classification: 'Specialty' },
+  { name: 'The Container Store', classification: 'Specialty' },
+  { name: 'The RealReal', classification: 'Specialty' },
+  { name: 'Tilly\'s', classification: 'Specialty' },
+  { name: 'Timberland', classification: 'Specialty' },
+  { name: 'Tommy John', classification: 'Specialty' },
+  { name: 'Too Faced Cosmetics', classification: 'Specialty' },
+  { name: 'True Religion Apparel', classification: 'Specialty' },
+  { name: 'UGG', classification: 'Specialty' },
+  { name: 'Ulta Beauty', classification: 'Specialty' },
+  { name: 'Under Armour', classification: 'Specialty' },
+  { name: 'UNIQLO', classification: 'Specialty' },
+  { name: 'Urban Outfitters', classification: 'Specialty' },
+  { name: 'Vans', classification: 'Specialty' },
+  { name: 'Vera Bradley', classification: 'Specialty' },
+  { name: 'Victoria\'s Secret', classification: 'Specialty' },
+  { name: 'Vineyard Vines', classification: 'Specialty' },
+  { name: 'Vuori', classification: 'Specialty' },
+  { name: 'White House Black Market', classification: 'Specialty' },
+  { name: 'World Market', classification: 'Specialty' },
+  { name: 'Yankee Candle', classification: 'Specialty' },
+  { name: 'Zara', classification: 'Specialty' },
+  { name: 'Zumiez', classification: 'Specialty' },
   // Big Box
   { name: 'Academy Sports + Outdoors', classification: 'Big Box' },
   { name: 'Amazon', classification: 'Big Box' },
@@ -655,7 +685,13 @@ function formatRetailerDisplayName(name: string): string {
 
 export function PermanentHiring() {
   const [activeTab, setActiveTab] = useState<TabId>('ask-reflex');
-  const [chatStarted, setChatStarted] = useState(false);
+  const [, setChatStarted] = useState(false);
+  const [agentActive, setAgentActive] = useState(false); // Agent on/off state (resets on page refresh)
+  const [persistChat, setPersistChat] = useState(() => {
+    // Load persist preference from localStorage (defaults to true)
+    const stored = localStorage.getItem('matchpoint_persist_chat');
+    return stored !== 'false';
+  });
   const [showJobSitesInfo, setShowJobSitesInfo] = useState(false);
   const [showScrapeModal, setShowScrapeModal] = useState(false);
 
@@ -663,7 +699,7 @@ export function PermanentHiring() {
   const jobSitesInfoRef = useRef<HTMLDivElement>(null);
   const [ozMarkets, setOzMarkets] = useState<{ id?: string; name: string; state: string }[]>([]);
   const [ozRoles, setOzRoles] = useState<{ id?: string; title: string; category?: string; match_keywords?: string[] | null }[]>([]);
-  const [ozRetailers, setOzRetailers] = useState<{ id?: string; name: string; classification: 'Luxury' | 'Mid' | 'Big Box'; created_at?: string; updated_at?: string }[]>([]);
+  const [ozRetailers, setOzRetailers] = useState<{ id?: string; name: string; classification: 'Luxury' | 'Specialty' | 'Big Box'; created_at?: string; updated_at?: string }[]>([]);
   const [newMarketState, setNewMarketState] = useState('');
 
   // Loading and saving states
@@ -732,8 +768,8 @@ export function PermanentHiring() {
   const ozSortedStates = useMemo(() => Object.keys(ozMarketsByState).sort(), [ozMarketsByState]);
   const [editingSection, setEditingSection] = useState<'markets' | 'roles' | 'retailers' | null>(null);
   const [newItemInput, setNewItemInput] = useState('');
-  const [newRetailerClass, setNewRetailerClass] = useState<'Luxury' | 'Mid' | 'Big Box'>('Mid');
-  const [newRoleCategory, setNewRoleCategory] = useState<'Entry-Level' | 'Specialized' | 'Management'>('Entry-Level');
+  const [newRetailerClass, setNewRetailerClass] = useState<'Luxury' | 'Specialty' | 'Big Box'>('Specialty');
+  const [newRoleCategory, setNewRoleCategory] = useState<'Sales Floor' | 'Sales Support' | 'Back of House' | 'Specialized' | 'Management'>('Sales Floor');
 
   // Search state for each section
   const [marketsSearch, setMarketsSearch] = useState('');
@@ -905,11 +941,24 @@ export function PermanentHiring() {
   const [jobSortColumn, setJobSortColumn] = useState<'source' | 'market' | 'retailer' | 'role' | 'salary' | 'employment_type'>('market');
   const [jobSortDirection, setJobSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Load messages from localStorage if persistChat is enabled
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    const stored = localStorage.getItem('matchpoint_persist_chat');
+    if (stored !== 'false') {
+      const savedMessages = localStorage.getItem('matchpoint_chat_history');
+      if (savedMessages) {
+        try {
+          const parsed = JSON.parse(savedMessages);
+          return parsed.map((m: ChatMessage) => ({ ...m, timestamp: new Date(m.timestamp) }));
+        } catch { /* ignore parse errors */ }
+      }
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
-  const [matchedWorkers, setMatchedWorkers] = useState<MatchedWorker[]>([]);
-  const [jobSpec, setJobSpec] = useState<JobSpec | null>(null);
-  const [geminiService] = useState(() => {
+  const [, setMatchedWorkers] = useState<MatchedWorker[]>([]);
+  const [, setJobSpec] = useState<JobSpec | null>(null);
+  const [geminiService, setGeminiService] = useState(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (apiKey) {
       console.log('Using real Gemini service');
@@ -919,36 +968,99 @@ export function PermanentHiring() {
     return new MockGeminiService();
   });
 
-  const startConversation = useCallback(async () => {
-    if (chatStarted) return;
-    setChatStarted(true);
-    setIsLoading(true);
-    try {
-      const response = await geminiService.startChat(
-        SAMPLE_RETAILER.name,
-        SAMPLE_RETAILER.brandTier
-      );
-      setMessages([
-        {
-          id: '1',
-          role: 'assistant',
-          content: response,
-          timestamp: new Date(),
-        },
-      ]);
-    } catch (error) {
-      console.error('Failed to start chat:', error);
-      setMessages([
-        {
-          id: '1',
-          role: 'assistant',
-          content: "Hi! I'm here to help you create a job posting for a permanent hire. What type of role are you looking to fill?",
-          timestamp: new Date(),
-        },
-      ]);
+  // Save messages to localStorage when they change (if persistChat is on)
+  useEffect(() => {
+    if (persistChat && messages.length > 0) {
+      localStorage.setItem('matchpoint_chat_history', JSON.stringify(messages));
     }
-    setIsLoading(false);
-  }, [geminiService, chatStarted]);
+  }, [messages, persistChat]);
+
+  // Toggle persist mode
+  const togglePersistChat = useCallback(() => {
+    setPersistChat(prev => {
+      const newValue = !prev;
+      localStorage.setItem('matchpoint_persist_chat', String(newValue));
+      if (!newValue) {
+        // Clear stored chat when disabling persistence
+        localStorage.removeItem('matchpoint_chat_history');
+      }
+      return newValue;
+    });
+  }, []);
+
+  // Toggle agent on/off
+  const toggleAgent = useCallback(async () => {
+    if (agentActive) {
+      // Turn off agent - clear chat state
+      setAgentActive(false);
+      setChatStarted(false);
+      setMessages([]);
+      // Recreate gemini service for fresh state
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      setGeminiService(apiKey ? new GeminiService(apiKey) : new MockGeminiService());
+    } else {
+      // Turn on agent - start conversation
+      setAgentActive(true);
+      setChatStarted(true);
+      setIsLoading(true);
+
+      // Check for existing messages in localStorage if persist is on
+      let existingHistory: { role: 'user' | 'model'; content: string }[] | undefined;
+      if (persistChat) {
+        const savedMessages = localStorage.getItem('matchpoint_chat_history');
+        if (savedMessages) {
+          try {
+            const parsed = JSON.parse(savedMessages) as ChatMessage[];
+            if (parsed.length > 0) {
+              // Set messages for UI
+              setMessages(parsed.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
+              // Convert for Gemini history (skip first assistant greeting)
+              existingHistory = parsed.slice(1).map(m => ({
+                role: m.role === 'user' ? 'user' as const : 'model' as const,
+                content: m.content,
+              }));
+            }
+          } catch { /* ignore parse errors */ }
+        }
+      }
+
+      try {
+        // Prototype context from CLAUDE.md: Mike Meyers, Ariat, Austin, Luxury
+        const response = await geminiService.startChat(
+          'Mike',
+          'Ariat',
+          'Luxury',
+          'Austin',
+          existingHistory
+        );
+        // Only set initial message if we didn't load from localStorage
+        if (!existingHistory || existingHistory.length === 0) {
+          setMessages([
+            {
+              id: '1',
+              role: 'assistant',
+              content: response,
+              timestamp: new Date(),
+            },
+          ]);
+        }
+      } catch (error) {
+        console.error('Failed to start chat:', error);
+        if (!existingHistory || existingHistory.length === 0) {
+          setMessages([
+            {
+              id: '1',
+              role: 'assistant',
+              content: "Hi! I'm here to help you create a job posting for a permanent hire. What type of role are you looking to fill?",
+              timestamp: new Date(),
+            },
+          ]);
+        }
+      }
+      setIsLoading(false);
+    }
+  }, [agentActive, geminiService, persistChat]);
+
 
   const handleSendMessage = async (content: string) => {
     const userMessage: ChatMessage = {
@@ -1436,9 +1548,22 @@ export function PermanentHiring() {
         >
           Oz
         </button>
-        <button className="tab-play-btn" onClick={startConversation} title="Start conversation">
-          <Play size={16} />
-        </button>
+        <div className="tab-play-btns">
+          <button
+            className="tab-play-btn"
+            onClick={togglePersistChat}
+            title={persistChat ? 'Chat persistence ON - click to disable' : 'Chat persistence OFF - click to enable'}
+          >
+            {persistChat ? <RefreshCw size={16} /> : <RefreshCwOff size={16} />}
+          </button>
+          <button
+            className="tab-play-btn"
+            onClick={toggleAgent}
+            title={agentActive ? 'Agent ON - click to stop' : 'Agent OFF - click to start'}
+          >
+            {agentActive ? <BotMessageSquare size={16} /> : <BotOff size={16} />}
+          </button>
+        </div>
       </nav>
 
       {activeTab === 'ask-reflex' && (
@@ -1449,25 +1574,6 @@ export function PermanentHiring() {
               onSendMessage={handleSendMessage}
               isLoading={isLoading}
             />
-          </div>
-
-          <div className="results-column">
-            {matchedWorkers.length > 0 ? (
-              <WorkerGrid
-                workers={matchedWorkers}
-                title={jobSpec?.title ? `Matches for "${jobSpec.title}"` : 'Matched Workers'}
-              />
-            ) : (
-              <div className="results-placeholder">
-                <div className="placeholder-content">
-                  <Briefcase size={48} strokeWidth={1} />
-                  <h3>Worker matches will appear here</h3>
-                  <p>
-                    Complete the conversation to see workers that match your job requirements
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -1712,9 +1818,11 @@ export function PermanentHiring() {
                     <select
                       className="oz-header-select"
                       value={newRoleCategory}
-                      onChange={(e) => setNewRoleCategory(e.target.value as 'Entry-Level' | 'Specialized' | 'Management')}
+                      onChange={(e) => setNewRoleCategory(e.target.value as 'Sales Floor' | 'Sales Support' | 'Back of House' | 'Specialized' | 'Management')}
                     >
-                      <option value="Entry-Level">Entry-Level</option>
+                      <option value="Sales Floor">Sales Floor</option>
+                      <option value="Sales Support">Sales Support</option>
+                      <option value="Back of House">Back of House</option>
                       <option value="Specialized">Specialized</option>
                       <option value="Management">Management</option>
                     </select>
@@ -1788,9 +1896,31 @@ export function PermanentHiring() {
               </div>
               <div className="oz-job-roles-grid">
                   <div className="oz-job-roles-category">
-                    <h4 className="oz-category-title">Entry Level</h4>
+                    <h4 className="oz-category-title">Sales Floor</h4>
                     <div className="oz-job-roles-list">
-                      {JOB_ROLES.entryLevel.map((role, idx) => (
+                      {JOB_ROLES.salesFloor.map((role, idx) => (
+                        <div key={idx} className="oz-job-role-item">
+                          <span className="oz-job-role-title">{role.title}</span>
+                          <span className="oz-job-role-desc">{role.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="oz-job-roles-category">
+                    <h4 className="oz-category-title">Sales Support</h4>
+                    <div className="oz-job-roles-list">
+                      {JOB_ROLES.salesSupport.map((role, idx) => (
+                        <div key={idx} className="oz-job-role-item">
+                          <span className="oz-job-role-title">{role.title}</span>
+                          <span className="oz-job-role-desc">{role.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="oz-job-roles-category">
+                    <h4 className="oz-category-title">Back of House</h4>
+                    <div className="oz-job-roles-list">
+                      {JOB_ROLES.backOfHouse.map((role, idx) => (
                         <div key={idx} className="oz-job-role-item">
                           <span className="oz-job-role-title">{role.title}</span>
                           <span className="oz-job-role-desc">{role.description}</span>
@@ -1887,10 +2017,10 @@ export function PermanentHiring() {
                     <select
                       className="oz-header-select"
                       value={newRetailerClass}
-                      onChange={(e) => setNewRetailerClass(e.target.value as 'Luxury' | 'Mid' | 'Big Box')}
+                      onChange={(e) => setNewRetailerClass(e.target.value as 'Luxury' | 'Specialty' | 'Big Box')}
                     >
                       <option value="Luxury">Luxury</option>
-                      <option value="Mid">Mid</option>
+                      <option value="Specialty">Specialty</option>
                       <option value="Big Box">Big Box</option>
                     </select>
                     <button
@@ -1937,8 +2067,8 @@ export function PermanentHiring() {
             )}
             <div className="oz-section-body">
               <div className="oz-retailers-grid">
-                {(['Luxury', 'Mid', 'Big Box'] as const).map(classification => {
-                  const shorthand = classification === 'Luxury' ? 'R' : classification === 'Mid' ? 'G' : 'N';
+                {(['Luxury', 'Specialty', 'Big Box'] as const).map(classification => {
+                  const shorthand = classification === 'Luxury' ? 'R' : classification === 'Specialty' ? 'G' : 'N';
                   const retailers = ozRetailers
                     .filter(r => r.classification === classification)
                     .sort((a, b) => a.name.localeCompare(b.name));
@@ -1969,10 +2099,10 @@ export function PermanentHiring() {
                                   R
                                 </button>
                                 <button
-                                  className={`oz-segment-btn ${retailer.classification === 'Mid' ? 'active' : ''}`}
+                                  className={`oz-segment-btn ${retailer.classification === 'Specialty' ? 'active' : ''}`}
                                   onClick={() => {
                                     const updated = [...ozRetailers];
-                                    updated[globalIdx] = { ...retailer, classification: 'Mid' };
+                                    updated[globalIdx] = { ...retailer, classification: 'Specialty' };
                                     setOzRetailers(updated);
                                   }}
                                 >

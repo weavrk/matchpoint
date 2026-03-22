@@ -66,6 +66,6 @@ function tierLabel(tier: BrandTier): string {
     case 'elevated':
       return 'Elevated';
     case 'mid':
-      return 'Mid-tier';
+      return 'Specialty';
   }
 }

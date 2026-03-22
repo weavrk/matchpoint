@@ -4,7 +4,7 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 
 ++**How might we build permanent hiring into Reflex and become the only platform retailers need for retail talent?**++
 
-> Product name TBD. Working name: Matchpoint.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## Users / Personas
 
@@ -20,6 +20,8 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 
 - **Shift Verified**: Existing Reflex workers with completed shifts. Carries a trust badge.
 - **Waitlist / New**: Signed up but no shifts yet. Visible to retailers, no badge.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## Core Flow
 
@@ -80,6 +82,8 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
   > TBD: Does retailer see live interest feed or only Reflex-curated shortlist?
 7. Retailer ↔ worker communication happens off-platform (phone, email)
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ## Tech Stack
 
 - **Frontend:** React + TypeScript (Vite) — located in `web/`
@@ -99,6 +103,20 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
     - `retailers` - Retailer brands (name, classification). Classifications: Luxury, Mid, Big Box.
     - `job_postings` - Scraped job listings with retailer_id, market_id, role_id, source, salary info, benefits
 
+## Environment Variables
+
+Stored in `.env` (gitignored). Do NOT hardcode keys in source files.
+
+```
+GEMINI_API_KEY=your_key_here
+SCRAPERAPI_KEY=your_key_here
+TWOCAPTCHA_API_KEY=your_key_here
+```
+
+- **GEMINI_API_KEY** - Google AI Studio API key for Gemini chat
+- **SCRAPERAPI_KEY** - ScraperAPI key for Indeed scraping (proxy/anti-bot bypass)
+- **TWOCAPTCHA_API_KEY** - 2Captcha API key for Glassdoor Cloudflare Turnstile solving
+
 ## Job Site Scrapers
 
 Scrapers live in `src/scrapers/`. Common behavior:
@@ -109,7 +127,7 @@ Scrapers live in `src/scrapers/`. Common behavior:
 - **Role matching:** Job titles fuzzy-matched to roles from Supabase `roles` table
 - **Pagination:** Up to `maxPages` pages scraped per search
 
-### Indeed (`src/scrapers/indeed.ts`)
+### ++Indeed (`src/scrapers/indeed.ts`)++
 
 - **Proxy:** ScraperAPI for anti-bot bypass (`SCRAPERAPI_KEY`)
 - **HTML Parsing:** Cheerio (extracts from embedded JSON `window.mosaic.providerData`)
@@ -124,7 +142,7 @@ Scrapers live in `src/scrapers/`. Common behavior:
 - **Session rotation:** Each pass uses a unique session number for fresh results
 - **Salary cleanup:** Spanish text auto-converted to English (e.g., "por hora" → "an hour")
 
-### Glassdoor (`src/scrapers/glassdoor.ts`)- NOPE! Scrape is ridiculous
+### ++Glassdoor (`src/scrapers/glassdoor.ts`)- NOPE! Scrape is ridiculous++
 
 - **Browser:** Puppeteer (headless Chrome)
 - **CAPTCHA Bypass:** Session cookie injection from logged-in browser
@@ -144,19 +162,7 @@ Scrapers live in `src/scrapers/`. Common behavior:
   4. Copy the output and save to `glassdoor-cookies.json` in project root
   5. Cookies typically last a few days before needing refresh
 
-## Environment Variables
-
-Stored in `.env` (gitignored). Do NOT hardcode keys in source files.
-
-```
-GEMINI_API_KEY=your_key_here
-SCRAPERAPI_KEY=your_key_here
-TWOCAPTCHA_API_KEY=your_key_here
-```
-
-- **GEMINI_API_KEY** - Google AI Studio API key for Gemini chat
-- **SCRAPERAPI_KEY** - ScraperAPI key for Indeed scraping (proxy/anti-bot bypass)
-- **TWOCAPTCHA_API_KEY** - 2Captcha API key for Glassdoor Cloudflare Turnstile solving
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## Project Structure
 
@@ -185,8 +191,8 @@ matchpoint/
 │   │   │   ├── PermanentHiring.tsx    # Main talent portal page
 │   │   │   └── PermanentHiring.css
 │   │   ├── services/
-│   │   │   ├── gemini.ts              # Gemini API + MockGeminiService
-│   │   │   ├── matching.ts            # Worker matching algorithm
+│   │   │   ├── gemini.ts              # Gemini API + data summaries + quick prompts
+│   │   │   ├── workerMatching.ts      # Worker matching algorithm
 │   │   │   └── supabase.ts            # Supabase client
 │   │   ├── data/
 │   │   │   ├── workers.ts             # Sample worker profiles
@@ -232,17 +238,62 @@ matchpoint/
 └── CLAUDE.md                          # This file
 ```
 
-## Scripts
-
-### Frontend (web/)
-
-- `npm run dev` - Start Vite dev server (default: [http://localhost:5173](http://localhost:5173))
-- `npm run build` - Build for production
-
-### Backend (root)
-
-- `npm start` - Run Express server with ts-node ([http://localhost:3000](http://localhost:3000))
-- `npm run build` - Compile TypeScript to JavaScript
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## Chat Model and Interface
+
+For our prototype, assume you are in Austin and the brand is Ariat. Your name is Mike Meyers. You're a district manager and have been on Reflex for 5 years. You haven't created a job posting yet, this is your first time using Talent Connect.
+
+### 1. Data Foundation
+
+- ++**Role Groupings**++ — When querying salary data, pull from the entire group and present ranges.
+
+  | Group         | Primary Role                         | Also Includes                                                                             |
+  | ------------- | ------------------------------------ | ----------------------------------------------------------------------------------------- |
+  | Sales Floor   | Sales Associate / Retail Associate   | Store Associate                                                                           |
+  | Sales Support | Cashier                              | Sales Assistant, Fitting Room Attendant, Team Member, Retail Customer Service             |
+  | Back of House | Stock Associate / Stocker            | Inventory Associate, Operations Associate                                                 |
+  | Specialized   | Beauty Advisor / Cosmetics Associate | Stylist, Visual Merchandiser, Pop Up                                                      |
+  | Management    | Store Manager                        | Store Team Leader, Supervisor, Key Holder, Department Supervisor, Assistant Store Manager |
+  | Regional      | District / Area Manager              | —                                                                                         |
+
+  - **Management exception:** Query the specific role asked, then list other management roles separately.
+  - **Example:** "Store Managers in Atlanta at Luxury retailers are earning $65k-85k. In the same market, here are salaries for other management roles: Assistant Store Manager: $45k-55k, Department Supervisor: $38k-48k, Key Holder / Lead Associate: $18-22/hr"
+- ++**Retailer Classification**++ — User's brand classification is known from login. Filter salary data to same classification.
+  - Classifications: Luxury, Specialty, Big Box
+  - Show: "Based on [X] similar [Luxury/Specialty/Big Box] retailers in [Market]..."
+  - Example: If user is logged in as Gucci (Luxury), show salary data from other Luxury retailers, not from Target or Gap.
+- ++**Market Context**++ — When presenting salary data, show:
+  - Specific market data - The range for the market they're hiring in
+  - Related role ranges - Salary ranges for related roles in same category
+  - National comparison - How this market compares to national average
+  - **Example:** "The range for Atlanta is $20-$24 per hour for Sales Associates at similar Luxury retailers. Sales Support roles are roughly $16-18 an hour. Atlanta is a little lower than the national average for Sales Associates which is $22-26 for Luxury brands."
+- ++**Data Summary Generator**++ — Functions in `web/src/services/gemini.ts`:
+  - `generateSalarySummary(roleId?, marketId?, retailerClass?)` — Returns structured salary data grouped by role/market/class
+  - `getMarketSummaryText(market, retailerClass, role?)` — Returns human-readable text for AI injection
+  - `getGroupedSalarySummary(role, market, retailerClass)` — Aggregates related roles + national average
+  - **Example output:** "Austin Luxury retailers:\nSales Associate: $18-24/hr (8 postings)\nStore Manager: $55k-75k (3 postings)"
+
+### 2. System Prompt
+
+Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
+
+- **Persona:** Hiring advisor for Reflex
+- **Context injection:** `{{USER_NAME}}`, `{{RETAILER_NAME}}`, `{{RETAILER_CLASS}}`, `{{MARKET}}` replaced at runtime
+- **Role categories:** Defines groupings for salary comparisons
+- **Response rules:**
+  - Salary questions: Show market range, related roles, national comparison
+  - Management: Query specific role, list others separately
+  - Job posting: Guide through role → FT/PT → salary → requirements
+- **Guardrails:** Stay concise, use real data, don't make up numbers
+
+
+
+- **Static Greeting:** No API call for greeting - uses hardcoded message:
+  - "Hey {firstname}, I'm here to connect you with retail talent. Want to create a job posting or explore the {market} market first?"
+  - Variables `{firstname}` and `{market}` injected at runtime from retailer context
+  - **Greeting Chips:** Two clickable buttons shown directly below greeting
+    - "Create a job posting" → starts job posting flow
+    - "Explore the market" → shows market salary data
+    - Export: `GREETING_CHIPS` in `gemini.ts`
 

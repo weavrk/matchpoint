@@ -76,12 +76,19 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--blue-100);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--blue-600);
+  overflow: hidden;
   flex-shrink: 0;
+}
+
+.message-avatar-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 .message-content {
@@ -196,4 +203,29 @@
 .chat-send-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Greeting Chips - shown right after assistant greeting */
+.greeting-chips {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.greeting-chip {
+  padding: 8px 16px;
+  border: 1px solid var(--blue-400);
+  border-radius: 20px;
+  background: var(--main-white);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--blue-600);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.greeting-chip:hover {
+  background: var(--blue-50);
+  border-color: var(--blue-500);
 }
