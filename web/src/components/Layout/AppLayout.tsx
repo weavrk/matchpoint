@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { SideNav } from './SideNav';
+import { SideNav, MobileBottomNav } from './SideNav';
 import './AppLayout.css';
+import './SideNav.css';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -25,6 +26,7 @@ export function AppLayout({ children, activePage, onNavigate }: AppLayoutProps) 
       <main className="main-content">
         {children}
       </main>
+      <MobileBottomNav activePage={activePage} onNavigate={onNavigate} />
     </div>
   );
 }

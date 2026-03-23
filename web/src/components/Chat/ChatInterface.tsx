@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Sparkles } from 'lucide-react';
+import { Send } from 'lucide-react';
 import type { ChatMessage } from '../../types';
 import { GREETING_CHIPS } from '../../services/gemini';
 import chatbotAvatarUrl from '../../../../assets/logo-and-backgrounds/chatbot.svg?url';
@@ -9,9 +9,17 @@ interface ChatInterfaceProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  userName?: string;
+  market?: string;
 }
 
-export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterfaceProps) {
+export function ChatInterface({
+  messages,
+  onSendMessage,
+  isLoading,
+  userName = 'Mike',
+  market = 'Austin'
+}: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -29,12 +37,21 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
     if (chipId === 'create-posting') {
       onSendMessage("I'd like to create a job posting");
     } else if (chipId === 'explore-market') {
-      onSendMessage("Show me market data");
+      onSendMessage(`Show me ${market} market data`);
+    } else if (chipId === 'explore-other') {
+      onSendMessage("I want to explore a different market");
+    } else if (chipId === 'how-it-works') {
+      onSendMessage("Tell me how Talent Connect works");
     }
   };
 
-  // Check if we should show greeting chips (only after first assistant message, before user responds)
-  const showGreetingChips = messages.length === 1 && messages[0].role === 'assistant';
+  // Replace {market} placeholder in chip labels
+  const getChipLabel = (label: string) => {
+    return label.replace('{market}', market);
+  };
+
+  // Show welcome screen when no messages yet
+  const showWelcomeScreen = messages.length === 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,19 +68,59 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
     }
   };
 
-  return (
-    <div className="chat-interface">
-      <div className="chat-header">
-        <div className="chat-header-icon">
-          <Sparkles size={20} />
-        </div>
-        <div className="chat-header-content">
-          <h2 className="chat-header-title">Search Retail Talent</h2>
+  // Welcome screen view
+  if (showWelcomeScreen) {
+    return (
+      <div className="chat-welcome">
+        <h1 className="chat-greeting">
+          Hey {userName}, let's connect with<br className="chat-greeting-break" />
+          retail talent in your area.
+        </h1>
+
+        <div className="chat-text-area">
+          <form className="chat-text-area-form" onSubmit={handleSubmit}>
+            <textarea
+              ref={inputRef}
+              className="chat-text-area-input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={`You can create a job posting or explore the ${market} market. Tell me what you want to do first or select a quick prompt below.`}
+              rows={1}
+              disabled={isLoading}
+            />
+            <div className="chat-text-area-footer">
+              <div className="chat-text-area-chips">
+                {GREETING_CHIPS.map(chip => (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    className="chat-text-area-chip"
+                    onClick={() => handleGreetingChip(chip.id)}
+                  >
+                    {getChipLabel(chip.label)}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="submit"
+                className="chat-text-area-send"
+                disabled={!input.trim() || isLoading}
+              >
+                <Send size={18} />
+              </button>
+            </div>
+          </form>
         </div>
       </div>
+    );
+  }
 
+  // Conversation view (after first message)
+  return (
+    <div className="chat-interface">
       <div className="chat-messages">
-        {messages.map((message, index) => (
+        {messages.map((message) => (
           <div
             key={message.id}
             className={`chat-message ${message.role === 'user' ? 'user' : 'assistant'}`}
@@ -81,20 +138,6 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
             )}
             <div className="message-content">
               <p>{message.content}</p>
-              {/* Greeting chips - show right after first assistant message */}
-              {index === 0 && message.role === 'assistant' && showGreetingChips && (
-                <div className="greeting-chips">
-                  {GREETING_CHIPS.map(chip => (
-                    <button
-                      key={chip.id}
-                      className="greeting-chip"
-                      onClick={() => handleGreetingChip(chip.id)}
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         ))}

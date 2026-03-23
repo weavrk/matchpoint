@@ -171,11 +171,13 @@ export async function getMarketSummaryText(market: string, retailerClass: 'Luxur
   return `${market} ${retailerClass} retailers:\n${lines.join('\n')}`;
 }
 
-// Quick-select prompt templates for UI
-// Greeting response chips - match the two branches in the greeting
+// Greeting response chips - initial options for user
+// Note: {market} in label is replaced at runtime with actual market name
 export const GREETING_CHIPS = [
   { id: 'create-posting', label: 'Create a job posting' },
-  { id: 'explore-market', label: 'Explore the market' },
+  { id: 'explore-market', label: 'Explore {market} market' },
+  { id: 'explore-other', label: 'Explore another market' },
+  { id: 'how-it-works', label: 'Tell me how Talent Connect works' },
 ];
 
 // Follow-up prompts shown after user picks a branch

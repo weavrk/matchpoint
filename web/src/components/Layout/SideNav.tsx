@@ -11,6 +11,7 @@ import {
   LifeBuoy,
   ChevronLeft,
   ChevronRight,
+  Menu,
 } from 'lucide-react';
 import './SideNav.css';
 
@@ -20,12 +21,13 @@ interface NavItemProps {
   active?: boolean;
   onClick?: () => void;
   collapsed?: boolean;
+  itemClassName?: string;
 }
 
-function NavItem({ icon, label, active, onClick, collapsed }: NavItemProps) {
+function NavItem({ icon, label, active, onClick, collapsed, itemClassName }: NavItemProps) {
   return (
     <a
-      className={`nav-item ${active ? 'active' : ''}`}
+      className={['nav-item', itemClassName, active ? 'active' : ''].filter(Boolean).join(' ')}
       onClick={onClick}
       href="#"
       title={collapsed ? label : undefined}
@@ -94,27 +96,74 @@ export function SideNav({ activePage = 'home', onNavigate, collapsed = false, on
               </div>
               <div className="logout-row">
                 <button className="logout-btn">Log Out</button>
-                <ChevronLeft
-                  size={36}
-                  className="collapse-icon"
+                <button
+                  type="button"
+                  className="collapse-toggle"
                   onClick={onToggleCollapse}
-                />
+                  aria-label="Collapse navigation"
+                >
+                  <ChevronLeft size={20} strokeWidth={2} />
+                </button>
               </div>
             </>
           ) : (
             <>
               <div className="user-avatar">M</div>
               <div className="expand-row">
-                <ChevronRight
-                  size={36}
-                  className="collapse-icon"
+                <button
+                  type="button"
+                  className="collapse-toggle"
                   onClick={onToggleCollapse}
-                />
+                  aria-label="Expand navigation"
+                >
+                  <ChevronRight size={20} strokeWidth={2} />
+                </button>
               </div>
             </>
           )}
         </div>
       </div>
+
+    </nav>
+  );
+}
+
+interface MobileBottomNavProps {
+  activePage?: string;
+  onNavigate?: (page: string) => void;
+}
+
+export function MobileBottomNav({ activePage = 'home', onNavigate }: MobileBottomNavProps) {
+  return (
+    <nav className="mobile-bottom-nav">
+      <a
+        href="#"
+        className={`mobile-nav-item ${activePage === 'home' ? 'active' : ''}`}
+        onClick={() => onNavigate?.('home')}
+      >
+        <Home size={24} strokeWidth={1.5} />
+        <span>Home</span>
+      </a>
+      <a href="#" className="mobile-nav-item">
+        <UserPlus size={24} strokeWidth={1.5} />
+        <span>Request</span>
+      </a>
+      <a href="#" className="mobile-nav-item">
+        <Calendar size={24} strokeWidth={1.5} />
+        <span>Calendar</span>
+      </a>
+      <a href="#" className="mobile-nav-item">
+        <Users size={24} strokeWidth={1.5} />
+        <span>Reflexers</span>
+      </a>
+      <a
+        href="#"
+        className={`mobile-nav-item ${activePage === 'talent' ? 'active' : ''}`}
+        onClick={() => onNavigate?.('talent')}
+      >
+        <Menu size={24} strokeWidth={1.5} />
+        <span>More</span>
+      </a>
     </nav>
   );
 }

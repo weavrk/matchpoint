@@ -1,7 +1,9 @@
 .side-nav {
   position: relative;
-  width: 100%;
-  height: 100%;
+  box-sizing: border-box;
+  width: fit-content;
+  max-width: 100%;
+  flex: 1 1 auto;
   padding: 24px 24px 32px;
   display: flex;
   flex-direction: column;
@@ -24,8 +26,9 @@
 }
 
 .side-nav-card {
-  width: 100%;
-  padding: 8px 16px;
+  width: 192px;
+  max-width: 100%;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -44,7 +47,7 @@
   border-radius: 6px;
   padding: 8px;
   text-decoration: none;
-  color: var(--app-secondary);
+  color: var(--app-primary);
   font-weight: 500;
   font-size: 16px;
   cursor: pointer;
@@ -58,12 +61,33 @@
 }
 
 .nav-item.active {
-  background: var(--app-background-navy);
-  color: var(--app-primary-light);
+  background: var(--navy-100);
+  color: var(--app-primary);
 }
 
 .nav-item.active:hover {
-  color: var(--app-primary-light);
+  color: var(--app-primary);
+}
+
+/* Settings: light gray default, transparent when active, lighter gray on hover (spec) */
+.nav-item.nav-item--settings {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.nav-item.nav-item--settings:hover {
+  background: var(--gray-50);
+  color: var(--gray-700);
+}
+
+.nav-item.nav-item--settings.active {
+  background: transparent;
+  color: var(--gray-700);
+}
+
+.nav-item.nav-item--settings.active:hover {
+  background: var(--gray-50);
+  color: var(--gray-700);
 }
 
 .nav-item svg {
@@ -75,14 +99,19 @@
 
 /* Reviews Alert Card */
 .reviews-alert {
+  align-self: flex-start;
+  flex-shrink: 0;
   background: var(--main-white);
   border-radius: var(--radius-md);
   box-shadow: 0 3px 10px rgba(38, 38, 38, 0.2);
   border: 1px solid var(--black-alpha-100);
-  width: 100%;
-  margin: 12px 24px 0 0;
+  width: 192px;
+  min-width: 192px;
+  max-width: 192px;
+  margin: 4px 0 0 0;
   padding: 16px;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .reviews-alert-header {
@@ -114,7 +143,7 @@
   border: 2px solid var(--main-white);
   object-fit: cover;
   flex-shrink: 0;
-  margin-right: -12px;
+  margin-right: -20px;
   box-sizing: border-box;
 }
 
@@ -172,13 +201,19 @@
 /* User footer */
 .nav-footer {
   margin-top: auto;
-  width: 100%;
+  align-self: flex-start;
+  flex-shrink: 0;
+  width: 192px;
+  min-width: 192px;
+  max-width: 192px;
+  box-sizing: border-box;
 }
 
 .user-section {
   padding-left: 0;
   padding-right: 0;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .user-row {
@@ -193,14 +228,14 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(212, 212, 216, 1);
+  background: var(--app-primary);
   border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
   font-weight: 600;
-  color: var(--app-primary);
+  color: var(--main-white);
   flex-shrink: 0;
 }
 
@@ -229,15 +264,38 @@
 }
 
 .logout-btn:hover {
-  color: var(--app-secondary);
+  text-decoration: underline;
+  color: var(--app-primary);
 }
 
-.collapse-icon {
-  width: 36px;
-  height: 36px;
-  color: var(--app-primary);
+.collapse-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--main-white);
+  color: var(--gray-900);
   cursor: pointer;
-  stroke-width: 2;
+  flex-shrink: 0;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.collapse-toggle:hover {
+  background: var(--gray-100);
+}
+
+.collapse-toggle:focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+}
+
+.collapse-toggle svg {
+  flex-shrink: 0;
 }
 
 .expand-row {
@@ -247,7 +305,11 @@
 
 /* Collapsed state */
 .side-nav.collapsed {
+  width: 100%;
+  max-width: none;
+  flex: 1 1 auto;
   align-items: center;
+  padding: 24px 16px 32px;
 }
 
 .side-nav.collapsed > .logo {
@@ -259,8 +321,12 @@
 }
 
 .side-nav.collapsed .side-nav-card {
-  width: auto;
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
   padding: 8px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .side-nav.collapsed .nav-item {
@@ -270,6 +336,9 @@
 
 .side-nav.collapsed .nav-footer {
   width: auto;
+  min-width: 0;
+  max-width: none;
+  align-self: center;
 }
 
 .side-nav.collapsed .user-section {
@@ -277,4 +346,62 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
+}
+
+/* Mobile bottom nav - hidden by default, shown below 768px */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: var(--main-white);
+  border-top: 1px solid var(--black-alpha-100);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  padding: 8px 0;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  text-decoration: none;
+  color: var(--text-hint);
+  font-size: 11px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.mobile-nav-item svg {
+  width: 24px;
+  height: 24px;
+}
+
+.mobile-nav-item:hover {
+  color: var(--app-secondary);
+}
+
+.mobile-nav-item.active {
+  color: var(--app-primary);
+}
+
+.mobile-nav-item.active svg {
+  stroke-width: 2;
+}
+
+/* Show mobile nav below 768px */
+@media (max-width: 767px) {
+  .side-nav {
+    display: none;
+  }
+
+  .mobile-bottom-nav {
+    display: flex;
+  }
 }

@@ -289,11 +289,15 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 
 
 
-- **Static Greeting:** No API call for greeting - uses hardcoded message:
-  - "Hey {firstname}, I'm here to connect you with retail talent. Want to create a job posting or explore the {market} market first?"
-  - Variables `{firstname}` and `{market}` injected at runtime from retailer context
-  - **Greeting Chips:** Two clickable buttons shown directly below greeting
+- **Welcome Screen:** Centered initial view before conversation starts
+  - Headline: "Hey {firstname}, let's connect you with retail talent"
+  - Input box with "Ask anything..." placeholder
+  - **Quick-select chips** inside input container:
     - "Create a job posting" → starts job posting flow
-    - "Explore the market" → shows market salary data
-    - Export: `GREETING_CHIPS` in `gemini.ts`
+    - "Explore {market} market" → shows market salary data
+    - "Explore another market" → lets user pick different market
+    - "Tell me how Talent Connect works" → explains the product
+  - Variables `{firstname}` and `{market}` injected from props
+  - Export: `GREETING_CHIPS` in `gemini.ts`
+  - After first message, transitions to conversation view
 

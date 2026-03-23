@@ -1,2 +1,2 @@
 export { AppLayout } from './AppLayout';
-export { SideNav } from './SideNav';
+export { SideNav, MobileBottomNav } from './SideNav';

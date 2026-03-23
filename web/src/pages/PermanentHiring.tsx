@@ -685,7 +685,6 @@ function formatRetailerDisplayName(name: string): string {
 
 export function PermanentHiring() {
   const [activeTab, setActiveTab] = useState<TabId>('ask-reflex');
-  const [, setChatStarted] = useState(false);
   const [agentActive, setAgentActive] = useState(false); // Agent on/off state (resets on page refresh)
   const [persistChat, setPersistChat] = useState(() => {
     // Load persist preference from localStorage (defaults to true)
@@ -958,7 +957,7 @@ export function PermanentHiring() {
   const [isLoading, setIsLoading] = useState(false);
   const [, setMatchedWorkers] = useState<MatchedWorker[]>([]);
   const [, setJobSpec] = useState<JobSpec | null>(null);
-  const [geminiService, setGeminiService] = useState(() => {
+  const [geminiService] = useState(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (apiKey) {
       console.log('Using real Gemini service');
@@ -967,6 +966,7 @@ export function PermanentHiring() {
     console.log('No API key found, using mock service');
     return new MockGeminiService();
   });
+  const chatStartedRef = useRef(false);
 
   // Save messages to localStorage when they change (if persistChat is on)
   useEffect(() => {
@@ -988,78 +988,10 @@ export function PermanentHiring() {
     });
   }, []);
 
-  // Toggle agent on/off
-  const toggleAgent = useCallback(async () => {
-    if (agentActive) {
-      // Turn off agent - clear chat state
-      setAgentActive(false);
-      setChatStarted(false);
-      setMessages([]);
-      // Recreate gemini service for fresh state
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      setGeminiService(apiKey ? new GeminiService(apiKey) : new MockGeminiService());
-    } else {
-      // Turn on agent - start conversation
-      setAgentActive(true);
-      setChatStarted(true);
-      setIsLoading(true);
-
-      // Check for existing messages in localStorage if persist is on
-      let existingHistory: { role: 'user' | 'model'; content: string }[] | undefined;
-      if (persistChat) {
-        const savedMessages = localStorage.getItem('matchpoint_chat_history');
-        if (savedMessages) {
-          try {
-            const parsed = JSON.parse(savedMessages) as ChatMessage[];
-            if (parsed.length > 0) {
-              // Set messages for UI
-              setMessages(parsed.map(m => ({ ...m, timestamp: new Date(m.timestamp) })));
-              // Convert for Gemini history (skip first assistant greeting)
-              existingHistory = parsed.slice(1).map(m => ({
-                role: m.role === 'user' ? 'user' as const : 'model' as const,
-                content: m.content,
-              }));
-            }
-          } catch { /* ignore parse errors */ }
-        }
-      }
-
-      try {
-        // Prototype context from CLAUDE.md: Mike Meyers, Ariat, Austin, Luxury
-        const response = await geminiService.startChat(
-          'Mike',
-          'Ariat',
-          'Luxury',
-          'Austin',
-          existingHistory
-        );
-        // Only set initial message if we didn't load from localStorage
-        if (!existingHistory || existingHistory.length === 0) {
-          setMessages([
-            {
-              id: '1',
-              role: 'assistant',
-              content: response,
-              timestamp: new Date(),
-            },
-          ]);
-        }
-      } catch (error) {
-        console.error('Failed to start chat:', error);
-        if (!existingHistory || existingHistory.length === 0) {
-          setMessages([
-            {
-              id: '1',
-              role: 'assistant',
-              content: "Hi! I'm here to help you create a job posting for a permanent hire. What type of role are you looking to fill?",
-              timestamp: new Date(),
-            },
-          ]);
-        }
-      }
-      setIsLoading(false);
-    }
-  }, [agentActive, geminiService, persistChat]);
+  // Toggle agent on/off - just toggles state for API usage control (no layout changes)
+  const toggleAgent = useCallback(() => {
+    setAgentActive(prev => !prev);
+  }, []);
 
 
   const handleSendMessage = async (content: string) => {
@@ -1072,7 +1004,37 @@ export function PermanentHiring() {
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
+    // If agent is off, use mock response to save API usage
+    if (!agentActive) {
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
+      const mockMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "[Agent OFF - API calls disabled] This is a mock response for prototyping. Turn on the agent to get real AI responses.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, mockMessage]);
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      // Initialize chat session on first message
+      if (!chatStartedRef.current) {
+        const classificationMap: Record<string, 'Luxury' | 'Specialty' | 'Big Box'> = {
+          luxury: 'Luxury',
+          elevated: 'Specialty',
+          mid: 'Big Box',
+        };
+        await geminiService.startChat(
+          'Mike', // userName
+          SAMPLE_RETAILER.name,
+          classificationMap[SAMPLE_RETAILER.brandTier] || 'Specialty',
+          'Austin' // market
+        );
+        chatStartedRef.current = true;
+      }
+
       const response = await geminiService.sendMessage(content);
 
       const assistantMessage: ChatMessage = {
@@ -1550,14 +1512,14 @@ export function PermanentHiring() {
         </button>
         <div className="tab-play-btns">
           <button
-            className="tab-play-btn"
+            className={`tab-play-btn${persistChat ? ' active' : ''}`}
             onClick={togglePersistChat}
             title={persistChat ? 'Chat persistence ON - click to disable' : 'Chat persistence OFF - click to enable'}
           >
             {persistChat ? <RefreshCw size={16} /> : <RefreshCwOff size={16} />}
           </button>
           <button
-            className="tab-play-btn"
+            className={`tab-play-btn${agentActive ? ' active' : ''}`}
             onClick={toggleAgent}
             title={agentActive ? 'Agent ON - click to stop' : 'Agent OFF - click to start'}
           >
