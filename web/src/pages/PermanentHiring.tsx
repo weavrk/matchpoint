@@ -4,6 +4,7 @@ import { ChatInterface } from '../components/Chat';
 import { ScrapeModal, type ScrapeConfig } from '../components/ScrapeModal';
 import { ScrapeProgressModal, type ScrapeProgressData } from '../components/ScrapeProgressModal';
 import { UnmatchedRolesModal } from '../components/UnmatchedRolesModal';
+import { WorkerCard } from '../components/Workers/WorkerCard';
 import { GeminiService, MockGeminiService } from '../services/gemini';
 import { matchWorkers } from '../services/workerMatching';
 import {
@@ -28,7 +29,7 @@ import { SAMPLE_RETAILER } from '../data/retailer';
 import type { ChatMessage, MatchedWorker, JobSpec } from '../types';
 import './PermanentHiring.css';
 
-type TabId = 'ask-reflex' | 'published-jobs' | 'oz';
+type TabId = 'ask-reflex' | 'published-jobs' | 'reflex-talent' | 'oz';
 
 // All job roles flattened for the Oz admin
 const ALL_ROLES = [
@@ -711,6 +712,14 @@ export function PermanentHiring() {
   const [backupRoles, setBackupRoles] = useState<typeof ozRoles | null>(null);
   const [backupRetailers, setBackupRetailers] = useState<typeof ozRetailers | null>(null);
 
+  // Reflex Talent tab state - lazy loading
+  const [talentDisplayCount, setTalentDisplayCount] = useState(6);
+  const talentLoadMoreRef = useRef<HTMLDivElement>(null);
+  const allTalentWorkers: MatchedWorker[] = useMemo(() =>
+    SAMPLE_WORKERS.map(w => ({ ...w, matchScore: 0, matchReasons: [] })),
+    []
+  );
+
   // Fetch data from Supabase on mount
   useEffect(() => {
     async function loadData() {
@@ -842,6 +851,23 @@ export function PermanentHiring() {
       el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [retailersMatchIndex, retailersMatches.length]);
+
+  // Reflex Talent lazy load - intersection observer
+  useEffect(() => {
+    if (activeTab !== 'reflex-talent') return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && talentDisplayCount < allTalentWorkers.length) {
+          setTalentDisplayCount((prev) => Math.min(prev + 6, allTalentWorkers.length));
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (talentLoadMoreRef.current) {
+      observer.observe(talentLoadMoreRef.current);
+    }
+    return () => observer.disconnect();
+  }, [activeTab, talentDisplayCount, allTalentWorkers.length]);
 
   // Navigation helpers
   const navigateMatch = (
@@ -1505,6 +1531,12 @@ export function PermanentHiring() {
           Published Jobs
         </button>
         <button
+          className={`tab ${activeTab === 'reflex-talent' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reflex-talent')}
+        >
+          Reflex Talent
+        </button>
+        <button
           className={`tab tab-right ${activeTab === 'oz' ? 'active' : ''}`}
           onClick={() => setActiveTab('oz')}
         >
@@ -1549,6 +1581,22 @@ export function PermanentHiring() {
               Jobs you publish will appear here for workers to discover
             </p>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'reflex-talent' && (
+        <div className="reflex-talent-content">
+          <div className="reflex-talent-grid">
+            {allTalentWorkers.slice(0, talentDisplayCount).map((worker) => (
+              <WorkerCard key={worker.id} worker={worker} />
+            ))}
+          </div>
+          {talentDisplayCount < allTalentWorkers.length && (
+            <div ref={talentLoadMoreRef} className="reflex-talent-load-more">
+              <Loader2 size={24} className="oz-spinner" />
+              <span>Loading more...</span>
+            </div>
+          )}
         </div>
       )}
 

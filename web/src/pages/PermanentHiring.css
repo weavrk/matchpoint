@@ -470,6 +470,29 @@
   margin-left: auto;
 }
 
+/* Reflex Talent Tab Styles */
+.reflex-talent-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+.reflex-talent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+}
+
+.reflex-talent-load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--black-alpha-500);
+  font-size: 14px;
+}
+
 /* Oz Tab Styles */
 .oz-content {
   display: flex;
