@@ -687,9 +687,9 @@ export function PermanentHiring() {
   const [activeTab, setActiveTab] = useState<TabId>('ask-reflex');
   const [agentActive, setAgentActive] = useState(false); // Agent on/off state (resets on page refresh)
   const [persistChat, setPersistChat] = useState(() => {
-    // Load persist preference from localStorage (defaults to true)
+    // Load persist preference from localStorage (defaults to false)
     const stored = localStorage.getItem('matchpoint_persist_chat');
-    return stored !== 'false';
+    return stored === 'true';
   });
   const [showJobSitesInfo, setShowJobSitesInfo] = useState(false);
   const [showScrapeModal, setShowScrapeModal] = useState(false);
