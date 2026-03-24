@@ -52,6 +52,7 @@ export interface RetailerProfile {
   name: string;
   market: string;
   brandTier: BrandTier;
+  classification: 'Luxury' | 'Specialty' | 'Big Box';
   about: string;
   starRating: number;
   wouldWorkAgainPct: number;

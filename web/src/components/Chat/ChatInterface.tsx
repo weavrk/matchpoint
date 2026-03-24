@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import type { ChatMessage } from '../../types';
 import { GREETING_CHIPS } from '../../services/gemini';
 import chatbotAvatarUrl from '../../../../assets/logo-and-backgrounds/chatbot.svg?url';
@@ -137,7 +138,11 @@ export function ChatInterface({
               </div>
             )}
             <div className="message-content">
-              <p>{message.content}</p>
+              {message.role === 'assistant' ? (
+                <ReactMarkdown>{message.content}</ReactMarkdown>
+              ) : (
+                <p>{message.content}</p>
+              )}
             </div>
           </div>
         ))}

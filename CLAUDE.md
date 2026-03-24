@@ -284,20 +284,55 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 - **Response rules:**
   - Salary questions: Show market range, related roles, national comparison
   - Management: Query specific role, list others separately
-  - Job posting: Guide through role → FT/PT → salary → requirements
+  - Job posting: Guide through market (confirm) -> role → FT/PT → salary → requirements
 - **Guardrails:** Stay concise, use real data, don't make up numbers
+- **Markdown:** Gemini responses render as markdown in the chat UI (react-markdown). Use markdown formatting for readability (bold, lists, headers).
 
+### 3. Chat Prompt-Response Logic Tree
 
-
-- **Welcome Screen:** Centered initial view before conversation starts
-  - Headline: "Hey {firstname}, let's connect you with retail talent"
-  - Input box with "Ask anything..." placeholder
-  - **Quick-select chips** inside input container:
-    - "Create a job posting" → starts job posting flow
-    - "Explore {market} market" → shows market salary data
-    - "Explore another market" → lets user pick different market
-    - "Tell me how Talent Connect works" → explains the product
-  - Variables `{firstname}` and `{market}` injected from props
-  - Export: `GREETING_CHIPS` in `gemini.ts`
-  - After first message, transitions to conversation view
+```
+[Welcome Screen]
+│   Headline: "Hey {{USER_NAME}}, let's connect you with retail talent"
+│   Input box with "Ask anything..." placeholder
+│  
+│
+├── "Create a job posting"
+│   └── [Job Posting Flow]
+│       ├── Confirm market (Austin)
+│       │   ├── "Yes" → Role selection
+│       │   └── "Different market" → Market picker
+│       ├── Select role
+│       │   └── Show role groups, pick one
+│       ├── FT/PT preference
+│       │   └── Full-time / Part-time / Both
+│       ├── Salary range
+│       │   └── Show market data, confirm or adjust
+│       └── Requirements
+│           └── Experience, skills, etc.
+│           └── → Generate job posting preview
+│
+├── "Explore {market} market"
+│   └── [Market Salary Data]
+│       ├── Show salary ranges by role group
+│       │   ├── Sales Floor: $X-Y/hr
+│       │   ├── Management: $X-Yk
+│       │   └── etc.
+│       ├── Compare to national average
+│       └── Offer follow-ups:
+│           ├── "Want to see a specific role?"
+│           └── "Ready to create a posting?"
+│
+├── "Explore another market"
+│   └── [Market Picker]
+│       ├── Show available markets
+│       └── User selects → same as "Explore {market}"
+│
+└── "Tell me how Talent Connect works"
+    └── [Product Explainer]
+        ├── What it is (permanent hiring on Reflex)
+        ├── How it works (chat → job → matches → interest)
+        ├── What makes it different (Shift Verified, endorsements)
+        └── Offer to start:
+            └── "Ready to explore the market or create a posting?"
+```
 

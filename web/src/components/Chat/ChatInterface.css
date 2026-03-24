@@ -193,6 +193,36 @@
   white-space: pre-wrap;
 }
 
+/* Markdown styling for assistant messages */
+.message-content p + p {
+  margin-top: 12px;
+}
+
+.message-content ul,
+.message-content ol {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.message-content li {
+  margin: 4px 0;
+}
+
+.message-content strong {
+  font-weight: 600;
+}
+
+.message-content h1,
+.message-content h2,
+.message-content h3 {
+  font-weight: 600;
+  margin: 12px 0 8px;
+}
+
+.message-content h1 { font-size: 18px; }
+.message-content h2 { font-size: 16px; }
+.message-content h3 { font-size: 15px; }
+
 .typing-indicator {
   display: flex;
   gap: 4px;

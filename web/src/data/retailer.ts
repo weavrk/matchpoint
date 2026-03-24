@@ -2,10 +2,11 @@ import type { RetailerProfile } from '../types';
 
 export const SAMPLE_RETAILER: RetailerProfile = {
   id: 'r001',
-  name: 'Hartwell & Co.',
-  market: 'New York City',
+  name: 'Ariat',
+  market: 'Austin',
   brandTier: 'elevated',
-  about: 'Contemporary fashion retailer specializing in elevated basics and modern workwear.',
+  classification: 'Specialty',
+  about: 'Performance footwear and apparel brand known for western and equestrian styles.',
   starRating: 4.7,
   wouldWorkAgainPct: 93,
   totalFlexesWorked: 156,
