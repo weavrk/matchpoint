@@ -54,7 +54,7 @@
 }
 
 .worker-name {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--app-primary);
   margin: 0;
@@ -85,7 +85,7 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  font-size: 12px;
+  font-size: 16px;
   color: var(--text-hint);
 }
 
@@ -268,6 +268,14 @@
 }
 
 /* Brands list */
+.brands-section {
+  margin-top: 4px;
+}
+
+.brands-section .section-label {
+  margin-bottom: 8px;
+}
+
 .brands-list {
   display: flex;
   flex-wrap: wrap;
@@ -293,22 +301,32 @@
 }
 
 /* Endorsements */
+.endorsements-section {
+  margin-top: 4px;
+}
+
+.endorsements-section .section-label {
+  margin-bottom: 10px;
+}
+
 .endorsements-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
 }
 
 .endorsement-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  background: var(--green-50);
-  color: var(--green-600);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
+  gap: 8px;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--app-primary);
+  border: 1px solid var(--black-alpha-200);
+  border-radius: var(--radius-md);
+  font-size: 12px;
   font-weight: 500;
+  width: fit-content;
 }
 
 /* ── Footer (availability + target brands) ── */
@@ -353,5 +371,54 @@
 .target-brands-text {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+/* ── Retailer Quotes Section ── */
+
+.retailer-quotes-section {
+  margin-top: 4px;
+}
+
+.retailer-quotes-section .section-label {
+  margin-bottom: 8px;
+}
+
+.retailer-quotes-summary {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 10px 0;
+}
+
+.retailer-quotes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.retailer-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.retailer-quote-text {
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.retailer-quote-text::before {
+  content: '"';
+}
+
+.retailer-quote-text::after {
+  content: '"';
+}
+
+.retailer-quote-attribution {
+  font-size: 12px;
+  color: var(--text-hint);
 }
 

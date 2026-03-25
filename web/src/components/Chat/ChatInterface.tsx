@@ -165,17 +165,28 @@ export function ChatInterface({
                     <ReactMarkdown>{parsed?.text || message.content}</ReactMarkdown>
                     {parsed && parsed.chips.length > 0 && (
                       <div className="message-chips">
-                        {parsed.chips.map((chip, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            className="message-chip"
-                            onClick={() => onSendMessage(chip)}
-                            disabled={isLoading}
-                          >
-                            {chip}
-                          </button>
-                        ))}
+                        {parsed.chips.map((chip, idx) => {
+                          const colonIndex = chip.indexOf(':');
+                          const hasBoldPart = colonIndex > 0 && colonIndex < 30;
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              className="message-chip"
+                              onClick={() => onSendMessage(chip)}
+                              disabled={isLoading}
+                            >
+                              {hasBoldPart ? (
+                                <>
+                                  <strong>{chip.slice(0, colonIndex)}</strong>
+                                  {chip.slice(colonIndex)}
+                                </>
+                              ) : (
+                                chip
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </>

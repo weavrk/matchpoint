@@ -31,6 +31,17 @@ export interface WorkerReflexActivity {
   storeFavoriteCount: number | null;
 }
 
+export interface RetailerQuote {
+  quote: string;
+  role: string;
+  brand: string;
+}
+
+export interface RetailerFeedback {
+  summary: string;
+  quotes: RetailerQuote[];
+}
+
 export interface WorkerProfile {
   id: string;
   name: string;
@@ -59,6 +70,7 @@ export interface WorkerProfile {
   reflexActivity: WorkerReflexActivity | null;
   activelyLooking: boolean;
   targetBrands: string[] | null;
+  retailerQuotes?: RetailerQuote[];
 }
 
 export interface JobSpec {

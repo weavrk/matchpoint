@@ -1,16 +1,15 @@
 import {
   BadgeCheck,
   MapPin,
-  Clock,
-  MessageSquare,
-  Sparkles,
+  MessageSquareText,
+  Zap,
   CheckSquare,
   Users,
   Timer,
   TrendingUp,
-  Target,
-  Heart,
-  Zap,
+  CircleSlash2,
+  Smile,
+  Shuffle,
   RotateCcw,
   Star,
   Search,
@@ -21,20 +20,108 @@ import {
   AlertCircle,
   Flame,
 } from 'lucide-react';
-import type { MatchedWorker, Endorsement } from '../../types';
+import type { MatchedWorker, Endorsement, RetailerQuote } from '../../types';
 import './WorkerCard.css';
 
+// Generate a unique AI-style summary from retailer quotes (3-5 sentences)
+function generateQuoteSummary(firstName: string, quotes: RetailerQuote[]): string {
+  const quoteText = quotes.map(q => q.quote.toLowerCase()).join(' ');
+  const brandCount = new Set(quotes.map(q => q.brand)).size;
+
+  const sentences: string[] = [];
+
+  // Opening sentence - vary based on content
+  if (quoteText.includes('five steps ahead') || quoteText.includes('initiative') || quoteText.includes('before i can ask')) {
+    sentences.push(`${firstName} is the type of worker who anticipates what needs to be done before being asked.`);
+  } else if (quoteText.includes('energy') || quoteText.includes('spirit') || quoteText.includes('contagious')) {
+    sentences.push(`${firstName} brings an energy to the floor that elevates the entire team.`);
+  } else if (quoteText.includes('professional') || quoteText.includes('polite') || quoteText.includes('brand ambassador')) {
+    sentences.push(`${firstName} represents the brand with professionalism that stands out to retailers.`);
+  } else if (quoteText.includes('hustle') || quoteText.includes('never stops') || quoteText.includes('circles around')) {
+    sentences.push(`${firstName} is known for relentless work ethic that keeps the floor running smoothly.`);
+  } else if (quoteText.includes('customer') || quoteText.includes('client') || quoteText.includes('greet')) {
+    sentences.push(`${firstName} has a natural ability to connect with customers that retailers notice immediately.`);
+  } else if (quoteText.includes('quick to learn') || quoteText.includes('eager')) {
+    sentences.push(`${firstName} picks things up quickly and is always eager to contribute.`);
+  } else {
+    sentences.push(`Retailers across ${brandCount} brands consistently request ${firstName} back.`);
+  }
+
+  // Middle sentences - specific to their strengths
+  if (quoteText.includes('greet') || quoteText.includes('welcome') || quoteText.includes('comfortable')) {
+    sentences.push(`Managers highlight how ${firstName} makes customers feel welcomed from the moment they walk in.`);
+  }
+  if (quoteText.includes('busy') || quoteText.includes('finding') || quoteText.includes('restocking') || quoteText.includes('displays')) {
+    sentences.push(`When things slow down, ${firstName} finds productive work without needing direction.`);
+  }
+  if (quoteText.includes('direction') || quoteText.includes('coaching') || quoteText.includes('feedback')) {
+    sentences.push(`${firstName} takes feedback professionally and applies it immediately.`);
+  }
+  if (quoteText.includes('team') || quoteText.includes('collaborate') || quoteText.includes('tone')) {
+    sentences.push(`Multiple managers note that ${firstName} elevates the performance of the whole team.`);
+  }
+  if (quoteText.includes('sale') || quoteText.includes('conversion') || quoteText.includes('close')) {
+    sentences.push(`${firstName} has strong sales instincts and consistently delivers results.`);
+  }
+  if (quoteText.includes('bilingual') || quoteText.includes('international')) {
+    sentences.push(`Language skills make ${firstName} especially valuable with diverse clientele.`);
+  }
+  if (quoteText.includes('visual') || quoteText.includes('floor') || quoteText.includes('organization')) {
+    sentences.push(`${firstName} has a sharp eye for floor presentation and visual details.`);
+  }
+  if (quoteText.includes('jump') || quoteText.includes('right in') || quoteText.includes('no problem')) {
+    sentences.push(`${firstName} hits the ground running and integrates seamlessly into any team.`);
+  }
+  if (quoteText.includes('fast') || quoteText.includes('quick') || quoteText.includes('efficient')) {
+    sentences.push(`Speed and efficiency are standout qualities that managers appreciate.`);
+  }
+  if (quoteText.includes('trust') || quoteText.includes('recommend') || quoteText.includes('knowledge')) {
+    sentences.push(`Customers trust ${firstName}'s product recommendations and expertise.`);
+  }
+  if (quoteText.includes('management') || quoteText.includes('lead') || quoteText.includes('example')) {
+    sentences.push(`Several retailers see leadership potential and management readiness.`);
+  }
+  if (quoteText.includes('pleasure') || quoteText.includes('joy') || quoteText.includes('love having')) {
+    sentences.push(`Store teams genuinely enjoy working alongside ${firstName}.`);
+  }
+
+  // Closing sentence based on overall sentiment
+  if (quoteText.includes('would love') || quoteText.includes('back anytime') || quoteText.includes('would not mind having')) {
+    sentences.push(`The consistent feedback: retailers want ${firstName} back.`);
+  } else if (quoteText.includes('outstanding') || quoteText.includes('exceptional') || quoteText.includes('best')) {
+    sentences.push(`${firstName} is regularly described as one of the strongest workers retailers have seen.`);
+  } else if (brandCount >= 4) {
+    sentences.push(`With positive feedback from ${brandCount} different retailers, ${firstName} has proven adaptable across brands.`);
+  }
+
+  // Ensure we have 3-5 sentences, take first 5 if we have more
+  const finalSentences = sentences.slice(0, 5);
+
+  // If we have fewer than 3, add generic but relevant closers
+  while (finalSentences.length < 3) {
+    if (!finalSentences.some(s => s.includes('request'))) {
+      finalSentences.push(`Multiple store managers have specifically requested ${firstName} for future shifts.`);
+    } else if (!finalSentences.some(s => s.includes('reliable'))) {
+      finalSentences.push(`${firstName} shows up ready to work and delivers consistently.`);
+    } else {
+      finalSentences.push(`This track record speaks to ${firstName}'s reliability and professionalism.`);
+    }
+  }
+
+  return finalSentences.join(' ');
+}
+
 const ENDORSEMENT_CONFIG: Record<Endorsement, { icon: React.ReactNode; label: string }> = {
-  'customer-engagement': { icon: <MessageSquare size={13} />, label: 'Customer Engagement' },
-  'self-starter':        { icon: <Sparkles size={13} />,      label: 'Self-Starter' },
-  'preparedness':        { icon: <CheckSquare size={13} />,   label: 'Preparedness' },
-  'perfect-attire':      { icon: <Users size={13} />,         label: 'Perfect Attire' },
-  'work-pace':           { icon: <Timer size={13} />,         label: 'Work Pace' },
-  'productivity':        { icon: <TrendingUp size={13} />,    label: 'Productivity' },
-  'attention-to-detail': { icon: <Target size={13} />,        label: 'Attention to Detail' },
-  'team-player':         { icon: <Users size={13} />,         label: 'Team Player' },
-  'positive-attitude':   { icon: <Heart size={13} />,         label: 'Positive Attitude' },
-  'adaptable':           { icon: <Zap size={13} />,           label: 'Adaptable' },
+  'customer-engagement': { icon: <MessageSquareText size={16} />, label: 'Customer Engagement' },
+  'self-starter':        { icon: <Zap size={16} />,               label: 'Self-Starter' },
+  'preparedness':        { icon: <CheckSquare size={16} />,       label: 'Preparedness' },
+  'perfect-attire':      { icon: <Users size={16} />,             label: 'Perfect Attire' },
+  'work-pace':           { icon: <Timer size={16} />,             label: 'Work Pace' },
+  'productivity':        { icon: <TrendingUp size={16} />,        label: 'Productivity' },
+  'attention-to-detail': { icon: <CircleSlash2 size={16} />,      label: 'Attention to Detail' },
+  'team-player':         { icon: <Users size={16} />,             label: 'Team Player' },
+  'positive-attitude':   { icon: <Smile size={16} />,             label: 'Positive Attitude' },
+  'adaptable':           { icon: <Shuffle size={16} />,           label: 'Adaptable' },
 };
 
 interface WorkerCardProps {
@@ -99,8 +186,8 @@ export function WorkerCard({ worker }: WorkerCardProps) {
             )}
           </div>
           <div className="worker-meta">
-            <span className="worker-meta-item"><MapPin size={13} />{worker.market}</span>
-            <span className="worker-meta-item"><Clock size={13} />{worker.preference === 'Both' ? 'FT / PT' : worker.preference}</span>
+            <span className="worker-meta-item"><MapPin size={14} />{worker.market}</span>
+            <span className="worker-meta-item">Looking for: {worker.preference === 'FT' ? 'Full-Time' : worker.preference === 'PT' ? 'Part-Time' : 'Full or Part-Time'}</span>
           </div>
         </div>
 
@@ -206,26 +293,50 @@ export function WorkerCard({ worker }: WorkerCardProps) {
 
               {/* Brands on Reflex */}
               {worker.brandsWorked.length > 0 && (
-                <div className="brands-list">
-                  {worker.brandsWorked.slice(0, 6).map((brand, idx) => (
-                    <span key={idx} className={`brand-tag ${brand.tier}`}>{brand.name}</span>
-                  ))}
-                  {worker.brandsWorked.length > 6 && (
-                    <span className="brand-tag more">+{worker.brandsWorked.length - 6} more</span>
-                  )}
+                <div className="brands-section">
+                  <span className="section-label">Retailers on Reflex</span>
+                  <div className="brands-list">
+                    {worker.brandsWorked.map((brand, idx) => (
+                      <span key={idx} className={`brand-tag ${brand.tier}`}>{brand.name}</span>
+                    ))}
+                  </div>
                 </div>
               )}
 
               {/* Retailer endorsements */}
               {worker.endorsements.length > 0 && (
-                <div className="endorsements-list">
-                  {worker.endorsements.slice(0, 5).map((e, idx) => (
-                    <span key={idx} className="endorsement-badge">
-                      {ENDORSEMENT_CONFIG[e]?.icon}
-                      {ENDORSEMENT_CONFIG[e]?.label}
-                    </span>
-                  ))}
+                <div className="endorsements-section">
+                  <span className="section-label">Retailer Endorsements</span>
+                  <div className="endorsements-list">
+                    {worker.endorsements.map((e, idx) => (
+                      <span key={idx} className="endorsement-badge">
+                        {ENDORSEMENT_CONFIG[e]?.icon}
+                        {ENDORSEMENT_CONFIG[e]?.label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
+              )}
+
+              {/* Retailer quotes */}
+              {worker.retailerQuotes && worker.retailerQuotes.length > 0 && (
+                <>
+                  <div className="reflex-inner-divider" />
+                  <div className="retailer-quotes-section">
+                    <span className="section-label">What retailers are saying about {worker.name.split(' ')[0]}</span>
+                    <p className="retailer-quotes-summary">
+                      {generateQuoteSummary(worker.name.split(' ')[0], worker.retailerQuotes)}
+                    </p>
+                    <div className="retailer-quotes-list">
+                      {worker.retailerQuotes.map((quote, idx) => (
+                        <div key={idx} className="retailer-quote">
+                          <p className="retailer-quote-text">{quote.quote}</p>
+                          <span className="retailer-quote-attribution">{quote.role}, {quote.brand}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
           </>

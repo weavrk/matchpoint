@@ -511,6 +511,9 @@
   flex-direction: column;
   gap: 16px;
   padding-bottom: 24px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .oz-section {

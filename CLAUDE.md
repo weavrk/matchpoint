@@ -89,7 +89,7 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 - **Frontend:** React + TypeScript (Vite), located in `web/`
 - **Backend:** Node.js + Express + TypeScript, located in `src/`
 - **AI Provider:** Google AI Studio (Gemini)
-- **Styling:** CSS (no framework)
+- **Styling:** CSS (no framework) - **never use italics**
 - **Icons:** Lucide React
 - Github repro: [https://github.com/weavrk/matchpoint.git](https://github.com/weavrk/matchpoint.git)
 - Supabase: [weavrk@gmail.com](mailto:weavrk@gmail.com)
@@ -286,8 +286,11 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
   - Management: Query specific role, list others separately
   - Job posting: START WITH SITUATION → role (if replacing, ask about previous person) → FT/PT → salary → benefits/requirements → show matches
 - **Guardrails:** Stay concise, use real data, don't make up numbers, never use em dashes
+- **CRITICAL: One question per message** - Never combine multiple questions. Ask role first, wait for response, THEN ask about performance. Each step = separate message.
 - **Markdown:** Gemini responses render as markdown in the chat UI (react-markdown). Use markdown formatting for readability (bold, lists, headers).
-- **Chips/Quick Prompts:** All chip buttons use 14px font size.
+- Styling
+  - **Chips/Quick Prompts:** All chip buttons use 14px font size.
+  - **Conversation Chips:** Follow-up style with vertical list layout, arrow prefix (↳), transparent background, subtle border separators, 6px vertical padding.
 
 ### 3. Chat Prompt-Response Logic Tree
 
@@ -297,7 +300,7 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │   Input box placeholder: "You can create a job posting or explore the {{MARKET}} market..."
 │   Chips: GREETING_CHIPS from gemini.ts
 │
-├── "Fill a permanent role at my store" (Guided Scenario Flow)
+├── "Fill a role at my store" (Guided Scenario Flow)
 │   └── [Step 1: SITUATION] ← Start here! Understanding WHY surfaces better matches
 │       │   "Sounds good, what's driving {{RETAILER_NAME}} to search for new talent right now?"
 │       │   Chips (with full descriptive text):
@@ -307,16 +310,17 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │       │     [Specialized: need specific skills]
 │       │     [Just exploring]
 │       │
-│       ├── If "Replacing" → [Step 2a: Role Context]
+│       ├── If "Replacing" → [Step 2a: Role Context] ← SEPARATE MESSAGE
 │       │   │   "Got it, backfilling a role. What did they do?"
-│       │   │   Chips: [Sales floor] [Cashier] [Stock/inventory] [Management]
+│       │   │   Chips: [Sales Floor] [Sales Support] [Back of House] [Specialized] [Management]
+│       │   │   ⚠️ STOP HERE. Wait for response before asking about performance.
 │       │   │
-│       │   └── [Step 2b: Previous Person Assessment]
+│       │   └── [Step 2b: Previous Person Assessment] ← SEPARATE MESSAGE
 │       │       │   "Was this person strong? What made them good (or not)?"
 │       │       │   "This helps me find someone similar, or better."
 │       │       │   Chips: [They were great, find similar] [They were okay, want better] [They struggled, need different traits]
 │       │       │
-│       │       └── If "great" → [Step 2c: Traits Deep Dive]
+│       │       └── If "great" → [Step 2c: Traits Deep Dive] ← SEPARATE MESSAGE
 │       │           │   "What did they do well? Pick the top 2-3:"
 │       │           │   Chips: [Customer engagement] [Self-starter] [Visual eye]
 │       │           │          [Team player] [Fast pace] [Reliable] [Clienteling]
@@ -325,22 +329,24 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │       │
 │       └── If NOT "Replacing" → [Step 3: Role Type]
 │           │   "What type of role do you need?"
-│           │   Chips: [Sales floor] [Cashier] [Stock/inventory] [Management] [Other]
+│           │   Chips: [Sales Floor] [Sales Support] [Back of House] [Specialized] [Management]
 │           │
 │           └── [Step 4: Employment Type]
 │               │   "Would this be full-time or part-time?"
 │               │   Chips: [Full-time] [Part-time] [Open to either]
 │               │
-│               └── [Step 5: Compensation]
+│               └── [Step 5: Compensation] ← SEPARATE MESSAGE (salary data only)
 │                   │   "For [role] in {{MARKET}}, {{RETAILER_CLASS}} retailers pay $X-Y/hr."
-│                   │   Based on [X] postings. Suggest range based on situation:
-│                   │   - Want someone great? → higher end
-│                   │   - Replacing someone who struggled? → mid-range
+│                   │   Based on [X] postings. List related roles with **bold titles**:
+│                   │   - **Assistant Store Manager:** $42k-52k
+│                   │   - **Department Supervisor:** $38k-46k
+│                   │   ⚠️ DO NOT ask about benefits in this message. End here.
 │                   │
-│                   └── [Step 6: Benefits & Requirements]
-│                       │   "Any benefits to highlight? Common for {{RETAILER_CLASS}}:"
-│                       │   Suggest: employee discount, flexible scheduling, health (FT), growth
-│                       │   "Any must-have requirements?"
+│                   └── [Step 6: Benefits] ← SEPARATE MESSAGE after user acknowledges salary
+│                       │   "Do you want to include any other details to the published job?"
+│                       │   "Common for {{RETAILER_CLASS}} retailers:"
+│                       │   Chips: [Employee discount] [Flexible scheduling] [Health insurance (for FT)]
+│                       │          [Growth path] [Paid time off] [Other benefits]
 │                       │
 │                       └── [Step 7: Job Posting Summary & Confirmation]
 │                           │   Summarize everything collected so far as a clean job posting preview:
@@ -439,13 +445,13 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
         │
         └── 4. Ready to get started?
             │   Surface the same chips from static greeting:
-            └── [Fill a permanent role] [Meet {{MARKET}} talent]
+            └── [Fill a role] [Meet {{MARKET}} talent]
                 [Explore {{MARKET}} market] [Explore another market]
 ```
 
 ### Design Notes (from PROMPT-ARCHITECTURE.md)
 
-- **#5 Guided Scenario**: Implemented. "Fill a permanent role" starts with SITUATION
+- **#5 Guided Scenario**: Implemented. "Fill a role" starts with SITUATION
 - **#10 Worker Stories**: Implemented. "Meet {{MARKET}} talent" leads with worker narratives
 - **#7 Hot List**: Future. Proactive "13 new workers available this week" alerts
 - **#8 Competitive Intel**: Could enhance "Explore market" with competitor posting data

@@ -30,6 +30,7 @@
 /* Text area container */
 .chat-text-area {
   width: 100%;
+  max-width: 800px;
 }
 
 .chat-text-area-form {
@@ -61,7 +62,10 @@
 
 .chat-text-area-footer {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
   padding: 16px 24px 24px;
   flex: 1;
 }
@@ -89,9 +93,6 @@
 }
 
 .chat-text-area-send {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
   width: 40px;
   height: 40px;
   border: none;
@@ -227,28 +228,46 @@
 .message-content h2 { font-size: 16px; }
 .message-content h3 { font-size: 15px; }
 
-/* Inline chips in assistant messages */
+/* Inline chips in assistant messages - follow-up style */
 .message-chips {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 16px;
+  border-top: 1px solid var(--black-alpha-100);
+  padding-top: 12px;
 }
 
 .message-chip {
-  padding: 6px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
   border: none;
-  border-radius: 16px;
-  background: var(--blue-100);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--blue-700);
+  border-bottom: 1px solid var(--black-alpha-50);
+  border-radius: 0;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.15s;
+  text-align: left;
+}
+
+.message-chip:last-child {
+  border-bottom: none;
+}
+
+.message-chip::before {
+  content: "↳";
+  color: var(--text-hint);
+  font-size: 14px;
 }
 
 .message-chip:hover:not(:disabled) {
-  background: var(--blue-200);
+  color: var(--text-primary);
+  background: transparent;
 }
 
 .message-chip:disabled {
