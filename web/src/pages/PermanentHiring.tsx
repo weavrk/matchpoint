@@ -1621,7 +1621,7 @@ export function PermanentHiring() {
           {/* Markets Section */}
           <section className="oz-section oz-section-markets">
             <div className={`oz-section-header${editingSection === 'markets' ? ' oz-section-header--editing' : ''}`}>
-              <h2 className="section-title">Markets (Live Only)</h2>
+              <h2 className="section-title">Markets ({ozMarkets.length}) <span className="section-title-sub">Live Only</span></h2>
               <div className="oz-section-actions">
                 <div className="oz-search-control">
                   <Search size={18} className="oz-search-icon" />
@@ -1777,7 +1777,7 @@ export function PermanentHiring() {
           {/* Roles Section */}
           <section className="oz-section">
             <div className={`oz-section-header${editingSection === 'roles' ? ' oz-section-header--editing' : ''}`}>
-              <h2 className="section-title">Roles</h2>
+              <h2 className="section-title">Roles ({ozRoles.length})</h2>
               <div className="oz-section-actions">
                 <div className="oz-search-control">
                   <Search size={18} className="oz-search-icon" />
@@ -1976,8 +1976,7 @@ export function PermanentHiring() {
           {/* Retailers Live Section */}
           <section className="oz-section">
             <div className="oz-section-header">
-              <h2 className="section-title">Retailers <span className="section-title-sub">(Live on Reflex)</span></h2>
-              <span className="oz-count-badge">{retailersLive.length}</span>
+              <h2 className="section-title">Retailers ({retailersLive.length}) <span className="section-title-sub">Live on Reflex</span></h2>
             </div>
             {retailersLive.length === 0 ? (
               <div className="oz-retailers-live-placeholder">
@@ -1997,7 +1996,7 @@ export function PermanentHiring() {
           {/* Retailers National Database Section */}
           <section className="oz-section">
             <div className={`oz-section-header${editingSection === 'retailers' ? ' oz-section-header--editing' : ''}`}>
-              <h2 className="section-title">Retailers <span className="section-title-sub">(National Database)</span></h2>
+              <h2 className="section-title">Retailers ({ozRetailers.length}) <span className="section-title-sub">National Database</span></h2>
               <div className="oz-section-actions">
                 <div className="oz-search-control">
                   <Search size={18} className="oz-search-icon" />

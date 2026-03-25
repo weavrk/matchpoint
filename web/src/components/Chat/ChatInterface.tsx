@@ -153,8 +153,8 @@ export function ChatInterface({
                   <img
                     src={chatbotAvatarUrl}
                     alt=""
-                    width={32}
-                    height={32}
+                    width={40}
+                    height={40}
                     className="message-avatar-img"
                   />
                 </div>
@@ -192,8 +192,8 @@ export function ChatInterface({
               <img
                 src={chatbotAvatarUrl}
                 alt=""
-                width={32}
-                height={32}
+                width={40}
+                height={40}
                 className="message-avatar-img"
               />
             </div>

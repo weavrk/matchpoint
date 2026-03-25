@@ -221,7 +221,7 @@ Instead of "what role?", ask "what's happening at your store?" The AI infers nee
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Hey Mike, what's going on at Ariat Austin that brings you here?    │
+│  Sounds good, what's driving Ariat to search for new talent right now? │
 │                                                                     │
 │  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐        │
 │  │ 📈 Growing      │ │ 🔄 Replacing    │ │ 📅 Seasonal     │        │

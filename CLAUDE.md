@@ -41,10 +41,10 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
     - Name, photo
     - Shift Verified badge (if applicable)
     - Shifts on Reflex count
-    - Brands worked (apparel/footwear — mid, elevated, or luxury)
+    - Brands worked (apparel/footwear: mid, elevated, or luxury)
     - Market (all NYC for prototype)
     - FT/PT preference (varies per worker)
-    - Retailer endorsements (variable per worker — not every shift hits all):
+    - Retailer endorsements (variable per worker, not every shift hits all):
       - 🗨 Customer Engagement
       - ✦ Self-Starter
       - ☑ Preparedness
@@ -58,7 +58,7 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
     - Reliability: On-time rating (Exceptional or null)
     - Commitment score (Exceptional or null)
     - "Invited back" with store count (e.g., "Invited back: 12 stores")
-    - About: 2-3 sentences — retail experience, retailer feedback summary
+    - About: 2-3 sentences (retail experience, retailer feedback summary)
     - Previous retail experience: company, duration, roles
     - Work style: role preferences, traits (self-directed, task switching, pace, focus, direction needs, physical activity)
   - **Simulated data (prototype)**: 40 synthetic worker profiles
@@ -77,8 +77,8 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
   - **Worker interest**:
     - Interact with job postings via: like, 👁 view, or express interest
     - Worker-side experience lives in the Worker App (deferred)
-      > TBD: Worker interest board — build or stay manual?
-6. **Reflex Manual step** — Reflex team manually filters interested workers, builds a contacts list for the retailer
+      > TBD: Worker interest board (build or stay manual?)
+6. **Reflex Manual step**: Reflex team manually filters interested workers, builds a contacts list for the retailer
   > TBD: Does retailer see live interest feed or only Reflex-curated shortlist?
 7. Retailer ↔ worker communication happens off-platform (phone, email)
 
@@ -86,8 +86,8 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 
 ## Tech Stack
 
-- **Frontend:** React + TypeScript (Vite) — located in `web/`
-- **Backend:** Node.js + Express + TypeScript — located in `src/`
+- **Frontend:** React + TypeScript (Vite), located in `web/`
+- **Backend:** Node.js + Express + TypeScript, located in `src/`
 - **AI Provider:** Google AI Studio (Gemini)
 - **Styling:** CSS (no framework)
 - **Icons:** Lucide React
@@ -246,7 +246,7 @@ For our prototype, assume you are in Austin and the brand is Ariat. Your name is
 
 ### 1. Data Foundation
 
-- ++**Role Groupings**++ — When querying salary data, pull from the entire group and present ranges.
+- ++**Role Groupings**++: When querying salary data, pull from the entire group and present ranges.
 
   | Group         | Primary Role                         | Also Includes                                                                             |
   | ------------- | ------------------------------------ | ----------------------------------------------------------------------------------------- |
@@ -255,23 +255,23 @@ For our prototype, assume you are in Austin and the brand is Ariat. Your name is
   | Back of House | Stock Associate / Stocker            | Inventory Associate, Operations Associate                                                 |
   | Specialized   | Beauty Advisor / Cosmetics Associate | Stylist, Visual Merchandiser, Pop Up                                                      |
   | Management    | Store Manager                        | Store Team Leader, Supervisor, Key Holder, Department Supervisor, Assistant Store Manager |
-  | Regional      | District / Area Manager              | —                                                                                         |
+  | Regional      | District / Area Manager              | (none)                                                                                    |
 
   - **Management exception:** Query the specific role asked, then list other management roles separately.
   - **Example:** "Store Managers in Atlanta at Luxury retailers are earning $65k-85k. In the same market, here are salaries for other management roles: Assistant Store Manager: $45k-55k, Department Supervisor: $38k-48k, Key Holder / Lead Associate: $18-22/hr"
-- ++**Retailer Classification**++ — User's brand classification is known from login. Filter salary data to same classification.
+- ++**Retailer Classification**++: User's brand classification is known from login. Filter salary data to same classification.
   - Classifications: Luxury, Specialty, Big Box
   - Show: "Based on [X] similar [Luxury/Specialty/Big Box] retailers in [Market]..."
   - Example: If user is logged in as Gucci (Luxury), show salary data from other Luxury retailers, not from Target or Gap.
-- ++**Market Context**++ — When presenting salary data, show:
+- ++**Market Context**++: When presenting salary data, show:
   - Specific market data - The range for the market they're hiring in
   - Related role ranges - Salary ranges for related roles in same category
   - National comparison - How this market compares to national average
   - **Example:** "The range for Atlanta is $20-$24 per hour for Sales Associates at similar Luxury retailers. Sales Support roles are roughly $16-18 an hour. Atlanta is a little lower than the national average for Sales Associates which is $22-26 for Luxury brands."
-- ++**Data Summary Generator**++ — Functions in `web/src/services/gemini.ts`:
-  - `generateSalarySummary(roleId?, marketId?, retailerClass?)` — Returns structured salary data grouped by role/market/class
-  - `getMarketSummaryText(market, retailerClass, role?)` — Returns human-readable text for AI injection
-  - `getGroupedSalarySummary(role, market, retailerClass)` — Aggregates related roles + national average
+- ++**Data Summary Generator**++: Functions in `web/src/services/gemini.ts`:
+  - `generateSalarySummary(roleId?, marketId?, retailerClass?)`: Returns structured salary data grouped by role/market/class
+  - `getMarketSummaryText(market, retailerClass, role?)`: Returns human-readable text for AI injection
+  - `getGroupedSalarySummary(role, market, retailerClass)`: Aggregates related roles + national average
   - **Example output:** "Austin Luxury retailers:\nSales Associate: $18-24/hr (8 postings)\nStore Manager: $55k-75k (3 postings)"
 
 ### 2. System Prompt
@@ -285,8 +285,9 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
   - Salary questions: Show market range, related roles, national comparison
   - Management: Query specific role, list others separately
   - Job posting: START WITH SITUATION → role (if replacing, ask about previous person) → FT/PT → salary → benefits/requirements → show matches
-- **Guardrails:** Stay concise, use real data, don't make up numbers
+- **Guardrails:** Stay concise, use real data, don't make up numbers, never use em dashes
 - **Markdown:** Gemini responses render as markdown in the chat UI (react-markdown). Use markdown formatting for readability (bold, lists, headers).
+- **Chips/Quick Prompts:** All chip buttons use 14px font size.
 
 ### 3. Chat Prompt-Response Logic Tree
 
@@ -298,21 +299,21 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │
 ├── "Fill a permanent role at my store" (Guided Scenario Flow)
 │   └── [Step 1: SITUATION] ← Start here! Understanding WHY surfaces better matches
-│       │   "Hey {{USER_NAME}}, what's going on at {{RETAILER_NAME}} {{MARKET}} that brings you here?"
-│       │   Chips (with context):
-│       │     [Growing] "We're busy, need more help"
-│       │     [Replacing] "Someone left, need to fill"
-│       │     [Seasonal] "Holiday rush is coming"
-│       │     [Specialized] "Need specific skills"
+│       │   "Sounds good, what's driving {{RETAILER_NAME}} to search for new talent right now?"
+│       │   Chips (with full descriptive text):
+│       │     [Growing: we're busy, need more help]
+│       │     [Replacing: someone left, need to fill]
+│       │     [Seasonal: holiday rush is coming]
+│       │     [Specialized: need specific skills]
 │       │     [Just exploring]
 │       │
 │       ├── If "Replacing" → [Step 2a: Role Context]
-│       │   │   "Got it — backfilling a role. What did they do?"
+│       │   │   "Got it, backfilling a role. What did they do?"
 │       │   │   Chips: [Sales floor] [Cashier] [Stock/inventory] [Management]
 │       │   │
 │       │   └── [Step 2b: Previous Person Assessment]
 │       │       │   "Was this person strong? What made them good (or not)?"
-│       │       │   "This helps me find someone similar — or better."
+│       │       │   "This helps me find someone similar, or better."
 │       │       │   Chips: [They were great, find similar] [They were okay, want better] [They struggled, need different traits]
 │       │       │
 │       │       └── If "great" → [Step 2c: Traits Deep Dive]
@@ -341,14 +342,25 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │                       │   Suggest: employee discount, flexible scheduling, health (FT), growth
 │                       │   "Any must-have requirements?"
 │                       │
-│                       └── [Step 7: Generate Posting & Show Matches]
-│                           │   "Perfect. Here are [X] workers in {{MARKET}} with those exact strengths"
-│                           │   "— all have been endorsed for [trait] and have 95%+ reliability:"
-│                           │   Show: Sofia M. ✓ | 98% reliable | Customer Engagement ×12
-│                           │         James T. ✓ | 96% reliable | Customer Engagement ×8
-│                           │   Chips: [Publish] [Edit] [Save draft]
+│                       └── [Step 7: Job Posting Summary & Confirmation]
+│                           │   Summarize everything collected so far as a clean job posting preview:
+│                           │   - Role, FT/PT, market
+│                           │   - Compensation range
+│                           │   - Key requirements / must-haves
+│                           │   - Benefits highlighted
+│                           │   "Here's what your posting looks like. Does this look right,
+│                           │    or is there anything you'd like to change?"
+│                           │   Chips: [Looks good, show me matches] [Change the role]
+│                           │          [Adjust compensation] [Edit requirements]
 │                           │
-│                           └── Output JOB_SPEC JSON when finalized
+│                           └── [Step 8: Generate Posting & Show Matches]
+│                               │   "Perfect. Here are [X] workers in {{MARKET}} with those exact strengths"
+│                               │   "All have been endorsed for [trait] and have 95%+ reliability:"
+│                               │   Show: Sofia M. ✓ | 98% reliable | Customer Engagement ×12
+│                               │         James T. ✓ | 96% reliable | Customer Engagement ×8
+│                               │   Chips: [Publish] [Edit] [Save draft]
+│                               │
+│                               └── Output JOB_SPEC JSON when finalized
 │
 ├── "Meet {{MARKET}} talent" (Worker Story Narrative Flow)
 │   └── [Step 1: Confirm Market]
@@ -363,13 +375,13 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │           │   │ worked 47 shifts across 15 brands, and 12 of them have   │
 │           │   │ invited me back. I'm ready for something permanent."     │
 │           │   │                                                          │
-│           │   │ — Sofia M., Sales Associate                              │
+│           │   │ Sofia M., Sales Associate                                 │
 │           │   │   ✓ Shift Verified • Madewell, Anthropologie, J.Crew    │
 │           │   │   Looking for: FT role at Specialty retailer            │
 │           │   │                                                          │
 │           │   │   What stores say:                                       │
-│           │   │   🗨 "Natural with customers" — Madewell manager         │
-│           │   │   🗨 "Would hire full-time if we had headcount" — J.Crew │
+│           │   │   🗨 "Natural with customers" (Madewell manager)         │
+│           │   │   🗨 "Would hire full-time if we had headcount" (J.Crew) │
 │           │   │                                                          │
 │           │   │   [Connect with Sofia] [See full journey]                │
 │           │   └──────────────────────────────────────────────────────────┘
@@ -383,7 +395,7 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │               │   Role: [Sales Associate] [Keyholder] [Other]
 │               │   FT/PT: [Full-time] [Part-time] [Either]
 │               │
-│               │   💡 "[Name] prefers [FT/PT] and $[X-Y]/hr — matching that
+│               │   💡 "[Name] prefers [FT/PT] and $[X-Y]/hr. Matching that
 │               │      increases your response rate by 3x."
 │               │
 │               └── [Send intro matching their preferences] [Customize message]
@@ -406,7 +418,7 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │       └── User selects → same flow as "Explore {{MARKET}}"
 │
 └── "Tell me how Talent Connect works"
-    └── [Product Explainer] — In this order:
+    └── [Product Explainer]: In this order:
         │
         ├── 1. What it is:
         │   "Talent Connect is a resource to explore markets, talent in your
@@ -414,7 +426,7 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
         │
         ├── 2. What makes it different (Value Prop):
         │   "Unlike traditional job boards, every worker here has real performance
-        │   data from Reflex shifts — verified reliability scores, store endorsements,
+        │   data from Reflex shifts: verified reliability scores, store endorsements,
         │   and brands they've worked with. You're not screening resumes, you're
         │   seeing proven retail talent."
         │
@@ -422,8 +434,8 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
         │   "We work together to narrow down published jobs by tuning based on
         │   market data and worker interest. I can help you fine-tune your salary
         │   ranges, employment type, and role descriptions to reach the best
-        │   possible pool of highly qualified candidates. We're not an ATS system —
-        │   we're an early acquisition resource for your team."
+        │   possible pool of highly qualified candidates. We're not an ATS system.
+        │   We're an early acquisition resource for your team."
         │
         └── 4. Ready to get started?
             │   Surface the same chips from static greeting:
@@ -433,16 +445,14 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 
 ### Design Notes (from PROMPT-ARCHITECTURE.md)
 
-- **#5 Guided Scenario** — Implemented: "Fill a permanent role" starts with SITUATION
-- **#10 Worker Stories** — Implemented: "Meet {{MARKET}} talent" leads with worker narratives
-- **#7 Hot List** — Future: Proactive "13 new workers available this week" alerts
-- **#8 Competitive Intel** — Could enhance "Explore market" with competitor posting data
-- **#9 Team Composition** — Could add team gap analysis before posting
-
-
+- **#5 Guided Scenario**: Implemented. "Fill a permanent role" starts with SITUATION
+- **#10 Worker Stories**: Implemented. "Meet {{MARKET}} talent" leads with worker narratives
+- **#7 Hot List**: Future. Proactive "13 new workers available this week" alerts
+- **#8 Competitive Intel**: Could enhance "Explore market" with competitor posting data
+- **#9 Team Composition**: Could add team gap analysis before posting
 
 Other things to field if asked  
-  
+
 EXAMPLE 1:
 User: I need to hire someone
 Assistant: Happy to help! What city or market are you hiring in?
@@ -454,4 +464,3 @@ Assistant: Store manager in Atlanta. Based on current market data, store manager
 EXAMPLE 2:
 User: What should I pay a cashier in Austin?
 Assistant: Based on 12 recent job postings in Austin, cashiers are being offered $14-17/hour. Want me to help you create a posting?
-

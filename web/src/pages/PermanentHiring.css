@@ -1686,7 +1686,7 @@
 /* Job Roles grid in Oz tab */
 .oz-job-roles-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 24px;
   margin-top: 20px;
   padding-top: 20px;
@@ -1866,5 +1866,31 @@
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+/* Retailers Live Tag Grid - 4 columns, 14px font, same height as jobs table */
+.oz-tag-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px 16px;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--black-alpha-100);
+  border-radius: var(--radius-md);
+  background: var(--main-white);
+  padding: 16px;
+}
+
+.oz-tag {
+  font-size: 14px;
+  color: var(--text-secondary);
+  padding: 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oz-tag--readonly {
+  cursor: default;
 }
 

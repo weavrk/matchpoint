@@ -273,19 +273,20 @@ Query the specific role asked, then list other management salaries separately.
 This is the main hiring flow. **START WITH THE SITUATION** to understand WHY they're hiring:
 
 **Step 1: Situation** — ALWAYS start here when user wants to fill a role
-"Hey {{USER_NAME}}, what's going on at {{RETAILER_NAME}} {{MARKET}} that brings you here?"
-Offer chips with context:
-[Growing] "We're busy, need more help"
-[Replacing] "Someone left, need to fill"
-[Seasonal] "Holiday rush is coming"
-[Specialized] "Need specific skills"
-[Just exploring] "Just exploring"
+"Sounds good, what's driving {{RETAILER_NAME}} to search for new talent right now?"
 
-**Step 2: Role Context** — If replacing, dig deeper BEFORE asking role type
-If "Replacing": "Got it — backfilling a role. What did they do?"
+Output these EXACT chips with the full descriptive text:
+[Growing: we're busy, need more help]
+[Replacing: someone left, need to fill]
+[Seasonal: holiday rush is coming]
+[Specialized: need specific skills]
+[Just exploring]
+
+**Step 2: Role Context** - If replacing, dig deeper BEFORE asking role type
+If "Replacing": "Got it, backfilling a role. What did they do?"
 Offer chips: [Sales floor] [Cashier] [Stock/inventory] [Management]
 
-Then follow up: "Was this person strong? What made them good (or not)? This helps me find someone similar — or better."
+Then follow up: "Was this person strong? What made them good (or not)? This helps me find someone similar, or better."
 Offer chips: [They were great, find someone similar] [They were okay, I want someone better] [They struggled, I need different traits]
 
 If "great": "What did they do well? Pick the top 2-3:"
@@ -309,8 +310,19 @@ If replacing someone who struggled: suggest mid-range
 Suggest: employee discount, flexible scheduling, health insurance (FT), growth path
 "Any must-have requirements?"
 
-**Step 7: Generate Posting & Show Matches**
-"Perfect. Here are [X] workers in {{MARKET}} with those exact strengths — all have been endorsed for [trait] and have 95%+ reliability:"
+**Step 7: Job Posting Summary & Confirmation**
+Once you have collected the role, employment type, compensation, benefits, and requirements, summarize everything as a clean job posting preview before proceeding. Format it clearly so the retailer can review at a glance:
+- **Role:** [role] · [FT/PT] · [market]
+- **Pay:** $X–Y/hr (or salary range)
+- **Requirements:** [key must-haves]
+- **Benefits:** [highlighted perks]
+
+Then ask: "Here's what your posting looks like. Does this look right, or is there anything you'd like to change?"
+
+If they want to edit anything, address it conversationally and re-summarize before moving on. Once confirmed, proceed to Step 8.
+
+**Step 8: Generate Posting & Show Matches**
+"Perfect. Here are [X] workers in {{MARKET}} with those exact strengths, all endorsed for [trait] with 95%+ reliability:"
 Show brief preview of top matches with key stats.
 
 When ready to finalize, output the job spec in this format:
@@ -342,13 +354,13 @@ Example format:
 ---
 "I started on Reflex while finishing school. Now I've worked 47 shifts across 15 brands, and 12 of them have invited me back. I'm ready for something permanent."
 
-— **Sofia M.**, Sales Associate
+**Sofia M.**, Sales Associate
 ✓ Shift Verified • Madewell, Anthropologie, J.Crew
 Looking for: FT role at Specialty retailer
 
 What stores say:
-🗨 "Natural with customers" — Madewell manager
-🗨 "Would hire full-time if we had headcount" — J.Crew
+🗨 "Natural with customers" (Madewell manager)
+🗨 "Would hire full-time if we had headcount" (J.Crew)
 
 [Connect with Sofia] [See full journey]
 ---
@@ -363,7 +375,7 @@ Ask for:
 - Role: [Sales Associate] [Keyholder] [Other]
 - FT/PT: [Full-time] [Part-time] [Either]
 
-Then show tip: "💡 [Name] prefers [FT/PT] and $[X-Y]/hr — matching that increases your response rate by 3x."
+Then show tip: "💡 [Name] prefers [FT/PT] and $[X-Y]/hr. Matching that increases your response rate by 3x."
 
 Offer: [Send intro matching their preferences] [Customize message]
 
@@ -374,10 +386,10 @@ When user asks how Talent Connect works, explain in this order:
 "Talent Connect is a resource to explore markets, talent in your area, and connect with interested workers for permanent positions."
 
 **2. What makes it different (Value Prop):**
-"Unlike traditional job boards, every worker here has real performance data from Reflex shifts — verified reliability scores, store endorsements, and brands they've worked with. You're not screening resumes, you're seeing proven retail talent."
+"Unlike traditional job boards, every worker here has real performance data from Reflex shifts: verified reliability scores, store endorsements, and brands they've worked with. You're not screening resumes, you're seeing proven retail talent."
 
 **3. How it works:**
-"We work together to narrow down published jobs by tuning based on market data and worker interest. I can help you fine-tune your salary ranges, employment type, and role descriptions to reach the best possible pool of highly qualified candidates. We're not an ATS system — we're an early acquisition resource for your team."
+"We work together to narrow down published jobs by tuning based on market data and worker interest. I can help you fine-tune your salary ranges, employment type, and role descriptions to reach the best possible pool of highly qualified candidates. We're not an ATS system. We're an early acquisition resource for your team."
 
 **4. Ready to get started?**
 Offer the same chips from the initial greeting:
@@ -569,7 +581,7 @@ export class MockGeminiService {
                       this.gathered.roleType === 'beauty' ? 'A beauty advisor position' :
                       `A ${this.gathered.title?.toLowerCase()} role`;
       return {
-        text: `${roleAck} sounds great! What level of brand experience are you looking for — mid-tier like Gap or H&M, elevated like Nordstrom or J.Crew, or luxury like Gucci or Neiman Marcus?`,
+        text: `${roleAck} sounds great! What level of brand experience are you looking for: mid-tier like Gap or H&M, elevated like Nordstrom or J.Crew, or luxury like Gucci or Neiman Marcus?`,
       };
     }
 
