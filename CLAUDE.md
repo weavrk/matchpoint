@@ -284,7 +284,7 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 - **Response rules:**
   - Salary questions: Show market range, related roles, national comparison
   - Management: Query specific role, list others separately
-  - Job posting: Guide through market (confirm) -> role → FT/PT → salary → requirements
+  - Job posting: START WITH SITUATION → role (if replacing, ask about previous person) → FT/PT → salary → benefits/requirements → show matches
 - **Guardrails:** Stay concise, use real data, don't make up numbers
 - **Markdown:** Gemini responses render as markdown in the chat UI (react-markdown). Use markdown formatting for readability (bold, lists, headers).
 
@@ -293,46 +293,165 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 ```
 [Welcome Screen]
 │   Headline: "Hey {{USER_NAME}}, let's connect you with retail talent"
-│   Input box with "Ask anything..." placeholder
-│  
+│   Input box placeholder: "You can create a job posting or explore the {{MARKET}} market..."
+│   Chips: GREETING_CHIPS from gemini.ts
 │
-├── "Create a job posting"
-│   └── [Job Posting Flow]
-│       ├── Confirm market (Austin)
-│       │   ├── "Yes" → Role selection
-│       │   └── "Different market" → Market picker
-│       ├── Select role
-│       │   └── Show role groups, pick one
-│       ├── FT/PT preference
-│       │   └── Full-time / Part-time / Both
-│       ├── Salary range
-│       │   └── Show market data, confirm or adjust
-│       └── Requirements
-│           └── Experience, skills, etc.
-│           └── → Generate job posting preview
+├── "Fill a permanent role at my store" (Guided Scenario Flow)
+│   └── [Step 1: SITUATION] ← Start here! Understanding WHY surfaces better matches
+│       │   "Hey {{USER_NAME}}, what's going on at {{RETAILER_NAME}} {{MARKET}} that brings you here?"
+│       │   Chips (with context):
+│       │     [Growing] "We're busy, need more help"
+│       │     [Replacing] "Someone left, need to fill"
+│       │     [Seasonal] "Holiday rush is coming"
+│       │     [Specialized] "Need specific skills"
+│       │     [Just exploring]
+│       │
+│       ├── If "Replacing" → [Step 2a: Role Context]
+│       │   │   "Got it — backfilling a role. What did they do?"
+│       │   │   Chips: [Sales floor] [Cashier] [Stock/inventory] [Management]
+│       │   │
+│       │   └── [Step 2b: Previous Person Assessment]
+│       │       │   "Was this person strong? What made them good (or not)?"
+│       │       │   "This helps me find someone similar — or better."
+│       │       │   Chips: [They were great, find similar] [They were okay, want better] [They struggled, need different traits]
+│       │       │
+│       │       └── If "great" → [Step 2c: Traits Deep Dive]
+│       │           │   "What did they do well? Pick the top 2-3:"
+│       │           │   Chips: [Customer engagement] [Self-starter] [Visual eye]
+│       │           │          [Team player] [Fast pace] [Reliable] [Clienteling]
+│       │           │
+│       │           └── Continue to Step 4...
+│       │
+│       └── If NOT "Replacing" → [Step 3: Role Type]
+│           │   "What type of role do you need?"
+│           │   Chips: [Sales floor] [Cashier] [Stock/inventory] [Management] [Other]
+│           │
+│           └── [Step 4: Employment Type]
+│               │   "Would this be full-time or part-time?"
+│               │   Chips: [Full-time] [Part-time] [Open to either]
+│               │
+│               └── [Step 5: Compensation]
+│                   │   "For [role] in {{MARKET}}, {{RETAILER_CLASS}} retailers pay $X-Y/hr."
+│                   │   Based on [X] postings. Suggest range based on situation:
+│                   │   - Want someone great? → higher end
+│                   │   - Replacing someone who struggled? → mid-range
+│                   │
+│                   └── [Step 6: Benefits & Requirements]
+│                       │   "Any benefits to highlight? Common for {{RETAILER_CLASS}}:"
+│                       │   Suggest: employee discount, flexible scheduling, health (FT), growth
+│                       │   "Any must-have requirements?"
+│                       │
+│                       └── [Step 7: Generate Posting & Show Matches]
+│                           │   "Perfect. Here are [X] workers in {{MARKET}} with those exact strengths"
+│                           │   "— all have been endorsed for [trait] and have 95%+ reliability:"
+│                           │   Show: Sofia M. ✓ | 98% reliable | Customer Engagement ×12
+│                           │         James T. ✓ | 96% reliable | Customer Engagement ×8
+│                           │   Chips: [Publish] [Edit] [Save draft]
+│                           │
+│                           └── Output JOB_SPEC JSON when finalized
 │
-├── "Explore {market} market"
+├── "Meet {{MARKET}} talent" (Worker Story Narrative Flow)
+│   └── [Step 1: Confirm Market]
+│       │   "Want to meet talent in {{MARKET}}, or a different location?"
+│       │   Chips: [Yes, {{MARKET}}] [Different location]
+│       │
+│       └── [Step 2: Worker Stories] ← Lead with humanity, not stats
+│           │   "Here are some standouts looking for permanent roles in {{MARKET}}:"
+│           │
+│           │   ┌──────────────────────────────────────────────────────────┐
+│           │   │ "I started on Reflex while finishing school. Now I've    │
+│           │   │ worked 47 shifts across 15 brands, and 12 of them have   │
+│           │   │ invited me back. I'm ready for something permanent."     │
+│           │   │                                                          │
+│           │   │ — Sofia M., Sales Associate                              │
+│           │   │   ✓ Shift Verified • Madewell, Anthropologie, J.Crew    │
+│           │   │   Looking for: FT role at Specialty retailer            │
+│           │   │                                                          │
+│           │   │   What stores say:                                       │
+│           │   │   🗨 "Natural with customers" — Madewell manager         │
+│           │   │   🗨 "Would hire full-time if we had headcount" — J.Crew │
+│           │   │                                                          │
+│           │   │   [Connect with Sofia] [See full journey]                │
+│           │   └──────────────────────────────────────────────────────────┘
+│           │
+│           │   Chips: [See more stories] [Filter by role] [I know what I need]
+│           │
+│           └── [Step 3: Connect with Worker] (when user selects a worker)
+│               │   "Great choice. To connect with [Name], I need a few details
+│               │   so they know what they're being considered for."
+│               │
+│               │   Role: [Sales Associate] [Keyholder] [Other]
+│               │   FT/PT: [Full-time] [Part-time] [Either]
+│               │
+│               │   💡 "[Name] prefers [FT/PT] and $[X-Y]/hr — matching that
+│               │      increases your response rate by 3x."
+│               │
+│               └── [Send intro matching their preferences] [Customize message]
+│
+├── "Explore {{MARKET}} market"
 │   └── [Market Salary Data]
-│       ├── Show salary ranges by role group
-│       │   ├── Sales Floor: $X-Y/hr
+│       ├── Show salary ranges by role group for {{RETAILER_CLASS}}
+│       │   ├── Sales Floor: $X-Y/hr (based on N postings)
 │       │   ├── Management: $X-Yk
 │       │   └── etc.
 │       ├── Compare to national average
 │       └── Offer follow-ups:
 │           ├── "Want to see a specific role?"
-│           └── "Ready to create a posting?"
+│           └── "Ready to fill a role?"
 │
 ├── "Explore another market"
 │   └── [Market Picker]
-│       ├── Show available markets
-│       └── User selects → same as "Explore {market}"
+│       │   "Which market would you like to explore?"
+│       │   List available Reflex markets
+│       └── User selects → same flow as "Explore {{MARKET}}"
 │
 └── "Tell me how Talent Connect works"
-    └── [Product Explainer]
-        ├── What it is (permanent hiring on Reflex)
-        ├── How it works (chat → job → matches → interest)
-        ├── What makes it different (Shift Verified, endorsements)
-        └── Offer to start:
-            └── "Ready to explore the market or create a posting?"
+    └── [Product Explainer] — In this order:
+        │
+        ├── 1. What it is:
+        │   "Talent Connect is a resource to explore markets, talent in your
+        │   area, and connect with interested workers for permanent positions."
+        │
+        ├── 2. What makes it different (Value Prop):
+        │   "Unlike traditional job boards, every worker here has real performance
+        │   data from Reflex shifts — verified reliability scores, store endorsements,
+        │   and brands they've worked with. You're not screening resumes, you're
+        │   seeing proven retail talent."
+        │
+        ├── 3. How it works:
+        │   "We work together to narrow down published jobs by tuning based on
+        │   market data and worker interest. I can help you fine-tune your salary
+        │   ranges, employment type, and role descriptions to reach the best
+        │   possible pool of highly qualified candidates. We're not an ATS system —
+        │   we're an early acquisition resource for your team."
+        │
+        └── 4. Ready to get started?
+            │   Surface the same chips from static greeting:
+            └── [Fill a permanent role] [Meet {{MARKET}} talent]
+                [Explore {{MARKET}} market] [Explore another market]
 ```
+
+### Design Notes (from PROMPT-ARCHITECTURE.md)
+
+- **#5 Guided Scenario** — Implemented: "Fill a permanent role" starts with SITUATION
+- **#10 Worker Stories** — Implemented: "Meet {{MARKET}} talent" leads with worker narratives
+- **#7 Hot List** — Future: Proactive "13 new workers available this week" alerts
+- **#8 Competitive Intel** — Could enhance "Explore market" with competitor posting data
+- **#9 Team Composition** — Could add team gap analysis before posting
+
+
+
+Other things to field if asked  
+  
+EXAMPLE 1:
+User: I need to hire someone
+Assistant: Happy to help! What city or market are you hiring in?
+User: Atlanta
+Assistant: Got it, Atlanta. What role are you looking to fill?
+User: Store manager
+Assistant: Store manager in Atlanta. Based on current market data, store managers there are earning $55,000-70,000. Is this a full-time position?
+
+EXAMPLE 2:
+User: What should I pay a cashier in Austin?
+Assistant: Based on 12 recent job postings in Austin, cashiers are being offered $14-17/hour. Want me to help you create a posting?
 

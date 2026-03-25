@@ -12,6 +12,25 @@ export type Endorsement =
   | 'positive-attitude'
   | 'adaptable';
 
+export interface WorkerReliability {
+  cancellations: number;
+  noShows: number;
+  lastMinuteFills: number;
+}
+
+export interface WorkerAvailability {
+  weekends: boolean;
+  openingShifts: boolean;
+  closingShifts: boolean;
+}
+
+export interface WorkerReflexActivity {
+  shiftsByTier: { luxury: number; elevated: number; mid: number };
+  longestRelationship: { brand: string; flexCount: number } | null;
+  tierProgression: 'upward' | 'stable';
+  storeFavoriteCount: number | null;
+}
+
 export interface WorkerProfile {
   id: string;
   name: string;
@@ -35,6 +54,11 @@ export interface WorkerProfile {
     rolePreferences: string[];
     traits: string[];
   };
+  reliability: WorkerReliability | null;
+  availability: WorkerAvailability;
+  reflexActivity: WorkerReflexActivity | null;
+  activelyLooking: boolean;
+  targetBrands: string[] | null;
 }
 
 export interface JobSpec {

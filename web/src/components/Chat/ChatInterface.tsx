@@ -14,6 +14,22 @@ interface ChatInterfaceProps {
   market?: string;
 }
 
+// Parse message content to extract inline chips [like this]
+function parseMessageWithChips(content: string): { text: string; chips: string[] } {
+  const chipPattern = /\[([^\]]+)\]/g;
+  const chips: string[] = [];
+  let match;
+
+  while ((match = chipPattern.exec(content)) !== null) {
+    chips.push(match[1]);
+  }
+
+  // Remove the chip patterns from the text for cleaner display
+  const text = content.replace(chipPattern, '').replace(/\s{2,}/g, ' ').trim();
+
+  return { text, chips };
+}
+
 export function ChatInterface({
   messages,
   onSendMessage,
@@ -35,8 +51,10 @@ export function ChatInterface({
 
   // Handle greeting chip click
   const handleGreetingChip = (chipId: string) => {
-    if (chipId === 'create-posting') {
-      onSendMessage("I'd like to create a job posting");
+    if (chipId === 'fill-role') {
+      onSendMessage("I need to fill a permanent role at my store");
+    } else if (chipId === 'meet-talent') {
+      onSendMessage(`I want to meet ${market} talent`);
     } else if (chipId === 'explore-market') {
       onSendMessage(`Show me ${market} market data`);
     } else if (chipId === 'explore-other') {
@@ -121,31 +139,53 @@ export function ChatInterface({
   return (
     <div className="chat-interface">
       <div className="chat-messages">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`chat-message ${message.role === 'user' ? 'user' : 'assistant'}`}
-          >
-            {message.role === 'assistant' && (
-              <div className="message-avatar" aria-hidden="true">
-                <img
-                  src={chatbotAvatarUrl}
-                  alt=""
-                  width={32}
-                  height={32}
-                  className="message-avatar-img"
-                />
-              </div>
-            )}
-            <div className="message-content">
-              {message.role === 'assistant' ? (
-                <ReactMarkdown>{message.content}</ReactMarkdown>
-              ) : (
-                <p>{message.content}</p>
+        {messages.map((message) => {
+          const isAssistant = message.role === 'assistant';
+          const parsed = isAssistant ? parseMessageWithChips(message.content) : null;
+
+          return (
+            <div
+              key={message.id}
+              className={`chat-message ${isAssistant ? 'assistant' : 'user'}`}
+            >
+              {isAssistant && (
+                <div className="message-avatar" aria-hidden="true">
+                  <img
+                    src={chatbotAvatarUrl}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="message-avatar-img"
+                  />
+                </div>
               )}
+              <div className="message-content">
+                {isAssistant ? (
+                  <>
+                    <ReactMarkdown>{parsed?.text || message.content}</ReactMarkdown>
+                    {parsed && parsed.chips.length > 0 && (
+                      <div className="message-chips">
+                        {parsed.chips.map((chip, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            className="message-chip"
+                            onClick={() => onSendMessage(chip)}
+                            disabled={isLoading}
+                          >
+                            {chip}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p>{message.content}</p>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {isLoading && (
           <div className="chat-message assistant">
             <div className="message-avatar" aria-hidden="true">

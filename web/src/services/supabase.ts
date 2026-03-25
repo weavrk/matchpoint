@@ -49,6 +49,12 @@ export interface JobPosting {
   source: string | null;
 }
 
+export interface RetailerLive {
+  id: number;
+  name: string;
+  updated_at: string | null;
+}
+
 // Markets API
 export async function fetchMarkets(): Promise<Market[]> {
   const { data, error } = await supabase
@@ -467,4 +473,18 @@ export async function saveScrapedJobs(jobs: ScrapedJob[], retailers: Retailer[])
 
   console.log(`Saved ${saved} NEW jobs to Supabase, ${errors} errors, ${skipped} skipped (duplicates)`);
   return { saved, errors, skipped };
+}
+
+// Retailers Live API
+export async function fetchRetailersLive(): Promise<RetailerLive[]> {
+  const { data, error } = await supabase
+    .from('retailers_live')
+    .select('*')
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching retailers_live:', error);
+    throw error;
+  }
+  return data || [];
 }

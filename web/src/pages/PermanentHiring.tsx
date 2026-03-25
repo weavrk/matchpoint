@@ -11,6 +11,7 @@ import {
   fetchMarkets,
   fetchRoles,
   fetchRetailers,
+  fetchRetailersLive,
   fetchJobPostings,
   syncMarkets,
   syncRoles,
@@ -21,6 +22,7 @@ import {
   type Market,
   type Role,
   type Retailer,
+  type RetailerLive,
   type ScrapedJob,
   type JobPosting,
 } from '../services/supabase';
@@ -712,6 +714,9 @@ export function PermanentHiring() {
   const [backupRoles, setBackupRoles] = useState<typeof ozRoles | null>(null);
   const [backupRetailers, setBackupRetailers] = useState<typeof ozRetailers | null>(null);
 
+  // Retailers Live (from Supabase retailers_live table)
+  const [retailersLive, setRetailersLive] = useState<RetailerLive[]>([]);
+
   // Reflex Talent tab state - lazy loading
   const [talentDisplayCount, setTalentDisplayCount] = useState(6);
   const talentLoadMoreRef = useRef<HTMLDivElement>(null);
@@ -725,10 +730,11 @@ export function PermanentHiring() {
     async function loadData() {
       setIsLoadingData(true);
       try {
-        const [marketsData, rolesData, retailersData] = await Promise.all([
+        const [marketsData, rolesData, retailersData, retailersLiveData] = await Promise.all([
           fetchMarkets(),
           fetchRoles(),
           fetchRetailers(),
+          fetchRetailersLive(),
         ]);
 
         // Transform markets data
@@ -751,6 +757,9 @@ export function PermanentHiring() {
           name: r.name,
           classification: r.classification,
         })));
+
+        // Set retailers live data
+        setRetailersLive(retailersLiveData);
       } catch (error) {
         console.error('Failed to load data from Supabase:', error);
         // Fall back to local data
@@ -1561,7 +1570,7 @@ export function PermanentHiring() {
       </nav>
 
       {activeTab === 'ask-reflex' && (
-        <div className="hiring-content">
+        <div className={`hiring-content${messages.length > 0 ? ' conversation-mode' : ''}`}>
           <div className="chat-column">
             <ChatInterface
               messages={messages}
@@ -1964,10 +1973,31 @@ export function PermanentHiring() {
               </div>
           </section>
 
-          {/* Retailers Section */}
+          {/* Retailers Live Section */}
+          <section className="oz-section">
+            <div className="oz-section-header">
+              <h2 className="section-title">Retailers <span className="section-title-sub">(Live on Reflex)</span></h2>
+              <span className="oz-count-badge">{retailersLive.length}</span>
+            </div>
+            {retailersLive.length === 0 ? (
+              <div className="oz-retailers-live-placeholder">
+                <span className="oz-placeholder-text">No retailers found in <code>retailers_live</code> table</span>
+              </div>
+            ) : (
+              <div className="oz-tag-grid">
+                {retailersLive.map((r) => (
+                  <span key={r.id} className="oz-tag oz-tag--readonly">
+                    {r.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Retailers National Database Section */}
           <section className="oz-section">
             <div className={`oz-section-header${editingSection === 'retailers' ? ' oz-section-header--editing' : ''}`}>
-              <h2 className="section-title">Retailers</h2>
+              <h2 className="section-title">Retailers <span className="section-title-sub">(National Database)</span></h2>
               <div className="oz-section-actions">
                 <div className="oz-search-control">
                   <Search size={18} className="oz-search-icon" />
