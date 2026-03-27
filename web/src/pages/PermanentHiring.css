@@ -482,6 +482,20 @@
   margin-left: auto;
 }
 
+/* Published Jobs Tab Styles */
+.published-jobs-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 24px;
+}
+
+.published-jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 900px;
+}
+
 /* Reflex Talent Tab Styles */
 .reflex-talent-content {
   flex: 1;

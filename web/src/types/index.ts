@@ -106,3 +106,42 @@ export interface MatchedWorker extends WorkerProfile {
   matchScore: number;
   matchReasons: string[];
 }
+
+// Candidate response status for published jobs
+// Flow: invited → viewed → interested → applied → (Reflex coordinates shortlist)
+export type CandidateStatus = 'invited' | 'viewed' | 'interested' | 'applied';
+
+// A candidate who has been invited or responded to a job
+export interface JobCandidate {
+  workerId: string;
+  workerName: string;
+  workerPhoto?: string;
+  shiftVerified: boolean;
+  shiftsOnReflex: number;
+  status: CandidateStatus;
+  statusDate: Date;
+  matchScore: number;
+  topEndorsements: string[];
+}
+
+// Engagement metrics for a published job
+export interface JobEngagement {
+  views: number;        // Eye icon - workers who viewed
+  likes: number;        // Heart icon - workers who liked/saved
+  applications: number; // Briefcase icon - workers who applied
+}
+
+// A published job posting
+export interface PublishedJob {
+  id: string;
+  role: string;
+  employmentType: 'Full-time' | 'Part-time' | 'Open to either';
+  market: string;
+  pay: string;
+  traits: string[];
+  benefits: string[];
+  publishedAt: Date;
+  status: 'active' | 'paused' | 'closed';
+  engagement: JobEngagement;
+  candidates: JobCandidate[];
+}

@@ -139,7 +139,7 @@
 .chat-message {
   display: flex;
   gap: 12px;
-  max-width: 85%;
+  max-width: calc(85% - 24px);
 }
 
 .chat-message.user {
@@ -149,6 +149,12 @@
 
 .chat-message.assistant {
   align-self: flex-start;
+}
+
+/* Full width for messages with worker cards or role selector */
+.chat-message.has-worker-cards,
+.chat-message.has-role-selector {
+  max-width: calc(100% - 24px);
 }
 
 .message-avatar {
@@ -174,6 +180,7 @@
   padding: 0;
   font-size: 16px;
   line-height: 1.5;
+  width: 100%;
 }
 
 /* Assistant messages: card-like container matching welcome box */
@@ -183,6 +190,7 @@
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
   padding: 20px 24px;
+  min-width: 400px;
 }
 
 /* User messages: simple rounded pill style */
@@ -191,6 +199,8 @@
   background: var(--stone-700);
   border-radius: 20px;
   padding: 12px 20px;
+  width: auto;
+  max-width: 540px;
 }
 
 .message-content p {
@@ -273,6 +283,414 @@
 .message-chip:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Multi-select mode - pill style chips */
+.message-chips.multi-select {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: none;
+  padding-top: 0;
+  margin-top: 12px;
+}
+
+.message-chips.multi-select .message-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 1px solid var(--app-primary);
+  border-radius: 20px;
+  background: var(--main-white);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--app-primary);
+}
+
+.message-chips.multi-select .message-chip::before {
+  content: none;
+}
+
+.message-chips.multi-select .message-chip:hover:not(:disabled) {
+  background: var(--gray-50);
+}
+
+.message-chips.multi-select .message-chip.selected {
+  background: var(--blue-100);
+  border-color: var(--blue-100);
+  color: var(--blue-700);
+}
+
+/* Inline input form in assistant message */
+.inline-input-form {
+  margin-top: 16px;
+  border-top: 1px solid var(--black-alpha-100);
+  padding-top: 16px;
+}
+
+.inline-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--gray-50);
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.inline-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text-primary);
+  resize: none;
+  outline: none;
+  height: 72px;
+}
+
+.inline-input::placeholder {
+  color: var(--text-hint);
+}
+
+.inline-send-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--app-primary);
+  color: var(--main-white);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+
+.inline-send-btn:hover:not(:disabled) {
+  background: var(--stone-800);
+}
+
+.inline-send-btn:disabled {
+  background: var(--gray-200);
+  color: var(--text-hint);
+  cursor: not-allowed;
+}
+
+.inline-send-btn svg.lucide {
+  margin-right: 2px;
+  margin-top: 2px;
+}
+
+/* Worker Cards Grid in Chat */
+.worker-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 800px) {
+  .worker-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.worker-card-chat {
+  background: var(--main-white);
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+
+.worker-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Verified tag - positioned in upper right */
+.worker-card-verified-tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: var(--teal-50);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--teal-700);
+}
+
+.worker-card-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.worker-card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.worker-card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.worker-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.worker-card-role {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.worker-card-status {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.worker-card-verified {
+  color: var(--teal-600);
+  font-weight: 500;
+}
+
+.worker-card-brands {
+  color: var(--text-secondary);
+}
+
+.worker-card-looking-for {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.worker-card-about {
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+  font-style: italic;
+}
+
+.worker-card-about p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.worker-card-store-quotes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--black-alpha-50);
+}
+
+.worker-card-store-quotes-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+
+.worker-card-store-quote {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.store-quote-icon {
+  flex-shrink: 0;
+}
+
+.store-quote-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.store-quote-text {
+  color: var(--text-primary);
+}
+
+.store-quote-source {
+  color: var(--text-hint);
+  font-size: 12px;
+}
+
+/* Section label for worker card sections */
+.worker-card-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-hint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Work History section */
+.worker-card-work-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--black-alpha-50);
+}
+
+.work-history-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.work-history-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.work-history-company {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.work-history-role {
+  color: var(--text-secondary);
+}
+
+.work-history-duration {
+  color: var(--text-hint);
+  font-size: 12px;
+}
+
+.work-history-item .work-history-role::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--text-hint);
+}
+
+.work-history-item .work-history-duration::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--text-hint);
+}
+
+.worker-card-endorsements {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--black-alpha-50);
+}
+
+.worker-card-endorsements-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.worker-card-endorsement-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.worker-card-endorsement-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--teal-50);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.worker-card-endorsement-tag svg {
+  color: var(--text-secondary);
+}
+
+.endorsement-count {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.worker-card-quote {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+}
+
+.quote-mark {
+  font-family: Georgia, serif;
+  font-size: 48px;
+  line-height: 1;
+  color: var(--text-hint);
+  margin-top: -8px;
+}
+
+.worker-card-quote p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.worker-card-source {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--black-alpha-50);
+}
+
+.source-brand {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.source-divider {
+  color: var(--black-alpha-200);
+}
+
+.source-role {
+  font-size: 14px;
+  color: var(--text-primary);
 }
 
 .typing-indicator {
@@ -366,4 +784,287 @@
 .chat-send-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Role Selector Grid - 5 column layout with headers */
+.role-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 24px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--black-alpha-100);
+}
+
+@media (max-width: 1200px) {
+  .role-selector-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .role-selector-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .role-selector-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.role-selector-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.role-selector-header {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+
+.role-selector-roles {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.role-selector-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--app-primary);
+  border-radius: 20px;
+  background: var(--main-white);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--app-primary);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  width: fit-content;
+}
+
+.role-selector-chip:hover:not(:disabled) {
+  background: var(--gray-50);
+}
+
+.role-selector-chip.selected {
+  background: var(--blue-100);
+  border-color: var(--blue-100);
+  color: var(--blue-700);
+}
+
+.role-selector-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Job Summary Card */
+.job-summary-card {
+  margin-top: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, var(--gray-50) 0%, var(--main-white) 100%);
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.job-summary-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--black-alpha-100);
+}
+
+.job-summary-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.job-summary-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.job-summary-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: var(--app-primary);
+  color: var(--main-white);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.job-summary-location {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.job-summary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.job-summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-hint);
+}
+
+.job-summary-pay {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.job-summary-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.job-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  background: var(--main-white);
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* Success Banner - celebration milestone */
+.success-banner {
+  position: relative;
+  margin: 16px 0;
+  padding: 24px 28px;
+  background: linear-gradient(135deg, var(--teal-50) 0%, var(--green-50) 50%, var(--blue-50) 100%);
+  border: 2px solid var(--teal-200);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  overflow: hidden;
+}
+
+.success-banner-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--teal-400) 0%, var(--green-400) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.success-banner-icon svg {
+  color: var(--main-white);
+}
+
+.success-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 1;
+}
+
+.success-banner-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--teal-700);
+  margin: 0;
+}
+
+.success-banner-subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Confetti pieces */
+.success-banner-confetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+.confetti-piece:nth-child(1) {
+  background: var(--pink-400);
+  top: 15%;
+  left: 10%;
+  transform: rotate(45deg);
+  animation: confetti-float 3s ease-in-out infinite;
+}
+
+.confetti-piece:nth-child(2) {
+  background: var(--yellow-400);
+  top: 25%;
+  right: 15%;
+  transform: rotate(-15deg);
+  animation: confetti-float 2.5s ease-in-out infinite 0.5s;
+}
+
+.confetti-piece:nth-child(3) {
+  background: var(--blue-400);
+  bottom: 20%;
+  left: 20%;
+  transform: rotate(30deg);
+  animation: confetti-float 2.8s ease-in-out infinite 0.3s;
+}
+
+.confetti-piece:nth-child(4) {
+  background: var(--green-400);
+  top: 60%;
+  right: 25%;
+  transform: rotate(-45deg);
+  animation: confetti-float 3.2s ease-in-out infinite 0.7s;
+}
+
+.confetti-piece:nth-child(5) {
+  background: var(--teal-400);
+  bottom: 30%;
+  right: 10%;
+  transform: rotate(60deg);
+  animation: confetti-float 2.6s ease-in-out infinite 0.2s;
+}
+
+@keyframes confetti-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(180deg);
+  }
 }

@@ -28,7 +28,8 @@ import {
 } from '../services/supabase';
 import { SAMPLE_WORKERS } from '../data/workers';
 import { SAMPLE_RETAILER } from '../data/retailer';
-import type { ChatMessage, MatchedWorker, JobSpec } from '../types';
+import type { ChatMessage, MatchedWorker, JobSpec, PublishedJob } from '../types';
+import { PublishedJobCard } from '../components/Jobs';
 import './PermanentHiring.css';
 
 type TabId = 'ask-reflex' | 'published-jobs' | 'reflex-talent' | 'oz';
@@ -992,6 +993,75 @@ export function PermanentHiring() {
   const [isLoading, setIsLoading] = useState(false);
   const [, setMatchedWorkers] = useState<MatchedWorker[]>([]);
   const [, setJobSpec] = useState<JobSpec | null>(null);
+
+  // Published jobs state with sample data
+  const [publishedJobs, setPublishedJobs] = useState<PublishedJob[]>([
+    {
+      id: '1',
+      role: 'Brand Representative',
+      employmentType: 'Part-time',
+      market: 'Austin',
+      pay: '$18-20/hr',
+      traits: ['Customer Engagement', 'Self-Starter'],
+      benefits: ['Employee discount', 'Flexible scheduling'],
+      publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      status: 'active',
+      engagement: { views: 47, likes: 12, applications: 6 },
+      candidates: [
+        { workerId: 'w1', workerName: 'Sofia M.', shiftVerified: true, shiftsOnReflex: 47, status: 'applied', statusDate: new Date(), matchScore: 94, topEndorsements: ['Customer Engagement', 'Positive Attitude'] },
+        { workerId: 'w2', workerName: 'Marcus T.', shiftVerified: true, shiftsOnReflex: 32, status: 'applied', statusDate: new Date(), matchScore: 89, topEndorsements: ['Self-Starter', 'Work Pace'] },
+        { workerId: 'w3', workerName: 'Elena R.', shiftVerified: true, shiftsOnReflex: 28, status: 'interested', statusDate: new Date(), matchScore: 87, topEndorsements: ['Team Player', 'Adaptable'] },
+        { workerId: 'w4', workerName: 'James K.', shiftVerified: false, shiftsOnReflex: 15, status: 'viewed', statusDate: new Date(), matchScore: 82, topEndorsements: ['Preparedness'] },
+        { workerId: 'w5', workerName: 'Priya S.', shiftVerified: true, shiftsOnReflex: 51, status: 'applied', statusDate: new Date(), matchScore: 96, topEndorsements: ['Customer Engagement', 'Self-Starter'] },
+        { workerId: 'w6', workerName: 'David L.', shiftVerified: true, shiftsOnReflex: 22, status: 'invited', statusDate: new Date(), matchScore: 78, topEndorsements: ['Work Pace'] },
+      ],
+    },
+    {
+      id: '2',
+      role: 'Sales Associate',
+      employmentType: 'Full-time',
+      market: 'Austin',
+      pay: '$17-19/hr',
+      traits: ['Team Player', 'Positive Attitude', 'Adaptable'],
+      benefits: ['Health insurance', '401(k) matching', 'Paid time off'],
+      publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+      status: 'active',
+      engagement: { views: 89, likes: 24, applications: 11 },
+      candidates: [
+        { workerId: 'w7', workerName: 'Jordan F.', shiftVerified: true, shiftsOnReflex: 63, status: 'applied', statusDate: new Date(), matchScore: 92, topEndorsements: ['Team Player', 'Positive Attitude'] },
+        { workerId: 'w8', workerName: 'Ashley N.', shiftVerified: true, shiftsOnReflex: 41, status: 'applied', statusDate: new Date(), matchScore: 88, topEndorsements: ['Adaptable', 'Customer Engagement'] },
+        { workerId: 'w9', workerName: 'Chris W.', shiftVerified: true, shiftsOnReflex: 35, status: 'interested', statusDate: new Date(), matchScore: 85, topEndorsements: ['Self-Starter'] },
+      ],
+    },
+  ]);
+
+  // Handle job actions (pause/resume/close)
+  const handleJobAction = useCallback((jobId: string, action: 'pause' | 'resume' | 'close') => {
+    setPublishedJobs(prev => prev.map(job => {
+      if (job.id !== jobId) return job;
+      const newStatus = action === 'pause' ? 'paused' : action === 'resume' ? 'active' : 'closed';
+      return { ...job, status: newStatus };
+    }));
+  }, []);
+
+  // Publish a new job from chat
+  const publishJob = useCallback((jobData: { role: string; employmentType: string; market: string; pay: string; traits: string[]; benefits: string[] }) => {
+    const newJob: PublishedJob = {
+      id: Date.now().toString(),
+      role: jobData.role,
+      employmentType: jobData.employmentType as 'Full-time' | 'Part-time' | 'Open to either',
+      market: jobData.market,
+      pay: jobData.pay,
+      traits: jobData.traits,
+      benefits: jobData.benefits,
+      publishedAt: new Date(),
+      status: 'active',
+      engagement: { views: 0, likes: 0, applications: 0 },
+      candidates: [],
+    };
+    setPublishedJobs(prev => [newJob, ...prev]);
+    // Don't auto-navigate - stay in chat so user can see success banner and optionally view candidates
+  }, []);
   const [geminiService] = useState(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (apiKey) {
@@ -1072,19 +1142,66 @@ export function PermanentHiring() {
 
       const response = await geminiService.sendMessage(content);
 
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: response.text,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+      // Check if response contains worker cards AND follow-up text (compensation question)
+      // If so, split into two separate messages
+      const workerCardsMatch = response.text.match(/---WORKER_CARDS_START---([\s\S]*?)---WORKER_CARDS_END---/);
+
+      if (workerCardsMatch) {
+        // Find text before and after worker cards
+        const parts = response.text.split(/---WORKER_CARDS_END---/);
+        const beforeAndCards = parts[0] + '---WORKER_CARDS_END---';
+        const afterCards = parts[1]?.trim();
+
+        // First message: text with worker cards (up to and including the cards)
+        const workerCardsMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: beforeAndCards,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, workerCardsMessage]);
+
+        // If there's follow-up text after the cards, add it as a second message after a delay
+        if (afterCards && afterCards.length > 10) {
+          // Add a small delay to make it feel like two separate responses
+          await new Promise(resolve => setTimeout(resolve, 800));
+
+          const followUpMessage: ChatMessage = {
+            id: (Date.now() + 2).toString(),
+            role: 'assistant',
+            content: afterCards,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, followUpMessage]);
+        }
+      } else {
+        // No worker cards, just add the message normally
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: response.text,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
 
       if (response.jobSpec) {
-        const spec = { ...response.jobSpec, retailerName: SAMPLE_RETAILER.name };
+        const spec = { ...response.jobSpec, retailerName: SAMPLE_RETAILER.name } as any;
         setJobSpec(spec);
         const matches = matchWorkers(SAMPLE_WORKERS, spec);
         setMatchedWorkers(matches);
+
+        // Publish the job when spec is received
+        // Map the Gemini response format to our PublishedJob format
+        const empType = spec.employmentType || spec.preference;
+        publishJob({
+          role: spec.title,
+          employmentType: empType === 'FT' || empType === 'Full-time' ? 'Full-time' : empType === 'PT' || empType === 'Part-time' ? 'Part-time' : 'Open to either',
+          market: spec.market || 'Austin',
+          pay: spec.salaryRange || spec.description?.match(/\$[\d,]+-?[\d,]*\/?(?:hr|hour|year)?/i)?.[0] || 'Competitive',
+          traits: spec.idealTraits || [],
+          benefits: spec.benefits || [],
+        });
       }
     } catch (error) {
       console.error('Failed to send message:', error);
@@ -1540,13 +1657,13 @@ export function PermanentHiring() {
           Published Jobs
         </button>
         <button
-          className={`tab ${activeTab === 'reflex-talent' ? 'active' : ''}`}
+          className={`tab tab-right ${activeTab === 'reflex-talent' ? 'active' : ''}`}
           onClick={() => setActiveTab('reflex-talent')}
         >
           Reflex Talent
         </button>
         <button
-          className={`tab tab-right ${activeTab === 'oz' ? 'active' : ''}`}
+          className={`tab ${activeTab === 'oz' ? 'active' : ''}`}
           onClick={() => setActiveTab('oz')}
         >
           Oz
@@ -1582,14 +1699,28 @@ export function PermanentHiring() {
       )}
 
       {activeTab === 'published-jobs' && (
-        <div className="tab-empty-state">
-          <div className="placeholder-content">
-            <FileText size={48} strokeWidth={1} />
-            <h3>No published jobs yet</h3>
-            <p>
-              Jobs you publish will appear here for workers to discover
-            </p>
-          </div>
+        <div className="published-jobs-content">
+          {publishedJobs.length === 0 ? (
+            <div className="tab-empty-state">
+              <div className="placeholder-content">
+                <FileText size={48} strokeWidth={1} />
+                <h3>No published jobs yet</h3>
+                <p>
+                  Jobs you publish will appear here for workers to discover
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="published-jobs-list">
+              {publishedJobs.map(job => (
+                <PublishedJobCard
+                  key={job.id}
+                  job={job}
+                  onJobAction={handleJobAction}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

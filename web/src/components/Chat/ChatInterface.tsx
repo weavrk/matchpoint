@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, MessageSquare, Rocket, Users, Star, Smile, Target, Zap, CheckCircle, Shield, RefreshCw, Shirt, Check, PartyPopper } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { ChatMessage } from '../../types';
 import { GREETING_CHIPS } from '../../services/gemini';
@@ -14,20 +14,345 @@ interface ChatInterfaceProps {
   market?: string;
 }
 
+// Worker card type for talent preview
+interface WorkerCard {
+  name: string;
+  photo?: string;
+  shiftVerified?: boolean;
+  aboutMe?: string;
+  workHistory?: { company: string; role: string; duration?: string }[];
+  endorsements: { label: string; count: number; icon: string }[];
+  storeQuotes?: { text: string; source: string }[];
+}
+
+// Role selector type for multi-column role selection
+interface RoleSelector {
+  columns: {
+    header: string;
+    roles: string[];
+  }[];
+}
+
+// Job summary type for posting preview
+interface JobSummary {
+  role: string;
+  employmentType: string;
+  market: string;
+  pay: string;
+  traits?: string[];
+  benefits?: string[];
+}
+
+// Success banner type for milestone celebrations
+interface SuccessBanner {
+  title: string;
+  subtitle: string;
+}
+
+// Icon mapping for endorsements
+const endorsementIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
+  chat: MessageSquare,
+  rocket: Rocket,
+  users: Users,
+  star: Star,
+  smile: Smile,
+  target: Target,
+  zap: Zap,
+  check: CheckCircle,
+  shield: Shield,
+  refresh: RefreshCw,
+  shirt: Shirt,
+};
+
+// Parse worker cards from message content
+function parseWorkerCards(content: string): { text: string; workerCards: WorkerCard[] | null } {
+  const workerCardsMatch = content.match(/---WORKER_CARDS_START---([\s\S]*?)---WORKER_CARDS_END---/);
+
+  if (workerCardsMatch) {
+    try {
+      const workerCards = JSON.parse(workerCardsMatch[1].trim());
+      const text = content
+        .replace(/---WORKER_CARDS_START---[\s\S]*?---WORKER_CARDS_END---/, '')
+        .trim();
+      return { text, workerCards };
+    } catch (e) {
+      console.error('Failed to parse worker cards:', e);
+    }
+  }
+
+  return { text: content, workerCards: null };
+}
+
+// Parse role selector from message content
+function parseRoleSelector(content: string): { text: string; roleSelector: RoleSelector | null } {
+  const roleSelectorMatch = content.match(/---ROLE_SELECTOR_START---([\s\S]*?)---ROLE_SELECTOR_END---/);
+
+  if (roleSelectorMatch) {
+    try {
+      const roleSelector = JSON.parse(roleSelectorMatch[1].trim());
+      const text = content
+        .replace(/---ROLE_SELECTOR_START---[\s\S]*?---ROLE_SELECTOR_END---/, '')
+        .trim();
+      return { text, roleSelector };
+    } catch (e) {
+      console.error('Failed to parse role selector:', e);
+    }
+  }
+
+  return { text: content, roleSelector: null };
+}
+
+// Parse job summary from message content
+function parseJobSummary(content: string): { text: string; jobSummary: JobSummary | null } {
+  const jobSummaryMatch = content.match(/---JOB_SUMMARY_START---([\s\S]*?)---JOB_SUMMARY_END---/);
+
+  if (jobSummaryMatch) {
+    try {
+      const jobSummary = JSON.parse(jobSummaryMatch[1].trim());
+      const text = content
+        .replace(/---JOB_SUMMARY_START---[\s\S]*?---JOB_SUMMARY_END---/, '')
+        .trim();
+      return { text, jobSummary };
+    } catch (e) {
+      console.error('Failed to parse job summary:', e);
+    }
+  }
+
+  return { text: content, jobSummary: null };
+}
+
+// Parse success banner from message content
+function parseSuccessBanner(content: string): { text: string; successBanner: SuccessBanner | null } {
+  const successBannerMatch = content.match(/---SUCCESS_BANNER_START---([\s\S]*?)---SUCCESS_BANNER_END---/);
+
+  if (successBannerMatch) {
+    try {
+      const successBanner = JSON.parse(successBannerMatch[1].trim());
+      const text = content
+        .replace(/---SUCCESS_BANNER_START---[\s\S]*?---SUCCESS_BANNER_END---/, '')
+        .trim();
+      return { text, successBanner };
+    } catch (e) {
+      console.error('Failed to parse success banner:', e);
+    }
+  }
+
+  return { text: content, successBanner: null };
+}
+
 // Parse message content to extract inline chips [like this]
-function parseMessageWithChips(content: string): { text: string; chips: string[] } {
+function parseMessageWithChips(content: string): { text: string; chips: string[]; isMultiSelect: boolean; workerCards: WorkerCard[] | null; roleSelector: RoleSelector | null; jobSummary: JobSummary | null; successBanner: SuccessBanner | null } {
+  // First extract worker cards if present
+  const { text: textWithoutCards, workerCards } = parseWorkerCards(content);
+
+  // Then extract role selector if present
+  const { text: textWithoutSelector, roleSelector } = parseRoleSelector(textWithoutCards);
+
+  // Then extract job summary if present
+  const { text: textWithoutSummary, jobSummary } = parseJobSummary(textWithoutSelector);
+
+  // Then extract success banner if present
+  const { text: textWithoutBanner, successBanner } = parseSuccessBanner(textWithoutSummary);
+
   const chipPattern = /\[([^\]]+)\]/g;
   const chips: string[] = [];
   let match;
 
-  while ((match = chipPattern.exec(content)) !== null) {
+  while ((match = chipPattern.exec(textWithoutBanner)) !== null) {
     chips.push(match[1]);
   }
 
   // Remove the chip patterns from the text for cleaner display
-  const text = content.replace(chipPattern, '').replace(/\s{2,}/g, ' ').trim();
+  const text = textWithoutBanner.replace(chipPattern, '').replace(/\s{2,}/g, ' ').trim();
 
-  return { text, chips };
+  // Detect multi-select prompts (e.g., "Pick the top 2-3", "select 2-3", "choose multiple", "select all that apply", "positive traits", "type out qualities")
+  const isMultiSelect = /pick\s+(the\s+)?(top\s+)?\d+-\d+|select\s+\d+-\d+|choose\s+multiple|select\s+all\s+that\s+apply|positive\s+traits|type\s+out\s+qualities/i.test(text);
+
+  return { text, chips, isMultiSelect, workerCards, roleSelector, jobSummary, successBanner };
+}
+
+// Job Summary Card Component
+function JobSummaryCard({ summary }: { summary: JobSummary }) {
+  return (
+    <div className="job-summary-card">
+      <div className="job-summary-header">
+        <h3 className="job-summary-title">{summary.role}</h3>
+        <div className="job-summary-meta">
+          <span className="job-summary-tag">{summary.employmentType}</span>
+          <span className="job-summary-location">{summary.market}</span>
+        </div>
+      </div>
+
+      <div className="job-summary-section">
+        <span className="job-summary-label">Compensation</span>
+        <span className="job-summary-pay">{summary.pay}</span>
+      </div>
+
+      {summary.traits && summary.traits.length > 0 && (
+        <div className="job-summary-section">
+          <span className="job-summary-label">Ideal Traits</span>
+          <div className="job-summary-chips">
+            {summary.traits.map((trait, idx) => (
+              <span key={idx} className="job-summary-chip">{trait}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {summary.benefits && summary.benefits.length > 0 && (
+        <div className="job-summary-section">
+          <span className="job-summary-label">Benefits</span>
+          <div className="job-summary-chips">
+            {summary.benefits.map((benefit, idx) => (
+              <span key={idx} className="job-summary-chip">{benefit}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Success Banner Component - celebration milestone
+function SuccessBannerComponent({ banner }: { banner: SuccessBanner }) {
+  return (
+    <div className="success-banner">
+      <div className="success-banner-icon">
+        <PartyPopper size={32} />
+      </div>
+      <div className="success-banner-content">
+        <h3 className="success-banner-title">{banner.title}</h3>
+        <p className="success-banner-subtitle">{banner.subtitle}</p>
+      </div>
+      <div className="success-banner-confetti">
+        <span className="confetti-piece"></span>
+        <span className="confetti-piece"></span>
+        <span className="confetti-piece"></span>
+        <span className="confetti-piece"></span>
+        <span className="confetti-piece"></span>
+      </div>
+    </div>
+  );
+}
+
+// Worker Card Component
+function WorkerCardComponent({ worker }: { worker: WorkerCard }) {
+  return (
+    <div className="worker-card-chat">
+      {/* Header: Avatar, Name + Verified badge in upper right */}
+      <div className="worker-card-header">
+        <div className="worker-card-avatar">
+          {worker.photo ? (
+            <img src={worker.photo} alt={worker.name} />
+          ) : (
+            worker.name.charAt(0)
+          )}
+        </div>
+        <h4 className="worker-card-name">{worker.name}</h4>
+        {worker.shiftVerified && (
+          <span className="worker-card-verified-tag">✓ Shift Verified</span>
+        )}
+      </div>
+
+      {/* About Me quote */}
+      {worker.aboutMe && (
+        <div className="worker-card-about">
+          <span className="quote-mark">"</span>
+          <p>{worker.aboutMe}</p>
+        </div>
+      )}
+
+      {/* Work History */}
+      {worker.workHistory && worker.workHistory.length > 0 && (
+        <div className="worker-card-work-history">
+          <span className="worker-card-section-label">Work History</span>
+          <div className="work-history-items">
+            {worker.workHistory.map((job, i) => (
+              <div key={i} className="work-history-item">
+                <span className="work-history-company">{job.company}</span>
+                <span className="work-history-role">{job.role}</span>
+                {job.duration && <span className="work-history-duration">{job.duration}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Endorsements */}
+      {worker.endorsements && worker.endorsements.length > 0 && (
+        <div className="worker-card-endorsements">
+          <span className="worker-card-section-label">Endorsements</span>
+          <div className="worker-card-endorsement-tags">
+            {worker.endorsements.map((e, i) => {
+              const IconComponent = endorsementIcons[e.icon] || MessageSquare;
+              return (
+                <span key={i} className="worker-card-endorsement-tag">
+                  <IconComponent size={14} />
+                  {e.label} <span className="endorsement-count">+{e.count}</span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* What stores say */}
+      {worker.storeQuotes && worker.storeQuotes.length > 0 && (
+        <div className="worker-card-store-quotes">
+          <span className="worker-card-section-label">What stores say</span>
+          {worker.storeQuotes.map((sq, i) => (
+            <div key={i} className="worker-card-store-quote">
+              <span className="store-quote-icon">🗨</span>
+              <div className="store-quote-content">
+                <span className="store-quote-text">"{sq.text}"</span>
+                <span className="store-quote-source">{sq.source}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Role Selector Component - 5 column grid with category headers
+function RoleSelectorComponent({
+  roleSelector,
+  selectedRoles,
+  onRoleToggle,
+  disabled
+}: {
+  roleSelector: RoleSelector;
+  selectedRoles: string[];
+  onRoleToggle: (role: string) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="role-selector-grid">
+      {roleSelector.columns.map((column, colIdx) => (
+        <div key={colIdx} className="role-selector-column">
+          <h5 className="role-selector-header">{column.header}</h5>
+          <div className="role-selector-roles">
+            {column.roles.map((role, roleIdx) => {
+              const isSelected = selectedRoles.includes(role);
+              return (
+                <button
+                  key={roleIdx}
+                  type="button"
+                  className={`role-selector-chip ${isSelected ? 'selected' : ''}`}
+                  onClick={() => onRoleToggle(role)}
+                  disabled={disabled}
+                >
+                  {isSelected && <Check size={14} />}
+                  <span>{role}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function ChatInterface({
@@ -38,8 +363,15 @@ export function ChatInterface({
   market = 'Austin'
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
+  const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Reset selected chips and input when a new message is added
+  useEffect(() => {
+    setSelectedChips([]);
+    setInput('');
+  }, [messages.length]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -74,7 +406,17 @@ export function ChatInterface({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (input.trim() && !isLoading) {
+    if (isLoading) return;
+
+    // If there are selected chips, send those
+    if (selectedChips.length > 0) {
+      const message = input.trim()
+        ? `${selectedChips.join(', ')}. ${input.trim()}`
+        : selectedChips.join(', ');
+      onSendMessage(message);
+      setSelectedChips([]);
+      setInput('');
+    } else if (input.trim()) {
       onSendMessage(input.trim());
       setInput('');
     }
@@ -135,18 +477,25 @@ export function ChatInterface({
     );
   }
 
+  // Find the last assistant message index for showing chips only on the latest
+  const lastAssistantIndex = messages.reduce((lastIdx, msg, idx) =>
+    msg.role === 'assistant' ? idx : lastIdx, -1);
+
   // Conversation view (after first message)
   return (
     <div className="chat-interface">
       <div className="chat-messages">
-        {messages.map((message) => {
+        {messages.map((message, messageIndex) => {
           const isAssistant = message.role === 'assistant';
           const parsed = isAssistant ? parseMessageWithChips(message.content) : null;
+          const isLastAssistantMessage = isAssistant && messageIndex === lastAssistantIndex;
+          const hasWorkerCards = parsed?.workerCards && parsed.workerCards.length > 0;
+          const hasRoleSelector = parsed?.roleSelector !== null;
 
           return (
             <div
               key={message.id}
-              className={`chat-message ${isAssistant ? 'assistant' : 'user'}`}
+              className={`chat-message ${isAssistant ? 'assistant' : 'user'}${hasWorkerCards ? ' has-worker-cards' : ''}${hasRoleSelector ? ' has-role-selector' : ''}`}
             >
               {isAssistant && (
                 <div className="message-avatar" aria-hidden="true">
@@ -163,31 +512,96 @@ export function ChatInterface({
                 {isAssistant ? (
                   <>
                     <ReactMarkdown>{parsed?.text || message.content}</ReactMarkdown>
-                    {parsed && parsed.chips.length > 0 && (
-                      <div className="message-chips">
-                        {parsed.chips.map((chip, idx) => {
-                          const colonIndex = chip.indexOf(':');
-                          const hasBoldPart = colonIndex > 0 && colonIndex < 30;
-                          return (
-                            <button
-                              key={idx}
-                              type="button"
-                              className="message-chip"
-                              onClick={() => onSendMessage(chip)}
-                              disabled={isLoading}
-                            >
-                              {hasBoldPart ? (
-                                <>
-                                  <strong>{chip.slice(0, colonIndex)}</strong>
-                                  {chip.slice(colonIndex)}
-                                </>
-                              ) : (
-                                chip
-                              )}
-                            </button>
-                          );
-                        })}
+                    {/* Worker Cards Grid */}
+                    {parsed?.workerCards && parsed.workerCards.length > 0 && (
+                      <div className="worker-cards-grid">
+                        {parsed.workerCards.map((worker, idx) => (
+                          <WorkerCardComponent key={idx} worker={worker} />
+                        ))}
                       </div>
+                    )}
+                    {/* Role Selector Grid - single select */}
+                    {parsed?.roleSelector && isLastAssistantMessage && (
+                      <RoleSelectorComponent
+                        roleSelector={parsed.roleSelector}
+                        selectedRoles={selectedChips}
+                        onRoleToggle={(role) => {
+                          // Single select - replace selection, or deselect if clicking same
+                          setSelectedChips(prev =>
+                            prev.includes(role) ? [] : [role]
+                          );
+                        }}
+                        disabled={isLoading}
+                      />
+                    )}
+                    {/* Job Summary Card */}
+                    {parsed?.jobSummary && (
+                      <JobSummaryCard summary={parsed.jobSummary} />
+                    )}
+                    {/* Success Banner */}
+                    {parsed?.successBanner && (
+                      <SuccessBannerComponent banner={parsed.successBanner} />
+                    )}
+                    {parsed && parsed.chips.length > 0 && isLastAssistantMessage && (
+                      <>
+                        <div className={`message-chips ${parsed.isMultiSelect ? 'multi-select' : ''}`}>
+                          {parsed.chips.map((chip, idx) => {
+                            const colonIndex = chip.indexOf(':');
+                            const hasBoldPart = colonIndex > 0 && colonIndex < 30;
+                            const isSelected = selectedChips.includes(chip);
+
+                            const handleChipClick = () => {
+                              if (parsed.isMultiSelect) {
+                                // Toggle selection for multi-select
+                                setSelectedChips(prev =>
+                                  prev.includes(chip)
+                                    ? prev.filter(c => c !== chip)
+                                    : [...prev, chip]
+                                );
+                              } else {
+                                // Single select - send immediately
+                                onSendMessage(chip);
+                              }
+                            };
+
+                            return (
+                              <button
+                                key={idx}
+                                type="button"
+                                className={`message-chip ${isSelected ? 'selected' : ''}`}
+                                onClick={handleChipClick}
+                                disabled={isLoading}
+                              >
+                                {parsed.isMultiSelect && isSelected && <Check size={14} />}
+                                <span>{hasBoldPart ? <><strong>{chip.slice(0, colonIndex)}</strong>:{chip.slice(colonIndex + 1)}</> : chip}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                    {/* Inline input area for last assistant message */}
+                    {isLastAssistantMessage && !isLoading && (
+                      <form className="inline-input-form" onSubmit={handleSubmit}>
+                        <div className="inline-input-wrapper">
+                          <textarea
+                            ref={inputRef}
+                            className="inline-input"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Type your message..."
+                            rows={1}
+                          />
+                          <button
+                            type="submit"
+                            className="inline-send-btn"
+                            disabled={!input.trim() && selectedChips.length === 0}
+                          >
+                            <Send size={18} />
+                          </button>
+                        </div>
+                      </form>
                     )}
                   </>
                 ) : (
@@ -219,26 +633,6 @@ export function ChatInterface({
         )}
         <div ref={messagesEndRef} />
       </div>
-
-      <form className="chat-input-form" onSubmit={handleSubmit}>
-        <textarea
-          ref={inputRef}
-          className="chat-input"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your message..."
-          rows={1}
-          disabled={isLoading}
-        />
-        <button
-          type="submit"
-          className="chat-send-btn"
-          disabled={!input.trim() || isLoading}
-        >
-          <Send size={18} />
-        </button>
-      </form>
     </div>
   );
 }

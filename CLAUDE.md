@@ -68,6 +68,12 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
     - Ranking algorithm to be tuned later
       > TBD: Ranking signals beyond Shift Verified
 4. Retailer publishes the job
+  - Job appears in "Published Jobs" tab with engagement metrics (views, likes, applications)
+  - Each job card shows: role, pay, market, employment type, traits, benefits
+  - Expandable candidate list shows all invited Reflexers with status
+  - Candidate statuses: invited → viewed → interested → applied
+  - Flow stops at "applied" - Reflex coordinates shortlist manually
+  - "Reflex is coordinating a shortlist of applicants for you to review" banner shown when applicants exist
 5. Workers see the posting and can: like, view (👁), or express interest
   - **Retailer profile** (enriched from existing Reflex data, not self-reported):
     - Star rating from workers who have flexed there
@@ -290,9 +296,35 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 - **Markdown:** Gemini responses render as markdown in the chat UI (react-markdown). Use markdown formatting for readability (bold, lists, headers).
 - Styling
   - **Chips/Quick Prompts:** All chip buttons use 14px font size.
-  - **Conversation Chips:** Follow-up style with vertical list layout, arrow prefix (↳), transparent background, subtle border separators, 6px vertical padding.
+  - **Single-select Chips:** Follow-up style with vertical list layout, arrow prefix (↳), transparent background, subtle border separators, 6px vertical padding. Click sends immediately.
+  - **Multi-select Chips:** Triggered by prompts containing "Pick the top 2-3" or similar. Horizontal pill layout with wrap. Default: white background + primary stroke. Selected: blue-100 background + blue-700 text + Lucide Check icon. Send button enabled when 1+ selected.
+  - **Inline Input:** Text input area appears below chips in the last assistant message (not at bottom of chat). 72px height, gray-50 background, includes send button.
 
-### 3. Chat Prompt-Response Logic Tree
+### 3. Special JSON Message Formats
+
+The chat interface parses special JSON blocks from Gemini responses to render custom UI components:
+
+| Format | Purpose | Component |
+|--------|---------|-----------|
+| `---WORKER_CARDS_START---[...]---WORKER_CARDS_END---` | Display worker profile cards | WorkerCardComponent |
+| `---ROLE_SELECTOR_START---{...}---ROLE_SELECTOR_END---` | 5-column role picker grid | RoleSelectorComponent |
+| `---JOB_SUMMARY_START---{...}---JOB_SUMMARY_END---` | Job posting preview card | JobSummaryCard |
+| `---SUCCESS_BANNER_START---{...}---SUCCESS_BANNER_END---` | Celebration milestone banner | SuccessBannerComponent |
+| `---JOB_SPEC_START---{...}---JOB_SPEC_END---` | Job specification (triggers publish) | Parsed by PermanentHiring.tsx |
+
+**SUCCESS_BANNER format:**
+```json
+{"title": "Job Published!", "subtitle": "Your posting is now live"}
+```
+Displays a teal/green gradient banner with party popper icon and animated confetti.
+
+**JOB_SPEC format:**
+```json
+{"title": "...", "market": "...", "employmentType": "FT|PT|Both", "salaryRange": "...", "salaryType": "hourly|salary", "requirements": [...], "benefits": [...], "description": "...", "idealTraits": [...]}
+```
+When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Published Jobs tab.
+
+### 4. Chat Prompt-Response Logic Tree
 
 ```
 [Welcome Screen]
@@ -310,63 +342,76 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │       │     [Specialized: need specific skills]
 │       │     [Just exploring]
 │       │
-│       ├── If "Replacing" → [Step 2a: Role Context] ← SEPARATE MESSAGE
-│       │   │   "Got it, backfilling a role. What did they do?"
-│       │   │   Chips: [Sales Floor] [Sales Support] [Back of House] [Specialized] [Management]
-│       │   │   ⚠️ STOP HERE. Wait for response before asking about performance.
-│       │   │
-│       │   └── [Step 2b: Previous Person Assessment] ← SEPARATE MESSAGE
-│       │       │   "Was this person strong? What made them good (or not)?"
-│       │       │   "This helps me find someone similar, or better."
-│       │       │   Chips: [They were great, find similar] [They were okay, want better] [They struggled, need different traits]
-│       │       │
-│       │       └── If "great" → [Step 2c: Traits Deep Dive] ← SEPARATE MESSAGE
-│       │           │   "What did they do well? Pick the top 2-3:"
-│       │           │   Chips: [Customer engagement] [Self-starter] [Visual eye]
-│       │           │          [Team player] [Fast pace] [Reliable] [Clienteling]
-│       │           │
-│       │           └── Continue to Step 4...
-│       │
-│       └── If NOT "Replacing" → [Step 3: Role Type]
-│           │   "What type of role do you need?"
-│           │   Chips: [Sales Floor] [Sales Support] [Back of House] [Specialized] [Management]
+│       └── [Step 2: Role Type] ← SEPARATE MESSAGE (for ALL situations)
+│           │   "What job title are you looking for? Select below or enter your own title"
+│           │   Shows ROLE_SELECTOR (single-select) with 5 columns:
+│           │   Sales Floor, Sales Support, Back of House, Specialized, Management
 │           │
-│           └── [Step 4: Employment Type]
-│               │   "Would this be full-time or part-time?"
-│               │   Chips: [Full-time] [Part-time] [Open to either]
+│           └── [Step 3: Talent Preview] ← Shows 4 worker cards in 2x2 grid
+│               │   "{{MARKET}} has Reflexers with previous [role] experience."
+│               │   "Keep building a job description and we can invite them to apply."
 │               │
-│               └── [Step 5: Compensation] ← SEPARATE MESSAGE (salary data only)
-│                   │   "For [role] in {{MARKET}}, {{RETAILER_CLASS}} retailers pay $X-Y/hr."
-│                   │   Based on [X] postings. List related roles with **bold titles**:
-│                   │   - **Assistant Store Manager:** $42k-52k
-│                   │   - **Department Supervisor:** $38k-46k
-│                   │   ⚠️ DO NOT ask about benefits in this message. End here.
+│               │   Worker card layout (top to bottom):
+│               │   1. Header: [Photo Avatar] Name | "✓ Shift Verified" tag (upper right)
+│               │   2. About Me: Worker's personal quote
+│               │   3. Work History: company · role · duration (list)
+│               │   4. Endorsements: Pill tags (icon + label + count)
+│               │   5. What stores say: Quote lines with source
+│               │
+│               │   Worker card JSON fields:
+│               │   - name, photo (Unsplash URL), shiftVerified
+│               │   - aboutMe (worker's own quote)
+│               │   - workHistory[{company, role, duration}]
+│               │   - endorsements[{label, count, icon}]
+│               │   - storeQuotes[{text, source}]
+│               │   (Uses ---WORKER_CARDS_START--- JSON format)
+│               │
+│               │   Implementation: PermanentHiring.tsx splits responses containing
+│               │   WORKER_CARDS into two messages - cards first, then follow-up after 800ms
+│               │
+│               └── [Step 4: Desired Traits] ← SEPARATE MESSAGE (auto-sent after cards)
+│                   │   "What positive traits should we look for in a new candidate?
+│                   │    You can also type out qualities you're looking for."
+│                   │   Chips: [Customer Engagement] [Self-Starter] [Preparedness]
+│                   │          [Perfect Attire] [Work Pace] [Productivity]
+│                   │          [Attention to Detail] [Team Player] [Positive Attitude] [Adaptable]
 │                   │
-│                   └── [Step 6: Benefits] ← SEPARATE MESSAGE after user acknowledges salary
-│                       │   "Do you want to include any other details to the published job?"
-│                       │   "Common for {{RETAILER_CLASS}} retailers:"
-│                       │   Chips: [Employee discount] [Flexible scheduling] [Health insurance (for FT)]
-│                       │          [Growth path] [Paid time off] [Other benefits]
+│                   └── [Step 5: Compensation] ← SEPARATE MESSAGE with market data
+│                       │   "Based on the {{MARKET}} market, the average hourly rate for a [role]
+│                       │    is $X-Y/hr, which is [higher/lower] than the national average.
+│                       │    What hourly rate do you want for this job?"
+│                       │   Chips: [$18-20/hr] [$20-22/hr] [$22-24/hr]
 │                       │
-│                       └── [Step 7: Job Posting Summary & Confirmation]
-│                           │   Summarize everything collected so far as a clean job posting preview:
-│                           │   - Role, FT/PT, market
-│                           │   - Compensation range
-│                           │   - Key requirements / must-haves
-│                           │   - Benefits highlighted
-│                           │   "Here's what your posting looks like. Does this look right,
-│                           │    or is there anything you'd like to change?"
-│                           │   Chips: [Looks good, show me matches] [Change the role]
-│                           │          [Adjust compensation] [Edit requirements]
+│                       └── [Step 6: Employment Type] ← SEPARATE MESSAGE
+│                           │   "Would this be full-time or part-time?"
+│                           │   Chips: [Full-time] [Part-time] [Open to either]
 │                           │
-│                           └── [Step 8: Generate Posting & Show Matches]
-│                               │   "Perfect. Here are [X] workers in {{MARKET}} with those exact strengths"
-│                               │   "All have been endorsed for [trait] and have 95%+ reliability:"
-│                               │   Show: Sofia M. ✓ | 98% reliable | Customer Engagement ×12
-│                               │         James T. ✓ | 96% reliable | Customer Engagement ×8
-│                               │   Chips: [Publish] [Edit] [Save draft]
+│                           └── [Step 7: Benefits] ← SEPARATE MESSAGE
+│                               │   "Do you want to include any other details to the published job?"
+│                               │   "Select all that apply:"
+│                               │   Chips: [Health insurance] [401(k) matching] [Vision insurance]
+│                               │          [Dental insurance] [Paid holidays] [Employee discount]
+│                               │          [Flexible scheduling] [Growth path] [Paid time off]
 │                               │
-│                               └── Output JOB_SPEC JSON when finalized
+│                               └── [Step 8: Job Posting Summary & Confirmation]
+│                                   │   Shows JOB_SUMMARY card with role, employmentType, market, pay, traits, benefits
+│                                   │   "Here's what your posting looks like. Does this look right?"
+│                                   │   Chips: [Looks good, publish it] [Change the role]
+│                                   │          [Adjust compensation] [Edit benefits]
+│                                   │
+│                                   └── [Step 9: Publish Success] ← SUCCESS_BANNER only
+│                                       │   First outputs JOB_SPEC JSON (triggers Published Jobs update)
+│                                       │   Then shows SUCCESS_BANNER: {"title": "Job Published!", "subtitle": "Your posting is now live"}
+│                                       │   "Success! Your job is published. Reflexers can view this posting and apply.
+│                                       │    Our team will pull together a shortlist of candidates for you to review.
+│                                       │    You can also review qualified candidates and invite them directly. Want to invite Reflexers?"
+│                                       │   Chips: [Yes, show me candidates] [No, I'm done for now]
+│                                       │
+│                                       └── [Step 10: Show Candidates] ← ONLY if user clicks "Yes, show me candidates"
+│                                           │   "Here are qualified Reflexers with previous [role] experience:"
+│                                           │   Display 6 DIFFERENT worker cards (not the same as Step 3 preview):
+│                                           │   - Elena R., David K., Aisha M., Chris T., Maya L., Tyler B.
+│                                           │   Chips: [Invite all 6] [Show me more candidates] [I'm done for now]
 │
 ├── "Meet {{MARKET}} talent" (Worker Story Narrative Flow)
 │   └── [Step 1: Confirm Market]
@@ -375,36 +420,18 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 │       │
 │       └── [Step 2: Worker Stories] ← Lead with humanity, not stats
 │           │   "Here are some standouts looking for permanent roles in {{MARKET}}:"
+│           │   Shows 3 worker cards (same format as Step 3 in Fill a role flow)
 │           │
-│           │   ┌──────────────────────────────────────────────────────────┐
-│           │   │ "I started on Reflex while finishing school. Now I've    │
-│           │   │ worked 47 shifts across 15 brands, and 12 of them have   │
-│           │   │ invited me back. I'm ready for something permanent."     │
-│           │   │                                                          │
-│           │   │ Sofia M., Sales Associate                                 │
-│           │   │   ✓ Shift Verified • Madewell, Anthropologie, J.Crew    │
-│           │   │   Looking for: FT role at Specialty retailer            │
-│           │   │                                                          │
-│           │   │   What stores say:                                       │
-│           │   │   🗨 "Natural with customers" (Madewell manager)         │
-│           │   │   🗨 "Would hire full-time if we had headcount" (J.Crew) │
-│           │   │                                                          │
-│           │   │   [Connect with Sofia] [See full journey]                │
-│           │   └──────────────────────────────────────────────────────────┘
+│           │   Worker card fields: name, photo, shiftVerified, aboutMe,
+│           │   workHistory[], endorsements[], storeQuotes[]
 │           │
-│           │   Chips: [See more stories] [Filter by role] [I know what I need]
+│           │   "To connect with these Reflexers, create a job posting and we'll invite them to apply."
+│           │   Chips: [Create a job posting] [See more talent] [Explore a different market]
 │           │
-│           └── [Step 3: Connect with Worker] (when user selects a worker)
-│               │   "Great choice. To connect with [Name], I need a few details
-│               │   so they know what they're being considered for."
-│               │
-│               │   Role: [Sales Associate] [Keyholder] [Other]
-│               │   FT/PT: [Full-time] [Part-time] [Either]
-│               │
-│               │   💡 "[Name] prefers [FT/PT] and $[X-Y]/hr. Matching that
-│               │      increases your response rate by 3x."
-│               │
-│               └── [Send intro matching their preferences] [Customize message]
+│           └── [Step 3: Create Job Posting]
+│               │   When user clicks "Create a job posting", redirect to Fill a role flow
+│               │   "Great! Let's build a job posting together."
+│               │   → Continue with Step 1 of Fill a role (Situation question)
 │
 ├── "Explore {{MARKET}} market"
 │   └── [Market Salary Data]

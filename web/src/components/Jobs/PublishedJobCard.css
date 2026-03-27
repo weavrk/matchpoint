@@ -1,0 +1,527 @@
+/* Published Job Card */
+.published-job-card {
+  background: var(--main-white);
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+  position: relative;
+}
+
+.published-job-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.published-job-card.paused {
+  opacity: 0.7;
+}
+
+.published-job-card.closed {
+  opacity: 0.5;
+}
+
+/* Job Header */
+.job-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px 16px;
+}
+
+.job-card-title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.job-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.job-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.job-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.job-meta-item svg {
+  color: var(--text-hint);
+}
+
+/* Job Actions Menu */
+.job-card-actions {
+  position: relative;
+}
+
+.job-menu-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.job-menu-btn:hover {
+  background: var(--gray-100);
+  color: var(--text-primary);
+}
+
+.job-menu-wrapper {
+  position: relative;
+}
+
+.job-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--main-white);
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.job-menu-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.job-menu-dropdown button:hover {
+  background: var(--gray-50);
+}
+
+.job-menu-dropdown button.danger {
+  color: var(--red-600);
+}
+
+.job-menu-dropdown button.danger:hover {
+  background: var(--red-50);
+}
+
+/* Engagement Metrics */
+.job-engagement-row {
+  display: flex;
+  gap: 24px;
+  padding: 0 24px 16px;
+  border-bottom: 1px solid var(--black-alpha-50);
+}
+
+.engagement-metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+}
+
+.engagement-metric svg {
+  color: var(--text-hint);
+}
+
+.engagement-metric.highlight svg {
+  color: var(--app-primary);
+}
+
+.engagement-count {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.engagement-metric.highlight .engagement-count {
+  color: var(--app-primary);
+}
+
+.engagement-label {
+  font-size: 13px;
+  color: var(--text-hint);
+}
+
+/* Job Tags */
+.job-tags-section {
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.job-tags-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.job-tags-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-hint);
+  min-width: 80px;
+  padding-top: 4px;
+}
+
+.job-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.job-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.job-tag.trait {
+  background: var(--blue-50);
+  color: var(--blue-700);
+}
+
+.job-tag.benefit {
+  background: var(--green-50);
+  color: var(--green-700);
+}
+
+/* Candidates Toggle */
+.candidates-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 24px;
+  border: none;
+  border-top: 1px solid var(--black-alpha-50);
+  background: var(--gray-50);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.candidates-toggle:hover {
+  background: var(--gray-100);
+}
+
+.candidates-toggle svg {
+  color: var(--text-secondary);
+}
+
+.candidates-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.candidates-total {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.candidates-breakdown {
+  display: flex;
+  gap: 12px;
+}
+
+.breakdown-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.breakdown-item.applied {
+  color: var(--app-primary);
+}
+
+.breakdown-item.accepted {
+  color: var(--green-600);
+}
+
+.breakdown-item.declined {
+  color: var(--text-hint);
+}
+
+.breakdown-item.pending {
+  color: var(--text-secondary);
+}
+
+/* Candidates List */
+.candidates-list {
+  border-top: 1px solid var(--black-alpha-50);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.candidate-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--black-alpha-50);
+  transition: background 0.15s;
+}
+
+.candidate-row:last-child {
+  border-bottom: none;
+}
+
+.candidate-row:hover {
+  background: var(--gray-50);
+}
+
+.candidate-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.candidate-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.candidate-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.candidate-avatar span {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.candidate-details {
+  min-width: 0;
+}
+
+.candidate-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.candidate-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.candidate-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: var(--green-600);
+}
+
+.candidate-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-hint);
+}
+
+.candidate-score {
+  color: var(--app-primary);
+  font-weight: 500;
+}
+
+.candidate-endorsements {
+  display: flex;
+  gap: 6px;
+}
+
+.candidate-endorsement {
+  padding: 3px 10px;
+  background: var(--gray-100);
+  border-radius: 12px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* Candidate Status Badge */
+.candidate-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-invited {
+  background: var(--gray-100);
+  color: var(--text-secondary);
+}
+
+.status-viewed {
+  background: var(--blue-50);
+  color: var(--blue-600);
+}
+
+.status-interested {
+  background: var(--pink-50);
+  color: var(--pink-600);
+}
+
+.status-applied {
+  background: var(--navy-100);
+  color: var(--app-secondary);
+}
+
+/* Reflex Coordinating Banner */
+.reflex-coordinating-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--green-50) 0%, var(--teal-50) 100%);
+  border: 1px solid var(--green-100);
+  border-radius: 12px;
+  margin: 12px 16px;
+  font-size: 13px;
+  color: var(--green-700);
+}
+
+.reflex-coordinating-banner svg {
+  flex-shrink: 0;
+  color: var(--green-600);
+}
+
+.status-accepted {
+  background: var(--green-50);
+  color: var(--green-600);
+}
+
+.status-declined {
+  background: var(--gray-100);
+  color: var(--text-hint);
+}
+
+/* Candidate Actions */
+.candidate-actions {
+  display: flex;
+  gap: 8px;
+  min-width: 80px;
+  justify-content: flex-end;
+}
+
+.candidate-action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.candidate-action-btn.accept {
+  background: var(--green-50);
+  color: var(--green-600);
+}
+
+.candidate-action-btn.accept:hover {
+  background: var(--green-100);
+}
+
+.candidate-action-btn.decline {
+  background: var(--gray-100);
+  color: var(--text-hint);
+}
+
+.candidate-action-btn.decline:hover {
+  background: var(--gray-200);
+  color: var(--text-secondary);
+}
+
+.candidate-action-placeholder {
+  width: 80px;
+}
+
+/* Job Status Banner */
+.job-status-banner {
+  position: absolute;
+  top: 16px;
+  right: 80px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.job-status-banner.paused {
+  background: var(--yellow-100);
+  color: var(--yellow-700);
+}
+
+.job-status-banner.closed {
+  background: var(--gray-200);
+  color: var(--text-hint);
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+  .candidate-row {
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+
+  .candidate-endorsements {
+    display: none;
+  }
+
+  .candidate-actions {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+}
