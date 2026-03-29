@@ -472,7 +472,8 @@ export function ChatInterface({
     return (
       <div className="chat-welcome">
         <h1 className="chat-greeting">
-          Hey {displayName}, let's connect with<br className="chat-greeting-break" />
+          Hey {displayName}, let's connect with{' '}
+          <br className="chat-greeting-break" />
           retail talent in your area.
         </h1>
 
