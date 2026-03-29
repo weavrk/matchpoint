@@ -13,6 +13,33 @@ const GREETING_NAMES = [
   'Emily', 'Olivia', 'Mary', 'Hans', 'Hadley', 'Leigh Ann'
 ];
 
+// Format date for session divider
+function formatSessionDate(date: Date): string {
+  const today = new Date();
+  const isToday = date.toDateString() === today.toDateString();
+
+  const months = ['January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'];
+  const month = months[date.getMonth()];
+  const day = date.getDate();
+
+  if (isToday) {
+    return `Today, ${month} ${day}`;
+  }
+
+  const year = date.getFullYear();
+  return `${month} ${day}, ${year}`;
+}
+
+// Session Date Divider Component
+function SessionDateDivider({ date }: { date: Date }) {
+  return (
+    <div className="session-date-divider">
+      <span className="session-date-text">{formatSessionDate(date)}</span>
+    </div>
+  );
+}
+
 interface ChatInterfaceProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => void;
@@ -522,6 +549,8 @@ export function ChatInterface({
   // Conversation view (after first message)
   return (
     <div className="chat-interface">
+      {/* Session date divider - fixed above scrollable area */}
+      <SessionDateDivider date={new Date()} />
       <div className="chat-messages">
         {/* Nav chips inside scrollable area */}
         <NavChipGrid

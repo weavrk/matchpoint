@@ -689,7 +689,7 @@ function formatRetailerDisplayName(name: string): string {
 
 export function PermanentHiring() {
   const [activeTab, setActiveTab] = useState<TabId>('ask-reflex');
-  const [agentActive, setAgentActive] = useState(false); // Agent on/off state (resets on page refresh)
+  const [agentActive, setAgentActive] = useState(true); // Agent on by default
   const [showDevMenu, setShowDevMenu] = useState(false); // Floating dev menu
 
   const [showJobSitesInfo, setShowJobSitesInfo] = useState(false);
