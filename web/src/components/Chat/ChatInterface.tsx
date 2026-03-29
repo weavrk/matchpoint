@@ -6,11 +6,17 @@ import { GREETING_CHIPS } from '../../services/gemini';
 import chatbotAvatarUrl from '../../../../assets/logo-and-backgrounds/chatbot.svg?url';
 import './ChatInterface.css';
 
+// Names to cycle through in the greeting
+const GREETING_NAMES = [
+  'Mike', 'Trevor', 'Shannon', 'Nate', 'Micah', 'Katherine', 'Cayley',
+  'Evan', 'Juan', 'Julie', 'Ashlee', 'Jeremy', 'Sam', 'Jasmine',
+  'Emily', 'Olivia', 'Mary', 'Hans', 'Hadley', 'Leigh Ann'
+];
+
 interface ChatInterfaceProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => void;
   isLoading: boolean;
-  userName?: string;
   market?: string;
 }
 
@@ -21,8 +27,9 @@ interface WorkerCard {
   shiftVerified?: boolean;
   aboutMe?: string;
   workHistory?: { company: string; role: string; duration?: string }[];
-  endorsements: { label: string; count: number; icon: string }[];
+  endorsements?: { label: string; count: number; icon: string }[];
   storeQuotes?: { text: string; source: string }[];
+  compact?: boolean; // If true, show only header + store quotes
 }
 
 // Role selector type for multi-column role selection
@@ -235,24 +242,61 @@ function SuccessBannerComponent({ banner }: { banner: SuccessBanner }) {
   );
 }
 
-// Worker Card Component
-function WorkerCardComponent({ worker }: { worker: WorkerCard }) {
+// Reusable Worker Card Header Component
+function WorkerCardHeader({ worker }: { worker: WorkerCard }) {
   return (
-    <div className="worker-card-chat">
-      {/* Header: Avatar, Name + Verified badge in upper right */}
-      <div className="worker-card-header">
-        <div className="worker-card-avatar">
-          {worker.photo ? (
-            <img src={worker.photo} alt={worker.name} />
-          ) : (
-            worker.name.charAt(0)
-          )}
-        </div>
-        <h4 className="worker-card-name">{worker.name}</h4>
-        {worker.shiftVerified && (
-          <span className="worker-card-verified-tag">✓ Shift Verified</span>
+    <div className="worker-card-header">
+      <div className="worker-card-avatar">
+        {worker.photo ? (
+          <img src={worker.photo} alt={worker.name} />
+        ) : (
+          worker.name.charAt(0)
         )}
       </div>
+      <h4 className="worker-card-name">{worker.name}</h4>
+      {worker.shiftVerified && (
+        <span className="worker-card-verified-tag">✓ Shift Verified</span>
+      )}
+    </div>
+  );
+}
+
+// Reusable Store Quotes Component
+function WorkerCardStoreQuotes({ quotes }: { quotes: { text: string; source: string }[] }) {
+  return (
+    <div className="worker-card-store-quotes">
+      <span className="worker-card-section-label">What stores say</span>
+      {quotes.map((sq, i) => (
+        <div key={i} className="worker-card-store-quote">
+          <span className="store-quote-icon">🗨</span>
+          <div className="store-quote-content">
+            <span className="store-quote-text">"{sq.text}"</span>
+            <span className="store-quote-source">{sq.source}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Worker Card Component - Full or Compact variant
+function WorkerCardComponent({ worker }: { worker: WorkerCard }) {
+  // Compact variant: header + store quotes only
+  if (worker.compact) {
+    return (
+      <div className="worker-card-chat worker-card-compact">
+        <WorkerCardHeader worker={worker} />
+        {worker.storeQuotes && worker.storeQuotes.length > 0 && (
+          <WorkerCardStoreQuotes quotes={worker.storeQuotes} />
+        )}
+      </div>
+    );
+  }
+
+  // Full variant
+  return (
+    <div className="worker-card-chat">
+      <WorkerCardHeader worker={worker} />
 
       {/* About Me quote */}
       {worker.aboutMe && (
@@ -298,18 +342,7 @@ function WorkerCardComponent({ worker }: { worker: WorkerCard }) {
 
       {/* What stores say */}
       {worker.storeQuotes && worker.storeQuotes.length > 0 && (
-        <div className="worker-card-store-quotes">
-          <span className="worker-card-section-label">What stores say</span>
-          {worker.storeQuotes.map((sq, i) => (
-            <div key={i} className="worker-card-store-quote">
-              <span className="store-quote-icon">🗨</span>
-              <div className="store-quote-content">
-                <span className="store-quote-text">"{sq.text}"</span>
-                <span className="store-quote-source">{sq.source}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <WorkerCardStoreQuotes quotes={worker.storeQuotes} />
       )}
     </div>
   );
@@ -355,15 +388,18 @@ function RoleSelectorComponent({
   );
 }
 
+// Pick a random name on each page load
+const getRandomName = () => GREETING_NAMES[Math.floor(Math.random() * GREETING_NAMES.length)];
+
 export function ChatInterface({
   messages,
   onSendMessage,
   isLoading,
-  userName = 'Mike',
   market = 'Austin'
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
+  const [displayName] = useState(getRandomName);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -434,7 +470,7 @@ export function ChatInterface({
     return (
       <div className="chat-welcome">
         <h1 className="chat-greeting">
-          Hey {userName}, let's connect with<br className="chat-greeting-break" />
+          Hey {displayName}, let's connect with<br className="chat-greeting-break" />
           retail talent in your area.
         </h1>
 

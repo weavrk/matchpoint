@@ -6,9 +6,9 @@ import { supabase } from './supabase';
 export const ROLE_GROUPS: Record<string, string[]> = {
   'Sales Floor': ['Sales Associate / Retail Associate', 'Store Associate'],
   'Sales Support': ['Cashier', 'Sales Assistant', 'Fitting Room Attendant', 'Team Member', 'Retail Customer Service'],
-  'Back of House': ['Stock Associate / Stocker', 'Inventory Associate', 'Operations Associate'],
+  'Back of House': ['Stock Associate / Stocker', 'Inventory Associate', 'Operations Associate', 'Operations Assistant'],
   'Specialized': ['Beauty Advisor / Cosmetics Associate', 'Stylist', 'Visual Merchandiser', 'Pop Up'],
-  'Management': ['Store Manager', 'Store Team Leader', 'Supervisor', 'Key Holder', 'Department Supervisor', 'Assistant Store Manager'],
+  'Management': ['Store Manager', 'Store Team Leader', 'Supervisor', 'Key Holder', 'Department Supervisor', 'Assistant Store Manager', 'New Store Lead'],
   'Regional': ['District / Area Manager'],
 };
 
@@ -313,7 +313,7 @@ Show the role selector using this EXACT format (copy verbatim):
     },
     {
       "header": "Back of House",
-      "roles": ["Stock Associate", "Inventory Associate", "Operations Associate"]
+      "roles": ["Stock Associate", "Inventory Associate", "Operations Associate", "Operations Assistant"]
     },
     {
       "header": "Specialized",
@@ -321,7 +321,7 @@ Show the role selector using this EXACT format (copy verbatim):
     },
     {
       "header": "Management",
-      "roles": ["Store Team Leader", "Supervisor", "Key Holder", "Department Supervisor", "Assistant Store Manager", "Store Manager", "District Manager"]
+      "roles": ["New Store Lead", "Store Team Leader", "Supervisor", "Key Holder", "Department Supervisor", "Assistant Store Manager", "Store Manager", "District Manager"]
     }
   ]
 }
@@ -495,7 +495,7 @@ You can also review qualified candidates and invite them directly to apply. Want
 **Step 10: Show Candidates** — ONLY if user clicks "Yes, show me candidates"
 "Here are qualified Reflexers with previous [role] experience:"
 
-Show 6 worker cards using this EXACT format (different workers than Step 3):
+Show 6 COMPACT worker cards (header + store quotes only) using this EXACT format:
 
 ---WORKER_CARDS_START---
 [
@@ -503,16 +503,7 @@ Show 6 worker cards using this EXACT format (different workers than Step 3):
     "name": "Elena R.",
     "photo": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face",
     "shiftVerified": true,
-    "aboutMe": "Retail is where I thrive. I've worked everything from stockroom to sales floor and love helping customers find exactly what they need.",
-    "workHistory": [
-      {"company": "Nordstrom", "role": "Sales Associate", "duration": "1 yr"},
-      {"company": "Banana Republic", "role": "Stock Associate", "duration": "8 mo"}
-    ],
-    "endorsements": [
-      {"label": "Customer Engagement", "count": 89, "icon": "chat"},
-      {"label": "Adaptable", "count": 76, "icon": "refresh"},
-      {"label": "Team Player", "count": 82, "icon": "users"}
-    ],
+    "compact": true,
     "storeQuotes": [
       {"text": "Elena is a quick learner and great with customers.", "source": "Nordstrom Floor Manager"}
     ]
@@ -521,16 +512,7 @@ Show 6 worker cards using this EXACT format (different workers than Step 3):
     "name": "David K.",
     "photo": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
     "shiftVerified": true,
-    "aboutMe": "I bring energy and positivity to every shift. I'm looking for a team that values hard work and good vibes.",
-    "workHistory": [
-      {"company": "lululemon", "role": "Educator", "duration": "10 mo"},
-      {"company": "REI", "role": "Sales Specialist", "duration": "6 mo"}
-    ],
-    "endorsements": [
-      {"label": "Positive Attitude", "count": 104, "icon": "smile"},
-      {"label": "Work Pace", "count": 91, "icon": "zap"},
-      {"label": "Self-Starter", "count": 78, "icon": "star"}
-    ],
+    "compact": true,
     "storeQuotes": [
       {"text": "David brings great energy to the floor.", "source": "lululemon Store Manager"}
     ]
@@ -539,16 +521,7 @@ Show 6 worker cards using this EXACT format (different workers than Step 3):
     "name": "Aisha M.",
     "photo": "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=150&h=150&fit=crop&crop=face",
     "shiftVerified": true,
-    "aboutMe": "Detail-oriented and organized. I take pride in keeping the store looking its best and helping customers feel welcome.",
-    "workHistory": [
-      {"company": "Sephora", "role": "Beauty Advisor", "duration": "1 yr 2 mo"},
-      {"company": "Ulta", "role": "Sales Associate", "duration": "7 mo"}
-    ],
-    "endorsements": [
-      {"label": "Attention to Detail", "count": 95, "icon": "target"},
-      {"label": "Preparedness", "count": 88, "icon": "check"},
-      {"label": "Customer Engagement", "count": 92, "icon": "chat"}
-    ],
+    "compact": true,
     "storeQuotes": [
       {"text": "Aisha has an eye for detail and keeps her section immaculate.", "source": "Sephora Assistant Manager"}
     ]
@@ -557,16 +530,7 @@ Show 6 worker cards using this EXACT format (different workers than Step 3):
     "name": "Chris T.",
     "photo": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face",
     "shiftVerified": true,
-    "aboutMe": "Former athlete turned retail pro. I bring the same discipline and teamwork to the sales floor.",
-    "workHistory": [
-      {"company": "Nike", "role": "Athlete", "duration": "9 mo"},
-      {"company": "Foot Locker", "role": "Sales Associate", "duration": "1 yr"}
-    ],
-    "endorsements": [
-      {"label": "Team Player", "count": 112, "icon": "users"},
-      {"label": "Hustle", "count": 98, "icon": "rocket"},
-      {"label": "Work Pace", "count": 86, "icon": "zap"}
-    ],
+    "compact": true,
     "storeQuotes": [
       {"text": "Chris is a natural leader on the floor.", "source": "Nike Store Lead"}
     ]
@@ -575,16 +539,7 @@ Show 6 worker cards using this EXACT format (different workers than Step 3):
     "name": "Maya L.",
     "photo": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
     "shiftVerified": true,
-    "aboutMe": "Fashion is my passion. I love styling customers and helping them discover new looks they never thought they could pull off.",
-    "workHistory": [
-      {"company": "Zara", "role": "Sales Assistant", "duration": "8 mo"},
-      {"company": "H&M", "role": "Visual Merchandiser", "duration": "5 mo"}
-    ],
-    "endorsements": [
-      {"label": "Perfect Attire", "count": 101, "icon": "shirt"},
-      {"label": "Customer Engagement", "count": 87, "icon": "chat"},
-      {"label": "Adaptable", "count": 79, "icon": "refresh"}
-    ],
+    "compact": true,
     "storeQuotes": [
       {"text": "Maya has incredible style sense.", "source": "Zara Department Manager"}
     ]
@@ -593,16 +548,7 @@ Show 6 worker cards using this EXACT format (different workers than Step 3):
     "name": "Tyler B.",
     "photo": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&h=150&fit=crop&crop=face",
     "shiftVerified": true,
-    "aboutMe": "I'm all about the customer experience. Every interaction is a chance to make someone's day better.",
-    "workHistory": [
-      {"company": "Apple", "role": "Specialist", "duration": "1 yr 4 mo"},
-      {"company": "Best Buy", "role": "Sales Consultant", "duration": "6 mo"}
-    ],
-    "endorsements": [
-      {"label": "Customer Engagement", "count": 118, "icon": "chat"},
-      {"label": "Self-Starter", "count": 94, "icon": "star"},
-      {"label": "Positive Attitude", "count": 89, "icon": "smile"}
-    ],
+    "compact": true,
     "storeQuotes": [
       {"text": "Tyler consistently gets the highest customer satisfaction scores.", "source": "Apple Store Leader"}
     ]

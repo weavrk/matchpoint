@@ -304,24 +304,30 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 
 The chat interface parses special JSON blocks from Gemini responses to render custom UI components:
 
-| Format | Purpose | Component |
-|--------|---------|-----------|
-| `---WORKER_CARDS_START---[...]---WORKER_CARDS_END---` | Display worker profile cards | WorkerCardComponent |
-| `---ROLE_SELECTOR_START---{...}---ROLE_SELECTOR_END---` | 5-column role picker grid | RoleSelectorComponent |
-| `---JOB_SUMMARY_START---{...}---JOB_SUMMARY_END---` | Job posting preview card | JobSummaryCard |
-| `---SUCCESS_BANNER_START---{...}---SUCCESS_BANNER_END---` | Celebration milestone banner | SuccessBannerComponent |
-| `---JOB_SPEC_START---{...}---JOB_SPEC_END---` | Job specification (triggers publish) | Parsed by PermanentHiring.tsx |
+
+| Format                                                    | Purpose                              | Component                     |
+| --------------------------------------------------------- | ------------------------------------ | ----------------------------- |
+| `---WORKER_CARDS_START---[...]---WORKER_CARDS_END---`     | Display worker profile cards         | WorkerCardComponent           |
+| `---ROLE_SELECTOR_START---{...}---ROLE_SELECTOR_END---`   | 5-column role picker grid            | RoleSelectorComponent         |
+| `---JOB_SUMMARY_START---{...}---JOB_SUMMARY_END---`       | Job posting preview card             | JobSummaryCard                |
+| `---SUCCESS_BANNER_START---{...}---SUCCESS_BANNER_END---` | Celebration milestone banner         | SuccessBannerComponent        |
+| `---JOB_SPEC_START---{...}---JOB_SPEC_END---`             | Job specification (triggers publish) | Parsed by PermanentHiring.tsx |
+
 
 **SUCCESS_BANNER format:**
+
 ```json
 {"title": "Job Published!", "subtitle": "Your posting is now live"}
 ```
+
 Displays a teal/green gradient banner with party popper icon and animated confetti.
 
 **JOB_SPEC format:**
+
 ```json
 {"title": "...", "market": "...", "employmentType": "FT|PT|Both", "salaryRange": "...", "salaryType": "hourly|salary", "requirements": [...], "benefits": [...], "description": "...", "idealTraits": [...]}
 ```
+
 When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Published Jobs tab.
 
 ### 4. Chat Prompt-Response Logic Tree
@@ -351,15 +357,23 @@ When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Publ
 │               │   "{{MARKET}} has Reflexers with previous [role] experience."
 │               │   "Keep building a job description and we can invite them to apply."
 │               │
-│               │   Worker card layout (top to bottom):
-│               │   1. Header: [Photo Avatar] Name | "✓ Shift Verified" tag (upper right)
+│               │   Worker card variants:
+│               │
+│               │   FULL CARD (Step 3 talent preview, Meet talent flow):
+│               │   1. Header (reusable): [Photo Avatar] Name | "✓ Shift Verified" tag (upper right)
 │               │   2. About Me: Worker's personal quote
 │               │   3. Work History: company · role · duration (list)
 │               │   4. Endorsements: Pill tags (icon + label + count)
 │               │   5. What stores say: Quote lines with source
 │               │
+│               │   COMPACT CARD (Step 10 candidate list):
+│               │   1. Header (reusable): [Photo Avatar] Name | "✓ Shift Verified" tag
+│               │   2. What stores say: Single quote line with source
+│               │   Set compact: true in JSON to use this variant
+│               │
 │               │   Worker card JSON fields:
 │               │   - name, photo (Unsplash URL), shiftVerified
+│               │   - compact (boolean, optional - if true, shows only header + store quotes)
 │               │   - aboutMe (worker's own quote)
 │               │   - workHistory[{company, role, duration}]
 │               │   - endorsements[{label, count, icon}]
@@ -409,8 +423,10 @@ When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Publ
 │                                       │
 │                                       └── [Step 10: Show Candidates] ← ONLY if user clicks "Yes, show me candidates"
 │                                           │   "Here are qualified Reflexers with previous [role] experience:"
-│                                           │   Display 6 DIFFERENT worker cards (not the same as Step 3 preview):
-│                                           │   - Elena R., David K., Aisha M., Chris T., Maya L., Tyler B.
+│                                           │   Display 6 COMPACT worker cards (header + store quotes only):
+│                                           │   - Uses compact: true flag in JSON
+│                                           │   - Card layout: avatar + name + verified tag + single store quote
+│                                           │   - Different workers than Step 3: Elena R., David K., Aisha M., Chris T., Maya L., Tyler B.
 │                                           │   Chips: [Invite all 6] [Show me more candidates] [I'm done for now]
 │
 ├── "Meet {{MARKET}} talent" (Worker Story Narrative Flow)
@@ -475,6 +491,10 @@ When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Publ
             └── [Fill a role] [Meet {{MARKET}} talent]
                 [Explore {{MARKET}} market] [Explore another market]
 ```
+
+
+
+IGNORE ANYTHING BELOW THIS
 
 ### Design Notes (from PROMPT-ARCHITECTURE.md)
 

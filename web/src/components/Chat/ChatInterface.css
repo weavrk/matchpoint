@@ -414,6 +414,51 @@
   position: relative;
 }
 
+/* Compact card variant - header + store quotes only */
+.worker-card-chat.worker-card-compact {
+  padding: 12px;
+  gap: 8px;
+}
+
+.worker-card-compact .worker-card-header {
+  gap: 8px;
+}
+
+.worker-card-compact .worker-card-avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 14px;
+}
+
+.worker-card-compact .worker-card-name {
+  font-size: 14px;
+}
+
+.worker-card-compact .worker-card-verified-tag {
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.worker-card-compact .worker-card-store-quotes {
+  padding-top: 6px;
+  border-top: 1px solid var(--black-alpha-50);
+  margin-top: 2px;
+}
+
+.worker-card-compact .worker-card-section-label {
+  font-size: 10px;
+}
+
+.worker-card-compact .store-quote-text {
+  font-size: 12px;
+}
+
+.worker-card-compact .store-quote-source {
+  font-size: 10px;
+}
+
 .worker-card-header {
   display: flex;
   align-items: center;

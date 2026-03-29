@@ -1911,3 +1911,107 @@
   cursor: default;
 }
 
+/* ============================================
+   Floating Dev Menu
+   ============================================ */
+.dev-menu-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.dev-menu-trigger {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow:
+    -4px -4px 10px rgba(0, 0, 0, 0.05),
+    6px 6px 14px rgba(0, 0, 0, 0.2);
+}
+
+.dev-menu-trigger:hover {
+  box-shadow:
+    inset 1px 1px 3px rgba(0, 0, 0, 0.08),
+    inset -1px -1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.dev-menu-trigger:active,
+.dev-menu-container:has(.dev-menu-dropdown) .dev-menu-trigger {
+  box-shadow:
+    inset 2px 2px 5px rgba(0, 0, 0, 0.12),
+    inset -1px -1px 3px rgba(255, 255, 255, 0.8);
+}
+
+.dev-menu-dropdown {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  background: var(--main-white);
+  border: 1px solid var(--black-alpha-200);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.dev-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-primary);
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.dev-menu-item:hover {
+  background: var(--gray-50);
+}
+
+.dev-menu-item.active {
+  background: var(--app-primary);
+  color: white;
+}
+
+.dev-menu-item.active .dev-menu-icon {
+  color: white;
+}
+
+.dev-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--app-primary);
+  flex-shrink: 0;
+}
+
+.dev-menu-label {
+  flex: 1;
+}
+
+/* Bot toggle specific styling */
+.dev-menu-item-bot.bot-on {
+  color: var(--blue-600);
+}
+
+.dev-menu-item-bot.bot-on .dev-menu-icon {
+  color: var(--blue-600);
+}
+
+.dev-menu-item-bot.bot-on:hover {
+  background: var(--blue-50);
+}
+

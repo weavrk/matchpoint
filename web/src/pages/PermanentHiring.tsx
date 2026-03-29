@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Check, Info, Loader2, Clipboard, CircleMinus, BotOff, BotMessageSquare, RefreshCw, RefreshCwOff } from 'lucide-react';
+import { Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Check, Info, Loader2, Clipboard, CircleMinus, BotOff, BotMessageSquare, UserStar, Database } from 'lucide-react';
 import { ChatInterface } from '../components/Chat';
 import { ScrapeModal, type ScrapeConfig } from '../components/ScrapeModal';
 import { ScrapeProgressModal, type ScrapeProgressData } from '../components/ScrapeProgressModal';
@@ -690,13 +690,13 @@ function formatRetailerDisplayName(name: string): string {
 export function PermanentHiring() {
   const [activeTab, setActiveTab] = useState<TabId>('ask-reflex');
   const [agentActive, setAgentActive] = useState(false); // Agent on/off state (resets on page refresh)
-  const [persistChat, setPersistChat] = useState(() => {
-    // Load persist preference from localStorage (defaults to false)
-    const stored = localStorage.getItem('matchpoint_persist_chat');
-    return stored === 'true';
-  });
+  const [showDevMenu, setShowDevMenu] = useState(false); // Floating dev menu
+
   const [showJobSitesInfo, setShowJobSitesInfo] = useState(false);
   const [showScrapeModal, setShowScrapeModal] = useState(false);
+
+  // Dev menu ref for click-outside
+  const devMenuRef = useRef<HTMLDivElement>(null);
 
   // Oz tab state - data from Supabase
   const jobSitesInfoRef = useRef<HTMLDivElement>(null);
@@ -840,6 +840,19 @@ export function PermanentHiring() {
     }
   }, [showJobSitesInfo]);
 
+  // Close dev menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (devMenuRef.current && !devMenuRef.current.contains(event.target as Node)) {
+        setShowDevMenu(false);
+      }
+    }
+    if (showDevMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showDevMenu]);
+
   // Scroll to current match when index changes
   useEffect(() => {
     if (marketsMatches.length > 0) {
@@ -976,20 +989,7 @@ export function PermanentHiring() {
   const [jobSortColumn, setJobSortColumn] = useState<'source' | 'market' | 'retailer' | 'role' | 'salary' | 'employment_type'>('market');
   const [jobSortDirection, setJobSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  // Load messages from localStorage if persistChat is enabled
-  const [messages, setMessages] = useState<ChatMessage[]>(() => {
-    const stored = localStorage.getItem('matchpoint_persist_chat');
-    if (stored !== 'false') {
-      const savedMessages = localStorage.getItem('matchpoint_chat_history');
-      if (savedMessages) {
-        try {
-          const parsed = JSON.parse(savedMessages);
-          return parsed.map((m: ChatMessage) => ({ ...m, timestamp: new Date(m.timestamp) }));
-        } catch { /* ignore parse errors */ }
-      }
-    }
-    return [];
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [, setMatchedWorkers] = useState<MatchedWorker[]>([]);
   const [, setJobSpec] = useState<JobSpec | null>(null);
@@ -1072,26 +1072,6 @@ export function PermanentHiring() {
     return new MockGeminiService();
   });
   const chatStartedRef = useRef(false);
-
-  // Save messages to localStorage when they change (if persistChat is on)
-  useEffect(() => {
-    if (persistChat && messages.length > 0) {
-      localStorage.setItem('matchpoint_chat_history', JSON.stringify(messages));
-    }
-  }, [messages, persistChat]);
-
-  // Toggle persist mode
-  const togglePersistChat = useCallback(() => {
-    setPersistChat(prev => {
-      const newValue = !prev;
-      localStorage.setItem('matchpoint_persist_chat', String(newValue));
-      if (!newValue) {
-        // Clear stored chat when disabling persistence
-        localStorage.removeItem('matchpoint_chat_history');
-      }
-      return newValue;
-    });
-  }, []);
 
   // Toggle agent on/off - just toggles state for API usage control (no layout changes)
   const toggleAgent = useCallback(() => {
@@ -1656,34 +1636,6 @@ export function PermanentHiring() {
         >
           Published Jobs
         </button>
-        <button
-          className={`tab tab-right ${activeTab === 'reflex-talent' ? 'active' : ''}`}
-          onClick={() => setActiveTab('reflex-talent')}
-        >
-          Reflex Talent
-        </button>
-        <button
-          className={`tab ${activeTab === 'oz' ? 'active' : ''}`}
-          onClick={() => setActiveTab('oz')}
-        >
-          Oz
-        </button>
-        <div className="tab-play-btns">
-          <button
-            className={`tab-play-btn${persistChat ? ' active' : ''}`}
-            onClick={togglePersistChat}
-            title={persistChat ? 'Chat persistence ON - click to disable' : 'Chat persistence OFF - click to enable'}
-          >
-            {persistChat ? <RefreshCw size={16} /> : <RefreshCwOff size={16} />}
-          </button>
-          <button
-            className={`tab-play-btn${agentActive ? ' active' : ''}`}
-            onClick={toggleAgent}
-            title={agentActive ? 'Agent ON - click to stop' : 'Agent OFF - click to start'}
-          >
-            {agentActive ? <BotMessageSquare size={16} /> : <BotOff size={16} />}
-          </button>
-        </div>
       </nav>
 
       {activeTab === 'ask-reflex' && (
@@ -2638,6 +2590,55 @@ export function PermanentHiring() {
           console.log('Ignored roles:', titles);
         }}
       />
+
+      {/* Floating Dev Menu */}
+      <div className="dev-menu-container" ref={devMenuRef}>
+        <button
+          className="dev-menu-trigger"
+          onClick={() => setShowDevMenu(!showDevMenu)}
+          title="Dev Tools"
+        />
+        {showDevMenu && (
+          <div className="dev-menu-dropdown">
+            <button
+              className={`dev-menu-item dev-menu-item-bot${agentActive ? ' bot-on' : ''}`}
+              onClick={() => {
+                toggleAgent();
+                setShowDevMenu(false);
+              }}
+            >
+              <span className="dev-menu-icon">
+                {agentActive ? <BotMessageSquare size={16} /> : <BotOff size={16} />}
+              </span>
+              <span className="dev-menu-label">Good Bot {agentActive ? 'On' : 'Off'}</span>
+            </button>
+            <button
+              className={`dev-menu-item${activeTab === 'reflex-talent' ? ' active' : ''}`}
+              onClick={() => {
+                setActiveTab('reflex-talent');
+                setShowDevMenu(false);
+              }}
+            >
+              <span className="dev-menu-icon">
+                <UserStar size={16} />
+              </span>
+              <span className="dev-menu-label">Reflex Talent</span>
+            </button>
+            <button
+              className={`dev-menu-item${activeTab === 'oz' ? ' active' : ''}`}
+              onClick={() => {
+                setActiveTab('oz');
+                setShowDevMenu(false);
+              }}
+            >
+              <span className="dev-menu-icon">
+                <Database size={16} />
+              </span>
+              <span className="dev-menu-label">Oz</span>
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
