@@ -46,13 +46,14 @@
 
 /* Header text inside card */
 .chat-text-area-header {
-  font-size: 16px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 400;
   color: var(--app-primary);
   margin: 0 0 20px 0;
   padding-bottom: 20px;
-  border-bottom: 1px solid var(--black-alpha-100);
-  line-height: 8px;
+  border-bottom: 1px solid rgba(228, 228, 231, 1);
+  line-height: fit-content;
+  height: fit-content;
 }
 
 /* Welcome Card Grid - 3x2 layout */
@@ -139,7 +140,7 @@
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   color: var(--text-primary);
   resize: none;

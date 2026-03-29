@@ -2,14 +2,15 @@
 .published-job-card {
   background: var(--main-white);
   border: 1px solid var(--black-alpha-100);
-  border-radius: 16px;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: box-shadow 0.15s;
   position: relative;
 }
 
 .published-job-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .published-job-card.paused {
@@ -220,7 +221,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 16px 24px;
+  padding: 14px 24px;
   border: none;
   border-top: 1px solid var(--black-alpha-50);
   background: var(--gray-50);
@@ -238,9 +239,9 @@
 
 .candidates-summary {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
 }
 
 .candidates-total {
@@ -255,7 +256,7 @@
 }
 
 .breakdown-item {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary);
 }
 
