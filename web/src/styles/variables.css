@@ -377,7 +377,16 @@
   --app-background-navy:  var(--background-navy);
   --background-sky:       #fbfbfb;
   --text-primary:         var(--primary);
+  --text-secondary:       var(--stone-500);
   --text-hint:            var(--gray-500);
+
+  /* Teal (for Shift Verified badges and success states) */
+  --teal-50:  #f0fdfa;
+  --teal-100: #ccfbf1;
+  --teal-200: #99f6e4;
+  --teal-400: #2dd4bf;
+  --teal-600: #0d9488;
+  --teal-700: #0f766e;
 }
 
 * {

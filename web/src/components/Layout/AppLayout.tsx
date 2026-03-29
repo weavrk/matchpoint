@@ -11,7 +11,7 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, activePage, onNavigate }: AppLayoutProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div className="app-layout">

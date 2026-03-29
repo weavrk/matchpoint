@@ -2,8 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, MessageSquare, Rocket, Users, Star, Smile, Target, Zap, CheckCircle, Shield, RefreshCw, Shirt, Check, PartyPopper } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { ChatMessage } from '../../types';
-import { GREETING_CHIPS } from '../../services/gemini';
 import chatbotAvatarUrl from '../../../../assets/logo-and-backgrounds/chatbot.svg?url';
+import { NavChipGrid, getNavChips } from '../NavChips';
 import './ChatInterface.css';
 
 // Names to cycle through in the greeting
@@ -399,6 +399,7 @@ export function ChatInterface({
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
+  const [activeNavChip, setActiveNavChip] = useState<string | null>(null);
   const [displayName] = useState(getRandomName);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -417,25 +418,26 @@ export function ChatInterface({
     scrollToBottom();
   }, [messages]);
 
-  // Handle greeting chip click
-  const handleGreetingChip = (chipId: string) => {
-    if (chipId === 'fill-role') {
+  // Handle greeting card click
+  const handleGreetingCard = (cardId: string) => {
+    setActiveNavChip(cardId);
+    if (cardId === 'fill-role') {
       onSendMessage("I need to fill a permanent role at my store");
-    } else if (chipId === 'meet-talent') {
+    } else if (cardId === 'meet-talent') {
       onSendMessage(`I want to meet ${market} talent`);
-    } else if (chipId === 'explore-market') {
+    } else if (cardId === 'explore-market') {
       onSendMessage(`Show me ${market} market data`);
-    } else if (chipId === 'explore-other') {
-      onSendMessage("I want to explore a different market");
-    } else if (chipId === 'how-it-works') {
+    } else if (cardId === 'check-jobs') {
+      onSendMessage("Check on my published jobs");
+    } else if (cardId === 'how-it-works') {
       onSendMessage("Tell me how Talent Connect works");
+    } else if (cardId === 'just-exploring') {
+      onSendMessage("Just exploring for now");
     }
   };
 
-  // Replace {market} placeholder in chip labels
-  const getChipLabel = (label: string) => {
-    return label.replace('{market}', market);
-  };
+  // Navigation chips for both welcome and conversation views
+  const navChips = getNavChips(market);
 
   // Show welcome screen when no messages yet
   const showWelcomeScreen = messages.length === 0;
@@ -475,39 +477,38 @@ export function ChatInterface({
         </h1>
 
         <div className="chat-text-area">
-          <form className="chat-text-area-form" onSubmit={handleSubmit}>
-            <textarea
-              ref={inputRef}
-              className="chat-text-area-input"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={`You can create a job posting or explore the ${market} market. Tell me what you want to do first or select a quick prompt below.`}
-              rows={1}
+          <div className="chat-text-area-form">
+            <p className="chat-text-area-header">
+              Where do you want to start?
+            </p>
+
+            <NavChipGrid
+              chips={navChips}
+              onChipClick={handleGreetingCard}
               disabled={isLoading}
+              variant="welcome"
             />
-            <div className="chat-text-area-footer">
-              <div className="chat-text-area-chips">
-                {GREETING_CHIPS.map(chip => (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    className="chat-text-area-chip"
-                    onClick={() => handleGreetingChip(chip.id)}
-                  >
-                    {getChipLabel(chip.label)}
-                  </button>
-                ))}
-              </div>
+
+            <form className="welcome-input-row" onSubmit={handleSubmit}>
+              <textarea
+                ref={inputRef}
+                className="welcome-input"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Somewhere else?"
+                rows={1}
+                disabled={isLoading}
+              />
               <button
                 type="submit"
-                className="chat-text-area-send"
+                className={`welcome-send-btn ${input.trim() ? 'has-input' : ''}`}
                 disabled={!input.trim() || isLoading}
               >
                 <Send size={18} />
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     );
@@ -521,6 +522,14 @@ export function ChatInterface({
   return (
     <div className="chat-interface">
       <div className="chat-messages">
+        {/* Nav chips inside scrollable area */}
+        <NavChipGrid
+          chips={navChips}
+          activeChipId={activeNavChip}
+          onChipClick={handleGreetingCard}
+          disabled={isLoading}
+          variant="compact"
+        />
         {messages.map((message, messageIndex) => {
           const isAssistant = message.role === 'assistant';
           const parsed = isAssistant ? parseMessageWithChips(message.content) : null;

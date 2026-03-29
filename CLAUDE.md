@@ -494,6 +494,67 @@ When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Publ
 
 
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## User Interface
+
+### Color Theme
+Primary interactive color is **primary** (`--primary`, stone-700 #3f3f46).
+- **Stroke/Border (interactive):** `--primary` (#3f3f46)
+- **Background (hover/selected):** `--stone-50` (#fafafa)
+- **Text (interactive):** `--primary` (#3f3f46)
+- **Icon backgrounds:** `--background-pink` (#ffe6e6) with `--primary` icon color
+
+### Welcome Screen (Static Greeting)
+Layout reference: Jack & Jill card grid pattern
+
+**Structure:**
+1. **Greeting headline**: "Hey {name}, let's connect with retail talent in your area."
+2. **Card container** (white bg, shadow): Contains header text, card grid, and input
+3. **Header text**: "Where do you want to start?" (with border-bottom separator)
+4. **Card grid** (3 columns x 2 rows): Each card has icon, title, description
+5. **Input area below cards**: text input + send button in flex-row parent
+
+**Card grid specs:**
+- Grid: 3 columns, gap 16px (responsive: 2 cols at 800px, 1 col at 500px)
+- Card: white bg, 1px border `--black-alpha-100`, border-radius 12px, padding 24px 16px
+- Hover: `--primary` border, subtle box-shadow
+- Icon: 48px circle with `--background-pink` background, icon in `--primary`
+- Title: 16px, font-weight 600, `--text-primary`
+
+**Welcome screen cards:**
+| ID | Icon | Title |
+|----|------|-------|
+| fill-role | UserSearch | Fill a role at my store |
+| meet-talent | Users | Meet {market} talent |
+| explore-market | SearchCheck | Explore market comps |
+| check-jobs | MapPin | Check on jobs |
+| how-it-works | HelpCircle | What is Talent Connect? |
+| just-exploring | Compass | Just exploring |
+
+### Chips Styling
+All chip buttons use 14px font size.
+
+**Single-select (follow-up responses):**
+- Vertical list layout
+- Arrow prefix (↳)
+- Transparent background
+- Subtle border separators
+- 6px vertical padding
+- Click sends immediately
+
+**Multi-select (traits, benefits):**
+- Triggered by: "Pick the top 2-3", "select all that apply", "positive traits"
+- Horizontal pill layout with wrap
+- Default: white bg + `--primary` stroke
+- Selected: `--stone-50` bg + `--primary` text + Lucide Check icon
+- Send button enabled when 1+ selected
+
+### Inline Input
+- Appears below chips in last assistant message
+- 72px height, `--gray-50` background
+- Includes send button in flex-row
+
 IGNORE ANYTHING BELOW THIS
 
 ### Design Notes (from PROMPT-ARCHITECTURE.md)
