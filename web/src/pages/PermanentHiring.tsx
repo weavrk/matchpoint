@@ -2662,9 +2662,15 @@ export function PermanentHiring() {
               <section className="ds-section">
                 <h3>Colors</h3>
                 <div className="ds-subsection">
-                  <h4>Primary</h4>
                   <div className="ds-color-grid">
                     <div className="ds-color-swatch">
+                      <h4>Brand</h4>
+                      <div className="ds-swatch" style={{ background: 'var(--brand-pink)' }} />
+                      <span className="ds-color-name">--brand-pink</span>
+                      <span className="ds-color-value">#ff9a9a</span>
+                    </div>
+                    <div className="ds-color-swatch">
+                      <h4>Primary</h4>
                       <div className="ds-swatch" style={{ background: 'var(--primary)' }} />
                       <span className="ds-color-name">--primary</span>
                       <span className="ds-color-value">stone-700 #3F3F46</span>
@@ -2683,16 +2689,6 @@ export function PermanentHiring() {
                       <div className="ds-swatch" style={{ background: 'var(--quaternary)' }} />
                       <span className="ds-color-name">--quaternary</span>
                       <span className="ds-color-value">stone-200 #E4E4E7</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="ds-subsection">
-                  <h4>Brand</h4>
-                  <div className="ds-color-grid">
-                    <div className="ds-color-swatch">
-                      <div className="ds-swatch" style={{ background: 'var(--brand-pink)' }} />
-                      <span className="ds-color-name">--brand-pink</span>
-                      <span className="ds-color-value">#ff9a9a</span>
                     </div>
                   </div>
                 </div>

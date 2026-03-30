@@ -2133,6 +2133,20 @@
   min-width: 100px;
 }
 
+.ds-color-swatch h4 {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  height: 18px;
+}
+
+.ds-color-swatch:not(:has(h4)) {
+  padding-top: 22px;
+}
+
 .ds-swatch {
   width: 48px;
   height: 48px;
