@@ -4,7 +4,7 @@ import { ChatInterface } from '../components/Chat';
 import { ScrapeModal, type ScrapeConfig } from '../components/ScrapeModal';
 import { ScrapeProgressModal, type ScrapeProgressData } from '../components/ScrapeProgressModal';
 import { UnmatchedRolesModal } from '../components/UnmatchedRolesModal';
-import { WorkerCard } from '../components/Workers/WorkerCard';
+import { WorkerCard, WorkerCardHeader, WorkerCardTeaser, WorkerCardCompact, WorkerCardFull } from '../components/Workers';
 import { GeminiService, MockGeminiService } from '../services/gemini';
 import { matchWorkers } from '../services/workerMatching';
 import {
@@ -692,6 +692,7 @@ export function PermanentHiring() {
   const [agentActive, setAgentActive] = useState(true); // Agent on by default
   const [showDevMenu, setShowDevMenu] = useState(false); // Floating dev menu
   const [showDesignSystem, setShowDesignSystem] = useState(false); // Design system modal
+  const [showDslWorkerFull, setShowDslWorkerFull] = useState(false); // DSL WorkerCardFull preview
 
   const [showJobSitesInfo, setShowJobSitesInfo] = useState(false);
   const [showScrapeModal, setShowScrapeModal] = useState(false);
@@ -1079,6 +1080,24 @@ export function PermanentHiring() {
     setAgentActive(prev => !prev);
   }, []);
 
+
+  // Handle branching from a previous message - clear everything after and start new path
+  const handleBranchFromMessage = (messageId: string, newMessage: string) => {
+    // Find the index of the message we're branching from
+    const messageIndex = messages.findIndex(m => m.id === messageId);
+    if (messageIndex === -1) return;
+
+    // Keep messages up to and including this one, then send the new message
+    setMessages(prev => prev.slice(0, messageIndex + 1));
+
+    // Reset chat session since we're starting a new path
+    chatStartedRef.current = false;
+
+    // Send the new message after a brief delay to let state update
+    setTimeout(() => {
+      handleSendMessage(newMessage);
+    }, 50);
+  };
 
   const handleSendMessage = async (content: string) => {
     const userMessage: ChatMessage = {
@@ -1645,6 +1664,7 @@ export function PermanentHiring() {
             <ChatInterface
               messages={messages}
               onSendMessage={handleSendMessage}
+              onBranchFromMessage={handleBranchFromMessage}
               isLoading={isLoading}
             />
           </div>
@@ -2840,13 +2860,19 @@ export function PermanentHiring() {
 
                 <div className="ds-subsection">
                   <h4>3. MessageChip variant="single"</h4>
-                  <p className="ds-description">Single-select options with arrow prefix</p>
+                  <p className="ds-description">Single-select options with check icon on right, sends immediately on click</p>
                   <div className="ds-example ds-example-list">
-                    <button className="ds-chip-demo message-chip type-chip-label" type="button">
-                      <span>Growing: we're busy, need more help</span>
+                    <button className="ds-chip-demo message-chip-single type-chip-label" type="button">
+                      <span>Sales Associate</span>
+                      <span className="chip-icon"></span>
                     </button>
-                    <button className="ds-chip-demo message-chip type-chip-label" type="button" style={{ borderColor: 'var(--app-primary)', background: 'var(--gray-50)' }}>
+                    <button className="ds-chip-demo message-chip-single type-chip-label" type="button" style={{ borderColor: 'var(--app-primary)', background: 'var(--gray-50)' }}>
                       <span>Hover State</span>
+                      <span className="chip-icon"></span>
+                    </button>
+                    <button className="ds-chip-demo message-chip-single type-chip-label selected" type="button">
+                      <span>Store Manager</span>
+                      <span className="chip-icon"><Check size={14} /></span>
                     </button>
                   </div>
                 </div>
@@ -2889,6 +2915,72 @@ export function PermanentHiring() {
                   </div>
                 </div>
               </section>
+
+              {/* Worker Cards Section */}
+              <section className="ds-section">
+                <h3>Worker Cards</h3>
+                <p className="ds-description">Three variants with shared header component (avatar, name, badges aligned vertically)</p>
+
+                <div className="ds-subsection">
+                  <h4>Shared Header</h4>
+                  <p className="ds-description">Reusable header: avatar + name + badges, all vertically centered</p>
+                  <div className="ds-card-preview">
+                    <WorkerCardHeader worker={SAMPLE_WORKERS[0] as MatchedWorker} />
+                  </div>
+                  <div className="ds-card-spec">
+                    <span className="ds-spec-item">Component: <code>WorkerCardHeader</code></span>
+                    <span className="ds-spec-item">Avatar: 40px (default) or 64px (large)</span>
+                    <span className="ds-spec-item">Layout: flex row, align-items: center</span>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>WorkerCardTeaser</h4>
+                  <p className="ds-description">Minimal card to entice. Shows: header, quote snippet, endorsement chips (3 max)</p>
+                  <div className="ds-card-preview">
+                    <WorkerCardTeaser worker={SAMPLE_WORKERS[0] as MatchedWorker} />
+                  </div>
+                  <div className="ds-card-spec">
+                    <span className="ds-spec-item">Class: <code>.worker-card-teaser</code></span>
+                    <span className="ds-spec-item">Quote: Quincy 15px italic</span>
+                    <span className="ds-spec-item">Endorsements: pill chips (no counts)</span>
+                    <span className="ds-spec-item">Click to reveal WorkerCardFull</span>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>WorkerCardCompact</h4>
+                  <p className="ds-description">More robust for chat view. Shows: quote, work history, endorsements with counts, store quotes</p>
+                  <div className="ds-card-preview">
+                    <WorkerCardCompact worker={SAMPLE_WORKERS[0] as MatchedWorker} />
+                  </div>
+                  <div className="ds-card-spec">
+                    <span className="ds-spec-item">Class: <code>.worker-card-compact</code></span>
+                    <span className="ds-spec-item">Endorsements: badges with +count in teal</span>
+                    <span className="ds-spec-item">Store quotes: icon + quote + attribution</span>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>WorkerCardFull</h4>
+                  <p className="ds-description">Comprehensive detail panel. Opens right of chat, 60% width, close button</p>
+                  <div className="ds-card-preview">
+                    <button
+                      className="ds-preview-button"
+                      onClick={() => setShowDslWorkerFull(true)}
+                    >
+                      Click to preview WorkerCardFull
+                    </button>
+                  </div>
+                  <div className="ds-card-spec">
+                    <span className="ds-spec-item">Class: <code>.worker-card-full-overlay</code></span>
+                    <span className="ds-spec-item">Width: 60% viewport, fixed right</span>
+                    <span className="ds-spec-item">Header: 64px avatar, 24px name</span>
+                    <span className="ds-spec-item">Sections: dividers, uppercase 11px labels</span>
+                    <span className="ds-spec-item">Close: X button top-right</span>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
         )}
@@ -2896,6 +2988,14 @@ export function PermanentHiring() {
       {/* Click outside to close design system */}
       {showDesignSystem && (
         <div className="design-system-backdrop" onClick={() => setShowDesignSystem(false)} />
+      )}
+
+      {/* DSL WorkerCardFull preview */}
+      {showDslWorkerFull && (
+        <WorkerCardFull
+          worker={SAMPLE_WORKERS[0] as MatchedWorker}
+          onClose={() => setShowDslWorkerFull(false)}
+        />
       )}
     </div>
   );

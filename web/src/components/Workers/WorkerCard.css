@@ -14,14 +14,22 @@
   transform: translateY(-2px);
 }
 
-/* ── Header ────────────────────────────────── */
+/* ── Shared Header (all variants) ────────────────────────────────── */
 
 .worker-card-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   padding: 14px 16px;
   border-bottom: 1px solid var(--black-alpha-100);
+}
+
+.worker-card-header .worker-name {
+  flex: 0 0 auto;
+}
+
+.worker-card-header .badge {
+  flex-shrink: 0;
 }
 
 .worker-avatar {
@@ -420,5 +428,494 @@
 .retailer-quote-attribution {
   font-size: 12px;
   color: var(--text-hint);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   WORKER CARD VARIANTS
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. WorkerCardTeaser ────────────────────────────────────────────
+   Abridged card meant to entice/tease
+   Shows: Header, quote snippet, work history (3), endorsements (3)
+   ─────────────────────────────────────────────────────────────────── */
+
+.worker-card-teaser {
+  cursor: pointer;
+}
+
+.worker-card-teaser:hover {
+  border-color: var(--primary);
+}
+
+.worker-card-teaser .worker-quote {
+  font-family: var(--font-quincy);
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--primary);
+  margin: 0 0 16px 0;
+}
+
+.worker-card-teaser .quote-mark {
+  font-size: 24px;
+  line-height: 0;
+  vertical-align: middle;
+  margin-right: 4px;
+  color: var(--secondary);
+}
+
+.teaser-section {
+  margin-bottom: 16px;
+}
+
+.teaser-section:last-child {
+  margin-bottom: 0;
+}
+
+.teaser-retailer-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.retailer-summary-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.endorsements-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.endorsement-chip {
+  padding: 4px 12px;
+  background: #ffffff;
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--primary);
+  text-transform: capitalize;
+}
+
+/* ── 2. WorkerCardCompact ───────────────────────────────────────────
+   More robust but still abridged for chat view
+   Shows: Header, quote, work history, endorsements with counts, quotes
+   ─────────────────────────────────────────────────────────────────── */
+
+.worker-card-compact {
+  cursor: pointer;
+}
+
+.worker-card-compact:hover {
+  border-color: var(--primary);
+}
+
+.worker-card-compact .worker-quote {
+  font-family: var(--font-quincy);
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--primary);
+  margin: 0 0 16px 0;
+}
+
+.worker-card-compact .quote-mark {
+  font-size: 24px;
+  line-height: 0;
+  vertical-align: middle;
+  margin-right: 4px;
+  color: var(--secondary);
+}
+
+.compact-section {
+  margin-bottom: 16px;
+}
+
+.compact-section:last-child {
+  margin-bottom: 0;
+}
+
+.endorsements-with-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.endorsement-badge-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--primary);
+}
+
+.endorsement-count {
+  color: var(--teal-600);
+  font-weight: 500;
+}
+
+/* Shared store quotes styles */
+.store-quotes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.store-quote {
+  display: flex;
+  gap: 10px;
+}
+
+.quote-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.quote-content {
+  flex: 1;
+}
+
+.quote-text {
+  font-size: 13px;
+  color: var(--primary);
+  line-height: 1.4;
+  margin: 0 0 4px 0;
+}
+
+.quote-attribution {
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+/* ── 3. WorkerCardFull ──────────────────────────────────────────────
+   Comprehensive detail card - opens to right of chat
+   60% width, close button, all worker details
+   ─────────────────────────────────────────────────────────────────── */
+
+.worker-card-full-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 60%;
+  background: #ffffff;
+  border-left: 1px solid var(--black-alpha-100);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.worker-card-full {
+  padding: 24px;
+  position: relative;
+}
+
+.worker-card-full-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 8px;
+  color: var(--secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.worker-card-full-close:hover {
+  background: var(--gray-50);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* Full card header */
+.worker-card-full-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.worker-avatar-lg {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--navy-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.worker-avatar-lg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.worker-avatar-lg span {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--secondary);
+}
+
+.worker-name-lg {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0;
+}
+
+.badge-lg {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+/* Full card meta */
+.worker-card-full-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--black-alpha-100);
+  margin-bottom: 24px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--secondary);
+}
+
+/* Full card body */
+.worker-card-full-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.full-section {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--black-alpha-100);
+}
+
+.full-section:last-child {
+  border-bottom: none;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px 0;
+}
+
+.worker-about-full {
+  font-family: var(--font-quincy);
+  font-size: 18px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--primary);
+  margin: 0;
+}
+
+.quote-mark-lg {
+  font-size: 32px;
+  line-height: 0;
+  vertical-align: middle;
+  margin-right: 6px;
+  color: var(--secondary);
+}
+
+/* Full experience list */
+.experience-list-full {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.experience-item-full {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.experience-item-full .exp-company {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.experience-item-full .exp-detail {
+  color: var(--secondary);
+}
+
+/* Reflex stats */
+.reflex-stats {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 16px;
+}
+
+.reflex-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.reflex-stat.highlight .stat-value {
+  color: var(--teal-600);
+}
+
+/* Reliability badges */
+.reliability-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.reliability-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.reliability-badge.good {
+  background: var(--teal-50);
+  color: var(--teal-700);
+}
+
+.reliability-badge.warn {
+  background: #fff7ed;
+  color: #b45309;
+}
+
+/* Brands grid */
+.brands-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.brand-tag-full {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.brand-tag-full.mid { background: var(--gray-100); color: var(--gray-600); }
+.brand-tag-full.elevated { background: var(--navy-100); color: var(--stone-700); }
+.brand-tag-full.luxury { background: var(--stone-700); color: #ffffff; }
+
+/* Endorsements grid */
+.endorsements-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.endorsement-badge-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #ffffff;
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--primary);
+}
+
+/* Full quotes list */
+.quotes-list-full {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.quote-item-full {
+  display: flex;
+  gap: 12px;
+}
+
+.quote-icon-full {
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.quote-content-full {
+  flex: 1;
+}
+
+.quote-text-full {
+  font-size: 14px;
+  color: var(--primary);
+  line-height: 1.5;
+  margin: 0 0 6px 0;
+}
+
+.quote-attribution-full {
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+/* Availability tags */
+.availability-tags-full {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.availability-tag-full {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #ffffff;
+  border: 1px solid var(--black-alpha-100);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+/* Target brands */
+.target-brands-full {
+  font-size: 14px;
+  color: var(--primary);
+  margin: 0;
 }
 

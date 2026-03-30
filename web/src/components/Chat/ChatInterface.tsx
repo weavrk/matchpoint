@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, MessageSquare, Rocket, Users, Star, Smile, Target, Zap, CheckCircle, Shield, RefreshCw, Shirt, Check, PartyPopper, Plus } from 'lucide-react';
+import { Send, Check, PartyPopper, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import type { ChatMessage } from '../../types';
+import type { ChatMessage, MatchedWorker } from '../../types';
 import chatbotAvatarUrl from '../../../../assets/logo-and-backgrounds/chatbot.svg?url';
 import { NavChipGrid, getNavChips } from '../NavChips';
+import { WorkerCardTeaser } from '../Workers';
+import { SAMPLE_WORKERS } from '../../data/workers';
 import './ChatInterface.css';
 
 // Names to cycle through in the greeting
@@ -43,25 +45,17 @@ function SessionDateDivider({ date }: { date: Date }) {
 interface ChatInterfaceProps {
   messages: ChatMessage[];
   onSendMessage: (message: string) => void;
+  onBranchFromMessage?: (messageId: string, newMessage: string) => void;
   isLoading: boolean;
   market?: string;
 }
 
-// Worker card type for talent preview
-interface WorkerCard {
-  name: string;
-  photo?: string;
-  shiftVerified?: boolean;
-  aboutMe?: string;
-  workHistory?: { company: string; role: string; duration?: string }[];
-  endorsements?: { label: string; count: number; icon: string }[];
-  storeQuotes?: { text: string; source: string }[];
-  compact?: boolean; // If true, show only header + store quotes
-}
+// Worker card IDs parsed from AI response - we look these up from SAMPLE_WORKERS
+type WorkerCardIds = string[];
 
-// Role selector type for multi-column role selection
+// Role selector type for stacked groups with 3-column role grids
 interface RoleSelector {
-  columns: {
+  groups: {
     header: string;
     roles: string[];
   }[];
@@ -83,38 +77,27 @@ interface SuccessBanner {
   subtitle: string;
 }
 
-// Icon mapping for endorsements
-const endorsementIcons: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  chat: MessageSquare,
-  rocket: Rocket,
-  users: Users,
-  star: Star,
-  smile: Smile,
-  target: Target,
-  zap: Zap,
-  check: CheckCircle,
-  shield: Shield,
-  refresh: RefreshCw,
-  shirt: Shirt,
-};
-
-// Parse worker cards from message content
-function parseWorkerCards(content: string): { text: string; workerCards: WorkerCard[] | null } {
+// Parse worker card IDs from message content - returns array of worker IDs to look up
+function parseWorkerCards(content: string): { text: string; workerCardIds: WorkerCardIds | null } {
   const workerCardsMatch = content.match(/---WORKER_CARDS_START---([\s\S]*?)---WORKER_CARDS_END---/);
 
   if (workerCardsMatch) {
     try {
-      const workerCards = JSON.parse(workerCardsMatch[1].trim());
+      const parsed = JSON.parse(workerCardsMatch[1].trim());
+      // Support both array of IDs ["w001", "w002"] and array of objects [{id: "w001"}, ...]
+      const workerCardIds: string[] = Array.isArray(parsed)
+        ? parsed.map((item: string | { id: string }) => typeof item === 'string' ? item : item.id)
+        : [];
       const text = content
         .replace(/---WORKER_CARDS_START---[\s\S]*?---WORKER_CARDS_END---/, '')
         .trim();
-      return { text, workerCards };
+      return { text, workerCardIds };
     } catch (e) {
       console.error('Failed to parse worker cards:', e);
     }
   }
 
-  return { text: content, workerCards: null };
+  return { text: content, workerCardIds: null };
 }
 
 // Parse role selector from message content
@@ -175,9 +158,9 @@ function parseSuccessBanner(content: string): { text: string; successBanner: Suc
 }
 
 // Parse message content to extract inline chips [like this]
-function parseMessageWithChips(content: string): { text: string; chips: string[]; isMultiSelect: boolean; workerCards: WorkerCard[] | null; roleSelector: RoleSelector | null; jobSummary: JobSummary | null; successBanner: SuccessBanner | null } {
-  // First extract worker cards if present
-  const { text: textWithoutCards, workerCards } = parseWorkerCards(content);
+function parseMessageWithChips(content: string): { text: string; chips: string[]; isMultiSelect: boolean; workerCardIds: WorkerCardIds | null; roleSelector: RoleSelector | null; jobSummary: JobSummary | null; successBanner: SuccessBanner | null } {
+  // First extract worker card IDs if present
+  const { text: textWithoutCards, workerCardIds } = parseWorkerCards(content);
 
   // Then extract role selector if present
   const { text: textWithoutSelector, roleSelector } = parseRoleSelector(textWithoutCards);
@@ -202,7 +185,7 @@ function parseMessageWithChips(content: string): { text: string; chips: string[]
   // Detect multi-select prompts (e.g., "Pick the top 2-3", "select 2-3", "choose multiple", "select all that apply", "positive traits", "type out qualities")
   const isMultiSelect = /pick\s+(the\s+)?(top\s+)?\d+-\d+|select\s+\d+-\d+|choose\s+multiple|select\s+all\s+that\s+apply|positive\s+traits|type\s+out\s+qualities/i.test(text);
 
-  return { text, chips, isMultiSelect, workerCards, roleSelector, jobSummary, successBanner };
+  return { text, chips, isMultiSelect, workerCardIds, roleSelector, jobSummary, successBanner };
 }
 
 // Job Summary Card Component
@@ -269,142 +252,46 @@ function SuccessBannerComponent({ banner }: { banner: SuccessBanner }) {
   );
 }
 
-// Reusable Worker Card Header Component
-function WorkerCardHeader({ worker }: { worker: WorkerCard }) {
-  return (
-    <div className="worker-card-header">
-      <div className="worker-card-avatar">
-        {worker.photo ? (
-          <img src={worker.photo} alt={worker.name} />
-        ) : (
-          worker.name.charAt(0)
-        )}
-      </div>
-      <h4 className="worker-card-name">{worker.name}</h4>
-      {worker.shiftVerified && (
-        <span className="worker-card-verified-tag">✓ Shift Verified</span>
-      )}
-    </div>
-  );
+// Helper to look up workers from SAMPLE_WORKERS by ID
+function getWorkersByIds(ids: string[]): MatchedWorker[] {
+  return ids
+    .map(id => SAMPLE_WORKERS.find(w => w.id === id))
+    .filter((w): w is MatchedWorker => w !== undefined)
+    .map(w => ({ ...w, matchScore: 95, matchReasons: ['Strong match'] }));
 }
 
-// Reusable Store Quotes Component
-function WorkerCardStoreQuotes({ quotes }: { quotes: { text: string; source: string }[] }) {
-  return (
-    <div className="worker-card-store-quotes">
-      <span className="worker-card-section-label">What stores say</span>
-      {quotes.map((sq, i) => (
-        <div key={i} className="worker-card-store-quote">
-          <span className="store-quote-icon">🗨</span>
-          <div className="store-quote-content">
-            <span className="store-quote-text">"{sq.text}"</span>
-            <span className="store-quote-source">{sq.source}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Worker Card Component - Full or Compact variant
-function WorkerCardComponent({ worker }: { worker: WorkerCard }) {
-  // Compact variant: header + store quotes only
-  if (worker.compact) {
-    return (
-      <div className="worker-card-chat worker-card-compact">
-        <WorkerCardHeader worker={worker} />
-        {worker.storeQuotes && worker.storeQuotes.length > 0 && (
-          <WorkerCardStoreQuotes quotes={worker.storeQuotes} />
-        )}
-      </div>
-    );
-  }
-
-  // Full variant
-  return (
-    <div className="worker-card-chat">
-      <WorkerCardHeader worker={worker} />
-
-      {/* About Me quote */}
-      {worker.aboutMe && (
-        <div className="worker-card-about">
-          <span className="quote-mark">"</span>
-          <p>{worker.aboutMe}</p>
-        </div>
-      )}
-
-      {/* Work History */}
-      {worker.workHistory && worker.workHistory.length > 0 && (
-        <div className="worker-card-work-history">
-          <span className="worker-card-section-label">Work History</span>
-          <div className="work-history-items">
-            {worker.workHistory.map((job, i) => (
-              <div key={i} className="work-history-item">
-                <span className="work-history-company">{job.company}</span>
-                <span className="work-history-role">{job.role}</span>
-                {job.duration && <span className="work-history-duration">{job.duration}</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Endorsements */}
-      {worker.endorsements && worker.endorsements.length > 0 && (
-        <div className="worker-card-endorsements">
-          <span className="worker-card-section-label">Endorsements</span>
-          <div className="worker-card-endorsement-tags">
-            {worker.endorsements.map((e, i) => {
-              const IconComponent = endorsementIcons[e.icon] || MessageSquare;
-              return (
-                <span key={i} className="worker-card-endorsement-tag">
-                  <IconComponent size={14} />
-                  {e.label} <span className="endorsement-count">+{e.count}</span>
-                </span>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* What stores say */}
-      {worker.storeQuotes && worker.storeQuotes.length > 0 && (
-        <WorkerCardStoreQuotes quotes={worker.storeQuotes} />
-      )}
-    </div>
-  );
-}
-
-// Role Selector Component - 5 column grid with category headers
+// Role Selector Component - 4 column grid with category headers, single-select sends immediately
 function RoleSelectorComponent({
   roleSelector,
   selectedRoles,
-  onRoleToggle,
+  onRoleSelect,
   disabled
 }: {
   roleSelector: RoleSelector;
   selectedRoles: string[];
-  onRoleToggle: (role: string) => void;
+  onRoleSelect: (role: string) => void;
   disabled?: boolean;
 }) {
   return (
-    <div className="role-selector-grid">
-      {roleSelector.columns.map((column, colIdx) => (
-        <div key={colIdx} className="role-selector-column">
-          <h5 className="role-selector-header">{column.header}</h5>
-          <div className="role-selector-roles">
-            {column.roles.map((role, roleIdx) => {
+    <div className="role-selector-stacked">
+      {roleSelector.groups.map((group, groupIdx) => (
+        <div key={groupIdx} className="role-selector-group">
+          <h5 className="type-chip-header-lg">{group.header}</h5>
+          <div className="role-selector-roles-grid">
+            {group.roles.map((role, roleIdx) => {
               const isSelected = selectedRoles.includes(role);
               return (
                 <button
                   key={roleIdx}
                   type="button"
-                  className={`role-selector-chip ${isSelected ? 'selected' : ''}`}
-                  onClick={() => onRoleToggle(role)}
+                  className={`role-selector-chip type-chip-label ${isSelected ? 'selected' : ''}`}
+                  onClick={() => onRoleSelect(role)}
                   disabled={disabled}
                 >
-                  {isSelected && <Check size={14} />}
                   <span>{role}</span>
+                  <span className="chip-icon">
+                    {isSelected ? <Check size={14} /> : null}
+                  </span>
                 </button>
               );
             })}
@@ -421,19 +308,19 @@ const getRandomName = () => GREETING_NAMES[Math.floor(Math.random() * GREETING_N
 export function ChatInterface({
   messages,
   onSendMessage,
+  onBranchFromMessage,
   isLoading,
   market = 'Austin'
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
-  const [selectedChips, setSelectedChips] = useState<string[]>([]);
+  const [selectedChipsByMessage, setSelectedChipsByMessage] = useState<Record<string, string[]>>({});
   const [activeNavChip, setActiveNavChip] = useState<string | null>(null);
   const [displayName] = useState(getRandomName);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Reset selected chips and input when a new message is added
+  // Reset input when a new message is added (but keep chip selections)
   useEffect(() => {
-    setSelectedChips([]);
     setInput('');
   }, [messages.length]);
 
@@ -469,17 +356,21 @@ export function ChatInterface({
   // Show welcome screen when no messages yet
   const showWelcomeScreen = messages.length === 0;
 
+  // Get the last assistant message ID for tracking current selections
+  const lastAssistantMessage = messages.filter(m => m.role === 'assistant').pop();
+  const lastAssistantMessageId = lastAssistantMessage?.id || '';
+  const currentSelectedChips = selectedChipsByMessage[lastAssistantMessageId] || [];
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
 
     // If there are selected chips, send those
-    if (selectedChips.length > 0) {
+    if (currentSelectedChips.length > 0) {
       const message = input.trim()
-        ? `${selectedChips.join(', ')}. ${input.trim()}`
-        : selectedChips.join(', ');
+        ? `${currentSelectedChips.join(', ')}. ${input.trim()}`
+        : currentSelectedChips.join(', ');
       onSendMessage(message);
-      setSelectedChips([]);
       setInput('');
     } else if (input.trim()) {
       onSendMessage(input.trim());
@@ -552,19 +443,33 @@ export function ChatInterface({
       {/* Session date divider - fixed above scrollable area */}
       <SessionDateDivider date={new Date()} />
       <div className="chat-messages">
-        {/* Nav chips inside scrollable area */}
-        <NavChipGrid
-          chips={navChips}
-          activeChipId={activeNavChip}
-          onChipClick={handleGreetingCard}
-          disabled={isLoading}
-          variant="compact"
-        />
+        {/* Nav chips wrapped in chat message container */}
+        <div className="chat-message assistant initial-nav-chips">
+          <div className="message-avatar" aria-hidden="true">
+            <img
+              src={chatbotAvatarUrl}
+              alt=""
+              width={40}
+              height={40}
+              className="message-avatar-img"
+            />
+          </div>
+          <div className="message-content">
+            <NavChipGrid
+              chips={navChips}
+              activeChipId={activeNavChip}
+              onChipClick={handleGreetingCard}
+              disabled={isLoading}
+              variant="compact"
+            />
+          </div>
+        </div>
         {messages.map((message, messageIndex) => {
           const isAssistant = message.role === 'assistant';
           const parsed = isAssistant ? parseMessageWithChips(message.content) : null;
           const isLastAssistantMessage = isAssistant && messageIndex === lastAssistantIndex;
-          const hasWorkerCards = parsed?.workerCards && parsed.workerCards.length > 0;
+          const workerCards = parsed?.workerCardIds ? getWorkersByIds(parsed.workerCardIds) : [];
+          const hasWorkerCards = workerCards.length > 0;
           const hasRoleSelector = parsed?.roleSelector !== null;
 
           return (
@@ -587,24 +492,30 @@ export function ChatInterface({
                 {isAssistant ? (
                   <>
                     <ReactMarkdown>{parsed?.text || message.content}</ReactMarkdown>
-                    {/* Worker Cards Grid */}
-                    {parsed?.workerCards && parsed.workerCards.length > 0 && (
+                    {/* Worker Cards Grid - uses shared WorkerCardTeaser component */}
+                    {hasWorkerCards && (
                       <div className="worker-cards-grid">
-                        {parsed.workerCards.map((worker, idx) => (
-                          <WorkerCardComponent key={idx} worker={worker} />
+                        {workerCards.map((worker) => (
+                          <WorkerCardTeaser key={worker.id} worker={worker} />
                         ))}
                       </div>
                     )}
-                    {/* Role Selector Grid - single select */}
-                    {parsed?.roleSelector && isLastAssistantMessage && (
+                    {/* Role Selector Grid - single select, shows animation then sends */}
+                    {parsed?.roleSelector && (
                       <RoleSelectorComponent
                         roleSelector={parsed.roleSelector}
-                        selectedRoles={selectedChips}
-                        onRoleToggle={(role) => {
-                          // Single select - replace selection, or deselect if clicking same
-                          setSelectedChips(prev =>
-                            prev.includes(role) ? [] : [role]
-                          );
+                        selectedRoles={selectedChipsByMessage[message.id] || []}
+                        onRoleSelect={(role) => {
+                          // Show selection with animation, then send after delay
+                          setSelectedChipsByMessage(prev => ({ ...prev, [message.id]: [role] }));
+                          setTimeout(() => {
+                            if (isLastAssistantMessage) {
+                              onSendMessage(role);
+                            } else if (onBranchFromMessage) {
+                              // Branch from this message - clear everything after and start new path
+                              onBranchFromMessage(message.id, role);
+                            }
+                          }, 300);
                         }}
                         disabled={isLoading}
                       />
@@ -617,48 +528,81 @@ export function ChatInterface({
                     {parsed?.successBanner && (
                       <SuccessBannerComponent banner={parsed.successBanner} />
                     )}
-                    {parsed && parsed.chips.length > 0 && isLastAssistantMessage && (
-                      <>
-                        <div className={`message-chips ${parsed.isMultiSelect ? 'multi-select' : ''}`}>
-                          {parsed.chips.map((chip, idx) => {
-                            const colonIndex = chip.indexOf(':');
-                            const hasBoldPart = colonIndex > 0 && colonIndex < 30;
-                            const isSelected = selectedChips.includes(chip);
+                    {parsed && parsed.chips.length > 0 && (() => {
+                      const messageSelectedChips = selectedChipsByMessage[message.id] || [];
+                      // For previous messages with multi-select, check if selections changed
+                      const hasMultiSelectChanges = parsed.isMultiSelect && !isLastAssistantMessage && messageSelectedChips.length > 0;
 
-                            const handleChipClick = () => {
-                              if (parsed.isMultiSelect) {
-                                // Toggle selection for multi-select
-                                setSelectedChips(prev =>
-                                  prev.includes(chip)
-                                    ? prev.filter(c => c !== chip)
-                                    : [...prev, chip]
-                                );
-                              } else {
-                                // Single select - send immediately
-                                onSendMessage(chip);
-                              }
-                            };
+                      return (
+                        <>
+                          <div className={`message-chips ${parsed.isMultiSelect ? 'multi-select' : ''}`}>
+                            {parsed.chips.map((chip, idx) => {
+                              const colonIndex = chip.indexOf(':');
+                              const hasBoldPart = colonIndex > 0 && colonIndex < 30;
+                              const isSelected = messageSelectedChips.includes(chip);
 
-                            return (
-                              <button
-                                key={idx}
-                                type="button"
-                                className={`message-chip type-chip-label ${isSelected ? 'selected' : ''}`}
-                                onClick={handleChipClick}
-                                disabled={isLoading}
-                              >
-                                <span>{hasBoldPart ? <><strong>{chip.slice(0, colonIndex)}</strong>:{chip.slice(colonIndex + 1)}</> : chip}</span>
-                                {parsed.isMultiSelect && (
+                              const handleChipClick = () => {
+                                if (parsed.isMultiSelect) {
+                                  // Toggle selection for multi-select
+                                  setSelectedChipsByMessage(prev => {
+                                    const current = prev[message.id] || [];
+                                    const updated = current.includes(chip)
+                                      ? current.filter(c => c !== chip)
+                                      : [...current, chip];
+                                    return { ...prev, [message.id]: updated };
+                                  });
+                                } else {
+                                  // Single select - show animation then send/branch
+                                  setSelectedChipsByMessage(prev => ({ ...prev, [message.id]: [chip] }));
+                                  setTimeout(() => {
+                                    if (isLastAssistantMessage) {
+                                      onSendMessage(chip);
+                                    } else if (onBranchFromMessage) {
+                                      // Branch from this message - clear everything after and start new path
+                                      onBranchFromMessage(message.id, chip);
+                                    }
+                                  }, 300);
+                                }
+                              };
+
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  className={`message-chip type-chip-label ${isSelected ? 'selected' : ''}`}
+                                  onClick={handleChipClick}
+                                  disabled={isLoading}
+                                >
+                                  <span>{hasBoldPart ? <><strong>{chip.slice(0, colonIndex)}</strong>:{chip.slice(colonIndex + 1)}</> : chip}</span>
                                   <span className="chip-icon">
-                                    {isSelected ? <Check size={14} /> : <Plus size={14} />}
+                                    {parsed.isMultiSelect
+                                      ? (isSelected ? <Check size={14} /> : <Plus size={14} />)
+                                      : (isSelected ? <Check size={14} /> : null)
+                                    }
                                   </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </>
-                    )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          {/* Show send button for multi-select on previous messages when selections change */}
+                          {hasMultiSelectChanges && (
+                            <button
+                              type="button"
+                              className="message-chips-send-btn"
+                              onClick={() => {
+                                if (onBranchFromMessage) {
+                                  onBranchFromMessage(message.id, messageSelectedChips.join(', '));
+                                }
+                              }}
+                              disabled={isLoading}
+                            >
+                              <Send size={16} />
+                              <span>Update selection</span>
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()}
                     {/* Inline input area for last assistant message */}
                     {isLastAssistantMessage && !isLoading && (
                       <form className="inline-input-form" onSubmit={handleSubmit}>
@@ -669,13 +613,13 @@ export function ChatInterface({
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            placeholder="Type your message..."
+                            placeholder={hasRoleSelector ? "Looking for a different job title?" : "Type your message..."}
                             rows={1}
                           />
                           <button
                             type="submit"
                             className="inline-send-btn"
-                            disabled={!input.trim() && selectedChips.length === 0}
+                            disabled={!input.trim() && currentSelectedChips.length === 0}
                           >
                             <Send size={18} />
                           </button>

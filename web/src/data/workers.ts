@@ -36,10 +36,59 @@ function t(name: string): { name: string; tier: BrandTier } {
   return { name, tier: tier[name] ?? 'mid' };
 }
 
+// Worker avatar photos - stored in /public/images/avatars/
+// Gender-matched to actual worker names
+// To add images: save 128x128 JPGs as w001.jpg, w002.jpg, etc. in web/public/images/avatars/
+const AVATAR_PHOTOS: Record<string, string> = {
+  // Male workers
+  'w001': '/images/avatars/w001.jpg', // Marcus Johnson (M)
+  'w003': '/images/avatars/w003.jpg', // Tyler Rodriguez (M)
+  'w005': '/images/avatars/w005.jpg', // DeShawn Williams (M)
+  'w007': '/images/avatars/w007.jpg', // Brandon Lee (M)
+  'w009': '/images/avatars/w009.jpg', // James Thompson (M)
+  'w013': '/images/avatars/w013.jpg', // Elliot Anderson (M)
+  'w015': '/images/avatars/w015.jpg', // Michael Brown (M)
+  'w017': '/images/avatars/w017.jpg', // Ryan Garcia (M)
+  'w019': '/images/avatars/w019.jpg', // Daniel Nguyen (M)
+  'w021': '/images/avatars/w021.jpg', // Sean White (M)
+  'w023': '/images/avatars/w023.jpg', // Anthony Moore (M)
+  'w025': '/images/avatars/w025.jpg', // Carlos Rivera (M)
+  'w027': '/images/avatars/w027.jpg', // Kevin Park (M)
+  'w029': '/images/avatars/w029.jpg', // Darius Mitchell (M)
+  'w031': '/images/avatars/w031.jpg', // Raymond Cruz (M)
+  'w033': '/images/avatars/w033.jpg', // Andre Williams (M)
+  'w035': '/images/avatars/w035.jpg', // Jonathan Kim (M)
+  'w037': '/images/avatars/w037.jpg', // Victor Huang (M)
+  'w039': '/images/avatars/w039.jpg', // Maurice Thompson (M)
+  // Female workers
+  'w002': '/images/avatars/w002.jpg', // Aisha Patel (F)
+  'w004': '/images/avatars/w004.jpg', // Cynthia Kim (F)
+  'w006': '/images/avatars/w006.jpg', // Maria Santos (F)
+  'w008': '/images/avatars/w008.jpg', // LaShelle Chen (F)
+  'w010': '/images/avatars/w010.jpg', // Madison Martinez (F)
+  'w011': '/images/avatars/w011.jpg', // Jill O'Brien (F)
+  'w012': '/images/avatars/w012.jpg', // Priya Sharma (F)
+  'w014': '/images/avatars/w014.jpg', // Ashley Davis (F)
+  'w016': '/images/avatars/w016.jpg', // Skyler Jackson (F)
+  'w018': '/images/avatars/w018.jpg', // Emily Wilson (F)
+  'w020': '/images/avatars/w020.jpg', // Lauren Taylor (F)
+  'w022': '/images/avatars/w022.jpg', // Megan Scott (F)
+  'w024': '/images/avatars/w024.jpg', // Brittany Harris (F)
+  'w026': '/images/avatars/w026.jpg', // Jasmine Howard (F)
+  'w028': '/images/avatars/w028.jpg', // Nina Petrov (F)
+  'w030': '/images/avatars/w030.jpg', // Olivia Chen (F)
+  'w032': '/images/avatars/w032.jpg', // Samantha Wells (F)
+  'w034': '/images/avatars/w034.jpg', // Christina Lopez (F)
+  'w036': '/images/avatars/w036.jpg', // Aaliyah Johnson (F)
+  'w038': '/images/avatars/w038.jpg', // Taylor Morgan (F)
+  'w040': '/images/avatars/w040.jpg', // Grace Kim (F)
+};
+
 export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w001',
     name: 'Marcus Johnson',
+    photo: AVATAR_PHOTOS['w001'],
     shiftVerified: true,
     shiftsOnReflex: 47,
     brandsWorked: ['Club Monaco', 'Vince', 'Banana Republic', 'Reiss', 'Nordstrom', 'J. Crew', 'Ralph Lauren', 'Faherty', 'Bonobos', 'Allsaints'].map(t),
@@ -81,6 +130,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w002',
     name: 'Aisha Patel',
+    photo: AVATAR_PHOTOS['w002'],
     shiftVerified: true,
     shiftsOnReflex: 52,
     brandsWorked: ['Gucci', 'Chanel', 'Dior', 'Louis Vuitton', 'Prada', 'Valentino', 'Burberry', 'Celine', 'Givenchy', 'Fendi', 'Rag & Bone', 'Theory'].map(t),
@@ -123,6 +173,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w003',
     name: 'Tyler Rodriguez',
+    photo: AVATAR_PHOTOS['w003'],
     shiftVerified: true,
     shiftsOnReflex: 38,
     brandsWorked: ['Rag & Bone', 'Theory', 'Club Monaco', 'Banana Republic', 'Reiss', 'Madewell', 'Burberry', 'Prada'].map(t),
@@ -135,9 +186,9 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     about: '4 years in luxury menswear at Gucci and Saint Laurent SoHo. Known for his product expertise and ability to style head-to-toe looks. Retailers note his calm demeanor with clients.',
     previousExperience: [
       { company: 'Gucci', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Gucci', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
       { company: 'Saint Laurent', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
       { company: 'Balenciaga', duration: '6 months–1 year', roles: ['Store Associate'] },
+      { company: 'Versace', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
       { company: 'Armani Exchange', duration: 'Less than 6 months', roles: ['Team Member'] },
     ],
     workStyle: {
@@ -165,6 +216,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w004',
     name: 'Cynthia Kim',
+    photo: AVATAR_PHOTOS['w004'],
     shiftVerified: true,
     shiftsOnReflex: 55,
     brandsWorked: ['Vince', 'Rag & Bone', 'Banana Republic', 'Madewell', 'Faherty', 'Allsaints', 'Ralph Lauren', 'Marc Jacobs', 'Tory Burch', 'COS', 'Eileen Fisher', 'Ann Taylor'].map(t),
@@ -209,6 +261,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w005',
     name: 'DeShawn Williams',
+    photo: AVATAR_PHOTOS['w005'],
     shiftVerified: true,
     shiftsOnReflex: 31,
     brandsWorked: ['Banana Republic', 'J. Crew', 'Club Monaco', 'Vince', 'Reiss', 'Coach', 'Longchamp'].map(t),
@@ -249,6 +302,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w006',
     name: 'Maria Santos',
+    photo: AVATAR_PHOTOS['w006'],
     shiftVerified: true,
     shiftsOnReflex: 44,
     brandsWorked: ['Gucci', 'Louis Vuitton', 'Prada', 'Celine', 'Givenchy', 'Bottega Veneta', 'Burberry', 'Saint Laurent', 'Neiman Marcus', 'Bergdorf Goodman'].map(t),
@@ -262,8 +316,8 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     previousExperience: [
       { company: 'Hermès', duration: '2+ years', roles: ['Assistant Store Manager'] },
       { company: 'Hermès', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Chanel', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Chanel', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'Louis Vuitton', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'Prada', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
       { company: 'Dior', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
     ],
     workStyle: {
@@ -292,6 +346,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w007',
     name: 'Brandon Lee',
+    photo: AVATAR_PHOTOS['w007'],
     shiftVerified: true,
     shiftsOnReflex: 41,
     brandsWorked: ['Club Monaco', 'Bonobos', 'Banana Republic', 'Vince', 'Reiss', 'J. Crew', 'Allsaints', 'Patagonia', "Arc'teryx"].map(t),
@@ -303,8 +358,8 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     invitedBackStores: 12,
     about: '4 years in elevated menswear at Rag & Bone and Faherty. Retailers love his energy on the floor and ability to connect with younger male shoppers. Strong closer on leather goods.',
     previousExperience: [
-      { company: 'Rag & Bone', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Rag & Bone', duration: '6 months–1 year', roles: ['Store Manager'] },
+      { company: 'Theory', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'Bonobos', duration: '6 months–1 year', roles: ['Store Manager'] },
       { company: 'Faherty', duration: '1–2 years', roles: ['Assistant Store Manager'] },
       { company: 'Rhone', duration: '6 months–1 year', roles: ['Sales Associate / Retail Associate'] },
       { company: 'Mizzen+Main', duration: 'Less than 6 months', roles: ['Visual Merchandiser'] },
@@ -334,6 +389,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w008',
     name: 'LaShelle Chen',
+    photo: AVATAR_PHOTOS['w008'],
     shiftVerified: true,
     shiftsOnReflex: 29,
     brandsWorked: ['Club Monaco', 'Vince', 'DVF', 'Reformation', 'Ann Taylor', 'Theory'].map(t),
@@ -375,6 +431,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w009',
     name: 'James Thompson',
+    photo: AVATAR_PHOTOS['w009'],
     shiftVerified: true,
     shiftsOnReflex: 63,
     brandsWorked: ['Burberry', 'Gucci', 'Prada', 'Saint Laurent', 'Celine', 'Givenchy', 'Balenciaga', 'Dolce & Gabbana', 'Versace', 'Rag & Bone', 'Theory', 'Club Monaco', 'Reiss', 'Allsaints'].map(t),
@@ -389,9 +446,9 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
       { company: 'Golden Goose', duration: '2+ years', roles: ['Store Manager'] },
       { company: 'Golden Goose', duration: '1–2 years', roles: ['Department Supervisor'] },
       { company: 'Moncler', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Mackage', duration: '1–2 years', roles: ['Assistant Store Manager'] },
-      { company: 'Mackage', duration: '6 months–1 year', roles: ['Stock Associate / Stocker'] },
-      { company: 'Giorgio Armani', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'Valentino', duration: '1–2 years', roles: ['Assistant Store Manager'] },
+      { company: 'Brunello Cucinelli', duration: '6 months–1 year', roles: ['Stock Associate / Stocker'] },
+      { company: 'Givenchy', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
     ],
     workStyle: {
       rolePreferences: ['Sales', 'Greeting Customers', 'Inventory', 'New Store Opening'],
@@ -419,6 +476,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w010',
     name: 'Madison Martinez',
+    photo: AVATAR_PHOTOS['w010'],
     shiftVerified: true,
     shiftsOnReflex: 27,
     brandsWorked: ['Club Monaco', 'Vince', 'Ann Taylor', 'White House Black Market', 'LOFT', 'Reiss'].map(t),
@@ -459,6 +517,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w011',
     name: "Jill O'Brien",
+    photo: AVATAR_PHOTOS['w011'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],
@@ -473,7 +532,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
       { company: 'Prada', duration: '2+ years', roles: ['Assistant Store Manager'] },
       { company: 'Prada', duration: '6 months–1 year', roles: ['Store Associate'] },
       { company: 'Miu Miu', duration: '1–2 years', roles: ['Visual Merchandiser'] },
-      { company: 'Valentino', duration: '6 months–1 year', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'Bottega Veneta', duration: '6 months–1 year', roles: ['Sales Associate / Retail Associate'] },
     ],
     workStyle: {
       rolePreferences: ['Sales', 'Greeting Customers', 'Events'],
@@ -488,6 +547,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w012',
     name: 'Priya Sharma',
+    photo: AVATAR_PHOTOS['w012'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],
@@ -500,10 +560,10 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     about: '6 years in luxury leather goods and outerwear at Burberry and Ferragamo. Extensive clienteling experience but hasn\'t worked Reflex shifts yet. Seeking full-time placement.',
     previousExperience: [
       { company: 'Burberry', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Burberry', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
-      { company: 'Gucci', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Gucci', duration: '6 months–1 year', roles: ['Store Associate'] },
-      { company: 'Bottega Veneta', duration: '1–2 years', roles: ['Sales Assistant'] },
+      { company: 'Salvatore Ferragamo', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'Fendi', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'Celine', duration: '6 months–1 year', roles: ['Store Associate'] },
+      { company: 'Dolce & Gabbana', duration: '1–2 years', roles: ['Sales Assistant'] },
     ],
     workStyle: {
       rolePreferences: ['Sales', 'Greeting Customers', 'Events', 'Visual Merchandising'],
@@ -518,6 +578,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w013',
     name: 'Elliot Anderson',
+    photo: AVATAR_PHOTOS['w013'],
     shiftVerified: true,
     shiftsOnReflex: 35,
     brandsWorked: ["Arc'teryx", 'Patagonia', 'Adidas', 'Nike', 'Free People', 'Anthropologie', 'Banana Republic'].map(t),
@@ -530,7 +591,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     about: '3 years in athletic apparel at Lululemon and Alo Yoga flagships. Strong closer who exceeds targets on launch days. Retailers note his energy and product knowledge.',
     previousExperience: [
       { company: 'Lululemon', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Lululemon', duration: '6 months–1 year', roles: ['Store Associate'] },
+      { company: 'Athleta', duration: '6 months–1 year', roles: ['Store Associate'] },
       { company: 'Alo Yoga', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
       { company: 'Rhone', duration: '6 months–1 year', roles: ['Team Member'] },
     ],
@@ -559,6 +620,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w014',
     name: 'Ashley Davis',
+    photo: AVATAR_PHOTOS['w014'],
     shiftVerified: true,
     shiftsOnReflex: 33,
     brandsWorked: ['Anthropologie', 'Urban Outfitters', 'Madewell', 'Club Monaco', 'Vince', 'Ann Taylor', 'DVF'].map(t),
@@ -570,8 +632,8 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     invitedBackStores: 9,
     about: '4 years in elevated womenswear at Alice + Olivia and Free People. Quick learner who handles high-volume trunk show days with ease. Retailers appreciate her calm under pressure.',
     previousExperience: [
-      { company: 'Alice + Olivia', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Alice + Olivia', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'Ganni', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'Anthropologie', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
       { company: 'Free People', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
       { company: 'Reformation', duration: '6 months–1 year', roles: ['Store Associate'] },
     ],
@@ -600,6 +662,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w015',
     name: 'Michael Brown',
+    photo: AVATAR_PHOTOS['w015'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],
@@ -629,6 +692,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w016',
     name: 'Skyler Jackson',
+    photo: AVATAR_PHOTOS['w016'],
     shiftVerified: true,
     shiftsOnReflex: 44,
     brandsWorked: ['Club Monaco', 'Vince', 'Madewell', 'J. Crew', 'Reiss', 'Theory', 'Ralph Lauren', "Bloomingdale's", 'Nordstrom'].map(t),
@@ -641,10 +705,10 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     about: '3 years in contemporary retail at UNIQLO and Abercrombie & Fitch SoHo. Trend-aware and connects with younger shoppers. Retailers love her energy during new collection launches.',
     previousExperience: [
       { company: 'UNIQLO', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'UNIQLO', duration: '6 months–1 year', roles: ['Stock Associate / Stocker'] },
-      { company: 'Abercrombie & Fitch', duration: '1–2 years', roles: ['Brand Representative'] },
-      { company: 'Abercrombie & Fitch', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
-      { company: 'Ann Taylor', duration: '6 months–1 year', roles: ['Cashier'] },
+      { company: 'Urban Outfitters', duration: '6 months–1 year', roles: ['Stock Associate / Stocker'] },
+      { company: 'Mango', duration: '1–2 years', roles: ['Brand Representative'] },
+      { company: 'Nike', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'Adidas', duration: '6 months–1 year', roles: ['Cashier'] },
     ],
     workStyle: {
       rolePreferences: ['Sales', 'Greeting Customers', 'Events', 'Cashier'],
@@ -671,6 +735,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w017',
     name: 'Ryan Garcia',
+    photo: AVATAR_PHOTOS['w017'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],
@@ -699,6 +764,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w018',
     name: 'Emily Wilson',
+    photo: AVATAR_PHOTOS['w018'],
     shiftVerified: true,
     shiftsOnReflex: 48,
     brandsWorked: ['Saint Laurent', 'Prada', 'Valentino', 'Bottega Veneta', 'Celine', 'Givenchy', 'Burberry', 'Hermès', 'Rag & Bone', 'Nordstrom', 'Saks Fifth Avenue'].map(t),
@@ -740,6 +806,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w019',
     name: 'Daniel Nguyen',
+    photo: AVATAR_PHOTOS['w019'],
     shiftVerified: true,
     shiftsOnReflex: 36,
     brandsWorked: ['Theory', 'Vince', 'Reiss', 'COS', 'Allsaints', 'Ralph Lauren', 'Ganni', 'Mango'].map(t),
@@ -752,7 +819,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     about: '4 years in contemporary apparel at Club Monaco and Banana Republic. Customers trust his recommendations on denim and outerwear. Retailers note his strong product knowledge.',
     previousExperience: [
       { company: 'Club Monaco', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Club Monaco', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'J. Crew', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
       { company: 'Banana Republic', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
       { company: 'Maje', duration: '6 months–1 year', roles: ['Store Associate'] },
       { company: 'Sandro', duration: 'Less than 6 months', roles: ['Team Member'] },
@@ -782,6 +849,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w020',
     name: 'Lauren Taylor',
+    photo: AVATAR_PHOTOS['w020'],
     shiftVerified: true,
     shiftsOnReflex: 52,
     brandsWorked: ['Madewell', 'J. Crew', 'Banana Republic', 'LOFT', 'Reformation', 'Allsaints', 'Eileen Fisher', 'White House Black Market', 'Splendid', 'Free People', 'Rag & Bone'].map(t),
@@ -796,9 +864,9 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
       { company: 'Ann Taylor', duration: '2+ years', roles: ['Store Manager'] },
       { company: 'Ann Taylor', duration: '6 months–1 year', roles: ['Assistant Store Manager'] },
       { company: 'Vince', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Vince', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
-      { company: 'Theory', duration: '1–2 years', roles: ['Department Supervisor'] },
-      { company: 'Theory', duration: '6 months–1 year', roles: ['Store Associate'] },
+      { company: 'Eileen Fisher', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'COS', duration: '1–2 years', roles: ['Department Supervisor'] },
+      { company: 'Reiss', duration: '6 months–1 year', roles: ['Store Associate'] },
     ],
     workStyle: {
       rolePreferences: ['Sales', 'Greeting Customers', 'Visual Merchandising', 'New Store Opening'],
@@ -826,6 +894,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w021',
     name: 'Sean White',
+    photo: AVATAR_PHOTOS['w021'],
     shiftVerified: true,
     shiftsOnReflex: 24,
     brandsWorked: ['Reiss', 'Ted Baker', 'Club Monaco', 'Banana Republic', 'Vince'].map(t),
@@ -837,8 +906,8 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     invitedBackStores: 6,
     about: 'Recent experience at Armani Exchange Outlet. Strong communicator who excels in fast-paced environments and enjoys creating positive customer experiences. Team-oriented with patience and focus on helping customers feel confident.',
     previousExperience: [
-      { company: 'Armani Exchange', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Armani Exchange', duration: '6 months–1 year', roles: ['Stock Associate / Stocker'] },
+      { company: 'Hugo Boss', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'Foot Locker', duration: '6 months–1 year', roles: ['Stock Associate / Stocker'] },
     ],
     workStyle: {
       rolePreferences: ['Sales', 'Greeting Customers', 'Inventory', 'Shipments + Fulfillment'],
@@ -864,6 +933,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w022',
     name: 'Megan Scott',
+    photo: AVATAR_PHOTOS['w022'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],
@@ -875,8 +945,8 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     invitedBackStores: 0,
     about: '4 years at luxury department stores Saks Fifth Avenue and Neiman Marcus. Strong styling skills across designers. New to Reflex and seeking flexible opportunities.',
     previousExperience: [
-      { company: 'Saks Fifth Avenue', duration: '2+ years', roles: ['Stylist'] },
-      { company: 'Saks Fifth Avenue', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'Nordstrom', duration: '2+ years', roles: ['Stylist'] },
+      { company: "Bloomingdale's", duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
       { company: 'Neiman Marcus', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
       { company: 'Bergdorf Goodman', duration: 'Less than 6 months', roles: ['Store Associate'] },
     ],
@@ -893,6 +963,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w023',
     name: 'Anthony Moore',
+    photo: AVATAR_PHOTOS['w023'],
     shiftVerified: true,
     shiftsOnReflex: 57,
     brandsWorked: ['Gucci', 'Saint Laurent', 'Prada', 'Valentino', 'Versace', 'Dolce & Gabbana', 'Balenciaga', 'Hermès', 'Burberry', 'Fendi', 'Rag & Bone', 'Reiss'].map(t),
@@ -934,6 +1005,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w024',
     name: 'Brittany Harris',
+    photo: AVATAR_PHOTOS['w024'],
     shiftVerified: true,
     shiftsOnReflex: 39,
     brandsWorked: ['Gucci', 'Saint Laurent', 'Chanel', 'Prada', 'Celine', 'Givenchy', 'Fendi', 'Maje', 'Sandro'].map(t),
@@ -975,6 +1047,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w025',
     name: 'Carlos Rivera',
+    photo: AVATAR_PHOTOS['w025'],
     shiftVerified: true,
     shiftsOnReflex: 45,
     brandsWorked: ['Gucci', 'Prada', 'Givenchy', 'Celine', 'Giorgio Armani', 'Dolce & Gabbana', 'Versace', 'Valentino', 'Rag & Bone', 'Theory'].map(t),
@@ -1016,6 +1089,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w026',
     name: 'Jasmine Howard',
+    photo: AVATAR_PHOTOS['w026'],
     shiftVerified: true,
     shiftsOnReflex: 42,
     brandsWorked: ['Ganni', 'Allsaints', 'Club Monaco', 'Vince', 'Theory', 'Rag & Bone', 'Reiss', 'Madewell', 'Banana Republic'].map(t),
@@ -1027,8 +1101,8 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     invitedBackStores: 12,
     about: '4 years in French contemporary at Sandro and Maje. Strong with young professional clientele seeking polished workwear. Retailers praise her efficiency during sample sales.',
     previousExperience: [
-      { company: 'Sandro', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Sandro', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'Alice + Olivia', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'DVF', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
       { company: 'Maje', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
       { company: 'Mango', duration: '6 months–1 year', roles: ['Store Associate'] },
     ],
@@ -1057,6 +1131,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w027',
     name: 'Kevin Park',
+    photo: AVATAR_PHOTOS['w027'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],
@@ -1086,6 +1161,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w028',
     name: 'Nina Petrov',
+    photo: AVATAR_PHOTOS['w028'],
     shiftVerified: true,
     shiftsOnReflex: 51,
     brandsWorked: ['Gucci', 'Prada', 'Chanel', 'Givenchy', 'Celine', 'Giorgio Armani', 'Tom Ford', 'Brunello Cucinelli', 'Fendi', 'Rag & Bone', 'Club Monaco'].map(t),
@@ -1127,6 +1203,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w029',
     name: 'Darius Mitchell',
+    photo: AVATAR_PHOTOS['w029'],
     shiftVerified: true,
     shiftsOnReflex: 28,
     brandsWorked: ['Club Monaco', 'Vince', 'Abercrombie & Fitch', 'Faherty', 'Reiss', 'Anthropologie'].map(t),
@@ -1166,6 +1243,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w030',
     name: 'Olivia Chen',
+    photo: AVATAR_PHOTOS['w030'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],
@@ -1194,6 +1272,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w031',
     name: 'Raymond Cruz',
+    photo: AVATAR_PHOTOS['w031'],
     shiftVerified: true,
     shiftsOnReflex: 37,
     brandsWorked: ['Brooks Brothers', 'Ted Baker', 'Reiss', 'Ralph Lauren', 'Club Monaco', 'Banana Republic', 'Mizzen+Main', 'Faherty'].map(t),
@@ -1235,6 +1314,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w032',
     name: 'Samantha Wells',
+    photo: AVATAR_PHOTOS['w032'],
     shiftVerified: true,
     shiftsOnReflex: 46,
     brandsWorked: ['Ann Taylor', 'LOFT', 'Reformation', 'Club Monaco', 'Tory Burch', 'Madewell', 'Alice + Olivia', 'Free People', 'Anthropologie', 'Vince'].map(t),
@@ -1247,7 +1327,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     about: '5 years in feminine contemporary at DVF and White House Black Market. Known for occasion dressing expertise — weddings, galas, cocktail parties. Retailers call her the go-to for special events.',
     previousExperience: [
       { company: 'Diane von Furstenberg', duration: '2+ years', roles: ['Visual Merchandiser'] },
-      { company: 'Diane von Furstenberg', duration: '6 months–1 year', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'Kate Spade', duration: '6 months–1 year', roles: ['Sales Associate / Retail Associate'] },
       { company: 'White House Black Market', duration: '1–2 years', roles: ['Store Associate'] },
       { company: 'Splendid', duration: '1–2 years', roles: ['Sales Associate / Retail Associate'] },
     ],
@@ -1276,6 +1356,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w033',
     name: 'Andre Williams',
+    photo: AVATAR_PHOTOS['w033'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],
@@ -1304,6 +1385,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w034',
     name: 'Christina Lopez',
+    photo: AVATAR_PHOTOS['w034'],
     shiftVerified: true,
     shiftsOnReflex: 32,
     brandsWorked: ['Club Monaco', 'Banana Republic', 'Ann Taylor', 'LOFT', 'Allsaints', 'COS', 'Reformation'].map(t),
@@ -1316,7 +1398,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     about: '4 years in lifestyle retail at Anthropologie and Free People. Strong visual merchandising skills and creative eye. Retailers love her during floor resets and new collection setups.',
     previousExperience: [
       { company: 'Anthropologie', duration: '2+ years', roles: ['Visual Merchandiser'] },
-      { company: 'Anthropologie', duration: '6 months–1 year', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'Abercrombie & Fitch', duration: '6 months–1 year', roles: ['Sales Associate / Retail Associate'] },
       { company: 'Free People', duration: '1–2 years', roles: ['Sales Assistant'] },
       { company: 'Urban Outfitters', duration: '6 months–1 year', roles: ['Store Associate'] },
     ],
@@ -1345,6 +1427,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w035',
     name: 'Jonathan Kim',
+    photo: AVATAR_PHOTOS['w035'],
     shiftVerified: true,
     shiftsOnReflex: 58,
     brandsWorked: ['Gucci', 'Saint Laurent', 'Chanel', 'Dior', 'Prada', 'Valentino', 'Versace', 'Dolce & Gabbana', 'Givenchy', 'Hermès', 'Burberry', 'Rag & Bone', 'Theory'].map(t),
@@ -1359,8 +1442,8 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
       { company: 'Brunello Cucinelli', duration: '2+ years', roles: ['Store Manager'] },
       { company: 'Brunello Cucinelli', duration: '6 months–1 year', roles: ['Store Associate'] },
       { company: 'Giorgio Armani', duration: '2+ years', roles: ['Assistant Store Manager'] },
-      { company: 'Fendi', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Fendi', duration: '6 months–1 year', roles: ['Department Supervisor'] },
+      { company: 'Balenciaga', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
+      { company: 'Moncler', duration: '6 months–1 year', roles: ['Department Supervisor'] },
     ],
     workStyle: {
       rolePreferences: ['Sales', 'Greeting Customers', 'Events'],
@@ -1388,6 +1471,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w036',
     name: 'Aaliyah Johnson',
+    photo: AVATAR_PHOTOS['w036'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],
@@ -1416,6 +1500,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w037',
     name: 'Victor Huang',
+    photo: AVATAR_PHOTOS['w037'],
     shiftVerified: true,
     shiftsOnReflex: 40,
     brandsWorked: ['Rhone', 'Athleta', 'Alo Yoga', 'Adidas', 'Nike', 'Faherty', 'Club Monaco', 'J. Crew', 'Banana Republic'].map(t),
@@ -1428,7 +1513,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
     about: '5 years in technical outdoor and athletic apparel at Arc\'teryx and Patagonia. Deep knowledge of performance fabrics. Retailers value his expertise with serious enthusiasts.',
     previousExperience: [
       { company: "Arc'teryx", duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: "Arc'teryx", duration: '6 months–1 year', roles: ['Stock Associate / Stocker'] },
+      { company: 'Adidas', duration: '6 months–1 year', roles: ['Stock Associate / Stocker'] },
       { company: 'Patagonia', duration: '1–2 years', roles: ['Store Associate'] },
       { company: 'Lululemon', duration: '1–2 years', roles: ['Team Member'] },
     ],
@@ -1457,6 +1542,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w038',
     name: 'Taylor Morgan',
+    photo: AVATAR_PHOTOS['w038'],
     shiftVerified: true,
     shiftsOnReflex: 26,
     brandsWorked: ['Club Monaco', 'Madewell', 'Vince', 'J. Crew', 'Ann Taylor'].map(t),
@@ -1496,6 +1582,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w039',
     name: 'Maurice Thompson',
+    photo: AVATAR_PHOTOS['w039'],
     shiftVerified: true,
     shiftsOnReflex: 49,
     brandsWorked: ['Gucci', 'Saint Laurent', 'Prada', 'Tom Ford', 'Brunello Cucinelli', 'Burberry', 'Fendi', 'Valentino', 'Hermès', 'Rag & Bone', 'Reiss'].map(t),
@@ -1510,8 +1597,8 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
       { company: 'Giorgio Armani', duration: '2+ years', roles: ['Store Manager'] },
       { company: 'Giorgio Armani', duration: '6 months–1 year', roles: ['Sales Associate / Retail Associate'] },
       { company: 'Givenchy', duration: '2+ years', roles: ['Sales Associate / Retail Associate'] },
-      { company: 'Celine', duration: '2+ years', roles: ['Assistant Store Manager'] },
-      { company: 'Celine', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
+      { company: 'Dolce & Gabbana', duration: '2+ years', roles: ['Assistant Store Manager'] },
+      { company: 'Versace', duration: '6 months–1 year', roles: ['Visual Merchandiser'] },
     ],
     workStyle: {
       rolePreferences: ['Sales', 'Greeting Customers', 'Events'],
@@ -1538,6 +1625,7 @@ export const SAMPLE_WORKERS: WorkerProfile[] = [
   {
     id: 'w040',
     name: 'Grace Kim',
+    photo: AVATAR_PHOTOS['w040'],
     shiftVerified: false,
     shiftsOnReflex: 0,
     brandsWorked: [],

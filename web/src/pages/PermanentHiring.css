@@ -2270,7 +2270,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border: 1px solid transparent;
+  border: 1px solid var(--quaternary);
   border-radius: 8px;
   background: #ffffff;
   font-size: 14px;
@@ -2284,13 +2284,13 @@
   font-size: 14px;
 }
 
-.ds-chip-demo.message-chip-multi {
+.ds-chip-demo.message-chip-single {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 8px 12px;
-  border: 1px solid transparent;
+  border: 1px solid var(--quaternary);
   border-radius: 8px;
   background: #ffffff;
   font-size: 14px;
@@ -2298,6 +2298,72 @@
   color: var(--primary);
   cursor: pointer;
   width: 100%;
+}
+
+.ds-chip-demo.message-chip-single::before {
+  content: "↳";
+  color: var(--primary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.ds-chip-demo.message-chip-single > span:first-of-type {
+  flex: 1;
+  text-align: left;
+}
+
+.ds-chip-demo.message-chip-single .chip-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ds-chip-demo.message-chip-single:hover {
+  border-color: var(--app-primary);
+  background: var(--gray-50);
+}
+
+.ds-chip-demo.message-chip-single.selected {
+  border-color: var(--app-primary);
+  background: var(--gray-50);
+}
+
+.ds-chip-demo.message-chip-single.selected .chip-icon {
+  background: var(--primary);
+  color: #ffffff;
+  animation: chip-select 0.25s ease-out;
+}
+
+.ds-chip-demo.message-chip-multi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--quaternary);
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--primary);
+  cursor: pointer;
+  width: 100%;
+}
+
+.ds-chip-demo.message-chip-multi::before {
+  content: "↳";
+  color: var(--primary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.ds-chip-demo.message-chip-multi > span:first-of-type {
+  flex: 1;
+  text-align: left;
 }
 
 .ds-chip-demo.message-chip-multi .chip-icon {
@@ -2328,6 +2394,22 @@
 .ds-chip-demo.message-chip-multi.selected .chip-icon {
   background: var(--primary);
   color: #ffffff;
+  animation: chip-select 0.25s ease-out;
+}
+
+/* Chip selection animation */
+@keyframes chip-select {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* States Grid */
@@ -2355,5 +2437,79 @@
 .ds-state-desc {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+/* Card Preview */
+.ds-card-preview {
+  margin: 12px 0;
+  padding: 16px;
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.ds-card-preview:hover {
+  border-color: var(--gray-300);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ds-card-preview .worker-card {
+  margin: 0;
+  border: 1px solid var(--quaternary);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+}
+
+.ds-card-preview .worker-card-header {
+  background: var(--gray-50);
+  border: 1px solid var(--quaternary);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.ds-preview-button {
+  width: 100%;
+  padding: 16px 24px;
+  background: var(--gray-50);
+  border: 1px dashed var(--gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ds-preview-button:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+  color: var(--text-primary);
+}
+
+/* Card Specs */
+.ds-card-spec {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: var(--gray-50);
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.ds-spec-item {
+  font-size: 12px;
+  color: var(--primary);
+}
+
+.ds-spec-item code {
+  font-family: monospace;
+  font-size: 11px;
+  background: var(--quaternary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--primary);
 }
 

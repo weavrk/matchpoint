@@ -445,9 +445,9 @@ body {
 /* Chip Label - Message chip text */
 .type-chip-label {
   font-family: var(--font-primary);
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
-  line-height: 20px;
+  line-height: 18px;
   color: var(--primary);
 }
 

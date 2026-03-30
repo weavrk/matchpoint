@@ -533,6 +533,28 @@ Definitions: `web/src/styles/variables.css`
 
 **Shared states:** Hover/Active = `--app-primary` border + `--gray-50` background
 
+### Worker Cards
+
+Three variants with shared header component. All headers have avatar, name, and badges vertically centered (align-items: center).
+
+| Variant | Class | Usage |
+|---------|-------|-------|
+| `WorkerCardTeaser` | `.worker-card-teaser` | Abridged to entice. Quote snippet, work history (3), endorsements (3 chips) |
+| `WorkerCardCompact` | `.worker-card-compact` | Chat view. Quote, work history, endorsements with +counts, store quotes |
+| `WorkerCardFull` | `.worker-card-full-overlay` | Detail panel. 60% width, fixed right, close button, all sections |
+
+**Shared Header:** `WorkerCardHeader` component
+- Avatar: 40px (default) or 64px (large via `size="large"`)
+- Layout: flex row, vertically centered
+- Badges: Shift Verified (green), Actively Looking (navy)
+
+**WorkerCardFull specs:**
+- Position: fixed right, 60% width
+- Close button: top-right, 36px, X icon
+- Sections: 20px padding, 1px dividers, 11px uppercase labels
+- Quote: Quincy 18px italic with large quote mark
+- Stats: 28px bold numbers with 12px labels
+
 ---
 
 IGNORE ANYTHING BELOW THIS

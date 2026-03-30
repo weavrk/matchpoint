@@ -274,6 +274,12 @@ const SYSTEM_PROMPT = `You are a hiring advisor for Reflex, a retail labor marke
 - Each step in the flow should be a SEPARATE message
 - This creates a natural conversation flow, not an interview
 
+## CRITICAL RULE: ALWAYS SHOW WORKER CARDS AFTER ROLE SELECTION
+- After ANY role is selected or confirmed (from selector OR custom input), you MUST show worker cards
+- Use the WORKER_CARDS_START format with worker IDs: ["w001", "w002", "w003", "w004"]
+- NEVER skip the worker cards step - it's essential to show talent available
+- If user typed a custom role, first ask for category, then confirm mapping, THEN show worker cards
+
 ## Context
 - User's name: {{USER_NAME}}
 - User's brand: {{RETAILER_NAME}} ({{RETAILER_CLASS}})
@@ -326,7 +332,7 @@ Show the role selector using this EXACT format (copy verbatim):
 
 ---ROLE_SELECTOR_START---
 {
-  "columns": [
+  "groups": [
     {
       "header": "Sales Floor",
       "roles": ["Sales Associate", "Store Associate", "Brand Representative"]
@@ -341,7 +347,7 @@ Show the role selector using this EXACT format (copy verbatim):
     },
     {
       "header": "Specialized",
-      "roles": ["Beauty Advisor", "Stylist", "Visual Merchandiser", "Pop Up"]
+      "roles": ["Beauty Advisor", "Stylist", "Visual Merchandiser", "Pop Up Associate"]
     },
     {
       "header": "Management",
@@ -353,95 +359,31 @@ Show the role selector using this EXACT format (copy verbatim):
 
 ⚠️ STOP. Wait for response.
 
-**Step 3: Talent Preview** — Show 4 worker cards in 2x2 grid
-After role is selected, show the talent preview:
+**Step 2b: Custom Role Category** — ONLY if user typed a custom role instead of selecting from the grid
+If user types a custom job title (not one from the role selector), ask which category it belongs to:
+"Which category best describes [typed role]?"
+Offer chips: [Sales Floor] [Sales Support] [Back of House] [Specialized] [Management]
+
+⚠️ STOP. Wait for response.
+
+**Step 2c: Confirm Role Mapping** — ONLY after Step 2b
+After user selects a category, confirm the role mapping for market comparisons:
+"For market comparisons, is [typed role] similar to [closest standard role from that category]?"
+Offer chips: [Yes, that works] [No, let me specify]
+
+If they say "No, let me specify", ask them to type the closest standard role.
+
+⚠️ STOP. Wait for response.
+
+**Step 3: Talent Preview** — ALWAYS show after role is confirmed (from selector OR custom flow)
+⚠️ CRITICAL: You MUST show worker cards after ANY role selection. This step is REQUIRED.
+
 "{{MARKET}} has Reflexers with previous [role] experience. Keep building a job description and we can invite them to apply."
 
-Then show 4 worker cards using this format (include aboutMe and storeQuotes):
+Then show 4 worker cards by referencing worker IDs from the database. Use this EXACT format:
 
 ---WORKER_CARDS_START---
-[
-  {
-    "name": "Jordan F.",
-    "photo": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "aboutMe": "I love the fast pace of retail and connecting with customers. Reflex has given me experience across different brands, and I'm eager to find a team to grow with.",
-    "workHistory": [
-      {"company": "MIZZEN+MAIN", "role": "Brand Rep", "duration": "6 mo"},
-      {"company": "Faherty", "role": "Sales Associate", "duration": "4 mo"},
-      {"company": "Marine Layer", "role": "Sales Associate", "duration": "3 mo"}
-    ],
-    "endorsements": [
-      {"label": "Customer Engagement", "count": 117, "icon": "chat"},
-      {"label": "Hustle", "count": 89, "icon": "rocket"},
-      {"label": "Team Player", "count": 97, "icon": "users"}
-    ],
-    "storeQuotes": [
-      {"text": "Jordan was awesome!! Great with customers and a natural seller.", "source": "MIZZEN+MAIN Store Manager"},
-      {"text": "Would definitely book again", "source": "Faherty"}
-    ]
-  },
-  {
-    "name": "Sofia M.",
-    "photo": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "aboutMe": "I started on Reflex while finishing school. Now I've worked 47 shifts across 15 brands, and 12 have invited me back. I'm ready for something permanent.",
-    "workHistory": [
-      {"company": "Madewell", "role": "Sales Associate", "duration": "8 mo"},
-      {"company": "Anthropologie", "role": "Sales Associate", "duration": "5 mo"},
-      {"company": "J.Crew", "role": "Sales Associate", "duration": "4 mo"}
-    ],
-    "endorsements": [
-      {"label": "Self-Starter", "count": 84, "icon": "star"},
-      {"label": "Positive Attitude", "count": 102, "icon": "smile"},
-      {"label": "Attention to Detail", "count": 76, "icon": "target"}
-    ],
-    "storeQuotes": [
-      {"text": "Sofia is reliable and always shows up ready to work.", "source": "Madewell Assistant Manager"},
-      {"text": "Would hire full-time if we had headcount", "source": "J.Crew"}
-    ]
-  },
-  {
-    "name": "Marcus T.",
-    "photo": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "aboutMe": "I take pride in keeping things organized and running smoothly. I've learned back-of-house operations at several brands and I'm ready for a permanent home.",
-    "workHistory": [
-      {"company": "J.Crew", "role": "Stock Associate", "duration": "1 yr"},
-      {"company": "Everlane", "role": "Inventory", "duration": "6 mo"},
-      {"company": "Bonobos", "role": "Operations", "duration": "4 mo"}
-    ],
-    "endorsements": [
-      {"label": "Team Player", "count": 91, "icon": "users"},
-      {"label": "Work Pace", "count": 88, "icon": "zap"},
-      {"label": "Preparedness", "count": 73, "icon": "check"}
-    ],
-    "storeQuotes": [
-      {"text": "Marcus picks up tasks without being asked. Great addition to any team.", "source": "J.Crew Store Manager"},
-      {"text": "Meticulous with inventory counts", "source": "Everlane"}
-    ]
-  },
-  {
-    "name": "Priya K.",
-    "photo": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "aboutMe": "Fashion is my passion. I love helping customers find pieces that make them feel confident. I'm looking for a brand that values personal styling.",
-    "workHistory": [
-      {"company": "Anthropologie", "role": "Stylist", "duration": "10 mo"},
-      {"company": "Free People", "role": "Sales Associate", "duration": "6 mo"},
-      {"company": "Madewell", "role": "Stylist", "duration": "5 mo"}
-    ],
-    "endorsements": [
-      {"label": "Customer Engagement", "count": 95, "icon": "chat"},
-      {"label": "Perfect Attire", "count": 110, "icon": "shirt"},
-      {"label": "Adaptable", "count": 82, "icon": "refresh"}
-    ],
-    "storeQuotes": [
-      {"text": "Priya has excellent style sense and connects naturally with customers.", "source": "Anthropologie Keyholder"},
-      {"text": "Clients ask for her by name", "source": "Free People"}
-    ]
-  }
-]
+["w001", "w002", "w003", "w004"]
 ---WORKER_CARDS_END---
 
 Then IMMEDIATELY in the same response, add a blank line and continue with Step 4:
@@ -519,65 +461,10 @@ You can also review qualified candidates and invite them directly to apply. Want
 **Step 10: Show Candidates** — ONLY if user clicks "Yes, show me candidates"
 "Here are qualified Reflexers with previous [role] experience:"
 
-Show 6 COMPACT worker cards (header + store quotes only) using this EXACT format:
+Show 6 worker cards by referencing worker IDs from the database. Use this EXACT format:
 
 ---WORKER_CARDS_START---
-[
-  {
-    "name": "Elena R.",
-    "photo": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "compact": true,
-    "storeQuotes": [
-      {"text": "Elena is a quick learner and great with customers.", "source": "Nordstrom Floor Manager"}
-    ]
-  },
-  {
-    "name": "David K.",
-    "photo": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "compact": true,
-    "storeQuotes": [
-      {"text": "David brings great energy to the floor.", "source": "lululemon Store Manager"}
-    ]
-  },
-  {
-    "name": "Aisha M.",
-    "photo": "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "compact": true,
-    "storeQuotes": [
-      {"text": "Aisha has an eye for detail and keeps her section immaculate.", "source": "Sephora Assistant Manager"}
-    ]
-  },
-  {
-    "name": "Chris T.",
-    "photo": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "compact": true,
-    "storeQuotes": [
-      {"text": "Chris is a natural leader on the floor.", "source": "Nike Store Lead"}
-    ]
-  },
-  {
-    "name": "Maya L.",
-    "photo": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "compact": true,
-    "storeQuotes": [
-      {"text": "Maya has incredible style sense.", "source": "Zara Department Manager"}
-    ]
-  },
-  {
-    "name": "Tyler B.",
-    "photo": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "compact": true,
-    "storeQuotes": [
-      {"text": "Tyler consistently gets the highest customer satisfaction scores.", "source": "Apple Store Leader"}
-    ]
-  }
-]
+["w005", "w006", "w007", "w008", "w009", "w010"]
 ---WORKER_CARDS_END---
 
 "Let me know which candidates you would like to invite."
@@ -594,71 +481,10 @@ Offer chips: [Yes, {{MARKET}}] [Different location]
 **Step 2: Show Worker Stories**
 "Here are some standouts looking for permanent roles in {{MARKET}}:"
 
-Show 3 worker cards using this EXACT format with workHistory:
+Show 3 worker cards by referencing worker IDs from the database. Use this EXACT format:
 
 ---WORKER_CARDS_START---
-[
-  {
-    "name": "Sofia M.",
-    "photo": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "aboutMe": "I started on Reflex while finishing school. Now I've worked 47 shifts across 15 brands, and 12 of them have invited me back. I'm ready for something permanent.",
-    "workHistory": [
-      {"company": "Madewell", "role": "Sales Associate", "duration": "8 mo"},
-      {"company": "Anthropologie", "role": "Sales Associate", "duration": "5 mo"},
-      {"company": "J.Crew", "role": "Sales Associate", "duration": "4 mo"}
-    ],
-    "endorsements": [
-      {"label": "Customer Engagement", "count": 95, "icon": "chat"},
-      {"label": "Positive Attitude", "count": 102, "icon": "smile"},
-      {"label": "Team Player", "count": 88, "icon": "users"}
-    ],
-    "storeQuotes": [
-      {"text": "Natural with customers", "source": "Madewell manager"},
-      {"text": "Would hire full-time if we had headcount", "source": "J.Crew"}
-    ]
-  },
-  {
-    "name": "Jordan F.",
-    "photo": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "aboutMe": "I love the fast pace of retail and connecting with customers. Reflex has given me so much experience across different brands, and I'm eager to find a team to grow with long-term.",
-    "workHistory": [
-      {"company": "MIZZEN+MAIN", "role": "Brand Rep", "duration": "6 mo"},
-      {"company": "Faherty", "role": "Sales Associate", "duration": "4 mo"},
-      {"company": "Marine Layer", "role": "Sales Associate", "duration": "3 mo"}
-    ],
-    "endorsements": [
-      {"label": "Customer Engagement", "count": 117, "icon": "chat"},
-      {"label": "Hustle", "count": 89, "icon": "rocket"},
-      {"label": "Team Player", "count": 97, "icon": "users"}
-    ],
-    "storeQuotes": [
-      {"text": "Jordan was awesome!! He was great with customers and seems to be a natural seller.", "source": "MIZZEN+MAIN Store Manager"},
-      {"text": "Would definitely book again", "source": "Faherty"}
-    ]
-  },
-  {
-    "name": "Marcus T.",
-    "photo": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-    "shiftVerified": true,
-    "aboutMe": "I take pride in keeping things organized and running smoothly. I've learned the back-of-house operations at several brands and I'm ready for a permanent home.",
-    "workHistory": [
-      {"company": "J.Crew", "role": "Stock Associate", "duration": "1 yr"},
-      {"company": "Everlane", "role": "Inventory", "duration": "6 mo"},
-      {"company": "Bonobos", "role": "Operations", "duration": "4 mo"}
-    ],
-    "endorsements": [
-      {"label": "Work Pace", "count": 104, "icon": "zap"},
-      {"label": "Attention to Detail", "count": 91, "icon": "target"},
-      {"label": "Preparedness", "count": 86, "icon": "check"}
-    ],
-    "storeQuotes": [
-      {"text": "Marcus picks up tasks without being asked. Great addition to any team.", "source": "J.Crew Store Manager"},
-      {"text": "Meticulous with inventory counts", "source": "Everlane"}
-    ]
-  }
-]
+["w001", "w002", "w003"]
 ---WORKER_CARDS_END---
 
 Then offer chips to direct them toward creating a job posting:
