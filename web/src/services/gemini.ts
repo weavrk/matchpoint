@@ -172,28 +172,26 @@ export async function getMarketSummaryText(market: string, retailerClass: 'Luxur
 }
 
 // ============================================================
-// CHIP COMPONENTS REFERENCE
+// DESIGN SYSTEM REFERENCE
 // ============================================================
-// 1. NavChipGrid (variant="welcome") - Static welcome screen cards
-//    Location: web/src/components/NavChips/NavChips.tsx
-//    Usage: 3x2 grid with icon + title, pink icon background
+// Live reference: Palette icon button in dev menu
+// Definitions: web/src/styles/variables.css
 //
-// 2. NavChipGrid (variant="compact") - Conversation nav bar
-//    Location: Same component, smaller variant
-//    Usage: Top of conversation, scrolls with content
+// TYPOGRAPHY CLASSES:
+// - .type-tagline         → Greeting headline (Quincy 36px/700)
+// - .type-prompt-question → AI prompts (20px/400 primary)
+// - .type-chip-header-lg  → Welcome card titles (16px/600)
+// - .type-chip-header     → Compact nav chip titles (14px/500 primary)
+// - .type-chip-label      → Message chip text (16px/400 primary)
+// - .type-body            → Message content (16px/400)
 //
-// 3. MessageChip - Single-select options (CSS class: .message-chip)
-//    Location: ChatInterface.tsx inline
-//    Usage: Follow-up responses like "Sounds good, what's driving..."
-//    Style: Vertical list with ↳ prefix, primary color text
+// COMPONENTS:
+// - NavChipGrid variant="welcome" → Welcome screen 3x2 cards
+// - NavChipGrid variant="compact" → Conversation nav bar
+// - MessageChip (single)          → Single-select with ↳ prefix
+// - MessageChip (multi)           → Multi-select with plus/check icons
 //
-// 4. MessageChip.multi-select - Multi-select pills
-//    Location: Same component with .multi-select class
-//    Usage: Traits, benefits ("Pick the top 2-3", "select all that apply")
-//
-// SHARED STATES:
-// - Hover: --app-primary border + --gray-50 background
-// - Active/Selected: --app-primary border + --gray-50 bg + checkmark
+// SHARED STATES: Hover/Active = --app-primary border + --gray-50 bg
 // ============================================================
 
 // Greeting response chips - initial options for user
