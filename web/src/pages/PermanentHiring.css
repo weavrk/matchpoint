@@ -36,9 +36,9 @@
 .page-tabs {
   display: flex;
   gap: 24px;
-  margin-bottom: 4px;
+  margin-bottom: 0px;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--black-alpha-200);
+  border-bottom: 1px solid var(--quaternary);
 }
 
 .page-tabs .tab {
@@ -79,7 +79,7 @@
   width: 32px;
   height: 32px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   color: var(--app-primary);
   cursor: pointer;
@@ -106,7 +106,7 @@
   min-height: 400px;
   background: var(--gray-50);
   border-radius: var(--radius-lg);
-  border: 2px dashed var(--black-alpha-200);
+  border: 2px dashed var(--quaternary);
 }
 
 .retailer-badge {
@@ -115,7 +115,7 @@
   gap: 12px;
   padding: 12px 16px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-lg);
 }
 
@@ -189,7 +189,7 @@
   min-height: 220px;
   background: var(--gray-50);
   border-radius: var(--radius-lg);
-  border: 2px dashed var(--black-alpha-200);
+  border: 2px dashed var(--quaternary);
 }
 
 .placeholder-content {
@@ -252,7 +252,7 @@
 /* Market Section */
 .market-section {
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-lg);
   padding: 20px;
 }
@@ -273,7 +273,7 @@
 .market-search-input {
   width: 100%;
   padding: 10px 12px 10px 40px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 14px;
   font-family: inherit;
@@ -329,7 +329,7 @@
   gap: 6px;
   padding: 6px 10px;
   background: var(--gray-50);
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.15s;
@@ -344,7 +344,7 @@
 
 .market-item:hover {
   background: var(--gray-100);
-  border-color: var(--black-alpha-200);
+  border-color: var(--quaternary);
 }
 
 .market-item.selected {
@@ -399,7 +399,7 @@
   padding: 10px;
   margin-top: 12px;
   background: transparent;
-  border: 1px dashed var(--black-alpha-200);
+  border: 1px dashed var(--quaternary);
   border-radius: var(--radius-md);
   color: var(--app-secondary);
   font-size: 13px;
@@ -411,7 +411,7 @@
 
 .show-more-btn:hover {
   background: var(--gray-50);
-  border-color: var(--black-alpha-300);
+  border-color: var(--quaternary);
   color: var(--app-primary);
 }
 
@@ -419,7 +419,7 @@
 .job-sites-section,
 .job-roles-section {
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-lg);
   padding: 20px;
 }
@@ -443,7 +443,7 @@
   color: var(--app-secondary);
   margin: 0 0 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
 }
 
 .job-sites-list,
@@ -515,7 +515,7 @@
   justify-content: center;
   gap: 8px;
   padding: 24px;
-  color: var(--black-alpha-500);
+  color: var(--quaternary);
   font-size: 14px;
 }
 
@@ -532,7 +532,7 @@
 
 .oz-section {
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-lg);
   padding: 20px;
 }
@@ -573,7 +573,7 @@
   justify-content: center;
   padding: 24px 16px;
   background: var(--gray-50);
-  border: 1px dashed var(--black-alpha-200);
+  border: 1px dashed var(--quaternary);
   border-radius: var(--radius-md);
   margin-top: 12px;
 }
@@ -586,7 +586,7 @@
 .oz-placeholder-text code {
   font-family: monospace;
   font-size: 12px;
-  background: var(--black-alpha-100);
+  background: var(--quaternary);
   padding: 2px 5px;
   border-radius: 3px;
   color: var(--gray-600);
@@ -647,7 +647,7 @@
   gap: 6px;
   padding: 6px 12px;
   background: transparent;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 14px;
   font-family: inherit;
@@ -659,7 +659,7 @@
 
 .oz-edit-btn:hover {
   background: var(--gray-50);
-  border-color: var(--black-alpha-300);
+  border-color: var(--quaternary);
   color: var(--app-primary);
 }
 
@@ -669,7 +669,7 @@
   gap: 6px;
   padding: 6px 12px;
   background: transparent;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 14px;
   font-family: inherit;
@@ -681,7 +681,7 @@
 
 .oz-cancel-btn:hover {
   background: var(--gray-50);
-  border-color: var(--black-alpha-300);
+  border-color: var(--quaternary);
   color: var(--app-secondary);
 }
 
@@ -692,7 +692,7 @@
   gap: 4px;
   padding: 4px 8px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
 }
 
@@ -720,7 +720,7 @@
   gap: 2px;
   margin-left: 4px;
   padding-left: 8px;
-  border-left: 1px solid var(--black-alpha-100);
+  border-left: 1px solid var(--quaternary);
 }
 
 .oz-search-nav-btn {
@@ -815,7 +815,7 @@
   color: var(--app-primary);
   margin: 0;
   padding-bottom: 4px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
 }
 
 .oz-state-cities {
@@ -871,7 +871,7 @@
   gap: 6px;
   padding: 6px 10px;
   background: var(--gray-50);
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 13px;
   color: var(--app-primary);
@@ -906,7 +906,7 @@
 }
 
 .oz-chip-remove:hover {
-  background: var(--black-alpha-100);
+  background: var(--quaternary);
   color: var(--app-primary);
 }
 
@@ -914,7 +914,7 @@
   font-size: 11px;
   color: var(--text-hint);
   padding: 2px 6px;
-  background: var(--black-alpha-50);
+  background: var(--quaternary);
   border-radius: 4px;
 }
 
@@ -950,7 +950,7 @@
 .oz-add-input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 14px;
   font-family: inherit;
@@ -964,7 +964,7 @@
 
 .oz-class-select {
   padding: 8px 12px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 14px;
   font-family: inherit;
@@ -1016,7 +1016,7 @@
 /* Header inputs for inline editing */
 .oz-header-input {
   padding: 6px 10px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 14px;
   font-family: inherit;
@@ -1046,7 +1046,7 @@
 
 .oz-header-select {
   padding: 6px 10px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 14px;
   font-family: inherit;
@@ -1095,7 +1095,7 @@
   color: var(--app-primary);
   margin: 0;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
 }
 
 .oz-retailer-list {
@@ -1119,7 +1119,7 @@
   gap: 6px;
   padding: 4px 8px;
   background: var(--gray-50);
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 12px;
 }
@@ -1136,7 +1136,7 @@
 /* Segmented control for classification */
 .oz-class-segment {
   display: flex;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-sm);
   overflow: hidden;
 }
@@ -1154,7 +1154,7 @@
 }
 
 .oz-segment-btn:not(:last-child) {
-  border-right: 1px solid var(--black-alpha-200);
+  border-right: 1px solid var(--quaternary);
 }
 
 .oz-segment-btn:hover {
@@ -1186,7 +1186,7 @@
   height: 36px;
   padding: 0;
   background: transparent;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   color: var(--app-primary);
   cursor: pointer;
@@ -1210,7 +1210,7 @@
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-lg);
   box-shadow: 0 24px 56px rgba(15, 23, 42, 0.28), 0 8px 24px rgba(15, 23, 42, 0.18);
   z-index: 200;
@@ -1223,7 +1223,7 @@
   justify-content: space-between;
   margin-bottom: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
 }
 
 .oz-info-bubble-header h3 {
@@ -1295,7 +1295,7 @@
   justify-content: space-between;
   width: 100%;
   padding: 6px 12px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 14px;
   font-family: inherit;
@@ -1336,7 +1336,7 @@
   right: 0;
   margin-top: 4px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   z-index: 100;
@@ -1350,7 +1350,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
 }
 
 .oz-filter-dropdown-search svg {
@@ -1464,7 +1464,7 @@
 .oz-clear-all-btn {
   padding: 4px 12px;
   background: transparent;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 12px;
   font-family: inherit;
@@ -1485,7 +1485,7 @@
 .oz-filter-select {
   width: 100%;
   padding: 8px 32px 8px 12px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 14px;
   font-family: inherit;
@@ -1516,7 +1516,7 @@
   min-height: 200px;
   background: var(--gray-50);
   border-radius: var(--radius-md);
-  border: 2px dashed var(--black-alpha-200);
+  border: 2px dashed var(--quaternary);
 }
 
 .oz-job-postings-placeholder p {
@@ -1528,7 +1528,7 @@
 .oz-jobs-table-container {
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   background: #ffffff;
 }
@@ -1551,7 +1551,7 @@
   text-align: left;
   font-weight: 600;
   color: var(--app-primary);
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
   white-space: nowrap;
 }
 
@@ -1566,7 +1566,7 @@
 
 .oz-jobs-table td {
   padding: 10px 12px;
-  border-bottom: 1px solid var(--black-alpha-50);
+  border-bottom: 1px solid var(--quaternary);
   color: var(--app-primary);
 }
 
@@ -1707,7 +1707,7 @@
   gap: 24px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid var(--black-alpha-100);
+  border-top: 1px solid var(--quaternary);
 }
 
 .oz-job-roles-category {
@@ -1721,7 +1721,7 @@
   color: var(--app-primary);
   margin: 0 0 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
   text-transform: capitalize;
 }
 
@@ -1892,7 +1892,7 @@
   gap: 4px 16px;
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   background: #ffffff;
   padding: 16px;
@@ -1950,7 +1950,7 @@
   right: 0;
   margin-bottom: 8px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
   min-width: 180px;
@@ -2048,7 +2048,7 @@
   right: 0;
   margin-bottom: 8px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: 12px;
   width: 60vw;
   max-height: 90vh;
@@ -2060,7 +2060,7 @@
 
 .design-system-header {
   padding: 16px 20px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
 }
 
 .design-system-header h2 {
@@ -2151,7 +2151,7 @@
   width: 48px;
   height: 48px;
   border-radius: 8px;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
 }
 
 .ds-color-name {
@@ -2221,7 +2221,7 @@
   gap: 12px;
   padding: 24px 16px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: 12px;
   width: 100%;
   text-align: center;
@@ -2231,7 +2231,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: var(--background-pink);
+  background: var(--background-navy);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2259,7 +2259,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: 8px;
   background: #ffffff;
   width: 100%;
@@ -2486,6 +2486,35 @@
   background: var(--gray-100);
   border-color: var(--gray-400);
   color: var(--text-primary);
+}
+
+/* Full card preview - shows inline without overlay positioning */
+.ds-card-preview-full {
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
+.ds-card-preview-full:hover {
+  border: none;
+  box-shadow: none;
+}
+
+.worker-card-full-inline {
+  position: relative;
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+}
+
+.worker-card-full-inline .worker-card-full-overlay {
+  position: relative;
+  width: 100%;
+  height: auto;
+  border: none;
+  box-shadow: none;
 }
 
 /* Card Specs */

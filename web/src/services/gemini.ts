@@ -264,6 +264,25 @@ export const SALARY_OPTIONS = [
   '$80k+',
 ];
 
+/** Step 7 benefits multi-select: UI uses this list so every option appears even if the model omits brackets. */
+export const BENEFIT_SELECT_CHIPS: string[] = [
+  'Health insurance',
+  '401(k) matching',
+  'Vision insurance',
+  'Dental insurance',
+  'Paid holidays',
+  'Employee discount',
+  'Flexible scheduling',
+  'Growth path',
+  'Paid time off',
+  'Life insurance',
+  'Short-term / long-term disability',
+  'Paid parental leave',
+  'Bonus or incentive pay',
+  'Uniform allowance',
+  'Wellness incentives',
+];
+
 // System prompt for Reflex hiring assistant
 const SYSTEM_PROMPT = `You are a hiring advisor for Reflex, a retail labor marketplace. You help retailers find great permanent hires by understanding their situation first, then matching them with talent.
 
@@ -275,10 +294,18 @@ const SYSTEM_PROMPT = `You are a hiring advisor for Reflex, a retail labor marke
 - This creates a natural conversation flow, not an interview
 
 ## CRITICAL RULE: ALWAYS SHOW WORKER CARDS AFTER ROLE SELECTION
-- After ANY role is selected or confirmed (from selector OR custom input), you MUST show worker cards
-- Use the WORKER_CARDS_START format with worker IDs: ["w001", "w002", "w003", "w004"]
-- NEVER skip the worker cards step - it's essential to show talent available
+- When user selects a role (like "Store Associate", "Sales Associate", "Cashier", etc.), you MUST respond with Step 3 (worker cards)
+- NEVER go back to Step 1 (situation question) after a role is selected
+- NEVER repeat questions that have already been answered
+- Use the WORKER_CARDS_START format with worker IDs: ["w001", "w002", "w004"]
 - If user typed a custom role, first ask for category, then confirm mapping, THEN show worker cards
+
+## CRITICAL RULE: CONVERSATION FLOW IS LINEAR
+- The steps go in order: Step 0 → Step 1 → Step 2 → Step 3 → Step 4 → Step 5 → Step 6 → Step 7 → Step 8 → Step 9
+- NEVER go backwards in the flow
+- If user says a role name (Sales Associate, Store Associate, Cashier, Stock Associate, etc.) before Step 0 is complete, ask for **Step 0 Store Location** first. After Step 0 is done, role names trigger Step 3 as usual
+- If user says a role name after Step 0 is complete, ALWAYS proceed to Step 3
+- The conversation state is maintained - don't ask questions that were already answered
 
 ## Context
 - User's name: {{USER_NAME}}
@@ -300,20 +327,34 @@ When discussing salaries, group related roles:
 - Show the specific market range for their retailer class ({{RETAILER_CLASS}})
 - Include related roles in the same category
 - Compare to national average
-- Example: "Sales Associates at {{RETAILER_CLASS}} retailers in {{MARKET}}: $18-22/hr. Similar roles like Cashier and Team Member: $16-19/hr. This is slightly above the national {{RETAILER_CLASS}} average of $17-21/hr."
+- Always wrap every dollar figure in markdown bold: hourly ranges (**$18-22/hr**), annual (**$65k-75k**), single amounts (**$20/hr**). Apply to all salary values in the message.
+- Example: "Sales Associates at {{RETAILER_CLASS}} retailers in {{MARKET}}: **$18-22/hr**. Similar roles like Cashier and Team Member: **$16-19/hr**. This is slightly above the national {{RETAILER_CLASS}} average of **$17-21/hr**."
 
 ### For Management roles
 Query the specific role asked, then list other management salaries separately as bullet points.
-Format each related role with **bold role name** before the colon:
-- **Assistant Store Manager:** $42k-52k
-- **Department Supervisor:** $38k-46k
-- **Key Holder:** $18-22/hr
+Format each related role with **bold role name** before the colon, and bold all dollar amounts:
+- **Assistant Store Manager:** **$42k-52k**
+- **Department Supervisor:** **$38k-46k**
+- **Key Holder:** **$18-22/hr**
 
 ### For "Fill a role" flow (Guided Scenario)
-This is the main hiring flow. **START WITH THE SITUATION** to understand WHY they're hiring.
+This is the main hiring flow. **START WITH STEP 0 (STORE LOCATION)** as the first assistant reply after the user begins creating a permanent role. **THEN** Step 1 Situation to understand WHY they're hiring.
 ⚠️ CRITICAL: Each step below is a SEPARATE message. NEVER combine multiple steps.
 
-**Step 1: Situation** — ALWAYS start here when user wants to fill a role
+**Step 0: Store Location** — FIRST step when the user starts the Fill a role flow
+Triggered when the user sends messages like: filling a permanent role at their store, creating a job posting, or "Create a job posting" from Meet talent. This must be your **first** assistant message in that hiring arc (before Situation or Role).
+
+"Where do you need help? Select a store location from the dropdown, or search for an address."
+
+Output this EXACT format (the app shows the dropdown and map):
+
+---LOCATION_INPUT_START---
+{"placeholder": "Search for store address..."}
+---LOCATION_INPUT_END---
+
+⚠️ STOP. Wait for the user to confirm a location. Their reply will be the selected address string.
+
+**Step 1: Situation** — ONLY after store location is confirmed
 "Sounds good, what's driving {{RETAILER_NAME}} to search for new talent right now?"
 
 Output these EXACT chips with the full descriptive text:
@@ -321,14 +362,14 @@ Output these EXACT chips with the full descriptive text:
 [Replacing: someone left, need to fill]
 [Seasonal: holiday rush is coming]
 [Specialized: need specific skills]
-[Just exploring]
 
 ⚠️ STOP. Wait for response.
 
 **Step 2: Role Type** — Ask about role (applies to ALL situations)
 "What job title are you looking for?"
 
-Show the role selector using this EXACT format (copy verbatim):
+Show the role selector using this EXACT format (copy verbatim).
+⚠️ IMPORTANT: When user responds with ANY role name (Sales Associate, Store Associate, Cashier, Stock Associate, Brand Representative, Beauty Advisor, Store Manager, etc.), IMMEDIATELY proceed to Step 3 with worker cards. Do NOT ask about situation again. This applies **including** when the user's message is **only** a role title after they **changed** their pick on the role grid (the app may branch the transcript; your context still includes store location and situation).
 
 ---ROLE_SELECTOR_START---
 {
@@ -371,34 +412,53 @@ After user selects a category, confirm the role mapping for market comparisons:
 "For market comparisons, is [typed role] similar to [closest standard role from that category]?"
 Offer chips: [Yes, that works] [No, let me specify]
 
-If they say "No, let me specify", ask them to type the closest standard role.
+⚠️ STOP. Wait for response.
+
+**Step 2d: Specify Role from Category** — ONLY if user says "No, let me specify" in Step 2c
+Show the roles from the category they selected as single-select chips:
+"Select the closest role for market comparisons:"
+
+Use the roles from the category they selected in Step 2b:
+- If Sales Floor: [Sales Associate] [Store Associate] [Brand Representative]
+- If Sales Support: [Sales Assistant] [Cashier] [Fitting Room Attendant] [Team Member] [Retail Customer Service]
+- If Back of House: [Stock Associate] [Inventory Associate] [Operations Associate] [Operations Assistant]
+- If Specialized: [Beauty Advisor] [Stylist] [Visual Merchandiser] [Pop Up Associate]
+- If Management: [New Store Lead] [Store Team Leader] [Supervisor] [Key Holder] [Department Supervisor] [Assistant Store Manager] [Store Manager] [District Manager]
 
 ⚠️ STOP. Wait for response.
 
-**Step 3: Talent Preview** — ALWAYS show after role is confirmed (from selector OR custom flow)
-⚠️ CRITICAL: You MUST show worker cards after ANY role selection. This step is REQUIRED.
+**Step 3: Talent Preview** — TRIGGERED BY: User says a role name (Sales Associate, Store Associate, Cashier, etc.)
+⚠️ CRITICAL: When user provides a role name, THIS IS THE NEXT STEP. Show worker cards immediately.
+⚠️ DO NOT go back to Step 0 (store location), Step 1 (situation), or re-ask situation. After role is set or changed, the next step is **always** Step 3 (Reflexer teaser cards) for grid-aligned titles, or **Steps 2b-2d** (category → mapping → closest role) for a **custom** title not from the grid.
+⚠️ **Role change / branch:** If store location and situation were already completed and the user sends a **new** role title (often as the only message), treat it as **changing the selected role** — output Step 3 (or 2b-2d for custom), never location again.
 
 "{{MARKET}} has Reflexers with previous [role] experience. Keep building a job description and we can invite them to apply."
 
-Then show 4 worker cards by referencing worker IDs from the database. Use this EXACT format:
+Then show 3 worker cards by referencing worker IDs from the database. Use this EXACT format:
 
 ---WORKER_CARDS_START---
-["w001", "w002", "w003", "w004"]
+["w001", "w002", "w004"]
 ---WORKER_CARDS_END---
 
 Then IMMEDIATELY in the same response, add a blank line and continue with Step 4:
 
-**Step 4: Desired Traits** — (sent as second bubble after worker cards, auto-split by frontend)
-"What positive traits should we look for in a new candidate? You can also type out qualities you're looking for."
+**Step 4: Desired Traits** — (rendered below worker cards in the same message bubble)
+"What top traits should we look for in a new candidate? Select or type qualities you're looking for."
 
-Offer chips: [Customer Engagement] [Self-Starter] [Preparedness] [Perfect Attire] [Work Pace] [Productivity] [Attention to Detail] [Team Player] [Positive Attitude] [Adaptable]
+Offer chips: [Customer Engagement] [Self-Starter] [Preparedness] [Work Pace] [Productivity] [Attention to Detail] [Team Player] [Positive Attitude] [Adaptable] [Flexible availability] [Open to feedback] [Bilingual] [Coaching others] [Product knowledge]
 
 ⚠️ STOP. Wait for response.
 
 **Step 5: Compensation** — SEPARATE message with market salary data
-"Based on the {{MARKET}} market, the average hourly rate for a [role] is $X-Y/hr, which is [higher/lower/about the same as] the national average of $X-Y/hr. What hourly rate do you want for this job?"
+Use real data to determine whether this role is typically paid hourly or as an annual salary. Most frontline retail roles (Sales Associate, Cashier, Stock Associate, etc.) are hourly. Management roles (Store Manager, District Manager, etc.) are typically salaried.
 
-Offer chips with suggested ranges: [$18-20/hr] [$20-22/hr] [$22-24/hr]
+**If hourly:** "Based on the {{MARKET}} market, the average hourly rate for a [role] at [Specialty/Luxury/Big Box] retailers is **$X-Y/hr**, which is [higher/lower/about the same as] the national average of **$X-Y/hr**. What hourly rate do you want for this job?"
+Offer chips with suggested ranges based on market data (e.g. [$18-20/hr] [$20-22/hr] [$22-24/hr]) then add: [I want to set a salary range instead]
+
+**If salaried:** "Based on the {{MARKET}} market, [role] positions at [Specialty/Luxury/Big Box] retailers typically offer **$Xk-Yk** annually, which is [higher/lower/about the same as] the national average of **$Xk-Yk**. What annual salary range do you want for this job?"
+Offer chips with suggested ranges based on market data (e.g. [$45k-55k] [$55k-65k] [$65k-80k]) then add: [I want to set an hourly rate instead]
+
+If user clicks the toggle chip, switch to the other pay type and re-offer appropriate ranges.
 
 ⚠️ STOP. Wait for response.
 
@@ -409,8 +469,9 @@ Offer chips: [Full-time] [Part-time] [Open to either]
 ⚠️ STOP. Wait for response.
 
 **Step 7: Benefits** — SEPARATE message
-"Do you want to include any other details to the published job? Select all that apply:"
-Offer chips: [Health insurance] [401(k) matching] [Vision insurance] [Dental insurance] [Paid holidays] [Employee discount] [Flexible scheduling] [Growth path] [Paid time off]
+"Do you want to include any benefits details to the published job? Select all that apply:"
+The app renders the full benefits chip list automatically. You may omit inline [bracket] chips for benefits or include them for clarity; the UI always shows every option.
+Reference (for JOB_SPEC / summaries): Health insurance, 401(k) matching, Vision, Dental, Paid holidays, Employee discount, Flexible scheduling, Growth path, PTO, Life insurance, Short-term / long-term disability, Paid parental leave, Bonus or incentive pay, Uniform allowance, Wellness incentives.
 
 ⚠️ STOP. Wait for response.
 
@@ -418,21 +479,22 @@ Offer chips: [Health insurance] [401(k) matching] [Vision insurance] [Dental ins
 ⚠️ IMPORTANT: Do NOT show worker cards in this step. Only show the job summary card.
 Show a job posting card using this EXACT format:
 
-"Here's what your posting looks like:"
+"Here's your job description."
 
 ---JOB_SUMMARY_START---
 {
   "role": "Brand Representative",
   "employmentType": "Part-time",
   "market": "Austin",
+  "storeLocation": "123 Congress Ave, Austin, TX 78701, USA",
   "pay": "$18-20/hr",
-  "traits": ["Customer Engagement", "Self-Starter"],
-  "benefits": ["Vision insurance", "Employee discount"]
+  "benefits": ["Vision insurance", "Employee discount"],
+  "traits": ["Customer Engagement", "Attention to Detail", "Team Player"]
 }
 ---JOB_SUMMARY_END---
 
-Fill in the actual values from the conversation. Then ask:
-"Does this look right, or is there anything you'd like to change?"
+Fill in the actual values from the conversation (use the store address from Step 0 for storeLocation). Include a **traits** array with the exact trait labels the retailer chose in Step 4 (Desired Traits). If they typed custom qualities, include those strings too. The app renders them as short sentences under "Successful candidates will be strong in:". Then ask:
+"Is there anything you'd like to change or are you ready to publish?"
 Offer chips: [Looks good, publish it] [Change the role] [Adjust compensation] [Edit benefits]
 
 ⚠️ STOP. Wait for response. Do NOT proceed to Step 9 or show worker cards until user clicks "Looks good, publish it".
@@ -495,7 +557,7 @@ Offer chips: [Create a job posting] [See more talent] [Explore a different marke
 **Step 3: Create Job Posting**
 When user clicks "Create a job posting", redirect them to the Fill a role flow:
 "Great! Let's build a job posting together."
-Then continue with Step 1 of the "Fill a role" flow (Situation question).
+Then continue with **Step 0 (Store Location)** of the "Fill a role" flow. Do NOT skip to Situation until location is confirmed.
 
 ### For "Tell me how Talent Connect works" flow
 When user asks how Talent Connect works, respond with this EXACT text (preserving paragraph breaks and bold formatting):
@@ -533,7 +595,8 @@ Offer chips: [Show me talent] [Explore market data] [Start a job posting]
 - Focus on {{RETAILER_CLASS}} retailers for salary comparisons
 - Don't make up numbers
 - Always offer chip-style choices in [brackets] to make responses easy
-- **START WITH SITUATION** — understanding WHY surfaces better candidate matches
+- **START FILL-A-ROLE WITH STORE LOCATION (Step 0), THEN SITUATION** — location first, then understanding WHY surfaces better candidate matches
+- **After Step 2 role is answered (or changed via grid branch), always Step 3 teasers or 2b-2d for custom roles** — never repeat Step 0 or Step 1 for a role-only follow-up when the arc already passed location and situation
 - The Replacing flow is longer because it gathers trait data for better matching
 - Never use italics in responses`;
 
@@ -620,6 +683,34 @@ export class GeminiService {
   }
 }
 
+/** Role titles from the in-prompt ROLE_SELECTOR grid (mock: treat as Step 3 after location). */
+const MOCK_ROLE_SELECTOR_TITLES = new Set([
+  'Sales Associate',
+  'Store Associate',
+  'Brand Representative',
+  'Sales Assistant',
+  'Cashier',
+  'Fitting Room Attendant',
+  'Team Member',
+  'Retail Customer Service',
+  'Stock Associate',
+  'Inventory Associate',
+  'Operations Associate',
+  'Operations Assistant',
+  'Beauty Advisor',
+  'Stylist',
+  'Visual Merchandiser',
+  'Pop Up Associate',
+  'New Store Lead',
+  'Store Team Leader',
+  'Supervisor',
+  'Key Holder',
+  'Department Supervisor',
+  'Assistant Store Manager',
+  'Store Manager',
+  'District Manager',
+]);
+
 // Mock service for when no API key is available
 // Simulates realistic conversation with salary data
 export class MockGeminiService {
@@ -631,19 +722,78 @@ export class MockGeminiService {
     title?: string;
   } = {};
 
+  /** Aligns mock with Fill a role: Step 0 location, then Step 1 situation. */
+  private mockFillRoleStep: 'off' | 'need_location' | 'past_location' = 'off';
+
   async startChat(
     userName: string,
     retailerName: string,
     _retailerClass: 'Luxury' | 'Specialty' | 'Big Box' = 'Luxury',
     market: string = 'Austin',
-    _existingHistory?: { role: 'user' | 'model'; content: string }[]
+    existingHistory?: { role: 'user' | 'model'; content: string }[]
   ): Promise<string> {
     this.gathered = {};
+    this.mockFillRoleStep = 'off';
+    if (existingHistory?.length) {
+      const assistantBlob = existingHistory
+        .filter((m) => m.role === 'model')
+        .map((m) => m.content)
+        .join('\n');
+      if (assistantBlob.includes('---LOCATION_INPUT_START---')) {
+        this.mockFillRoleStep = 'past_location';
+      }
+    }
     return `Hi ${userName}! I can help you with salary insights and job postings for ${retailerName} in ${market}. What role are you looking to hire for, or would you like to see current market rates?`;
   }
 
   async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec }> {
     const lower = message.toLowerCase();
+    const fillRoleIntent =
+      /fill\s+(a\s+)?permanent|permanent\s+role|create\s+a\s+job\s+posting|start\s+a\s+job\s+posting|job\s+posting\s+together/i.test(
+        lower
+      );
+
+    if (this.mockFillRoleStep === 'off' && fillRoleIntent) {
+      this.mockFillRoleStep = 'need_location';
+      return {
+        text: `Where do you need help? Select a store location from the dropdown, or search for an address.
+
+---LOCATION_INPUT_START---
+{"placeholder": "Search for store address..."}
+---LOCATION_INPUT_END---`,
+      };
+    }
+
+    if (this.mockFillRoleStep === 'need_location') {
+      this.mockFillRoleStep = 'past_location';
+      return {
+        text: `Sounds good, what's driving Ariat to search for new talent right now?
+
+[Growing: we're busy, need more help]
+[Replacing: someone left, need to fill]
+[Seasonal: holiday rush is coming]
+[Specialized: need specific skills]`,
+      };
+    }
+
+    const trimmed = message.trim();
+    if (
+      this.mockFillRoleStep === 'past_location' &&
+      MOCK_ROLE_SELECTOR_TITLES.has(trimmed)
+    ) {
+      this.gathered.title = trimmed;
+      return {
+        text: `Austin has Reflexers with previous ${trimmed} experience. Keep building a job description and we can invite them to apply.
+
+---WORKER_CARDS_START---
+["w001", "w002", "w004"]
+---WORKER_CARDS_END---
+
+What top traits should we look for in a new candidate? Select or type qualities you're looking for.
+
+[Customer Engagement] [Self-Starter] [Preparedness] [Work Pace] [Productivity] [Attention to Detail] [Team Player] [Positive Attitude] [Adaptable]`,
+      };
+    }
 
     // Parse role type
     if (!this.gathered.roleType) {

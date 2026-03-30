@@ -31,7 +31,7 @@ export function NavChip({ chip, isActive = false, onClick, disabled = false, var
   const IconComponent = chip.icon;
   const className = variant === 'compact' ? 'chat-nav-chip' : 'welcome-card';
   const iconClassName = variant === 'compact' ? 'chat-nav-chip-icon' : 'welcome-card-icon';
-  const titleClassName = variant === 'compact' ? 'chat-nav-chip-title type-chip-header' : 'welcome-card-title type-chip-header-lg';
+  const titleClassName = variant === 'compact' ? 'chat-nav-chip-title type-chip-header-md' : 'welcome-card-title type-chip-header-lg';
   const iconSize = variant === 'compact' ? 16 : 24;
 
   return (

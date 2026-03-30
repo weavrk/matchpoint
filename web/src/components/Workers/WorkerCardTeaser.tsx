@@ -19,14 +19,14 @@ export function WorkerCardTeaser({ worker, onClick }: WorkerCardTeaserProps) {
 
   return (
     <div className="worker-card worker-card-teaser" onClick={onClick}>
-      <WorkerCardHeader worker={worker} />
+      <WorkerCardHeader worker={worker} showActivelyLooking={false} />
 
       <div className="worker-card-body">
         {/* What retailers are saying - AI summary */}
         {quoteSummary && (
           <div className="teaser-retailer-summary">
-            <span className="section-label">What retailers are saying about {firstName}</span>
-            <p className="retailer-summary-text">{quoteSummary}</p>
+            <span className="type-section-header-sm">What retailers are saying about {firstName}</span>
+            <p className="teaser-summary-text">{quoteSummary}</p>
           </div>
         )}
       </div>

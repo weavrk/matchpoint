@@ -32,6 +32,16 @@ import type { ChatMessage, MatchedWorker, JobSpec, PublishedJob } from '../types
 import { PublishedJobCard } from '../components/Jobs';
 import './PermanentHiring.css';
 
+/** Map UI messages to Gemini `startChat` history (user/model turns). */
+function chatMessagesToGeminiHistory(
+  msgs: ChatMessage[]
+): { role: 'user' | 'model'; content: string }[] {
+  return msgs.map((m) => ({
+    role: m.role === 'user' ? 'user' : 'model',
+    content: m.content,
+  }));
+}
+
 type TabId = 'ask-reflex' | 'published-jobs' | 'reflex-talent' | 'oz';
 
 // All job roles flattened for the Oz admin
@@ -692,7 +702,6 @@ export function PermanentHiring() {
   const [agentActive, setAgentActive] = useState(true); // Agent on by default
   const [showDevMenu, setShowDevMenu] = useState(false); // Floating dev menu
   const [showDesignSystem, setShowDesignSystem] = useState(false); // Design system modal
-  const [showDslWorkerFull, setShowDslWorkerFull] = useState(false); // DSL WorkerCardFull preview
 
   const [showJobSitesInfo, setShowJobSitesInfo] = useState(false);
   const [showScrapeModal, setShowScrapeModal] = useState(false);
@@ -1083,23 +1092,24 @@ export function PermanentHiring() {
 
   // Handle branching from a previous message - clear everything after and start new path
   const handleBranchFromMessage = (messageId: string, newMessage: string) => {
-    // Find the index of the message we're branching from
     const messageIndex = messages.findIndex(m => m.id === messageId);
     if (messageIndex === -1) return;
 
-    // Keep messages up to and including this one, then send the new message
-    setMessages(prev => prev.slice(0, messageIndex + 1));
+    const branchBaseMessages = messages.slice(0, messageIndex + 1);
+    setMessages(branchBaseMessages);
 
-    // Reset chat session since we're starting a new path
+    // Re-seed the model with the kept transcript so a lone role title is not treated as a fresh flow
     chatStartedRef.current = false;
 
-    // Send the new message after a brief delay to let state update
     setTimeout(() => {
-      handleSendMessage(newMessage);
+      handleSendMessage(newMessage, { branchBaseMessages });
     }, 50);
   };
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (
+    content: string,
+    options?: { branchBaseMessages?: ChatMessage[] }
+  ) => {
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -1131,11 +1141,17 @@ export function PermanentHiring() {
           elevated: 'Specialty',
           mid: 'Big Box',
         };
+        const historySource =
+          options?.branchBaseMessages !== undefined
+            ? options.branchBaseMessages
+            : messages;
+        const existingHistory = chatMessagesToGeminiHistory(historySource);
         await geminiService.startChat(
           'Mike', // userName
           SAMPLE_RETAILER.name,
           classificationMap[SAMPLE_RETAILER.brandTier] || 'Specialty',
-          'Austin' // market
+          'Austin', // market
+          existingHistory.length > 0 ? existingHistory : undefined
         );
         chatStartedRef.current = true;
       }
@@ -1147,33 +1163,14 @@ export function PermanentHiring() {
       const workerCardsMatch = response.text.match(/---WORKER_CARDS_START---([\s\S]*?)---WORKER_CARDS_END---/);
 
       if (workerCardsMatch) {
-        // Find text before and after worker cards
-        const parts = response.text.split(/---WORKER_CARDS_END---/);
-        const beforeAndCards = parts[0] + '---WORKER_CARDS_END---';
-        const afterCards = parts[1]?.trim();
-
-        // First message: text with worker cards (up to and including the cards)
+        // Combine worker cards and any follow-up text into a single message
         const workerCardsMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: beforeAndCards,
+          content: response.text,
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, workerCardsMessage]);
-
-        // If there's follow-up text after the cards, add it as a second message after a delay
-        if (afterCards && afterCards.length > 10) {
-          // Add a small delay to make it feel like two separate responses
-          await new Promise(resolve => setTimeout(resolve, 800));
-
-          const followUpMessage: ChatMessage = {
-            id: (Date.now() + 2).toString(),
-            role: 'assistant',
-            content: afterCards,
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, followUpMessage]);
-        }
       } else {
         // No worker cards, just add the message normally
         const assistantMessage: ChatMessage = {
@@ -2774,28 +2771,60 @@ export function PermanentHiring() {
                     <span className="ds-type-preview type-prompt-question">Where do you want to start?</span>
                   </div>
                   <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-section-header-lg</span>
+                    <span className="ds-type-preview type-section-header-lg">Work History</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-section-header-md</span>
+                    <span className="ds-type-preview type-section-header-md">Work History</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-section-header-sm</span>
+                    <span className="ds-type-preview type-section-header-sm">Work History</span>
+                  </div>
+                  <div className="ds-type-sample">
                     <span className="ds-type-name">.type-chip-header-lg</span>
-                    <span className="ds-type-preview type-chip-header-lg">Fill a role at my store</span>
+                    <span className="ds-type-preview type-chip-header-lg">Chip header large</span>
                   </div>
                   <div className="ds-type-sample">
-                    <span className="ds-type-name">.type-chip-header</span>
-                    <span className="ds-type-preview type-chip-header">Fill a role</span>
+                    <span className="ds-type-name">.type-chip-header-md</span>
+                    <span className="ds-type-preview type-chip-header-md">Chip header medium</span>
                   </div>
                   <div className="ds-type-sample">
-                    <span className="ds-type-name">.type-chip-label</span>
-                    <span className="ds-type-preview type-chip-label">Growing: we're busy, need more help</span>
+                    <span className="ds-type-name">.type-chip-header-sm</span>
+                    <span className="ds-type-preview type-chip-header-sm">Chip header small</span>
                   </div>
                   <div className="ds-type-sample">
-                    <span className="ds-type-name">.type-body</span>
-                    <span className="ds-type-preview type-body">Default body text for messages and content</span>
+                    <span className="ds-type-name">.type-chip-label-lg</span>
+                    <span className="ds-type-preview type-chip-label-lg">Chip label large</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-chip-label-md</span>
+                    <span className="ds-type-preview type-chip-label-md">Chip label medium</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-body-lg</span>
+                    <span className="ds-type-preview type-body-lg">Body text large</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-body-md</span>
+                    <span className="ds-type-preview type-body-md">Body text medium</span>
                   </div>
                   <div className="ds-type-sample">
                     <span className="ds-type-name">.type-body-sm</span>
-                    <span className="ds-type-preview type-body-sm">Secondary text and descriptions</span>
+                    <span className="ds-type-preview type-body-sm">Body text small</span>
                   </div>
                   <div className="ds-type-sample">
-                    <span className="ds-type-name">.type-label</span>
-                    <span className="ds-type-preview type-label">Small labels and hints</span>
+                    <span className="ds-type-name">.type-label-lg</span>
+                    <span className="ds-type-preview type-label-lg">Label large</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-label-md</span>
+                    <span className="ds-type-preview type-label-md">Label medium</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-label-sm</span>
+                    <span className="ds-type-preview type-label-sm">Label small</span>
                   </div>
                   <div className="ds-type-sample">
                     <span className="ds-type-name">.type-placeholder</span>
@@ -2923,27 +2952,29 @@ export function PermanentHiring() {
 
                 <div className="ds-subsection">
                   <h4>Shared Header</h4>
-                  <p className="ds-description">Reusable header: avatar + name + badges, all vertically centered</p>
+                  <p className="ds-description">Reusable header: avatar + name + badges, all vertically centered. Shift Verified badge right-aligned via margin-left: auto.</p>
                   <div className="ds-card-preview">
                     <WorkerCardHeader worker={SAMPLE_WORKERS[0] as MatchedWorker} />
                   </div>
                   <div className="ds-card-spec">
                     <span className="ds-spec-item">Component: <code>WorkerCardHeader</code></span>
                     <span className="ds-spec-item">Avatar: 40px (default) or 64px (large)</span>
-                    <span className="ds-spec-item">Layout: flex row, align-items: center</span>
+                    <span className="ds-spec-item">Name: <code>.type-section-header-lg</code></span>
+                    <span className="ds-spec-item">Shift Verified: right-aligned, green badge</span>
+                    <span className="ds-spec-item">Actively Looking: hidden on Teaser via <code>showActivelyLooking=&#123;false&#125;</code></span>
                   </div>
                 </div>
 
                 <div className="ds-subsection">
                   <h4>WorkerCardTeaser</h4>
-                  <p className="ds-description">Minimal card to entice. Shows: header, quote snippet, endorsement chips (3 max)</p>
+                  <p className="ds-description">Minimal card to entice. Shows: header + "What retailers are saying about [Name]" AI summary. No Actively Looking badge.</p>
                   <div className="ds-card-preview">
                     <WorkerCardTeaser worker={SAMPLE_WORKERS[0] as MatchedWorker} />
                   </div>
                   <div className="ds-card-spec">
                     <span className="ds-spec-item">Class: <code>.worker-card-teaser</code></span>
-                    <span className="ds-spec-item">Quote: Quincy 15px italic</span>
-                    <span className="ds-spec-item">Endorsements: pill chips (no counts)</span>
+                    <span className="ds-spec-item">Label: <code>.type-section-header-sm</code></span>
+                    <span className="ds-spec-item">Summary: 14px/400 primary, line-height 20px</span>
                     <span className="ds-spec-item">Click to reveal WorkerCardFull</span>
                   </div>
                 </div>
@@ -2964,19 +2995,19 @@ export function PermanentHiring() {
                 <div className="ds-subsection">
                   <h4>WorkerCardFull</h4>
                   <p className="ds-description">Comprehensive detail panel. Opens right of chat, 60% width, close button</p>
-                  <div className="ds-card-preview">
-                    <button
-                      className="ds-preview-button"
-                      onClick={() => setShowDslWorkerFull(true)}
-                    >
-                      Click to preview WorkerCardFull
-                    </button>
+                  <div className="ds-card-preview ds-card-preview-full">
+                    <div className="worker-card-full-inline">
+                      <WorkerCardFull
+                        worker={SAMPLE_WORKERS[0] as MatchedWorker}
+                        onClose={() => {}}
+                      />
+                    </div>
                   </div>
                   <div className="ds-card-spec">
                     <span className="ds-spec-item">Class: <code>.worker-card-full-overlay</code></span>
                     <span className="ds-spec-item">Width: 60% viewport, fixed right</span>
                     <span className="ds-spec-item">Header: 64px avatar, 24px name</span>
-                    <span className="ds-spec-item">Sections: dividers, uppercase 11px labels</span>
+                    <span className="ds-spec-item">Sections: 12px/500 labels (sentence case)</span>
                     <span className="ds-spec-item">Close: X button top-right</span>
                   </div>
                 </div>
@@ -2990,13 +3021,6 @@ export function PermanentHiring() {
         <div className="design-system-backdrop" onClick={() => setShowDesignSystem(false)} />
       )}
 
-      {/* DSL WorkerCardFull preview */}
-      {showDslWorkerFull && (
-        <WorkerCardFull
-          worker={SAMPLE_WORKERS[0] as MatchedWorker}
-          onClose={() => setShowDslWorkerFull(false)}
-        />
-      )}
     </div>
   );
 }

@@ -217,6 +217,8 @@ Less chat, more visual browsing. Workers displayed as cards with key signals. AI
 
 **Main Idea:** AI asks about the *situation*, not the *requirements*.
 
+**Product note (Matchpoint):** The live Fill a role flow is **store location first**, then **situation**, then **role** (grid or typed), then **Reflexer teaser cards** (or a short custom-role clarification path). If the user **changes** their role on the grid, the client **re-seeds** the model with the kept transcript so the assistant does **not** ask for location or situation again; the next step is always teasers or custom-role steps.
+
 Instead of "what role?", ask "what's happening at your store?" The AI infers needs from context. More natural, surfaces needs retailer might not articulate.
 
 ```

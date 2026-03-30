@@ -4,9 +4,10 @@ import type { MatchedWorker } from '../../types';
 interface WorkerCardHeaderProps {
   worker: MatchedWorker;
   size?: 'default' | 'large';
+  showActivelyLooking?: boolean;
 }
 
-export function WorkerCardHeader({ worker, size = 'default' }: WorkerCardHeaderProps) {
+export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking = true }: WorkerCardHeaderProps) {
   const initials = worker.name
     .split(' ')
     .map((n) => n[0])
@@ -22,7 +23,7 @@ export function WorkerCardHeader({ worker, size = 'default' }: WorkerCardHeaderP
         {worker.photo ? <img src={worker.photo} alt={worker.name} /> : <span>{initials}</span>}
       </div>
 
-      <h3 className={`worker-name ${nameSize}`}>{worker.name}</h3>
+      <h3 className={`worker-name type-section-header-lg ${nameSize}`}>{worker.name}</h3>
 
       {worker.shiftVerified && (
         <span className="badge badge-verified">
@@ -30,7 +31,7 @@ export function WorkerCardHeader({ worker, size = 'default' }: WorkerCardHeaderP
         </span>
       )}
 
-      {worker.activelyLooking && (
+      {showActivelyLooking && worker.activelyLooking && (
         <span className="badge badge-looking">
           <Search size={12} /> Actively looking
         </span>

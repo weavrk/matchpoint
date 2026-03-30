@@ -424,34 +424,55 @@ body {
   color: var(--app-primary);
 }
 
-/* Chip Header Large - Welcome card titles */
+/* Chip Header - 600 weight */
 .type-chip-header-lg {
   font-family: var(--font-primary);
   font-size: 16px;
   font-weight: 600;
-  line-height: 20px;
-  color: var(--text-primary);
-}
-
-/* Chip Header - Compact nav chip titles */
-.type-chip-header {
-  font-family: var(--font-primary);
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 18px;
+  line-height: 22px;
   color: var(--primary);
 }
 
-/* Chip Label - Message chip text */
-.type-chip-label {
+h3.type-chip-header-md,
+h3.type-chip-header,
+.type-chip-header-md,
+.type-chip-header {
   font-family: var(--font-primary);
   font-size: 14px;
-  font-weight: 400;
-  line-height: 18px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--primary);
+  margin: 0;
+}
+
+.type-chip-header-sm {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  color: var(--primary);
+}
+
+/* Chip Label - 500 weight */
+.type-chip-label-lg,
+.type-chip-label {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 22px;
+  color: var(--primary);
+}
+
+.type-chip-label-md {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
   color: var(--primary);
 }
 
 /* Body - Default message/content text */
+.type-body-lg,
 .type-body {
   font-family: var(--font-primary);
   font-size: 16px;
@@ -460,22 +481,46 @@ body {
   color: var(--text-primary);
 }
 
-/* Body Small - Secondary text, descriptions */
-.type-body-sm {
+.type-body-md {
   font-family: var(--font-primary);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
-/* Label - Small labels and hints */
+.type-body-sm {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--text-primary);
+}
+
+/* Label - Labels with medium weight */
+.type-label-lg {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 22px;
+  color: var(--primary);
+}
+
+.type-label-md,
 .type-label {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--primary);
+}
+
+.type-label-sm {
   font-family: var(--font-primary);
   font-size: 12px;
   font-weight: 500;
   line-height: 16px;
-  color: var(--text-secondary);
+  color: var(--primary);
 }
 
 /* Placeholder - Input placeholder text */
@@ -485,4 +530,65 @@ body {
   font-weight: 400;
   line-height: 20px;
   color: var(--text-hint);
+}
+
+/* Section Header - Full card section titles */
+.type-section-header-lg,
+.type-section-header {
+  font-family: var(--font-primary);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 24px;
+  color: var(--primary);
+}
+
+.type-section-header-md {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  color: var(--primary);
+}
+
+.type-section-header-sm {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  color: var(--primary);
+}
+
+/* ==========================================
+   Global Scrollbar Styles
+   ========================================== */
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gray-200);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-300);
+}
+
+/* Position scrollbar closer to edge */
+* {
+  scrollbar-gutter: stable;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-200) transparent;
 }

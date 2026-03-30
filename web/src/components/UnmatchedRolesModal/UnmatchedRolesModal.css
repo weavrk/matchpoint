@@ -21,7 +21,7 @@
 
 .unmatched-modal-header {
   padding: 20px 24px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
   position: relative;
 }
 
@@ -52,7 +52,7 @@
 }
 
 .unmatched-modal-close:hover {
-  background: var(--black-alpha-50);
+  background: var(--quaternary);
 }
 
 .unmatched-modal-body {
@@ -67,7 +67,7 @@
   gap: 12px;
   padding: 12px 24px;
   background: var(--gray-50);
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
   font-size: 12px;
   font-weight: 600;
   color: var(--gray-500);
@@ -78,7 +78,7 @@
 }
 
 .unmatched-col-divider {
-  background: var(--black-alpha-200);
+  background: var(--quaternary);
 }
 
 .unmatched-list {
@@ -90,7 +90,7 @@
   grid-template-columns: 1fr 60px 140px 140px 1px 180px 80px;
   gap: 12px;
   padding: 12px 24px;
-  border-bottom: 1px solid var(--black-alpha-50);
+  border-bottom: 1px solid var(--quaternary);
   align-items: center;
 }
 
@@ -141,7 +141,7 @@
 .unmatched-col-map select {
   width: 100%;
   padding: 6px 10px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: 6px;
   font-size: 13px;
   font-family: inherit;
@@ -166,7 +166,7 @@
 .unmatched-col-custom-title input {
   width: 100%;
   padding: 6px 10px;
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: 6px;
   font-size: 13px;
   font-family: inherit;
@@ -188,12 +188,12 @@
 .unmatched-col-divider {
   width: 1px;
   height: 100%;
-  background: var(--black-alpha-200);
+  background: var(--quaternary);
 }
 
 .unmatched-modal-footer {
   padding: 16px 24px;
-  border-top: 1px solid var(--black-alpha-100);
+  border-top: 1px solid var(--quaternary);
   display: flex;
   justify-content: flex-end;
   gap: 12px;

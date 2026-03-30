@@ -1,6 +1,6 @@
 .worker-card {
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
@@ -21,11 +21,16 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
 }
 
 .worker-card-header .worker-name {
   flex: 0 0 auto;
+}
+
+.worker-card-header .badge:first-of-type {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .worker-card-header .badge {
@@ -118,7 +123,7 @@
 /* Divider between major sections */
 .card-divider {
   height: 1px;
-  background: var(--black-alpha-100);
+  background: var(--quaternary);
   margin: 12px 0;
 }
 
@@ -163,7 +168,7 @@
 
 .reflex-record {
   background: var(--gray-50);
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   padding: 10px 12px;
   display: flex;
@@ -176,7 +181,7 @@
 /* Thin divider inside the Reflex block */
 .reflex-inner-divider {
   height: 1px;
-  background: var(--black-alpha-100);
+  background: var(--quaternary);
   margin: 1px 0;
 }
 
@@ -259,7 +264,7 @@
   padding: 2px 8px;
   border-radius: 8px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   color: var(--text-secondary);
 }
 
@@ -300,7 +305,7 @@
 .brand-tag.mid      { background: var(--gray-100);  color: var(--gray-600); }
 .brand-tag.elevated { background: var(--navy-100);  color: var(--stone-700); }
 .brand-tag.luxury   { background: var(--stone-700); color: #ffffff; }
-.brand-tag.more     { background: var(--black-alpha-100); color: var(--text-hint); }
+.brand-tag.more     { background: var(--quaternary); color: var(--text-hint); }
 
 /* Inside ON REFLEX box — all brand chips use uniform primary dark style */
 .reflex-record .brand-tag:not(.more) {
@@ -330,7 +335,7 @@
   padding: 6px 12px;
   background: transparent;
   color: var(--app-primary);
-  border: 1px solid var(--black-alpha-200);
+  border: 1px solid var(--quaternary);
   border-radius: var(--radius-md);
   font-size: 12px;
   font-weight: 500;
@@ -358,7 +363,7 @@
   font-size: 11px;
   color: var(--text-secondary);
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   padding: 2px 8px;
   border-radius: 8px;
 }
@@ -475,12 +480,22 @@
 .teaser-retailer-summary {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
-.retailer-summary-text {
-  font-size: 13px;
-  line-height: 1.6;
+.teaser-label {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--text-secondary);
+}
+
+.teaser-summary-text {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
   color: var(--text-primary);
   margin: 0;
 }
@@ -494,7 +509,7 @@
 .endorsement-chip {
   padding: 4px 12px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: 16px;
   font-size: 12px;
   color: var(--primary);
@@ -551,7 +566,7 @@
   gap: 6px;
   padding: 6px 12px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: 8px;
   font-size: 13px;
   color: var(--primary);
@@ -596,57 +611,88 @@
 }
 
 /* ── 3. WorkerCardFull ──────────────────────────────────────────────
-   Comprehensive detail card - opens to right of chat
-   60% width, close button, all worker details
+   Comprehensive detail card - opens side by side with chat
+   Uses flex layout, scrollable content
    ─────────────────────────────────────────────────────────────────── */
 
 .worker-card-full-overlay {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 60%;
   background: #ffffff;
-  border-left: 1px solid var(--black-alpha-100);
-  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.1);
-  z-index: 100;
   overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
 }
 
 .worker-card-full {
   padding: 24px;
+  padding-top: 36px;
+  padding-right: 0px;
   position: relative;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .worker-card-full-close {
-  position: absolute;
+  position: sticky;
   top: 16px;
-  right: 16px;
+  margin-left: auto;
+  margin-right: 16px;
+  margin-bottom: -52px;
   width: 36px;
   height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
-  border-radius: 8px;
-  color: var(--secondary);
+  background: var(--primary);
+  border: none;
+  border-radius: 50%;
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.15s;
+  z-index: 10;
+  flex-shrink: 0;
 }
 
 .worker-card-full-close:hover {
-  background: var(--gray-50);
-  color: var(--primary);
-  border-color: var(--primary);
+  background: var(--stone-800);
 }
 
 /* Full card header */
 .worker-card-full-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   margin-bottom: 16px;
+  margin-right: 52px;
+}
+
+.worker-card-full-header-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.worker-card-full-header-content .worker-name-lg {
+  margin: 0;
+}
+
+.worker-card-full-header-content .worker-card-full-meta {
+  padding-bottom: 0;
+  border-bottom: none;
+  margin-bottom: 0;
+  gap: 12px;
+}
+
+.worker-card-full-header {
+  padding-bottom: 20px;
+  margin-right: -24px;
+  padding-right: 24px;
+  border-bottom: 1px solid var(--quaternary);
+}
+
+.worker-card-full-header-content .meta-preference {
+  color: var(--secondary);
 }
 
 .worker-avatar-lg {
@@ -691,7 +737,7 @@
   align-items: center;
   gap: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
   margin-bottom: 24px;
 }
 
@@ -712,7 +758,7 @@
 
 .full-section {
   padding: 20px 0;
-  border-bottom: 1px solid var(--black-alpha-100);
+  border-bottom: 1px solid var(--quaternary);
 }
 
 .full-section:last-child {
@@ -720,29 +766,36 @@
 }
 
 .section-title {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
   margin: 0 0 12px 0;
 }
 
-.worker-about-full {
-  font-family: var(--font-quincy);
+.worker-card-full .section-title {
   font-size: 18px;
-  font-style: italic;
+  font-weight: 700;
+  padding-bottom: 12px;
+  color: var(--primary);
+}
+
+/* All text in full card uses primary color */
+.worker-card-full .type-body,
+.worker-card-full .type-body-sm,
+.worker-card-full .type-label {
+  color: var(--primary);
+}
+
+.worker-about-full {
+  font-family: var(--font-primary);
+  font-size: 16px;
   line-height: 1.5;
   color: var(--primary);
   margin: 0;
 }
 
 .quote-mark-lg {
-  font-size: 32px;
-  line-height: 0;
-  vertical-align: middle;
-  margin-right: 6px;
-  color: var(--secondary);
+  display: none;
 }
 
 /* Full experience list */
@@ -854,9 +907,15 @@
   gap: 8px;
   padding: 8px 14px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: 8px;
   font-size: 14px;
+  color: var(--primary);
+}
+
+/* Full quotes summary */
+.quotes-summary-full {
+  margin: 0 0 20px 0;
   color: var(--primary);
 }
 
@@ -906,7 +965,7 @@
   gap: 6px;
   padding: 6px 12px;
   background: #ffffff;
-  border: 1px solid var(--black-alpha-100);
+  border: 1px solid var(--quaternary);
   border-radius: 8px;
   font-size: 13px;
   color: var(--secondary);

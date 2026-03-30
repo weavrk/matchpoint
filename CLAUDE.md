@@ -290,28 +290,29 @@ Located in `web/src/services/gemini.ts` as `SYSTEM_PROMPT`.
 - **Response rules:**
   - Salary questions: Show market range, related roles, national comparison
   - Management: Query specific role, list others separately
-  - Job posting: START WITH SITUATION → role (if replacing, ask about previous person) → FT/PT → salary → benefits/requirements → show matches
+  - Job posting (Fill a role): **Step 0 store location** → **Step 1 situation** → **Step 2 role** (grid or typed) → **Step 3 Reflexer teaser cards** (or Steps 2b-2d for a custom title), then traits, pay, etc. After role is chosen or **changed** (user picks a different title on the role grid), the next step is **always** teaser cards or custom-role clarification — **never** ask for store location or situation again for that arc.
 - **Guardrails:** Stay concise, use real data, don't make up numbers, never use em dashes
-- **CRITICAL: One question per message** - Never combine multiple questions. Ask role first, wait for response, THEN ask about performance. Each step = separate message.
+- **CRITICAL: One question per message** - Never combine multiple questions. One step per assistant message (location, then situation, then role, and so on).
 - **Markdown:** Gemini responses render as markdown in the chat UI (react-markdown). Use markdown formatting for readability (bold, lists, headers).
 - Styling
   - **Chips/Quick Prompts:** All chip buttons use 14px font size.
   - **Single-select Chips:** Follow-up style with vertical list layout, arrow prefix (↳), transparent background, subtle border separators, 6px vertical padding. Click sends immediately.
   - **Multi-select Chips:** Triggered by prompts containing "Pick the top 2-3" or similar. Horizontal pill layout with wrap. Default: white background + primary stroke. Selected: blue-100 background + blue-700 text + Lucide Check icon. Send button enabled when 1+ selected.
-  - **Inline Input:** Text input area appears below chips in the last assistant message (not at bottom of chat). 72px height, gray-50 background, includes send button.
+  - **Inline Input:** Text input area appears below chips in the last assistant message (not at bottom of chat). Single-line height (~24px field, compact row), gray-50 background, 24px margin above from chips, includes send button.
 
 ### 3. Special JSON Message Formats
 
 The chat interface parses special JSON blocks from Gemini responses to render custom UI components:
 
 
-| Format                                                    | Purpose                              | Component                     |
-| --------------------------------------------------------- | ------------------------------------ | ----------------------------- |
-| `---WORKER_CARDS_START---[...]---WORKER_CARDS_END---`     | Display worker profile cards         | WorkerCardComponent           |
-| `---ROLE_SELECTOR_START---{...}---ROLE_SELECTOR_END---`   | 5-column role picker grid            | RoleSelectorComponent         |
-| `---JOB_SUMMARY_START---{...}---JOB_SUMMARY_END---`       | Job posting preview card             | JobSummaryCard                |
-| `---SUCCESS_BANNER_START---{...}---SUCCESS_BANNER_END---` | Celebration milestone banner         | SuccessBannerComponent        |
-| `---JOB_SPEC_START---{...}---JOB_SPEC_END---`             | Job specification (triggers publish) | Parsed by PermanentHiring.tsx |
+| Format                                                          | Purpose                              | Component                     |
+| --------------------------------------------------------------- | ------------------------------------ | ----------------------------- |
+| `---WORKER_CARDS_START---[...]---WORKER_CARDS_END---`           | Display worker profile cards         | WorkerCardComponent           |
+| `---ROLE_SELECTOR_START---{...}---ROLE_SELECTOR_END---`         | 5-column role picker grid            | RoleSelectorComponent         |
+| `---LOCATION_INPUT_START---{...}---LOCATION_INPUT_END---`       | Address search + OSM mini map        | LocationInputComponent        |
+| `---JOB_SUMMARY_START---{...}---JOB_SUMMARY_END---`             | Job posting preview card             | JobSummaryCard                |
+| `---SUCCESS_BANNER_START---{...}---SUCCESS_BANNER_END---`       | Celebration milestone banner         | SuccessBannerComponent        |
+| `---JOB_SPEC_START---{...}---JOB_SPEC_END---`                   | Job specification (triggers publish) | Parsed by PermanentHiring.tsx |
 
 
 **SUCCESS_BANNER format:**
@@ -339,21 +340,27 @@ When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Publ
 │   Chips: GREETING_CHIPS from gemini.ts
 │
 ├── "Fill a role at my store" (Guided Scenario Flow)
-│   └── [Step 1: SITUATION] ← Start here! Understanding WHY surfaces better matches
-│       │   "Sounds good, what's driving {{RETAILER_NAME}} to search for new talent right now?"
-│       │   Chips (with full descriptive text):
-│       │     [Growing: we're busy, need more help]
-│       │     [Replacing: someone left, need to fill]
-│       │     [Seasonal: holiday rush is coming]
-│       │     [Specialized: need specific skills]
-│       │     [Just exploring]
+│   └── [Step 0: Store Location] ← FIRST assistant reply in this arc
+│       │   "Where do you need help? Select a store location from the dropdown, or search for an address."
+│       │   Renders ---LOCATION_INPUT_START--- (store dropdown + map). Wait for confirmed address.
 │       │
-│       └── [Step 2: Role Type] ← SEPARATE MESSAGE (for ALL situations)
-│           │   "What job title are you looking for? Select below or enter your own title"
-│           │   Shows ROLE_SELECTOR (single-select) with 5 columns:
-│           │   Sales Floor, Sales Support, Back of House, Specialized, Management
+│       └── [Step 1: SITUATION] ← ONLY after location is confirmed. Understanding WHY surfaces better matches
+│           │   "Sounds good, what's driving {{RETAILER_NAME}} to search for new talent right now?"
+│           │   Chips (with full descriptive text):
+│           │     [Growing: we're busy, need more help]
+│           │     [Replacing: someone left, need to fill]
+│           │     [Seasonal: holiday rush is coming]
+│           │     [Specialized: need specific skills]
 │           │
-│           └── [Step 3: Talent Preview] ← Shows 4 worker cards in 2x2 grid
+│           └── [Step 2: Role Type] ← SEPARATE MESSAGE (for ALL situations)
+│               │   "What job title are you looking for?"
+│               │   Shows ROLE_SELECTOR (single-select) with column groups:
+│               │   Sales Floor, Sales Support, Back of House, Specialized, Management
+│               │   If the user **changes** their role pick on the grid, the app branches the transcript but **re-seeds** the model with prior turns; the assistant must go to Step 3 (or 2b-2d for custom text), **not** Step 0 or Step 1 again.
+│               │
+│               ├── [Step 2b-2d: Custom role] ← ONLY if user typed a title not on the grid (category → mapping → closest role)
+│               │
+│               └── [Step 3: Talent Preview] ← After every grid role selection or completed custom-role path; shows 3 worker cards
 │               │   "{{MARKET}} has Reflexers with previous [role] experience."
 │               │   "Keep building a job description and we can invite them to apply."
 │               │
@@ -380,35 +387,42 @@ When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Publ
 │               │   - storeQuotes[{text, source}]
 │               │   (Uses ---WORKER_CARDS_START--- JSON format)
 │               │
-│               │   Implementation: PermanentHiring.tsx splits responses containing
-│               │   WORKER_CARDS into two messages - cards first, then follow-up after 800ms
+│               │   Implementation: PermanentHiring.tsx keeps worker cards + Step 4 traits
+│               │   question in ONE message. Text after WORKER_CARDS_END renders below the
+│               │   cards via textAfterCards in parseMessageWithChips.
 │               │
-│               └── [Step 4: Desired Traits] ← SEPARATE MESSAGE (auto-sent after cards)
-│                   │   "What positive traits should we look for in a new candidate?
-│                   │    You can also type out qualities you're looking for."
+│               └── [Step 4: Desired Traits] ← SAME MESSAGE as worker cards (appended below)
+│                   │   "What top traits should we look for in a new candidate?
+│                   │    Select or type qualities you're looking for."
 │                   │   Chips: [Customer Engagement] [Self-Starter] [Preparedness]
-│                   │          [Perfect Attire] [Work Pace] [Productivity]
+│                   │          [Work Pace] [Productivity]
 │                   │          [Attention to Detail] [Team Player] [Positive Attitude] [Adaptable]
 │                   │
 │                   └── [Step 5: Compensation] ← SEPARATE MESSAGE with market data
-│                       │   "Based on the {{MARKET}} market, the average hourly rate for a [role]
-│                       │    is $X-Y/hr, which is [higher/lower] than the national average.
-│                       │    What hourly rate do you want for this job?"
-│                       │   Chips: [$18-20/hr] [$20-22/hr] [$22-24/hr]
+│                       │   Pay type determined by role (hourly for frontline, salary for mgmt)
+│                       │   Hourly: market range chips + [I want to set a salary range instead]
+│                       │   Salary: market range chips + [I want to set an hourly rate instead]
+│                       │   Toggle chip switches pay type and re-offers appropriate ranges
 │                       │
 │                       └── [Step 6: Employment Type] ← SEPARATE MESSAGE
 │                           │   "Would this be full-time or part-time?"
 │                           │   Chips: [Full-time] [Part-time] [Open to either]
 │                           │
 │                           └── [Step 7: Benefits] ← SEPARATE MESSAGE
-│                               │   "Do you want to include any other details to the published job?"
-│                               │   "Select all that apply:"
+│                               │   "Do you want to include any benefits details to the published job? Select all that apply:"
 │                               │   Chips: [Health insurance] [401(k) matching] [Vision insurance]
 │                               │          [Dental insurance] [Paid holidays] [Employee discount]
 │                               │          [Flexible scheduling] [Growth path] [Paid time off]
+│                               │          [Life insurance] [Short-term / long-term disability] [Paid parental leave]
+│                               │          [Bonus or incentive pay] [Uniform allowance] [Wellness incentives]
+│                               │
+│                               └── [Step 7.5: Store on posting card] ← SEPARATE MESSAGE if location still needed for publish copy; primary capture is **Step 0** at arc start
+│                               │   Renders ---LOCATION_INPUT_START--- when used
+│                               │   User confirms address for the job summary card
 │                               │
 │                               └── [Step 8: Job Posting Summary & Confirmation]
-│                                   │   Shows JOB_SUMMARY card with role, employmentType, market, pay, traits, benefits
+│                                   │   Shows JOB_SUMMARY card: role, employmentType, storeLocation, pay, benefits (bulleted list)
+│                                   │   No traits shown. Employment type spelled out (Full-time / Part-time / Open to either)
 │                                   │   "Here's what your posting looks like. Does this look right?"
 │                                   │   Chips: [Looks good, publish it] [Change the role]
 │                                   │          [Adjust compensation] [Edit benefits]
@@ -447,7 +461,7 @@ When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Publ
 │           └── [Step 3: Create Job Posting]
 │               │   When user clicks "Create a job posting", redirect to Fill a role flow
 │               │   "Great! Let's build a job posting together."
-│               │   → Continue with Step 1 of Fill a role (Situation question)
+│               │   → Continue with **Step 0** of Fill a role (store location), then situation, then role
 │
 ├── "Explore {{MARKET}} market"
 │   └── [Market Salary Data]
@@ -499,14 +513,37 @@ When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Publ
 Live reference: Palette icon button (bottom-right dev menu)
 Definitions: `web/src/styles/variables.css`
 
+**Border rule:** All borders use `--quaternary` unless explicitly specified otherwise. Never use `--black-alpha-*` or `rgba(0,0,0,*)` for borders.
+
 ### Colors
 
 | Token | Hex | Usage |
 |-------|-----|-------|
 | `--primary` | #3F3F46 | Text, interactive elements, strokes |
 | `--secondary` | #A1A1AA | Secondary text, hints |
-| `--background-pink` | #ffe6e6 | Icon backgrounds |
+| `--tertiary` | #D4D4D8 | Disabled states, light strokes |
+| `--quaternary` | #E4E4E7 | Card borders, dividers |
+| `--brand-pink` | #ff9a9a | Brand accent |
 | `--gray-50` | #fafafa | Hover backgrounds |
+| `--gray-100` | #ebebeb | Light borders |
+| `--gray-200` | #cecece | Scrollbar thumb |
+| `--gray-300` | #bababa | Scrollbar thumb hover |
+| `--stone-50` | #fafafa | Body background dark mode |
+| `--stone-700` | #3f3f46 | Primary (alias) |
+| `--background-navy` | #f4f6f7 | Light navy backgrounds |
+| `--background-green` | #e6f6f3 | Success/teal backgrounds |
+| `--background-pink` | #ffe6e6 | Icon backgrounds |
+| `--background-blue` | #e0f1fc | Info backgrounds |
+| `--background-gray` | #e4e4e7 | Neutral backgrounds |
+| `--background-yellow` | #fff8ec | Warning backgrounds |
+| `--accent-green-mid` | #4ba098 | Success banner, teal accents |
+| `--accent-blue-mid` | #3b73ce | Selected chip background |
+| `--blue-100` | #e0f1fc | Multi-select chip selected bg |
+| `--blue-700` | #234a8b | Multi-select chip selected text |
+| `--teal-600` | #0d9488 | Shift Verified badge |
+| `--teal-100` | #ccfbf1 | Shift Verified badge bg |
+| `--black-alpha-100` | rgba(0,0,0,0.06) | Subtle dividers |
+| `--black-alpha-200` | rgba(0,0,0,0.08) | Card shadows |
 
 ### Typography Classes
 
@@ -514,13 +551,28 @@ Definitions: `web/src/styles/variables.css`
 |-------|-------|
 | `.type-tagline` | Greeting headline ("Hey Sam...") - Quincy 36px/700 |
 | `.type-prompt-question` | AI prompts ("Where do you want to start?") - 20px/400 primary |
-| `.type-chip-header-lg` | Welcome card titles - 16px/600 |
-| `.type-chip-header` | Compact nav chip titles - 14px/500 primary |
-| `.type-chip-label` | Message chip text - 16px/400 primary |
-| `.type-body` | Message content - 16px/400 |
-| `.type-body-sm` | Secondary text - 14px/400 |
-| `.type-label` | Small labels - 12px/500 |
+| `.type-section-header-lg` | Section titles large - 18px/700 primary |
+| `.type-section-header-md` | Section titles medium - 16px/700 primary |
+| `.type-section-header-sm` | Section titles small - 14px/700 primary |
+| `.type-chip-header-lg` | Chip header large - 16px/600 primary |
+| `.type-chip-header-md` | Chip header medium - 14px/600 primary |
+| `.type-chip-header-sm` | Chip header small - 12px/600 primary |
+| `.type-chip-label-lg` | Chip label large - 16px/500 primary |
+| `.type-chip-label-md` | Chip label medium - 14px/500 primary |
+| `.type-body-lg` | Body text large - 16px/400 primary |
+| `.type-body-md` | Body text medium - 14px/400 primary |
+| `.type-body-sm` | Body text small - 12px/400 primary |
+| `.type-label-lg` | Label large - 16px/500 primary |
+| `.type-label-md` | Label medium - 14px/500 primary |
+| `.type-label-sm` | Label small - 12px/500 primary |
 | `.type-placeholder` | Input placeholders - 16px/400 hint |
+
+**Type Style Usage:**
+- Welcome nav chips (static): `.type-chip-header-lg`
+- Conversational nav chips (compact): `.type-chip-header-md`
+- Single-select message chips: `.type-chip-label-md`
+- Multi-select message chips: `.type-chip-label-md`
+- Role selector chips: `.type-chip-label-md`
 
 ### Components
 
@@ -539,21 +591,32 @@ Three variants with shared header component. All headers have avatar, name, and 
 
 | Variant | Class | Usage |
 |---------|-------|-------|
-| `WorkerCardTeaser` | `.worker-card-teaser` | Abridged to entice. Quote snippet, work history (3), endorsements (3 chips) |
+| `WorkerCardTeaser` | `.worker-card-teaser` | Minimal to entice. Header + "What retailers are saying about [Name]" AI summary |
 | `WorkerCardCompact` | `.worker-card-compact` | Chat view. Quote, work history, endorsements with +counts, store quotes |
 | `WorkerCardFull` | `.worker-card-full-overlay` | Detail panel. 60% width, fixed right, close button, all sections |
 
+**WorkerCardTeaser specs:**
+- Label ("What retailers are saying about [Name]"): `.type-section-header-sm`
+- Summary text: 14px/400 primary color, line-height 20px
+- Gap between label and summary: 4px
+- No Actively Looking badge (suppressed via `showActivelyLooking={false}`)
+
 **Shared Header:** `WorkerCardHeader` component
 - Avatar: 40px (default) or 64px (large via `size="large"`)
-- Layout: flex row, vertically centered
-- Badges: Shift Verified (green), Actively Looking (navy)
+- Name: `.type-section-header-lg`
+- Layout: flex row, vertically centered; Shift Verified badge pushed to right via `margin-left: auto`
+- Badges: Shift Verified (green, right-aligned) — Actively Looking badge hidden on WorkerCardTeaser, visible on Compact and Full variants
+- Props: `showActivelyLooking` (default `true`) — pass `false` on WorkerCardTeaser
 
 **WorkerCardFull specs:**
-- Position: fixed right, 60% width
-- Close button: top-right, 36px, X icon
-- Sections: 20px padding, 1px dividers, 11px uppercase labels
-- Quote: Quincy 18px italic with large quote mark
+- Position: inline right of chat, 35vw width
+- Close button: sticky top-right, 36px circle, primary background with white X
+- Header: avatar + name stacked with location/shift verified below, full-width divider
+- Section titles: 18px/700 primary (`.type-section-header`)
+- Sections: 20px padding, 1px dividers
+- About: 16px primary font (no italics, no Quincy)
 - Stats: 28px bold numbers with 12px labels
+- Clicking WorkerCardTeaser opens WorkerCardFull panel
 
 ---
 
@@ -561,7 +624,7 @@ IGNORE ANYTHING BELOW THIS
 
 ### Design Notes (from PROMPT-ARCHITECTURE.md)
 
-- **#5 Guided Scenario**: Implemented. "Fill a role" starts with SITUATION
+- **#5 Guided Scenario**: Implemented. "Fill a role" starts with **store location (Step 0)**, then situation, then role; changing the role on the grid re-seeds Gemini with prior turns so location is not repeated (see `PermanentHiring.tsx` `handleBranchFromMessage` + `chatMessagesToGeminiHistory`).
 - **#10 Worker Stories**: Implemented. "Meet {{MARKET}} talent" leads with worker narratives
 - **#7 Hot List**: Future. Proactive "13 new workers available this week" alerts
 - **#8 Competitive Intel**: Could enhance "Explore market" with competitor posting data
