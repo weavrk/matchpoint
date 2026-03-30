@@ -499,10 +499,22 @@ When detected, triggers `publishJob()` in PermanentHiring.tsx to add job to Publ
 ## User Interface
 
 ### Color Theme
-Primary interactive color is **primary** (`--primary`, stone-700 #3f3f46).
-- **Stroke/Border (interactive):** `--primary` (#3f3f46)
-- **Background (hover/selected):** `--stone-50` (#fafafa)
-- **Text (interactive):** `--primary` (#3f3f46)
+
+**Primary Palette (stone-based):**
+| Token | Value | Hex | Usage |
+|-------|-------|-----|-------|
+| `--primary` | stone-700 | #3F3F46 | Primary text, interactive elements, strokes |
+| `--secondary` | stone-400 | #A1A1AA | Secondary text, hints, placeholders |
+| `--tertiary` | stone-300 | #D4D4D8 | Borders, dividers |
+| `--quaternary` | stone-200 | #E4E4E7 | Subtle backgrounds |
+**Text Colors (merged with primary):**
+- `--text-primary`: Same as `--primary` (stone-700)
+- `--text-secondary`: Same as `--secondary` (stone-400)
+- `--text-hint`: Same as `--secondary` (stone-400)
+
+**Interactive States:**
+- **Stroke/Border:** `--primary` (#3f3f46)
+- **Hover background:** `--gray-50` or `--stone-50`
 - **Icon backgrounds:** `--background-pink` (#ffe6e6) with `--primary` icon color
 
 ### Welcome Screen (Static Greeting)
@@ -532,23 +544,54 @@ Layout reference: Jack & Jill card grid pattern
 | how-it-works | HelpCircle | What is Talent Connect? |
 | just-exploring | Compass | Just exploring |
 
-### Chips Styling
-All chip buttons use 14px font size.
+### Reusable Chip Components
 
-**Single-select (follow-up responses):**
-- Vertical list layout
-- Arrow prefix (↳)
-- Transparent background
-- Subtle border separators
-- 6px vertical padding
+#### 1. `NavChipGrid` (Welcome Cards)
+**Location:** `web/src/components/NavChips/NavChips.tsx`
+**Usage:** Static welcome screen and conversation nav bar
+**Variants:** `welcome` (large 3x2 grid) | `compact` (smaller 3x2 in conversation)
+
+**Styling:**
+- Grid: 3 columns, gap 16px
+- Card: white bg, 1px border `--black-alpha-100`, border-radius 12px
+- Icon: circle with `--background-pink` bg, `--primary` icon color
+- Text: `--primary` color
+- Hover: `--app-primary` border, `--gray-50` background
+- Active: `--app-primary` border, `--gray-50` background, checkmark icon
+
+#### 2. `NavChipGrid variant="compact"` (Conversation Nav)
+**Location:** Same component, different variant
+**Usage:** Top of conversation view, scrolls with content
+
+**Styling:**
+- Grid: 3 columns, gap 8px
+- Smaller icon (28px) and text (14px)
+- Same hover/active states as welcome cards
+
+#### 3. `MessageChip` (Single-Select Options)
+**Location:** Inline in `ChatInterface.tsx` (`.message-chip` class)
+**Usage:** Follow-up responses like "Sounds good, what's driving Ariat..."
+
+**Styling:**
+- Vertical list layout with arrow prefix (↳)
+- Text: `--primary` color at 100%
+- Hover: `--app-primary` border, `--gray-50` background, border-radius 8px
 - Click sends immediately
 
-**Multi-select (traits, benefits):**
-- Triggered by: "Pick the top 2-3", "select all that apply", "positive traits"
+#### 4. `MessageChip.multi-select` (Multi-Select Pills)
+**Location:** Same component with `.multi-select` class
+**Usage:** Traits, benefits selection ("Pick the top 2-3", "select all that apply")
+
+**Styling:**
 - Horizontal pill layout with wrap
 - Default: white bg + `--primary` stroke
 - Selected: `--stone-50` bg + `--primary` text + Lucide Check icon
 - Send button enabled when 1+ selected
+
+### Shared Hover/Active States
+All interactive chips share:
+- **Hover:** `--app-primary` border + `--gray-50` background
+- **Active/Selected:** `--app-primary` border + `--gray-50` background + visual indicator (checkmark or highlight)
 
 ### Inline Input
 - Appears below chips in last assistant message

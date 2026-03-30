@@ -171,14 +171,40 @@ export async function getMarketSummaryText(market: string, retailerClass: 'Luxur
   return `${market} ${retailerClass} retailers:\n${lines.join('\n')}`;
 }
 
+// ============================================================
+// CHIP COMPONENTS REFERENCE
+// ============================================================
+// 1. NavChipGrid (variant="welcome") - Static welcome screen cards
+//    Location: web/src/components/NavChips/NavChips.tsx
+//    Usage: 3x2 grid with icon + title, pink icon background
+//
+// 2. NavChipGrid (variant="compact") - Conversation nav bar
+//    Location: Same component, smaller variant
+//    Usage: Top of conversation, scrolls with content
+//
+// 3. MessageChip - Single-select options (CSS class: .message-chip)
+//    Location: ChatInterface.tsx inline
+//    Usage: Follow-up responses like "Sounds good, what's driving..."
+//    Style: Vertical list with ↳ prefix, primary color text
+//
+// 4. MessageChip.multi-select - Multi-select pills
+//    Location: Same component with .multi-select class
+//    Usage: Traits, benefits ("Pick the top 2-3", "select all that apply")
+//
+// SHARED STATES:
+// - Hover: --app-primary border + --gray-50 background
+// - Active/Selected: --app-primary border + --gray-50 bg + checkmark
+// ============================================================
+
 // Greeting response chips - initial options for user
 // Note: {market} in label is replaced at runtime with actual market name
 export const GREETING_CHIPS = [
   { id: 'fill-role', label: 'Fill a role at my store' },
   { id: 'meet-talent', label: 'Meet {market} talent' },
-  { id: 'explore-market', label: 'Explore {market} market' },
-  { id: 'explore-other', label: 'Explore another market' },
-  { id: 'how-it-works', label: 'Tell me how Talent Connect works' },
+  { id: 'explore-market', label: 'Explore market comps' },
+  { id: 'check-jobs', label: 'Check on jobs' },
+  { id: 'how-it-works', label: 'What is Talent Connect?' },
+  { id: 'just-exploring', label: 'Just exploring' },
 ];
 
 // Follow-up prompts shown after user picks a branch

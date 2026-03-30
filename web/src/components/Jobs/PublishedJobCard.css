@@ -1,6 +1,6 @@
 /* Published Job Card */
 .published-job-card {
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-100);
   border-radius: 12px;
   overflow: hidden;
@@ -94,7 +94,7 @@
   top: 100%;
   right: 0;
   margin-top: 4px;
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-100);
   border-radius: 12px;
   box-shadow: var(--shadow-lg);

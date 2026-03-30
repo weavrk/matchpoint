@@ -37,12 +37,6 @@
       "primitiveValue": "color/pink/pink-500",
       "hexValue": "#ff9a9a",
       "type": "COLOR"
-    },
-    {
-      "group/name": "color/brand/brand-navy",
-      "primitiveValue": "color/navy/navy-500",
-      "hexValue": "#284b63",
-      "type": "COLOR"
     }
   ],
   "color/body": [
@@ -237,29 +231,11 @@
       "type": "COLOR"
     },
     {
-      "group/name": "color/background/background-purple",
-      "primitiveValue": "color/purple/purple-100",
-      "hexValue": "#ededfd",
-      "type": "COLOR"
-    },
-    {
-      "group/name": "color/background/background-red",
-      "primitiveValue": "color/red/red-100",
-      "hexValue": "#feeded",
-      "type": "COLOR"
-    },
-    {
       "group/name": "color/background/background-yellow",
       "primitiveValue": "color/yellow/yellow-100",
       "hexValue": "#fff8ec",
       "type": "COLOR"
     },
-    {
-      "group/name": "color/background/background-orange",
-      "primitiveValue": "color/orange/orange-100",
-      "hexValue": "#ffeedf",
-      "type": "COLOR"
-    }
   ],
   "header": [
     {

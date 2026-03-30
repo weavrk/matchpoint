@@ -10,7 +10,7 @@
 }
 
 .scrape-modal {
-  background: var(--main-white);
+  background: #ffffff;
   border-radius: var(--radius-lg);
   width: 90%;
   max-width: 600px;
@@ -132,7 +132,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-200);
   border-radius: var(--radius-md);
 }
@@ -225,7 +225,7 @@
   left: 0;
   right: 0;
   margin-top: 4px;
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-200);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);

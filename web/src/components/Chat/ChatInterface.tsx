@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, MessageSquare, Rocket, Users, Star, Smile, Target, Zap, CheckCircle, Shield, RefreshCw, Shirt, Check, PartyPopper } from 'lucide-react';
+import { Send, MessageSquare, Rocket, Users, Star, Smile, Target, Zap, CheckCircle, Shield, RefreshCw, Shirt, Check, PartyPopper, Plus } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import type { ChatMessage } from '../../types';
 import chatbotAvatarUrl from '../../../../assets/logo-and-backgrounds/chatbot.svg?url';
@@ -498,7 +498,7 @@ export function ChatInterface({
   if (showWelcomeScreen) {
     return (
       <div className="chat-welcome">
-        <h1 className="chat-greeting">
+        <h1 className="chat-greeting type-tagline">
           Hey {displayName}, let's connect with{' '}
           <br className="chat-greeting-break" />
           retail talent in your area.
@@ -506,7 +506,7 @@ export function ChatInterface({
 
         <div className="chat-text-area">
           <div className="chat-text-area-form">
-            <p className="chat-text-area-header">
+            <p className="chat-text-area-header type-prompt-question">
               Where do you want to start?
             </p>
 
@@ -643,12 +643,16 @@ export function ChatInterface({
                               <button
                                 key={idx}
                                 type="button"
-                                className={`message-chip ${isSelected ? 'selected' : ''}`}
+                                className={`message-chip type-chip-label ${isSelected ? 'selected' : ''}`}
                                 onClick={handleChipClick}
                                 disabled={isLoading}
                               >
-                                {parsed.isMultiSelect && isSelected && <Check size={14} />}
                                 <span>{hasBoldPart ? <><strong>{chip.slice(0, colonIndex)}</strong>:{chip.slice(colonIndex + 1)}</> : chip}</span>
+                                {parsed.isMultiSelect && (
+                                  <span className="chip-icon">
+                                    {isSelected ? <Check size={14} /> : <Plus size={14} />}
+                                  </span>
+                                )}
                               </button>
                             );
                           })}

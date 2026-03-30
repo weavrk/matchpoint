@@ -163,7 +163,6 @@
   --black-alpha-700: rgba(0, 0, 0, 0.64);
 
   /* Main */
-  --main-white: #ffffff;
   --main-dark:  #18181b;
 
   /* ----------------------------------------------------------
@@ -178,7 +177,6 @@
      SEMANTIC — BRAND
   ---------------------------------------------------------- */
   --brand-pink: #ff9a9a; /* pink-500 */
-  --brand-navy: #284b63; /* navy-500 */
 
   /* ----------------------------------------------------------
      SEMANTIC — BODY
@@ -194,10 +192,7 @@
   --background-pink:   #ffe6e6; /* pink-200 */
   --background-blue:   #e0f1fc; /* blue-100 */
   --background-gray:   #e4e4e7; /* stone-200 */
-  --background-purple: #ededfd; /* purple-100 */
-  --background-red:    #feeded; /* red-100 */
   --background-yellow: #fff8ec; /* yellow-100 */
-  --background-orange: #ffeedf; /* orange-100 */
 
   /* ----------------------------------------------------------
      SEMANTIC — ACCENT (Navy)
@@ -365,6 +360,14 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 
   /* ----------------------------------------------------------
+     TEXT COLORS (merged with primary palette)
+  ---------------------------------------------------------- */
+  --text-primary:    var(--primary);    /* stone-700 #3F3F46 */
+  --text-secondary:  var(--secondary);  /* stone-400 #A1A1AA */
+  --text-tertiary:   var(--tertiary);   /* stone-300 #D4D4D8 */
+  --text-hint:       var(--secondary);  /* stone-400 #A1A1AA */
+
+  /* ----------------------------------------------------------
      LEGACY ALIASES (backward compatibility)
   ---------------------------------------------------------- */
   --font-family:          var(--font-primary);
@@ -376,9 +379,6 @@
   --app-secondary:        var(--secondary);
   --app-background-navy:  var(--background-navy);
   --background-sky:       #fbfbfb;
-  --text-primary:         var(--primary);
-  --text-secondary:       var(--stone-500);
-  --text-hint:            var(--gray-500);
 
   /* Teal (for Shift Verified badges and success states) */
   --teal-50:  #f0fdfa;
@@ -400,4 +400,89 @@ body {
   background: var(--background-sky);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================
+   Typography Utility Classes
+   ========================================== */
+
+/* Tagline - Large greeting headline (Quincy) */
+.type-tagline {
+  font-family: var(--font-quincy);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 42px;
+  color: var(--text-primary);
+}
+
+/* Prompt Question - Conversational prompts from AI */
+.type-prompt-question {
+  font-family: var(--font-primary);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 28px;
+  color: var(--app-primary);
+}
+
+/* Chip Header Large - Welcome card titles */
+.type-chip-header-lg {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--text-primary);
+}
+
+/* Chip Header - Compact nav chip titles */
+.type-chip-header {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  color: var(--primary);
+}
+
+/* Chip Label - Message chip text */
+.type-chip-label {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--primary);
+}
+
+/* Body - Default message/content text */
+.type-body {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  color: var(--text-primary);
+}
+
+/* Body Small - Secondary text, descriptions */
+.type-body-sm {
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--text-secondary);
+}
+
+/* Label - Small labels and hints */
+.type-label {
+  font-family: var(--font-primary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  color: var(--text-secondary);
+}
+
+/* Placeholder - Input placeholder text */
+.type-placeholder {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 20px;
+  color: var(--text-hint);
 }

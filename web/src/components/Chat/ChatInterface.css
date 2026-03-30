@@ -6,7 +6,7 @@
   flex: 1;
   padding: 24px 48px;
   gap: 36px;
-  background: var(--main-white);
+  background: #ffffff;
 }
 
 /* Greeting headline */
@@ -35,7 +35,7 @@
 
 .chat-text-area-form {
   position: relative;
-  background: var(--main-white);
+  background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
   overflow: visible;
@@ -82,7 +82,7 @@
   align-items: center;
   gap: 12px;
   padding: 24px 16px;
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-100);
   border-radius: 12px;
   cursor: pointer;
@@ -91,8 +91,18 @@
 }
 
 .welcome-card:hover:not(:disabled) {
-  border-color: var(--primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-color: var(--app-primary);
+  background: var(--gray-50);
+}
+
+.welcome-card:hover:not(:disabled) .welcome-card-icon {
+  background: var(--app-primary);
+  color: #ffffff;
+}
+
+.welcome-card.active {
+  border-color: var(--text-primary);
+  background: var(--gray-50);
 }
 
 .welcome-card:disabled {
@@ -181,7 +191,7 @@
 
 .welcome-send-btn.has-input {
   background: var(--app-primary);
-  color: var(--main-white);
+  color: #ffffff;
 }
 
 .welcome-send-btn:hover:not(:disabled) {
@@ -234,7 +244,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   padding: 0;
-  background: var(--main-white);
+  background: #ffffff;
 }
 
 @media (max-width: 600px) {
@@ -251,13 +261,19 @@
   padding: 8px 12px;
   border: 1px solid var(--black-alpha-100);
   border-radius: 8px;
-  background: var(--main-white);
+  background: #ffffff;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .chat-nav-chip:hover:not(:disabled) {
-  border-color: var(--primary);
+  border-color: var(--app-primary);
+  background: var(--gray-50);
+}
+
+.chat-nav-chip:hover:not(:disabled) .chat-nav-chip-icon {
+  background: var(--app-primary);
+  color: #ffffff;
 }
 
 .chat-nav-chip.active {
@@ -285,13 +301,13 @@
 
 .chat-nav-chip.active .chat-nav-chip-icon {
   background: var(--app-primary);
-  color: var(--main-white);
+  color: #ffffff;
 }
 
 .chat-nav-chip-title {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: var(--primary);
   text-align: left;
   line-height: 1.2;
 }
@@ -352,15 +368,21 @@
 
 .message-content {
   padding: 0;
-  font-size: 16px;
-  line-height: 1.5;
   width: 100%;
+}
+
+/* Apply type-body styling to message content */
+.chat-message.assistant .message-content {
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
 }
 
 /* Assistant messages: card-like container matching welcome box */
 .chat-message.assistant .message-content {
   color: var(--text-primary);
-  background: var(--main-white);
+  background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
   padding: 20px 24px;
@@ -369,7 +391,7 @@
 
 /* User messages: simple rounded pill style */
 .chat-message.user .message-content {
-  color: var(--main-white);
+  color: #ffffff;
   background: var(--stone-700);
   border-radius: 20px;
   padding: 12px 20px;
@@ -426,32 +448,28 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 0;
-  border: none;
-  border-bottom: 1px solid var(--black-alpha-50);
-  border-radius: 0;
+  padding: 8px 12px;
+  margin-left: -12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
   background: transparent;
   font-size: 16px;
   font-weight: 400;
-  color: var(--text-secondary);
+  color: var(--primary);
   cursor: pointer;
   transition: all 0.15s;
   text-align: left;
 }
 
-.message-chip:last-child {
-  border-bottom: none;
-}
-
 .message-chip::before {
   content: "↳";
-  color: var(--text-hint);
+  color: var(--primary);
   font-size: 14px;
 }
 
 .message-chip:hover:not(:disabled) {
-  color: var(--text-primary);
-  background: transparent;
+  border-color: var(--app-primary);
+  background: var(--gray-50);
 }
 
 .message-chip:disabled {
@@ -459,42 +477,63 @@
   cursor: not-allowed;
 }
 
-/* Multi-select mode - pill style chips */
+/* Multi-select mode - same style as single but with icon on right */
 .message-chips.multi-select {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 8px;
-  border-top: none;
-  padding-top: 0;
-  margin-top: 12px;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--black-alpha-100);
+  padding-top: 12px;
+  margin-top: 16px;
 }
 
 .message-chips.multi-select .message-chip {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border: 1px solid var(--app-primary);
-  border-radius: 20px;
-  background: var(--main-white);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--app-primary);
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-left: -12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--primary);
 }
 
 .message-chips.multi-select .message-chip::before {
   content: none;
 }
 
+.message-chips.multi-select .message-chip .chip-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tertiary);
+  flex-shrink: 0;
+}
+
 .message-chips.multi-select .message-chip:hover:not(:disabled) {
+  border-color: var(--app-primary);
   background: var(--gray-50);
 }
 
+.message-chips.multi-select .message-chip:hover:not(:disabled) .chip-icon {
+  color: var(--primary);
+}
+
 .message-chips.multi-select .message-chip.selected {
-  background: var(--blue-100);
-  border-color: var(--blue-100);
-  color: var(--blue-700);
+  border-color: var(--app-primary);
+  background: var(--gray-50);
+}
+
+.message-chips.multi-select .message-chip.selected .chip-icon {
+  background: var(--primary);
+  color: #ffffff;
 }
 
 /* Inline input form in assistant message */
@@ -518,7 +557,7 @@
   flex: 1;
   border: none;
   background: transparent;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   color: var(--text-primary);
   resize: none;
@@ -537,7 +576,7 @@
   border: none;
   border-radius: 50%;
   background: var(--app-primary);
-  color: var(--main-white);
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -578,7 +617,7 @@
 }
 
 .worker-card-chat {
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-100);
   border-radius: 12px;
   padding: 14px;
@@ -985,7 +1024,7 @@
   border: none;
   border-radius: var(--radius-lg);
   background: var(--stone-700);
-  color: var(--main-white);
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1059,7 +1098,7 @@
   padding: 8px 12px;
   border: 1px solid var(--app-primary);
   border-radius: 20px;
-  background: var(--main-white);
+  background: #ffffff;
   font-size: 13px;
   font-weight: 500;
   color: var(--app-primary);
@@ -1088,7 +1127,7 @@
 .job-summary-card {
   margin-top: 16px;
   padding: 24px;
-  background: linear-gradient(135deg, var(--gray-50) 0%, var(--main-white) 100%);
+  background: linear-gradient(135deg, var(--gray-50) 0%, #ffffff 100%);
   border: 1px solid var(--black-alpha-100);
   border-radius: 16px;
   display: flex;
@@ -1122,7 +1161,7 @@
   align-items: center;
   padding: 4px 12px;
   background: var(--app-primary);
-  color: var(--main-white);
+  color: #ffffff;
   border-radius: 20px;
   font-size: 13px;
   font-weight: 500;
@@ -1163,7 +1202,7 @@
   display: inline-flex;
   align-items: center;
   padding: 6px 14px;
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-100);
   border-radius: 20px;
   font-size: 13px;
@@ -1197,7 +1236,7 @@
 }
 
 .success-banner-icon svg {
-  color: var(--main-white);
+  color: #ffffff;
 }
 
 .success-banner-content {

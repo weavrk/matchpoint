@@ -1,5 +1,5 @@
 .worker-card {
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-100);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -250,7 +250,7 @@
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 8px;
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-100);
   color: var(--text-secondary);
 }
@@ -291,13 +291,13 @@
 
 .brand-tag.mid      { background: var(--gray-100);  color: var(--gray-600); }
 .brand-tag.elevated { background: var(--navy-100);  color: var(--stone-700); }
-.brand-tag.luxury   { background: var(--stone-700); color: var(--main-white); }
+.brand-tag.luxury   { background: var(--stone-700); color: #ffffff; }
 .brand-tag.more     { background: var(--black-alpha-100); color: var(--text-hint); }
 
 /* Inside ON REFLEX box — all brand chips use uniform primary dark style */
 .reflex-record .brand-tag:not(.more) {
   background: var(--stone-700);
-  color: var(--main-white);
+  color: #ffffff;
 }
 
 /* Endorsements */
@@ -349,7 +349,7 @@
   gap: 4px;
   font-size: 11px;
   color: var(--text-secondary);
-  background: var(--main-white);
+  background: #ffffff;
   border: 1px solid var(--black-alpha-100);
   padding: 2px 8px;
   border-radius: 8px;

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Check, Info, Loader2, Clipboard, CircleMinus, BotOff, BotMessageSquare, UserStar, Database } from 'lucide-react';
+import { Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Check, Info, Loader2, Clipboard, CircleMinus, BotOff, BotMessageSquare, UserStar, Database, Palette } from 'lucide-react';
 import { ChatInterface } from '../components/Chat';
 import { ScrapeModal, type ScrapeConfig } from '../components/ScrapeModal';
 import { ScrapeProgressModal, type ScrapeProgressData } from '../components/ScrapeProgressModal';
@@ -691,6 +691,7 @@ export function PermanentHiring() {
   const [activeTab, setActiveTab] = useState<TabId>('ask-reflex');
   const [agentActive, setAgentActive] = useState(true); // Agent on by default
   const [showDevMenu, setShowDevMenu] = useState(false); // Floating dev menu
+  const [showDesignSystem, setShowDesignSystem] = useState(false); // Design system modal
 
   const [showJobSitesInfo, setShowJobSitesInfo] = useState(false);
   const [showScrapeModal, setShowScrapeModal] = useState(false);
@@ -2591,13 +2592,13 @@ export function PermanentHiring() {
         }}
       />
 
-      {/* Floating Dev Menu */}
+      {/* Dev Menu - Bottom Right */}
       <div className="dev-menu-container" ref={devMenuRef}>
-        <button
-          className="dev-menu-trigger"
-          onClick={() => setShowDevMenu(!showDevMenu)}
-          title="Dev Tools"
-        />
+          <button
+            className="dev-menu-trigger"
+            onClick={() => setShowDevMenu(!showDevMenu)}
+            title="Dev Tools"
+          />
         {showDevMenu && (
           <div className="dev-menu-dropdown">
             <button
@@ -2636,9 +2637,270 @@ export function PermanentHiring() {
               </span>
               <span className="dev-menu-label">Oz</span>
             </button>
+            <button
+              className="dev-menu-item"
+              onClick={() => {
+                setShowDesignSystem(true);
+                setShowDevMenu(false);
+              }}
+            >
+              <span className="dev-menu-icon">
+                <Palette size={16} />
+              </span>
+              <span className="dev-menu-label">Design System</span>
+            </button>
+          </div>
+        )}
+        {/* Design System Panel */}
+        {showDesignSystem && (
+          <div className="design-system-panel">
+            <div className="design-system-header">
+              <h2>Design System</h2>
+            </div>
+            <div className="design-system-content">
+              {/* Colors Section */}
+              <section className="ds-section">
+                <h3>Colors</h3>
+                <div className="ds-subsection">
+                  <h4>Primary</h4>
+                  <div className="ds-color-grid">
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--primary)' }} />
+                      <span className="ds-color-name">--primary</span>
+                      <span className="ds-color-value">stone-700 #3F3F46</span>
+                    </div>
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--secondary)' }} />
+                      <span className="ds-color-name">--secondary</span>
+                      <span className="ds-color-value">stone-400 #A1A1AA</span>
+                    </div>
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--tertiary)' }} />
+                      <span className="ds-color-name">--tertiary</span>
+                      <span className="ds-color-value">stone-300 #D4D4D8</span>
+                    </div>
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--quaternary)' }} />
+                      <span className="ds-color-name">--quaternary</span>
+                      <span className="ds-color-value">stone-200 #E4E4E7</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="ds-subsection">
+                  <h4>Brand</h4>
+                  <div className="ds-color-grid">
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--brand-pink)' }} />
+                      <span className="ds-color-name">--brand-pink</span>
+                      <span className="ds-color-value">#ff9a9a</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="ds-subsection">
+                  <h4>Background</h4>
+                  <div className="ds-color-grid">
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--background-navy)' }} />
+                      <span className="ds-color-name">--background-navy</span>
+                      <span className="ds-color-value">#f4f6f7</span>
+                    </div>
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--background-green)' }} />
+                      <span className="ds-color-name">--background-green</span>
+                      <span className="ds-color-value">#e6f6f3</span>
+                    </div>
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--background-pink)' }} />
+                      <span className="ds-color-name">--background-pink</span>
+                      <span className="ds-color-value">#ffe6e6</span>
+                    </div>
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--background-blue)' }} />
+                      <span className="ds-color-name">--background-blue</span>
+                      <span className="ds-color-value">#e0f1fc</span>
+                    </div>
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--background-gray)' }} />
+                      <span className="ds-color-name">--background-gray</span>
+                      <span className="ds-color-value">#e4e4e7</span>
+                    </div>
+                    <div className="ds-color-swatch">
+                      <div className="ds-swatch" style={{ background: 'var(--background-yellow)' }} />
+                      <span className="ds-color-name">--background-yellow</span>
+                      <span className="ds-color-value">#fff8ec</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* Typography Section */}
+              <section className="ds-section">
+                <h3>Typography</h3>
+                <div className="ds-subsection">
+                  <h4>Font Families</h4>
+                  <div className="ds-type-sample" style={{ fontFamily: 'var(--font-primary)' }}>
+                    <span className="ds-type-name">--font-primary</span>
+                    <span className="ds-type-preview">Circular Std - The quick brown fox</span>
+                  </div>
+                  <div className="ds-type-sample" style={{ fontFamily: 'var(--font-quincy)' }}>
+                    <span className="ds-type-name">--font-quincy</span>
+                    <span className="ds-type-preview">Quincy CF - The quick brown fox</span>
+                  </div>
+                </div>
+                <div className="ds-subsection">
+                  <h4>Type Classes</h4>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-tagline</span>
+                    <span className="ds-type-preview type-tagline">Hey Sam, let's connect</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-prompt-question</span>
+                    <span className="ds-type-preview type-prompt-question">Where do you want to start?</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-chip-header-lg</span>
+                    <span className="ds-type-preview type-chip-header-lg">Fill a role at my store</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-chip-header</span>
+                    <span className="ds-type-preview type-chip-header">Fill a role</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-chip-label</span>
+                    <span className="ds-type-preview type-chip-label">Growing: we're busy, need more help</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-body</span>
+                    <span className="ds-type-preview type-body">Default body text for messages and content</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-body-sm</span>
+                    <span className="ds-type-preview type-body-sm">Secondary text and descriptions</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-label</span>
+                    <span className="ds-type-preview type-label">Small labels and hints</span>
+                  </div>
+                  <div className="ds-type-sample">
+                    <span className="ds-type-name">.type-placeholder</span>
+                    <span className="ds-type-preview type-placeholder">Somewhere else?</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* Chip Components Section */}
+              <section className="ds-section">
+                <h3>Chip Components</h3>
+
+                <div className="ds-subsection">
+                  <h4>1. NavChipGrid variant="welcome"</h4>
+                  <p className="ds-description">Static welcome screen cards - 3x2 grid with icon + title</p>
+                  <div className="ds-example ds-example-chips">
+                    <div className="ds-chip-demo welcome-card">
+                      <div className="welcome-card-icon">
+                        <UserStar size={24} />
+                      </div>
+                      <h3 className="welcome-card-title type-chip-header-lg">Fill a role at my store</h3>
+                    </div>
+                    <div className="ds-chip-demo welcome-card" style={{ borderColor: 'var(--app-primary)', background: 'var(--gray-50)' }}>
+                      <div className="welcome-card-icon" style={{ background: 'var(--app-primary)', color: '#ffffff' }}>
+                        <UserStar size={24} />
+                      </div>
+                      <h3 className="welcome-card-title type-chip-header-lg">Hover State</h3>
+                    </div>
+                    <div className="ds-chip-demo welcome-card active">
+                      <div className="welcome-card-icon" style={{ background: 'var(--app-primary)', color: '#ffffff' }}>
+                        <Check size={24} />
+                      </div>
+                      <h3 className="welcome-card-title type-chip-header-lg">Active</h3>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>2. NavChipGrid variant="compact"</h4>
+                  <p className="ds-description">Conversation nav bar - smaller horizontal layout</p>
+                  <div className="ds-example ds-example-chips">
+                    <div className="ds-chip-demo chat-nav-chip">
+                      <div className="chat-nav-chip-icon">
+                        <UserStar size={16} />
+                      </div>
+                      <span className="chat-nav-chip-title type-chip-header">Fill a role</span>
+                    </div>
+                    <div className="ds-chip-demo chat-nav-chip" style={{ borderColor: 'var(--app-primary)', background: 'var(--gray-50)' }}>
+                      <div className="chat-nav-chip-icon" style={{ background: 'var(--app-primary)', color: '#ffffff' }}>
+                        <UserStar size={16} />
+                      </div>
+                      <span className="chat-nav-chip-title type-chip-header">Hover</span>
+                    </div>
+                    <div className="ds-chip-demo chat-nav-chip active">
+                      <div className="chat-nav-chip-icon" style={{ background: 'var(--app-primary)', color: 'white' }}>
+                        <Check size={16} />
+                      </div>
+                      <span className="chat-nav-chip-title type-chip-header">Active</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>3. MessageChip variant="single"</h4>
+                  <p className="ds-description">Single-select options with arrow prefix</p>
+                  <div className="ds-example ds-example-list">
+                    <button className="ds-chip-demo message-chip type-chip-label" type="button">
+                      <span>Growing: we're busy, need more help</span>
+                    </button>
+                    <button className="ds-chip-demo message-chip type-chip-label" type="button" style={{ borderColor: 'var(--app-primary)', background: 'var(--gray-50)' }}>
+                      <span>Hover State</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>4. MessageChip variant="multi"</h4>
+                  <p className="ds-description">Multi-select options with plus/check icon on right</p>
+                  <div className="ds-example ds-example-list">
+                    <button className="ds-chip-demo message-chip-multi type-chip-label" type="button">
+                      <span>Customer Engagement</span>
+                      <span className="chip-icon"><Plus size={14} /></span>
+                    </button>
+                    <button className="ds-chip-demo message-chip-multi type-chip-label" type="button" style={{ borderColor: 'var(--app-primary)', background: 'var(--gray-50)' }}>
+                      <span>Hover State</span>
+                      <span className="chip-icon" style={{ color: 'var(--primary)' }}><Plus size={14} /></span>
+                    </button>
+                    <button className="ds-chip-demo message-chip-multi type-chip-label selected" type="button">
+                      <span>Self-Starter</span>
+                      <span className="chip-icon"><Check size={14} /></span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              {/* Shared States Section */}
+              <section className="ds-section">
+                <h3>Shared States</h3>
+                <div className="ds-states-grid">
+                  <div className="ds-state">
+                    <span className="ds-state-name">Default</span>
+                    <span className="ds-state-desc">1px border --black-alpha-100, white bg</span>
+                  </div>
+                  <div className="ds-state">
+                    <span className="ds-state-name">Hover</span>
+                    <span className="ds-state-desc">--app-primary border, --gray-50 bg</span>
+                  </div>
+                  <div className="ds-state">
+                    <span className="ds-state-name">Active/Selected</span>
+                    <span className="ds-state-desc">--app-primary border, --gray-50 bg, checkmark icon</span>
+                  </div>
+                </div>
+              </section>
+            </div>
           </div>
         )}
       </div>
+      {/* Click outside to close design system */}
+      {showDesignSystem && (
+        <div className="design-system-backdrop" onClick={() => setShowDesignSystem(false)} />
+      )}
     </div>
   );
 }

@@ -27,7 +27,7 @@
   flex-direction: column;
   overflow-y: auto;
   padding: 24px 32px;
-  background: var(--main-white);
+  background: #ffffff;
 }
 
 @media (max-width: 1024px) {
