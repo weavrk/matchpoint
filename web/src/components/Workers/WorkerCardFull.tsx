@@ -189,7 +189,7 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
             <div className="full-section">
               <h4 className="section-title type-section-header">What Stores Say</h4>
               <p className="quotes-summary-full type-body">
-                {generateQuoteSummary(worker.name.split(' ')[0], worker.retailerQuotes)}
+                {generateQuoteSummary(worker.name.split(' ')[0], worker.retailerQuotes, 5)}
               </p>
               <div className="quotes-list-full">
                 {worker.retailerQuotes.map((quote, idx) => (

@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 3000,
+    port: 3500,
     fs: {
       // Allow importing shared assets from repo root (e.g. assets/logo-and-backgrounds)
       allow: [path.resolve(__dirname, '..')],

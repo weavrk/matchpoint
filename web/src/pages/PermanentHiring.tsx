@@ -1653,6 +1653,12 @@ export function PermanentHiring() {
         >
           Published Jobs
         </button>
+        <button
+          className={`tab ${activeTab === 'reflex-talent' ? 'active' : ''}`}
+          onClick={() => setActiveTab('reflex-talent')}
+        >
+          Reflex Talent
+        </button>
       </nav>
 
       {activeTab === 'ask-reflex' && (
@@ -2629,18 +2635,6 @@ export function PermanentHiring() {
                 {agentActive ? <BotMessageSquare size={16} /> : <BotOff size={16} />}
               </span>
               <span className="dev-menu-label">Good Bot {agentActive ? 'On' : 'Off'}</span>
-            </button>
-            <button
-              className={`dev-menu-item${activeTab === 'reflex-talent' ? ' active' : ''}`}
-              onClick={() => {
-                setActiveTab('reflex-talent');
-                setShowDevMenu(false);
-              }}
-            >
-              <span className="dev-menu-icon">
-                <UserStar size={16} />
-              </span>
-              <span className="dev-menu-label">Reflex Talent</span>
             </button>
             <button
               className={`dev-menu-item${activeTab === 'oz' ? ' active' : ''}`}

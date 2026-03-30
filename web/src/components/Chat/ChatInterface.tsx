@@ -17,7 +17,8 @@ import './ChatInterface.css';
 const GREETING_NAMES = [
   'Mike', 'Trevor', 'Shannon', 'Nate', 'Micah', 'Katherine', 'Cayley',
   'Evan', 'Juan', 'Julie', 'Ashlee', 'Jeremy', 'Sam', 'Jasmine',
-  'Emily', 'Olivia', 'Mary', 'Hans', 'Hadley', 'Leigh Ann'
+  'Emily', 'Olivia', 'Mary', 'Hans', 'Hadley', 'Leigh Ann',
+  'Sydney', 'Akana', 'Brittany', 'Dina', 'Selena',
 ];
 
 /** Match first user message to the greeting-card send strings so compact nav shows selection after typing. */
@@ -264,6 +265,25 @@ function parseLocationInput(content: string): { text: string; locationInput: Loc
   return { text: content, locationInput: null };
 }
 
+// Trait chips to suppress from UI (step is disabled but model may still return them)
+// Keep this list in case we want to restore the traits step later
+const SUPPRESSED_TRAIT_CHIPS = new Set([
+  'Customer Engagement',
+  'Self-Starter',
+  'Preparedness',
+  'Work Pace',
+  'Productivity',
+  'Attention to Detail',
+  'Team Player',
+  'Positive Attitude',
+  'Adaptable',
+  'Flexible availability',
+  'Open to feedback',
+  'Bilingual',
+  'Coaching others',
+  'Product knowledge',
+]);
+
 // Parse message content to extract inline chips [like this]
 function parseMessageWithChips(content: string): { text: string; textAfterCards: string; chips: string[]; isMultiSelect: boolean; workerCardIds: WorkerCardIds | null; roleSelector: RoleSelector | null; jobSummary: JobSummary | null; successBanner: SuccessBanner | null; locationInput: LocationInput | null } {
   // First extract worker card IDs if present, keeping before/after text separate
@@ -273,25 +293,34 @@ function parseMessageWithChips(content: string): { text: string; textAfterCards:
   const { text: textWithoutSelector, roleSelector } = parseRoleSelector(textBeforeCards);
   const { text: textWithoutSummary, jobSummary } = parseJobSummary(textWithoutSelector);
   const { text: textWithoutBanner, successBanner } = parseSuccessBanner(textWithoutSummary);
-  const { text: textWithoutLocation, locationInput } = parseLocationInput(textWithoutBanner);
+  const { text: textWithoutLocation, locationInput: locationInputBefore } = parseLocationInput(textWithoutBanner);
+
+  // Also parse location input from textAfterCards (when it follows worker cards)
+  const { text: textAfterCardsWithoutLocation, locationInput: locationInputAfter } = parseLocationInput(rawTextAfterCards);
+  const locationInput = locationInputBefore || locationInputAfter;
 
   // Extract chips from textAfterCards (if cards exist) or from the main text
-  const chipSource = workerCardIds ? rawTextAfterCards : textWithoutLocation;
+  const chipSource = workerCardIds ? textAfterCardsWithoutLocation : textWithoutLocation;
   const chipPattern = /\[([^\]]+)\]/g;
   const chips: string[] = [];
   let match;
 
   while ((match = chipPattern.exec(chipSource)) !== null) {
-    chips.push(match[1]);
+    // Filter out suppressed trait chips
+    if (!SUPPRESSED_TRAIT_CHIPS.has(match[1])) {
+      chips.push(match[1]);
+    }
   }
 
   // Strip chip patterns from both text sections
   const text = textWithoutLocation.replace(/\[([^\]]+)\]/g, '').replace(/\s{2,}/g, ' ').trim();
-  const textAfterCards = rawTextAfterCards.replace(/\[([^\]]+)\]/g, '').replace(/\s{2,}/g, ' ').trim();
+  // Also strip the traits question text if present (step is disabled)
+  let textAfterCards = textAfterCardsWithoutLocation.replace(/\[([^\]]+)\]/g, '').replace(/\s{2,}/g, ' ').trim();
+  textAfterCards = textAfterCards.replace(/What top traits should we look for in a new candidate\?.*$/i, '').trim();
 
-  // Detect multi-select prompts
+  // Detect multi-select prompts (benefits step, or any "select all that apply" prompt)
   const combinedText = text + ' ' + textAfterCards;
-  const isMultiSelect = /pick\s+(the\s+)?(top\s+)?\d+-\d+|select\s+\d+-\d+|choose\s+multiple|select\s+all\s+that\s+apply|top\s+traits|positive\s+traits|type\s+out\s+qualities|select\s+or\s+type\s+qualities/i.test(combinedText);
+  const isMultiSelect = /pick\s+(the\s+)?(top\s+)?\d+-\d+|select\s+\d+-\d+|choose\s+multiple|select\s+all\s+that\s+apply/i.test(combinedText);
 
   return { text, textAfterCards, chips, isMultiSelect, workerCardIds, roleSelector, jobSummary, successBanner, locationInput };
 }
@@ -536,60 +565,183 @@ function LocationInputComponent({
   );
 }
 
-// Success Banner Component - celebration milestone
+// Success Banner Component - celebration milestone (confetti clipped to banner + choreographed bursts)
+const SUCCESS_CONFETTI_COLORS = [
+  '#ff9a9a',
+  '#4ba098',
+  '#3b73ce',
+  '#f59e0b',
+  '#a78bfa',
+  '#9dd9cf',
+  '#ffffff',
+  '#e0f1fc',
+];
+
 function SuccessBannerComponent({ banner }: { banner: SuccessBanner }) {
+  const confettiCanvasRef = useRef<HTMLCanvasElement>(null);
+
   useEffect(() => {
-    const duration = 3000;
-    const end = Date.now() + duration;
+    const canvas = confettiCanvasRef.current;
+    if (!canvas) return;
 
-    // Burst from bottom-center
-    const burst = () => {
-      confetti({
-        particleCount: 12,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 1 },
-        colors: ['#ff9a9a', '#4ba098', '#3b73ce', '#f59e0b', '#a78bfa'],
-        gravity: 0.9,
-        scalar: 0.9,
-      });
-      confetti({
-        particleCount: 12,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 1 },
-        colors: ['#ff9a9a', '#4ba098', '#3b73ce', '#f59e0b', '#a78bfa'],
-        gravity: 0.9,
-        scalar: 0.9,
-      });
-      if (Date.now() < end) {
-        requestAnimationFrame(burst);
-      }
-    };
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
 
-    // Initial big pop from center
-    confetti({
-      particleCount: 120,
-      spread: 100,
-      origin: { x: 0.5, y: 0.85 },
-      colors: ['#ff9a9a', '#4ba098', '#3b73ce', '#f59e0b', '#a78bfa', '#9dd9cf'],
-      startVelocity: 45,
-      gravity: 0.8,
-      ticks: 200,
+    const fire = confetti.create(canvas, {
+      resize: true,
+      useWorker: true,
+      disableForReducedMotion: true,
     });
 
-    // Then rain from sides
-    setTimeout(burst, 300);
+    const colors = SUCCESS_CONFETTI_COLORS;
+    const burst = (opts: confetti.Options) =>
+      fire({
+        disableForReducedMotion: true,
+        ...opts,
+      });
+
+    const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+    const schedule = (fn: () => void, ms: number) => {
+      timeoutIds.push(
+        window.setTimeout(() => {
+          fn();
+        }, ms)
+      );
+    };
+
+    // 1) Main fan from upper center of the banner (reads as a "pop" above the copy)
+    burst({
+      particleCount: 95,
+      spread: 82,
+      startVelocity: 52,
+      origin: { x: 0.5, y: 0.22 },
+      gravity: 0.62,
+      ticks: 340,
+      colors,
+      shapes: ['star', 'circle', 'circle', 'square'],
+      scalar: 1.05,
+    });
+
+    // 2) Side cannons (staggered teal / pink emphasis)
+    schedule(() => {
+      burst({
+        particleCount: 42,
+        angle: 58,
+        spread: 52,
+        origin: { x: 0.04, y: 0.72 },
+        startVelocity: 40,
+        colors: ['#4ba098', '#9dd9cf', '#ccfbf1', '#ffffff'],
+        shapes: ['circle', 'star'],
+        gravity: 0.58,
+        ticks: 300,
+      });
+      burst({
+        particleCount: 42,
+        angle: 122,
+        spread: 52,
+        origin: { x: 0.96, y: 0.72 },
+        startVelocity: 40,
+        colors: ['#ff9a9a', '#ffe4e4', '#ffffff', '#f59e0b'],
+        shapes: ['circle', 'star'],
+        gravity: 0.58,
+        ticks: 300,
+      });
+    }, 180);
+
+    // 3) Omnidirectional sparkle burst from mid banner
+    schedule(() => {
+      burst({
+        particleCount: 70,
+        spread: 360,
+        startVelocity: 26,
+        origin: { x: 0.5, y: 0.42 },
+        gravity: 0.88,
+        ticks: 240,
+        colors,
+        shapes: ['square', 'circle'],
+        scalar: 0.82,
+      });
+    }, 420);
+
+    // 4) Ground-level twin fountains
+    schedule(() => {
+      burst({
+        particleCount: 38,
+        angle: 88,
+        spread: 68,
+        origin: { x: 0.32, y: 0.92 },
+        startVelocity: 58,
+        colors: ['#4ba098', '#3b73ce', '#ffffff'],
+        shapes: ['star', 'circle'],
+        gravity: 0.72,
+        ticks: 280,
+      });
+      burst({
+        particleCount: 38,
+        angle: 92,
+        spread: 68,
+        origin: { x: 0.68, y: 0.92 },
+        startVelocity: 58,
+        colors: ['#ff9a9a', '#a78bfa', '#ffffff'],
+        shapes: ['star', 'circle'],
+        gravity: 0.72,
+        ticks: 280,
+      });
+    }, 640);
+
+    // 5) Second wave: tighter star shower from top
+    schedule(() => {
+      burst({
+        particleCount: 48,
+        spread: 64,
+        startVelocity: 44,
+        origin: { x: 0.5, y: 0.12 },
+        gravity: 0.55,
+        ticks: 360,
+        colors,
+        shapes: ['star', 'star', 'circle'],
+        scalar: 1.1,
+        drift: 0.12,
+      });
+    }, 920);
+
+    // 6) Light "confetti rain" — sparse drops from above the banner area
+    for (let i = 0; i < 14; i++) {
+      schedule(() => {
+        burst({
+          particleCount: 5,
+          spread: 140,
+          startVelocity: 14,
+          origin: { x: 0.12 + Math.random() * 0.76, y: -0.02 },
+          gravity: 0.42,
+          ticks: 420,
+          colors,
+          scalar: 0.72 + Math.random() * 0.2,
+        });
+      }, 1050 + i * 130);
+    }
+
+    return () => {
+      timeoutIds.forEach((id) => clearTimeout(id));
+      try {
+        fire.reset();
+      } catch {
+        /* ignore */
+      }
+    };
   }, []);
 
   return (
     <div className="success-banner">
-      <div className="success-banner-icon">
-        <PartyPopper size={28} />
-      </div>
-      <div className="success-banner-content">
-        <h3 className="success-banner-title type-section-header-lg">{banner.title}</h3>
-        <p className="success-banner-subtitle">{banner.subtitle}</p>
+      <canvas ref={confettiCanvasRef} className="success-banner-confetti" aria-hidden />
+      <div className="success-banner-inner">
+        <div className="success-banner-icon">
+          <PartyPopper size={28} />
+        </div>
+        <div className="success-banner-content">
+          <h3 className="success-banner-title type-section-header-lg">{banner.title}</h3>
+          <p className="success-banner-subtitle">{banner.subtitle}</p>
+        </div>
       </div>
     </div>
   );
@@ -627,7 +779,7 @@ function RoleSelectorComponent({
                 <button
                   key={roleIdx}
                   type="button"
-                  className={`role-selector-chip type-chip-label-md ${isSelected ? 'selected' : ''}`}
+                  className={`role-selector-chip type-chip-label-lg ${isSelected ? 'selected' : ''}`}
                   onClick={() => onRoleSelect(role)}
                   disabled={disabled}
                 >
@@ -887,7 +1039,7 @@ export function ChatInterface({
                         ))}
                       </div>
                     )}
-                    {/* Divider + text that follows worker cards (e.g. traits question) */}
+                    {/* Divider + text that follows worker cards (e.g. store location prompt) */}
                     {hasWorkerCards && parsed?.textAfterCards && (
                       <div className="worker-cards-after-divider">
                         <ReactMarkdown>
@@ -1004,7 +1156,7 @@ export function ChatInterface({
                                 <button
                                   key={`${message.id}-${chip}`}
                                   type="button"
-                                  className={`message-chip type-chip-label-md ${isSelected ? 'selected' : ''}`}
+                                  className={`message-chip type-chip-label-lg ${isSelected ? 'selected' : ''}`}
                                   onClick={handleChipClick}
                                   disabled={isLoading}
                                 >
@@ -1109,7 +1261,7 @@ export function ChatInterface({
                     )}
                   </>
                 ) : (
-                  <p>{message.content}</p>
+                  <p>{toTitleCase(message.content)}</p>
                 )}
               </div>
             </div>

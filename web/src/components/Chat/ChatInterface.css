@@ -151,7 +151,7 @@
   padding: 10px 14px;
   border: 1px solid var(--quaternary);
   border-radius: var(--radius-lg);
-  background: #ffffff;
+  background: var(--background-navy);
   font-size: 16px;
   font-family: inherit;
   color: var(--text-primary);
@@ -168,7 +168,7 @@
 }
 
 .welcome-input::placeholder {
-  color: var(--text-hint);
+  color: var(--secondary);
 }
 
 .welcome-send-btn {
@@ -292,6 +292,18 @@
   white-space: nowrap;
 }
 
+/* ============================================================
+   PROMPT WIDTH TOKENS
+   Customize widths for different prompt types here
+   ============================================================ */
+:root {
+  --prompt-width-nav-chips: 800px;      /* Initial nav chips grid */
+  --prompt-width-standard: 480px;       /* Standard assistant bubbles */
+  --prompt-width-benefits: 960px;       /* Benefits multi-select */
+  --prompt-width-role-selector: 100%;   /* Role selector (full width) */
+  --prompt-width-worker-cards: 100%;    /* Worker cards grid (full width) */
+}
+
 /* Initial nav chips in message container */
 .chat-message.initial-nav-chips {
   max-width: calc(100% - 24px);
@@ -299,7 +311,7 @@
 
 .chat-message.initial-nav-chips .message-content {
   padding: 16px;
-  width: 800px;
+  width: var(--prompt-width-nav-chips);
   max-width: 100%;
 }
 
@@ -407,7 +419,7 @@
   flex-direction: column;
   gap: 32px;
   min-height: 0;
-  min-width: 0;
+  min-width: 480px; /* Floor: no chat content goes below this */
 }
 
 .chat-message {
@@ -445,7 +457,7 @@
 }
 
 .chat-message.assistant.has-benefits-select .message-content {
-  width: 960px;
+  width: var(--prompt-width-benefits);
   max-width: 100%;
 }
 
@@ -494,9 +506,9 @@
   padding: 20px 24px;
 }
 
-/* Standard assistant bubbles: compact width (benefits uses .has-benefits-select for 960px) */
+/* Standard assistant bubbles: uses --prompt-width-standard token */
 .chat-message.assistant:not(.has-worker-cards):not(.has-role-selector):not(.initial-nav-chips):not(.has-benefits-select) .message-content {
-  width: 800px;
+  width: var(--prompt-width-standard);
   max-width: 100%;
 }
 
@@ -651,10 +663,10 @@
   margin-top: 0;
 }
 
-/* Multi-select mode — equal-width chips, four columns on typical widths */
+/* Multi-select mode — equal-width chips, five columns on typical widths */
 .message-chips.multi-select {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
   border-top: none;
   padding-top: 0;
@@ -772,7 +784,7 @@
   padding: 10px 14px;
   border: 1px solid var(--quaternary);
   border-radius: var(--radius-lg);
-  background: #ffffff;
+  background: var(--background-navy);
   font-size: 16px;
   font-family: inherit;
   color: var(--text-primary);
@@ -788,7 +800,7 @@
 }
 
 .inline-input::placeholder {
-  color: var(--text-hint);
+  color: var(--secondary);
 }
 
 .inline-send-btn {
@@ -1254,8 +1266,10 @@
   padding: 16px 20px;
   border: 1px solid var(--quaternary);
   border-radius: var(--radius-lg);
+  background: var(--background-navy);
   font-size: 15px;
   font-family: inherit;
+  color: var(--text-primary);
   resize: none;
   min-height: 88px;
   max-height: 200px;
@@ -1268,7 +1282,7 @@
 }
 
 .chat-input::placeholder {
-  color: var(--text-hint);
+  color: var(--secondary);
 }
 
 .chat-send-btn {
@@ -1567,7 +1581,7 @@
   padding: 10px 14px;
   border: 1px solid var(--quaternary);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--background-navy);
 }
 
 .location-pin-icon {
@@ -1581,7 +1595,7 @@
   outline: none;
   font-size: 14px;
   color: var(--primary);
-  background: transparent;
+  background: transparent; /* Inherits from .location-search-row */
 }
 
 .location-search-input::placeholder {
@@ -1664,11 +1678,27 @@
 
 /* Success Banner - celebration milestone */
 .success-banner {
+  position: relative;
   margin: 16px 0;
   padding: 20px 24px;
   background: var(--background-green);
   border: 1px solid var(--accent-green-light);
   border-radius: 16px;
+  overflow: hidden;
+}
+
+.success-banner-confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.success-banner-inner {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -1683,10 +1713,50 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 12px rgba(75, 160, 152, 0.35);
 }
 
 .success-banner-icon svg {
   color: #ffffff;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .success-banner {
+    animation: success-banner-glow 2.4s ease-out 1;
+  }
+
+  .success-banner-icon {
+    animation: success-banner-icon-celebrate 0.9s cubic-bezier(0.34, 1.45, 0.64, 1) 0.12s both;
+  }
+}
+
+@keyframes success-banner-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(75, 160, 152, 0);
+  }
+  35% {
+    box-shadow: 0 0 0 3px rgba(75, 160, 152, 0.22), 0 8px 32px rgba(75, 160, 152, 0.12);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(75, 160, 152, 0);
+  }
+}
+
+@keyframes success-banner-icon-celebrate {
+  0% {
+    transform: scale(0.65) rotate(-14deg);
+    opacity: 0.85;
+  }
+  45% {
+    transform: scale(1.1) rotate(6deg);
+  }
+  70% {
+    transform: scale(0.97) rotate(-3deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
 
 .success-banner-content {

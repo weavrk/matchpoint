@@ -488,3 +488,250 @@ export async function fetchRetailersLive(): Promise<RetailerLive[]> {
   }
   return data || [];
 }
+
+// ============================================================
+// Published Jobs API
+// ============================================================
+
+export interface PublishedJobDB {
+  id: string;
+  retailer_id: string | null;
+  role: string;
+  employment_type: 'Full-time' | 'Part-time' | 'Open to either';
+  market: string;
+  store_location: string | null;
+  pay: string;
+  traits: string[];
+  benefits: string[];
+  published_at: string;
+  status: 'active' | 'paused' | 'closed';
+  views: number;
+  likes: number;
+  applications: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface JobCandidateDB {
+  id: string;
+  job_id: string;
+  worker_id: string;
+  worker_name: string;
+  worker_photo: string | null;
+  shift_verified: boolean;
+  shifts_on_reflex: number;
+  status: 'invited' | 'viewed' | 'interested' | 'applied';
+  status_date: string;
+  match_score: number;
+  top_endorsements: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+// Fetch all published jobs with their candidates
+export async function fetchPublishedJobs(): Promise<PublishedJobDB[]> {
+  const { data, error } = await supabase
+    .from('published_jobs')
+    .select('*')
+    .order('published_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching published jobs:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+// Fetch candidates for a specific job
+export async function fetchJobCandidates(jobId: string): Promise<JobCandidateDB[]> {
+  const { data, error } = await supabase
+    .from('job_candidates')
+    .select('*')
+    .eq('job_id', jobId)
+    .order('match_score', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching job candidates:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+// Fetch all published jobs with candidates in one call
+export async function fetchPublishedJobsWithCandidates(): Promise<(PublishedJobDB & { candidates: JobCandidateDB[] })[]> {
+  const { data: jobs, error: jobsError } = await supabase
+    .from('published_jobs')
+    .select('*')
+    .order('published_at', { ascending: false });
+
+  if (jobsError) {
+    console.error('Error fetching published jobs:', jobsError);
+    throw jobsError;
+  }
+
+  if (!jobs || jobs.length === 0) {
+    return [];
+  }
+
+  const jobIds = jobs.map(j => j.id);
+  const { data: candidates, error: candidatesError } = await supabase
+    .from('job_candidates')
+    .select('*')
+    .in('job_id', jobIds);
+
+  if (candidatesError) {
+    console.error('Error fetching job candidates:', candidatesError);
+    throw candidatesError;
+  }
+
+  // Group candidates by job_id
+  const candidatesByJob = new Map<string, JobCandidateDB[]>();
+  for (const candidate of (candidates || [])) {
+    const existing = candidatesByJob.get(candidate.job_id) || [];
+    existing.push(candidate);
+    candidatesByJob.set(candidate.job_id, existing);
+  }
+
+  // Merge candidates into jobs
+  return jobs.map(job => ({
+    ...job,
+    candidates: candidatesByJob.get(job.id) || [],
+  }));
+}
+
+// Create a new published job
+export async function createPublishedJob(job: {
+  retailer_id?: string;
+  role: string;
+  employment_type: 'Full-time' | 'Part-time' | 'Open to either';
+  market: string;
+  store_location?: string;
+  pay: string;
+  traits: string[];
+  benefits: string[];
+}): Promise<PublishedJobDB> {
+  const { data, error } = await supabase
+    .from('published_jobs')
+    .insert({
+      retailer_id: job.retailer_id || null,
+      role: job.role,
+      employment_type: job.employment_type,
+      market: job.market,
+      store_location: job.store_location || null,
+      pay: job.pay,
+      traits: job.traits,
+      benefits: job.benefits,
+      published_at: new Date().toISOString(),
+      status: 'active',
+      views: 0,
+      likes: 0,
+      applications: 0,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating published job:', error);
+    throw error;
+  }
+  return data;
+}
+
+// Update job status (pause/resume/close)
+export async function updatePublishedJobStatus(
+  jobId: string,
+  status: 'active' | 'paused' | 'closed'
+): Promise<PublishedJobDB> {
+  const { data, error } = await supabase
+    .from('published_jobs')
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq('id', jobId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating job status:', error);
+    throw error;
+  }
+  return data;
+}
+
+// Update job engagement metrics
+export async function updateJobEngagement(
+  jobId: string,
+  engagement: { views?: number; likes?: number; applications?: number }
+): Promise<PublishedJobDB> {
+  const { data, error } = await supabase
+    .from('published_jobs')
+    .update({ ...engagement, updated_at: new Date().toISOString() })
+    .eq('id', jobId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating job engagement:', error);
+    throw error;
+  }
+  return data;
+}
+
+// Add a candidate to a job
+export async function addJobCandidate(candidate: {
+  job_id: string;
+  worker_id: string;
+  worker_name: string;
+  worker_photo?: string;
+  shift_verified: boolean;
+  shifts_on_reflex: number;
+  status: 'invited' | 'viewed' | 'interested' | 'applied';
+  match_score: number;
+  top_endorsements: string[];
+}): Promise<JobCandidateDB> {
+  const { data, error } = await supabase
+    .from('job_candidates')
+    .insert({
+      ...candidate,
+      worker_photo: candidate.worker_photo || null,
+      status_date: new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error adding job candidate:', error);
+    throw error;
+  }
+  return data;
+}
+
+// Update candidate status
+export async function updateCandidateStatus(
+  candidateId: string,
+  status: 'invited' | 'viewed' | 'interested' | 'applied'
+): Promise<JobCandidateDB> {
+  const { data, error } = await supabase
+    .from('job_candidates')
+    .update({ status, status_date: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq('id', candidateId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating candidate status:', error);
+    throw error;
+  }
+  return data;
+}
+
+// Delete a published job (and its candidates via cascade)
+export async function deletePublishedJob(jobId: string): Promise<void> {
+  const { error } = await supabase
+    .from('published_jobs')
+    .delete()
+    .eq('id', jobId);
+
+  if (error) {
+    console.error('Error deleting published job:', error);
+    throw error;
+  }
+}

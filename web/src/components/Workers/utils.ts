@@ -1,10 +1,13 @@
 import type { RetailerQuote } from '../../types';
 
 /**
- * Generate a unique AI-style summary from retailer quotes (3-5 sentences)
+ * Generate a unique AI-style summary from retailer quotes
  * Analyzes quote content to produce a personalized summary
+ * @param firstName - Worker's first name
+ * @param quotes - Array of retailer quotes
+ * @param maxSentences - Maximum number of sentences (default 2 for teaser, use 5 for full)
  */
-export function generateQuoteSummary(firstName: string, quotes: RetailerQuote[]): string {
+export function generateQuoteSummary(firstName: string, quotes: RetailerQuote[], maxSentences: number = 2): string {
   const quoteText = quotes.map(q => q.quote.toLowerCase()).join(' ');
   const brandCount = new Set(quotes.map(q => q.brand)).size;
 
@@ -74,17 +77,15 @@ export function generateQuoteSummary(firstName: string, quotes: RetailerQuote[])
     sentences.push(`With positive feedback from ${brandCount} different retailers, ${firstName} has proven adaptable across brands.`);
   }
 
-  // Ensure we have 3-5 sentences, take first 5 if we have more
-  const finalSentences = sentences.slice(0, 5);
+  // Limit to maxSentences
+  const finalSentences = sentences.slice(0, maxSentences);
 
-  // If we have fewer than 3, add generic but relevant closers
-  while (finalSentences.length < 3) {
+  // If we have fewer than 2, add a generic closer
+  while (finalSentences.length < Math.min(2, maxSentences)) {
     if (!finalSentences.some(s => s.includes('request'))) {
       finalSentences.push(`Multiple store managers have specifically requested ${firstName} for future shifts.`);
-    } else if (!finalSentences.some(s => s.includes('reliable'))) {
-      finalSentences.push(`${firstName} shows up ready to work and delivers consistently.`);
     } else {
-      finalSentences.push(`This track record speaks to ${firstName}'s reliability and professionalism.`);
+      finalSentences.push(`${firstName} shows up ready to work and delivers consistently.`);
     }
   }
 

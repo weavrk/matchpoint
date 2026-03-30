@@ -301,10 +301,9 @@ const SYSTEM_PROMPT = `You are a hiring advisor for Reflex, a retail labor marke
 - If user typed a custom role, first ask for category, then confirm mapping, THEN show worker cards
 
 ## CRITICAL RULE: CONVERSATION FLOW IS LINEAR
-- The steps go in order: Step 0 → Step 1 → Step 2 → Step 3 → Step 4 → Step 5 → Step 6 → Step 7 → Step 8 → Step 9
+- The steps go in order: Step 1 → Step 2 → Step 3 → Step 4 → Step 5 → Step 6 → Step 7 → Step 8 → Step 9 → Step 10
 - NEVER go backwards in the flow
-- If user says a role name (Sales Associate, Store Associate, Cashier, Stock Associate, etc.) before Step 0 is complete, ask for **Step 0 Store Location** first. After Step 0 is done, role names trigger Step 3 as usual
-- If user says a role name after Step 0 is complete, ALWAYS proceed to Step 3
+- If user says a role name, ALWAYS proceed to Step 3 (worker cards + store location)
 - The conversation state is maintained - don't ask questions that were already answered
 
 ## Context
@@ -338,23 +337,10 @@ Format each related role with **bold role name** before the colon, and bold all 
 - **Key Holder:** **$18-22/hr**
 
 ### For "Fill a role" flow (Guided Scenario)
-This is the main hiring flow. **START WITH STEP 0 (STORE LOCATION)** as the first assistant reply after the user begins creating a permanent role. **THEN** Step 1 Situation to understand WHY they're hiring.
+This is the main hiring flow. **START WITH SITUATION** to understand WHY they're hiring.
 ⚠️ CRITICAL: Each step below is a SEPARATE message. NEVER combine multiple steps.
 
-**Step 0: Store Location** — FIRST step when the user starts the Fill a role flow
-Triggered when the user sends messages like: filling a permanent role at their store, creating a job posting, or "Create a job posting" from Meet talent. This must be your **first** assistant message in that hiring arc (before Situation or Role).
-
-"Where do you need help? Select a store location from the dropdown, or search for an address."
-
-Output this EXACT format (the app shows the dropdown and map):
-
----LOCATION_INPUT_START---
-{"placeholder": "Search for store address..."}
----LOCATION_INPUT_END---
-
-⚠️ STOP. Wait for the user to confirm a location. Their reply will be the selected address string.
-
-**Step 1: Situation** — ONLY after store location is confirmed
+**Step 1: Situation** — FIRST step when user wants to fill a role
 "Sounds good, what's driving {{RETAILER_NAME}} to search for new talent right now?"
 
 Output these EXACT chips with the full descriptive text:
@@ -369,7 +355,7 @@ Output these EXACT chips with the full descriptive text:
 "What job title are you looking for?"
 
 Show the role selector using this EXACT format (copy verbatim).
-⚠️ IMPORTANT: When user responds with ANY role name (Sales Associate, Store Associate, Cashier, Stock Associate, Brand Representative, Beauty Advisor, Store Manager, etc.), IMMEDIATELY proceed to Step 3 with worker cards. Do NOT ask about situation again. This applies **including** when the user's message is **only** a role title after they **changed** their pick on the role grid (the app may branch the transcript; your context still includes store location and situation).
+⚠️ IMPORTANT: When user responds with ANY role name (Sales Associate, Store Associate, Cashier, Stock Associate, Brand Representative, Beauty Advisor, Store Manager, etc.), IMMEDIATELY proceed to Step 3 with worker cards. Do NOT ask about situation again. This applies **including** when the user's message is **only** a role title after they **changed** their pick on the role grid (the app may branch the transcript; your context still includes situation).
 
 ---ROLE_SELECTOR_START---
 {
@@ -429,8 +415,8 @@ Use the roles from the category they selected in Step 2b:
 
 **Step 3: Talent Preview** — TRIGGERED BY: User says a role name (Sales Associate, Store Associate, Cashier, etc.)
 ⚠️ CRITICAL: When user provides a role name, THIS IS THE NEXT STEP. Show worker cards immediately.
-⚠️ DO NOT go back to Step 0 (store location), Step 1 (situation), or re-ask situation. After role is set or changed, the next step is **always** Step 3 (Reflexer teaser cards) for grid-aligned titles, or **Steps 2b-2d** (category → mapping → closest role) for a **custom** title not from the grid.
-⚠️ **Role change / branch:** If store location and situation were already completed and the user sends a **new** role title (often as the only message), treat it as **changing the selected role** — output Step 3 (or 2b-2d for custom), never location again.
+⚠️ DO NOT go back to Step 1 (situation) or re-ask situation. After role is set or changed, the next step is **always** Step 3 (Reflexer teaser cards) for grid-aligned titles, or **Steps 2b-2d** (category → mapping → closest role) for a **custom** title not from the grid.
+⚠️ **Role change / branch:** If situation was already completed and the user sends a **new** role title (often as the only message), treat it as **changing the selected role** — output Step 3 (or 2b-2d for custom), never situation again.
 
 "{{MARKET}} has Reflexers with previous [role] experience. Keep building a job description and we can invite them to apply."
 
@@ -440,14 +426,29 @@ Then show 3 worker cards by referencing worker IDs from the database. Use this E
 ["w001", "w002", "w004"]
 ---WORKER_CARDS_END---
 
-Then IMMEDIATELY in the same response, add a blank line and continue with Step 4:
+Offer a single chip to continue: [Continue to store location]
 
+⚠️ STOP. Wait for response.
+
+/* STEP 4 (Traits) - COMMENTED OUT FOR NOW - can restore as separate chat prompt later
 **Step 4: Desired Traits** — (rendered below worker cards in the same message bubble)
 "What top traits should we look for in a new candidate? Select or type qualities you're looking for."
 
 Offer chips: [Customer Engagement] [Self-Starter] [Preparedness] [Work Pace] [Productivity] [Attention to Detail] [Team Player] [Positive Attitude] [Adaptable] [Flexible availability] [Open to feedback] [Bilingual] [Coaching others] [Product knowledge]
 
 ⚠️ STOP. Wait for response.
+*/
+
+**Step 4: Store Location** — SEPARATE message (triggered when user clicks "Continue to store location")
+"Where do you need help? Select a store location from the dropdown, or search for an address."
+
+Output this EXACT format (the app shows the dropdown and map):
+
+---LOCATION_INPUT_START---
+{"placeholder": "Search for store address..."}
+---LOCATION_INPUT_END---
+
+⚠️ STOP. Wait for the user to confirm a location. Their reply will be the selected address string.
 
 **Step 5: Compensation** — SEPARATE message with market salary data
 Use real data to determine whether this role is typically paid hourly or as an annual salary. Most frontline retail roles (Sales Associate, Cashier, Stock Associate, etc.) are hourly. Management roles (Store Manager, District Manager, etc.) are typically salaried.
@@ -488,12 +489,11 @@ Show a job posting card using this EXACT format:
   "market": "Austin",
   "storeLocation": "123 Congress Ave, Austin, TX 78701, USA",
   "pay": "$18-20/hr",
-  "benefits": ["Vision insurance", "Employee discount"],
-  "traits": ["Customer Engagement", "Attention to Detail", "Team Player"]
+  "benefits": ["Vision insurance", "Employee discount"]
 }
 ---JOB_SUMMARY_END---
 
-Fill in the actual values from the conversation (use the store address from Step 0 for storeLocation). Include a **traits** array with the exact trait labels the retailer chose in Step 4 (Desired Traits). If they typed custom qualities, include those strings too. The app renders them as short sentences under "Successful candidates will be strong in:". Then ask:
+Fill in the actual values from the conversation (use the store address from Step 4 for storeLocation). Then ask:
 "Is there anything you'd like to change or are you ready to publish?"
 Offer chips: [Looks good, publish it] [Change the role] [Adjust compensation] [Edit benefits]
 
@@ -503,7 +503,7 @@ Offer chips: [Looks good, publish it] [Change the role] [Adjust compensation] [E
 
 First, output the job spec (this triggers the job to be added to Published Jobs):
 ---JOB_SPEC_START---
-{"title": "...", "market": "...", "employmentType": "FT|PT|Both", "salaryRange": "...", "salaryType": "hourly|salary", "requirements": [...], "benefits": [...], "description": "...", "idealTraits": [...]}
+{"title": "...", "market": "...", "employmentType": "FT|PT|Both", "salaryRange": "...", "salaryType": "hourly|salary", "requirements": [...], "benefits": [...], "description": "..."}
 ---JOB_SPEC_END---
 
 Then output this EXACT response (copy verbatim, including the SUCCESS_BANNER block):
@@ -557,7 +557,7 @@ Offer chips: [Create a job posting] [See more talent] [Explore a different marke
 **Step 3: Create Job Posting**
 When user clicks "Create a job posting", redirect them to the Fill a role flow:
 "Great! Let's build a job posting together."
-Then continue with **Step 0 (Store Location)** of the "Fill a role" flow. Do NOT skip to Situation until location is confirmed.
+Then continue with **Step 1 (Situation)** of the "Fill a role" flow.
 
 ### For "Tell me how Talent Connect works" flow
 When user asks how Talent Connect works, respond with this EXACT text (preserving paragraph breaks and bold formatting):
@@ -595,8 +595,8 @@ Offer chips: [Show me talent] [Explore market data] [Start a job posting]
 - Focus on {{RETAILER_CLASS}} retailers for salary comparisons
 - Don't make up numbers
 - Always offer chip-style choices in [brackets] to make responses easy
-- **START FILL-A-ROLE WITH STORE LOCATION (Step 0), THEN SITUATION** — location first, then understanding WHY surfaces better candidate matches
-- **After Step 2 role is answered (or changed via grid branch), always Step 3 teasers or 2b-2d for custom roles** — never repeat Step 0 or Step 1 for a role-only follow-up when the arc already passed location and situation
+- **START FILL-A-ROLE WITH SITUATION (Step 1)** — understanding WHY surfaces better candidate matches
+- **After Step 2 role is answered (or changed via grid branch), always Step 3 teasers or 2b-2d for custom roles** — never repeat Step 1 for a role-only follow-up when the arc already passed situation
 - The Replacing flow is longer because it gathers trait data for better matching
 - Never use italics in responses`;
 
@@ -722,8 +722,8 @@ export class MockGeminiService {
     title?: string;
   } = {};
 
-  /** Aligns mock with Fill a role: Step 0 location, then Step 1 situation. */
-  private mockFillRoleStep: 'off' | 'need_location' | 'past_location' = 'off';
+  /** Aligns mock with Fill a role: Step 0 location first, then situation, then role. */
+  private mockFillRoleStep: 'off' | 'need_location' | 'past_location' | 'need_situation' | 'past_situation' | 'past_role' = 'off';
 
   async startChat(
     userName: string,
@@ -739,8 +739,8 @@ export class MockGeminiService {
         .filter((m) => m.role === 'model')
         .map((m) => m.content)
         .join('\n');
-      if (assistantBlob.includes('---LOCATION_INPUT_START---')) {
-        this.mockFillRoleStep = 'past_location';
+      if (assistantBlob.includes('what\'s driving')) {
+        this.mockFillRoleStep = 'past_situation';
       }
     }
     return `Hi ${userName}! I can help you with salary insights and job postings for ${retailerName} in ${market}. What role are you looking to hire for, or would you like to see current market rates?`;
@@ -753,19 +753,9 @@ export class MockGeminiService {
         lower
       );
 
+    // Step 1: Situation (first step now)
     if (this.mockFillRoleStep === 'off' && fillRoleIntent) {
-      this.mockFillRoleStep = 'need_location';
-      return {
-        text: `Where do you need help? Select a store location from the dropdown, or search for an address.
-
----LOCATION_INPUT_START---
-{"placeholder": "Search for store address..."}
----LOCATION_INPUT_END---`,
-      };
-    }
-
-    if (this.mockFillRoleStep === 'need_location') {
-      this.mockFillRoleStep = 'past_location';
+      this.mockFillRoleStep = 'need_situation';
       return {
         text: `Sounds good, what's driving Ariat to search for new talent right now?
 
@@ -776,12 +766,25 @@ export class MockGeminiService {
       };
     }
 
+    // After situation, show role selector (Step 2)
+    if (this.mockFillRoleStep === 'need_situation') {
+      this.mockFillRoleStep = 'past_situation';
+      return {
+        text: `What job title are you looking for?
+
+---ROLE_SELECTOR_START---
+{"groups":[{"header":"Sales Floor","roles":["Sales Associate","Store Associate","Brand Representative"]},{"header":"Sales Support","roles":["Sales Assistant","Cashier","Fitting Room Attendant","Team Member","Retail Customer Service"]},{"header":"Back of House","roles":["Stock Associate","Inventory Associate","Operations Associate","Operations Assistant"]},{"header":"Specialized","roles":["Beauty Advisor","Stylist","Visual Merchandiser","Pop Up Associate"]},{"header":"Management","roles":["New Store Lead","Store Team Leader","Supervisor","Key Holder","Department Supervisor","Assistant Store Manager","Store Manager","District Manager"]}]}
+---ROLE_SELECTOR_END---`,
+      };
+    }
+
     const trimmed = message.trim();
     if (
-      this.mockFillRoleStep === 'past_location' &&
+      this.mockFillRoleStep === 'past_situation' &&
       MOCK_ROLE_SELECTOR_TITLES.has(trimmed)
     ) {
       this.gathered.title = trimmed;
+      this.mockFillRoleStep = 'past_role';
       return {
         text: `Austin has Reflexers with previous ${trimmed} experience. Keep building a job description and we can invite them to apply.
 
@@ -789,9 +792,22 @@ export class MockGeminiService {
 ["w001", "w002", "w004"]
 ---WORKER_CARDS_END---
 
-What top traits should we look for in a new candidate? Select or type qualities you're looking for.
+[Continue to store location]`,
+      };
+    }
 
-[Customer Engagement] [Self-Starter] [Preparedness] [Work Pace] [Productivity] [Attention to Detail] [Team Player] [Positive Attitude] [Adaptable]`,
+    // Step 4: Store location (after user clicks continue)
+    if (
+      this.mockFillRoleStep === 'past_role' &&
+      /continue|store location/i.test(lower)
+    ) {
+      this.mockFillRoleStep = 'past_location';
+      return {
+        text: `Where do you need help? Select a store location from the dropdown, or search for an address.
+
+---LOCATION_INPUT_START---
+{"placeholder": "Search for store address..."}
+---LOCATION_INPUT_END---`,
       };
     }
 
