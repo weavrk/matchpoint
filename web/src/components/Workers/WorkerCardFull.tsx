@@ -81,8 +81,9 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
             <div className="worker-card-full-meta">
               <span className="meta-item"><MapPin size={16} /> {worker.market}</span>
               {worker.shiftVerified && (
-                <span className="badge badge-verified badge-lg">
-                  <BadgeCheck size={16} /> Shift Verified
+                <span className="pill pill-green pill-md">
+                  <span className="pill-icon"><BadgeCheck size={14} /></span>
+                  <span className="pill-text">Shift Verified</span>
                 </span>
               )}
             </div>
@@ -163,7 +164,9 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
               <h4 className="section-title type-section-header">Retailers on Reflex</h4>
               <div className="brands-grid">
                 {worker.brandsWorked.map((brand, idx) => (
-                  <span key={idx} className={`brand-tag-full type-body-sm ${brand.tier}`}>{brand.name}</span>
+                  <span key={idx} className="pill pill-lite-gray pill-sm">
+                    <span className="pill-text">{brand.name}</span>
+                  </span>
                 ))}
               </div>
             </div>
@@ -175,9 +178,9 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
               <h4 className="section-title type-section-header">Retailer Endorsements</h4>
               <div className="endorsements-grid">
                 {worker.endorsements.map((e, idx) => (
-                  <span key={idx} className="endorsement-badge-full type-body-sm">
-                    {ENDORSEMENT_CONFIG[e]?.icon}
-                    {ENDORSEMENT_CONFIG[e]?.label}
+                  <span key={idx} className="pill pill-stroke pill-sm">
+                    <span className="pill-icon">{ENDORSEMENT_CONFIG[e]?.icon}</span>
+                    <span className="pill-text">{ENDORSEMENT_CONFIG[e]?.label}</span>
                   </span>
                 ))}
               </div>
@@ -211,8 +214,9 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
               <h4 className="section-title type-section-header">Availability</h4>
               <div className="availability-tags-full">
                 {availabilityTags.map((tag, idx) => (
-                  <span key={idx} className="availability-tag-full type-body-sm">
-                    {tag.icon} {tag.label}
+                  <span key={idx} className="pill pill-stroke pill-sm">
+                    <span className="pill-icon">{tag.icon}</span>
+                    <span className="pill-text">{tag.label}</span>
                   </span>
                 ))}
               </div>

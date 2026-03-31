@@ -86,7 +86,7 @@
   border: 1px solid var(--quaternary);
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: center;
 }
 
@@ -98,11 +98,18 @@
 .welcome-card:hover:not(:disabled) .welcome-card-icon {
   background: var(--app-primary);
   color: #ffffff;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .welcome-card.active {
   border-color: var(--text-primary);
   background: var(--gray-50);
+}
+
+.welcome-card.active .welcome-card-icon {
+  background: var(--text-primary);
+  color: #ffffff;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .welcome-card:disabled {
@@ -119,6 +126,7 @@
   align-items: center;
   justify-content: center;
   color: var(--primary);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .welcome-card-title {

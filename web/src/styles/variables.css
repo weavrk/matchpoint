@@ -693,15 +693,15 @@ h3.type-chip-header,
 
 /* ── Pill Styles ────────────────────────────── */
 
-/* Lite Gray - light background, primary text */
+/* Lite Gray - navy tint background, primary text */
 .pill-lite-gray {
-  background: var(--stone-100);
+  background: var(--background-navy);
   color: var(--text-primary);
   border: none;
 }
 
 .pill-lite-gray .pill-counter {
-  background: var(--stone-200);
+  background: var(--navy-200);
   color: var(--text-primary);
 }
 
@@ -831,18 +831,3 @@ h3.type-chip-header,
   color: var(--yellow-600);
 }
 
-/* Navy */
-.pill-navy {
-  background: var(--navy-100);
-  color: var(--navy-700);
-  border: none;
-}
-
-.pill-navy .pill-counter {
-  background: var(--navy-200);
-  color: var(--navy-700);
-}
-
-.pill-navy .pill-icon {
-  color: var(--navy-500);
-}

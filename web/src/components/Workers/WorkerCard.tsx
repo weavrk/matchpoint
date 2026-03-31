@@ -175,13 +175,15 @@ export function WorkerCard({ worker }: WorkerCardProps) {
           <div className="worker-name-row">
             <h3 className="worker-name">{worker.name}</h3>
             {worker.shiftVerified && (
-              <span className="badge badge-verified">
-                <BadgeCheck size={13} /> Shift Verified
+              <span className="pill pill-green pill-sm">
+                <span className="pill-icon"><BadgeCheck size={12} /></span>
+                <span className="pill-text">Shift Verified</span>
               </span>
             )}
             {worker.activelyLooking && (
-              <span className="badge badge-looking">
-                <Search size={12} /> Actively looking
+              <span className="pill pill-lite-gray pill-sm">
+                <span className="pill-icon"><Search size={12} /></span>
+                <span className="pill-text">Actively looking</span>
               </span>
             )}
           </div>
@@ -297,7 +299,9 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <span className="section-label">Retailers on Reflex</span>
                   <div className="brands-list">
                     {worker.brandsWorked.map((brand, idx) => (
-                      <span key={idx} className={`brand-tag ${brand.tier}`}>{brand.name}</span>
+                      <span key={idx} className="pill pill-lite-gray pill-sm">
+                        <span className="pill-text">{brand.name}</span>
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -309,9 +313,9 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <span className="section-label">Retailer Endorsements</span>
                   <div className="endorsements-list">
                     {worker.endorsements.map((e, idx) => (
-                      <span key={idx} className="endorsement-badge">
-                        {ENDORSEMENT_CONFIG[e]?.icon}
-                        {ENDORSEMENT_CONFIG[e]?.label}
+                      <span key={idx} className="pill pill-stroke pill-sm">
+                        <span className="pill-icon">{ENDORSEMENT_CONFIG[e]?.icon}</span>
+                        <span className="pill-text">{ENDORSEMENT_CONFIG[e]?.label}</span>
                       </span>
                     ))}
                   </div>
@@ -350,8 +354,9 @@ export function WorkerCard({ worker }: WorkerCardProps) {
               {availabilityTags.length > 0 && (
                 <div className="availability-row">
                   {availabilityTags.map((tag, idx) => (
-                    <span key={idx} className="availability-tag">
-                      {tag.icon} {tag.label}
+                    <span key={idx} className="pill pill-stroke pill-sm">
+                      <span className="pill-icon">{tag.icon}</span>
+                      <span className="pill-text">{tag.label}</span>
                     </span>
                   ))}
                 </div>

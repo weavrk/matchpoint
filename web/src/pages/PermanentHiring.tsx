@@ -3050,201 +3050,122 @@ export function PermanentHiring() {
               <section className="ds-section">
                 <h3>Pills / Tags</h3>
                 <p className="ds-description">
-                  Rounded pill badges with consistent sizing. Combine style + size classes.
-                  Usage: <code>className="pill pill-[style] pill-[size]"</code>
+                  Rounded pill badges. Usage: <code>className="pill pill-[style] pill-[size]"</code>
                 </p>
 
+                {/* Styles - all in one row */}
                 <div className="ds-subsection">
                   <h4>Styles</h4>
-                  <div className="ds-pills-grid">
-                    <div className="ds-pill-group">
-                      <span className="ds-pill-label">pill-lite-gray</span>
-                      <span className="pill pill-lite-gray pill-md">
-                        <span className="pill-text">Lite Gray</span>
-                      </span>
-                    </div>
-                    <div className="ds-pill-group">
-                      <span className="ds-pill-label">pill-green</span>
-                      <span className="pill pill-green pill-md">
-                        <span className="pill-icon"><BadgeCheck size={14} /></span>
-                        <span className="pill-text">Shift Verified</span>
-                      </span>
-                    </div>
-                    <div className="ds-pill-group">
-                      <span className="ds-pill-label">pill-dark-gray</span>
-                      <span className="pill pill-dark-gray pill-md">
-                        <span className="pill-text">Dark Gray</span>
-                      </span>
-                    </div>
-                    <div className="ds-pill-group">
-                      <span className="ds-pill-label">pill-stroke</span>
+                  <div className="ds-pills-styles-row">
+                    <div className="ds-pill-style-item">
                       <span className="pill pill-stroke pill-md">
                         <span className="pill-text">Stroke</span>
                       </span>
+                      <span className="ds-pill-label">pill-stroke</span>
                     </div>
-                    <div className="ds-pill-group">
-                      <span className="ds-pill-label">pill-blue</span>
+                    <span className="ds-pill-divider" />
+                    <div className="ds-pill-style-item">
+                      <span className="pill pill-dark-gray pill-md">
+                        <span className="pill-text">Dark Gray</span>
+                      </span>
+                      <span className="ds-pill-label">pill-dark-gray</span>
+                    </div>
+                    <span className="ds-pill-divider" />
+                    <div className="ds-pill-style-item">
+                      <span className="pill pill-lite-gray pill-md">
+                        <span className="pill-text">Lite Gray</span>
+                      </span>
+                      <span className="ds-pill-label">pill-lite-gray</span>
+                    </div>
+                    <span className="ds-pill-divider" />
+                    <div className="ds-pill-style-item">
+                      <span className="pill pill-green pill-md">
+                        <span className="pill-text">Green</span>
+                      </span>
+                      <span className="ds-pill-label">pill-green</span>
+                    </div>
+                    <span className="ds-pill-divider" />
+                    <div className="ds-pill-style-item">
                       <span className="pill pill-blue pill-md">
                         <span className="pill-text">Blue</span>
                       </span>
-                    </div>
-                    <div className="ds-pill-group">
-                      <span className="ds-pill-label">pill-navy</span>
-                      <span className="pill pill-navy pill-md">
-                        <span className="pill-text">Navy</span>
-                      </span>
+                      <span className="ds-pill-label">pill-blue</span>
                     </div>
                   </div>
                 </div>
 
+                {/* Sizes */}
                 <div className="ds-subsection">
                   <h4>Sizes</h4>
-                  <div className="ds-pills-row">
-                    <div className="ds-pill-group">
-                      <span className="ds-pill-label">pill-sm (12px)</span>
+                  <div className="ds-pills-styles-row">
+                    <div className="ds-pill-style-item">
                       <span className="pill pill-lite-gray pill-sm">
                         <span className="pill-text">Small</span>
                       </span>
+                      <span className="ds-pill-label">pill-sm (12px)</span>
                     </div>
-                    <div className="ds-pill-group">
-                      <span className="ds-pill-label">pill-md (14px)</span>
+                    <span className="ds-pill-divider" />
+                    <div className="ds-pill-style-item">
                       <span className="pill pill-lite-gray pill-md">
                         <span className="pill-text">Medium</span>
                       </span>
+                      <span className="ds-pill-label">pill-md (14px)</span>
                     </div>
-                    <div className="ds-pill-group">
-                      <span className="ds-pill-label">pill-lg (16px)</span>
+                    <span className="ds-pill-divider" />
+                    <div className="ds-pill-style-item">
                       <span className="pill pill-lite-gray pill-lg">
                         <span className="pill-text">Large</span>
                       </span>
+                      <span className="ds-pill-label">pill-lg (16px)</span>
                     </div>
                   </div>
                 </div>
 
+                {/* Variants */}
                 <div className="ds-subsection">
-                  <h4>Variants: Counter (left of text)</h4>
-                  <div className="ds-pills-row">
-                    <span className="pill pill-lite-gray pill-sm">
-                      <span className="pill-counter">24</span>
-                      <span className="pill-text">shifts</span>
-                    </span>
-                    <span className="pill pill-lite-gray pill-md">
-                      <span className="pill-counter">24</span>
-                      <span className="pill-text">shifts</span>
-                    </span>
-                    <span className="pill pill-lite-gray pill-lg">
-                      <span className="pill-counter">24</span>
-                      <span className="pill-text">shifts</span>
-                    </span>
-                  </div>
-                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
-                    <span className="pill pill-green pill-md">
-                      <span className="pill-counter">12</span>
-                      <span className="pill-text">stores favorited</span>
-                    </span>
-                    <span className="pill pill-stroke pill-md">
-                      <span className="pill-counter">8</span>
-                      <span className="pill-text">endorsements</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="ds-subsection">
-                  <h4>Variants: Icon (left of text)</h4>
-                  <div className="ds-pills-row">
-                    <span className="pill pill-green pill-sm">
-                      <span className="pill-icon"><BadgeCheck size={12} /></span>
-                      <span className="pill-text">Shift Verified</span>
-                    </span>
-                    <span className="pill pill-green pill-md">
-                      <span className="pill-icon"><BadgeCheck size={14} /></span>
-                      <span className="pill-text">Shift Verified</span>
-                    </span>
-                    <span className="pill pill-green pill-lg">
-                      <span className="pill-icon"><BadgeCheck size={16} /></span>
-                      <span className="pill-text">Shift Verified</span>
-                    </span>
-                  </div>
-                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
-                    <span className="pill pill-stroke pill-md">
-                      <span className="pill-icon"><CalendarDays size={14} /></span>
-                      <span className="pill-text">Weekends</span>
-                    </span>
-                    <span className="pill pill-stroke pill-md">
-                      <span className="pill-icon"><Briefcase size={14} /></span>
-                      <span className="pill-text">Full-time</span>
-                    </span>
-                    <span className="pill pill-navy pill-md">
-                      <span className="pill-icon"><Search size={14} /></span>
-                      <span className="pill-text">Actively looking</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="ds-subsection">
-                  <h4>Variants: Text only</h4>
-                  <div className="ds-pills-row">
-                    <span className="pill pill-lite-gray pill-md">
-                      <span className="pill-text">Luxury</span>
-                    </span>
-                    <span className="pill pill-lite-gray pill-md">
-                      <span className="pill-text">Elevated</span>
-                    </span>
-                    <span className="pill pill-lite-gray pill-md">
-                      <span className="pill-text">Mid</span>
-                    </span>
-                  </div>
-                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
-                    <span className="pill pill-stroke pill-md">
-                      <span className="pill-text">Team Player</span>
-                    </span>
-                    <span className="pill pill-stroke pill-md">
-                      <span className="pill-text">Self-Starter</span>
-                    </span>
-                    <span className="pill pill-stroke pill-md">
-                      <span className="pill-text">Adaptable</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div className="ds-subsection">
-                  <h4>Real-world Examples</h4>
-                  <p className="ds-description">Common patterns from worker cards</p>
-                  <div className="ds-pills-row">
-                    <span className="pill pill-green pill-md">
-                      <span className="pill-icon"><BadgeCheck size={14} /></span>
-                      <span className="pill-text">Shift Verified</span>
-                    </span>
-                    <span className="pill pill-lite-gray pill-md">
-                      <span className="pill-counter">24</span>
-                      <span className="pill-text">shifts</span>
-                    </span>
-                    <span className="pill pill-lite-gray pill-md">
-                      <span className="pill-counter">12</span>
-                      <span className="pill-text">stores favorited</span>
-                    </span>
-                  </div>
-                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
-                    <span className="pill pill-stroke pill-sm">
-                      <span className="pill-icon"><Star size={12} /></span>
-                      <span className="pill-text">Customer Engagement</span>
-                      <span className="pill-counter">+5</span>
-                    </span>
-                    <span className="pill pill-stroke pill-sm">
-                      <span className="pill-icon"><Heart size={12} /></span>
-                      <span className="pill-text">Positive Attitude</span>
-                      <span className="pill-counter">+3</span>
-                    </span>
-                  </div>
-                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
-                    <span className="pill pill-stroke pill-md">
-                      <span className="pill-icon"><CalendarDays size={14} /></span>
-                      <span className="pill-text">Weekends</span>
-                    </span>
-                    <span className="pill pill-stroke pill-md">
-                      <span className="pill-icon"><Clock size={14} /></span>
-                      <span className="pill-text">Opening shifts</span>
-                    </span>
+                  <h4>Variants</h4>
+                  <div className="ds-pills-variants">
+                    {/* Text Only */}
+                    <div className="ds-variant-group">
+                      <span className="ds-variant-label">Text Only</span>
+                      <div className="ds-variant-pills">
+                        <span className="pill pill-stroke pill-md"><span className="pill-text">Stroke</span></span>
+                        <span className="pill pill-dark-gray pill-md"><span className="pill-text">Dark</span></span>
+                        <span className="pill pill-lite-gray pill-md"><span className="pill-text">Lite</span></span>
+                      </div>
+                      <div className="ds-variant-pills">
+                        <span className="pill pill-green pill-md"><span className="pill-text">Green</span></span>
+                        <span className="pill pill-blue pill-md"><span className="pill-text">Blue</span></span>
+                      </div>
+                    </div>
+                    <span className="ds-variant-divider" />
+                    {/* Icon */}
+                    <div className="ds-variant-group">
+                      <span className="ds-variant-label">Icon + Text</span>
+                      <div className="ds-variant-pills">
+                        <span className="pill pill-stroke pill-md"><span className="pill-icon"><CalendarDays size={14} /></span><span className="pill-text">Stroke</span></span>
+                        <span className="pill pill-dark-gray pill-md"><span className="pill-icon"><CalendarDays size={14} /></span><span className="pill-text">Dark</span></span>
+                        <span className="pill pill-lite-gray pill-md"><span className="pill-icon"><CalendarDays size={14} /></span><span className="pill-text">Lite</span></span>
+                      </div>
+                      <div className="ds-variant-pills">
+                        <span className="pill pill-green pill-md"><span className="pill-icon"><BadgeCheck size={14} /></span><span className="pill-text">Green</span></span>
+                        <span className="pill pill-blue pill-md"><span className="pill-icon"><Search size={14} /></span><span className="pill-text">Blue</span></span>
+                      </div>
+                    </div>
+                    <span className="ds-variant-divider" />
+                    {/* Counter */}
+                    <div className="ds-variant-group">
+                      <span className="ds-variant-label">Counter + Text</span>
+                      <div className="ds-variant-pills">
+                        <span className="pill pill-stroke pill-md"><span className="pill-counter">24</span><span className="pill-text">Stroke</span></span>
+                        <span className="pill pill-dark-gray pill-md"><span className="pill-counter">24</span><span className="pill-text">Dark</span></span>
+                        <span className="pill pill-lite-gray pill-md"><span className="pill-counter">24</span><span className="pill-text">Lite</span></span>
+                      </div>
+                      <div className="ds-variant-pills">
+                        <span className="pill pill-green pill-md"><span className="pill-counter">24</span><span className="pill-text">Green</span></span>
+                        <span className="pill pill-blue pill-md"><span className="pill-counter">24</span><span className="pill-text">Blue</span></span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </section>

@@ -26,14 +26,16 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
       <h3 className={`worker-name type-section-header-lg ${nameSize}`}>{worker.name}</h3>
 
       {worker.shiftVerified && (
-        <span className="badge badge-verified">
-          <BadgeCheck size={13} /> Shift Verified
+        <span className="pill pill-green pill-sm">
+          <span className="pill-icon"><BadgeCheck size={12} /></span>
+          <span className="pill-text">Shift Verified</span>
         </span>
       )}
 
       {showActivelyLooking && worker.activelyLooking && (
-        <span className="badge badge-looking">
-          <Search size={12} /> Actively looking
+        <span className="pill pill-lite-gray pill-sm">
+          <span className="pill-icon"><Search size={12} /></span>
+          <span className="pill-text">Actively looking</span>
         </span>
       )}
     </div>

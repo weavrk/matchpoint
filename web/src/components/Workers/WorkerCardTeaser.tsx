@@ -28,12 +28,14 @@ export function WorkerCardTeaser({ worker, onClick }: WorkerCardTeaserProps) {
         {worker.shiftVerified && (
           <>
             <div className="teaser-reflex-stats">
-              <span className="teaser-stat-pill">
-                <strong>{worker.shiftsOnReflex}</strong> shifts
+              <span className="pill pill-lite-gray pill-sm">
+                <span className="pill-counter">{worker.shiftsOnReflex}</span>
+                <span className="pill-text">shifts</span>
               </span>
               {worker.reflexActivity?.storeFavoriteCount && worker.reflexActivity.storeFavoriteCount > 0 && (
-                <span className="teaser-stat-pill">
-                  <strong>{worker.reflexActivity.storeFavoriteCount}</strong> stores favorited
+                <span className="pill pill-lite-gray pill-sm">
+                  <span className="pill-counter">{worker.reflexActivity.storeFavoriteCount}</span>
+                  <span className="pill-text">stores favorited</span>
                 </span>
               )}
             </div>

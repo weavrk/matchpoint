@@ -91,10 +91,10 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
             <span className="section-label">Endorsements</span>
             <div className="endorsements-with-counts">
               {topEndorsements.map((e, idx) => (
-                <span key={idx} className="endorsement-badge-count">
-                  {ENDORSEMENT_ICONS[e]}
-                  {ENDORSEMENT_LABELS[e]}
-                  <span className="endorsement-count">+{getEndorsementCount(idx)}</span>
+                <span key={idx} className="pill pill-stroke pill-sm">
+                  <span className="pill-icon">{ENDORSEMENT_ICONS[e]}</span>
+                  <span className="pill-text">{ENDORSEMENT_LABELS[e]}</span>
+                  <span className="pill-counter">+{getEndorsementCount(idx)}</span>
                 </span>
               ))}
             </div>
