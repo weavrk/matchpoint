@@ -486,6 +486,7 @@
 .published-jobs-content {
   flex: 1;
   overflow-y: auto;
+  padding-top: 24px;
   padding-bottom: 24px;
 }
 
@@ -500,6 +501,7 @@
 .reflex-talent-content {
   flex: 1;
   overflow-y: auto;
+  padding-top: 24px;
   padding-bottom: 24px;
 }
 
