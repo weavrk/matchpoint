@@ -1128,12 +1128,10 @@ export function PermanentHiring() {
   }, []);
   const [geminiService] = useState(() => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (apiKey) {
-      console.log('Using real Gemini service');
-      return new GeminiService(apiKey);
+    if (!apiKey) {
+      console.error('VITE_GEMINI_API_KEY is not set!');
     }
-    console.log('No API key found, using mock service');
-    return new MockGeminiService();
+    return new GeminiService(apiKey || '');
   });
   const chatStartedRef = useRef(false);
 
@@ -1163,13 +1161,18 @@ export function PermanentHiring() {
     content: string,
     options?: { branchBaseMessages?: ChatMessage[] }
   ) => {
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content,
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
+    // Special internal trigger - don't show as user message
+    const isInternalTrigger = content === '__auto_location__';
+
+    if (!isInternalTrigger) {
+      const userMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+    }
     setIsLoading(true);
 
     // If agent is off, use mock response to save API usage
@@ -1799,6 +1802,7 @@ export function PermanentHiring() {
               {/* Broader Worker Community */}
               {communityWorkers.length > 0 && (
                 <div className="reflex-talent-group">
+                  <div className="reflex-talent-divider"></div>
                   <h3 className="reflex-talent-subheader">Broader worker community</h3>
                   <div className="reflex-talent-grid">
                     {communityWorkers.map((worker) => (

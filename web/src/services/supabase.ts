@@ -614,6 +614,7 @@ export interface WorkerRow {
     storeFavoriteCount?: number;
   } | null;
   retailer_quotes: { quote: string; brand: string; role: string }[] | null;
+  retailer_summary: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -786,6 +787,7 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     activelyLooking: row.actively_looking,
     targetBrands: row.target_brands,
     retailerQuotes: row.retailer_quotes || undefined,
+    retailerSummary: row.retailer_summary || undefined,
   };
 }
 

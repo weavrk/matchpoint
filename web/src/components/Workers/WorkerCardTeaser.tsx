@@ -16,7 +16,8 @@ interface WorkerCardTeaserProps {
 export function WorkerCardTeaser({ worker, onClick }: WorkerCardTeaserProps) {
   const firstName = worker.name.split(' ')[0];
   const hasQuotes = worker.retailerQuotes && worker.retailerQuotes.length > 0;
-  const quoteSummary = hasQuotes ? generateQuoteSummary(firstName, worker.retailerQuotes!) : null;
+  // Use stored summary from DB, fall back to generated if not available
+  const quoteSummary = worker.retailerSummary || (hasQuotes ? generateQuoteSummary(firstName, worker.retailerQuotes!) : null);
   const hasWorkHistory = worker.previousExperience && worker.previousExperience.length > 0;
 
   return (

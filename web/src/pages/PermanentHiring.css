@@ -527,20 +527,28 @@
 }
 
 .reflex-talent-header {
+  font-size: 24px;
   margin: 0 0 24px 0;
 }
 
 .reflex-talent-group {
   margin-bottom: 32px;
+  color: var(--secondary);
 }
 
 .reflex-talent-group:last-child {
   margin-bottom: 0;
 }
 
+.reflex-talent-divider {
+  height: 2px;
+  background-color: #E4E4E7;
+  margin-bottom: 12px;
+}
+
 .reflex-talent-subheader {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: var(--primary);
   margin: 0 0 16px 0;
   letter-spacing: 0.5px;
@@ -549,6 +557,8 @@
 .reflex-talent-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  /* Equal height rows - tallest card sets the row height */
+  grid-auto-rows: 1fr;
   gap: 16px;
 }
 

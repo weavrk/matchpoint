@@ -387,15 +387,18 @@ interface NominatimResult {
 function LocationInputComponent({
   disabled,
   onSelectionChange,
+  onAutoSubmit,
 }: {
   disabled?: boolean;
   onSelectionChange?: (address: string | null) => void;
+  onAutoSubmit?: (address: string) => void;
 }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<NominatimResult[]>([]);
   const [selected, setSelected] = useState<NominatimResult | null>(null);
   const [storeSelectId, setStoreSelectId] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -403,6 +406,17 @@ function LocationInputComponent({
   useEffect(() => {
     onSelectionChange?.(selected?.display_name ?? null);
   }, [selected, onSelectionChange]);
+
+  // Auto-submit after map renders (short delay to show the map first)
+  useEffect(() => {
+    if (selected && !hasAutoSubmitted && onAutoSubmit) {
+      const timer = setTimeout(() => {
+        onAutoSubmit(selected.display_name);
+        setHasAutoSubmitted(true);
+      }, 1200); // Show map for 1.2 seconds before auto-submitting
+      return () => clearTimeout(timer);
+    }
+  }, [selected, hasAutoSubmitted, onAutoSubmit]);
 
   const handleSearch = (value: string) => {
     setStoreSelectId('');
@@ -1108,6 +1122,7 @@ export function ChatInterface({
                     {parsed?.locationInput && isLastAssistantMessage && (
                       <LocationInputComponent
                         onSelectionChange={setPendingLocationAddress}
+                        onAutoSubmit={(address) => onSendMessage(address)}
                         disabled={isLoading}
                       />
                     )}
@@ -1225,20 +1240,21 @@ export function ChatInterface({
                     {/* Inline input area for last assistant message */}
                     {isLastAssistantMessage && !isLoading && (
                       <>
-                        {parsed?.locationInput ? (
-                          /* Location step: show chip button instead of text input */
-                          <form className="inline-input-form" onSubmit={handleSubmit}>
-                            <div className="message-chips">
-                              <button
-                                type="submit"
-                                className={`chip single-select type-chip-label-md${pendingLocationAddress ? ' selected' : ''}`}
-                                disabled={!pendingLocationAddress}
-                              >
-                                <span className="chip-icon">↳</span>
-                                {pendingLocationAddress || 'Select a store location'}
-                              </button>
-                            </div>
-                          </form>
+                        {hasWorkerCards ? (
+                          /* After worker cards: show "Select store location" chip */
+                          <div className="message-chips">
+                            <button
+                              type="button"
+                              className="message-chip"
+                              onClick={() => onSendMessage('__auto_location__')}
+                            >
+                              <span>Select store location</span>
+                              <span className="chip-icon"></span>
+                            </button>
+                          </div>
+                        ) : parsed?.locationInput ? (
+                          /* Location step: no input area - auto-submits on selection */
+                          null
                         ) : (
                           /* Regular input */
                           <form className="inline-input-form" onSubmit={handleSubmit}>

@@ -426,9 +426,9 @@ Then show 3 worker cards by referencing worker IDs from the database. Use this E
 ["w001", "w002", "w004"]
 ---WORKER_CARDS_END---
 
-⚠️ STOP after showing worker cards. The app will auto-trigger Step 4.
+⚠️ STOP after showing worker cards. The app will auto-trigger Step 4 by sending "__auto_location__".
 
-**Step 4: Store Location** — Auto-triggered as SEPARATE chat bubble after worker cards
+**Step 4: Store Location** — When you receive the message "__auto_location__", respond with this step
 "Where do you need help? Select a store location from the dropdown, or search for an address."
 
 Output this EXACT format (the app shows the dropdown and map):
@@ -437,7 +437,7 @@ Output this EXACT format (the app shows the dropdown and map):
 {"placeholder": "Search for store address..."}
 ---LOCATION_INPUT_END---
 
-⚠️ STOP. Wait for the user to confirm a location. Their reply will be the selected address string.
+⚠️ STOP. Wait for the user to confirm a location. Their reply will be the selected address string (not "__auto_location__").
 
 **Step 5: Compensation** — SEPARATE message with market salary data
 Use real data to determine whether this role is typically paid hourly or as an annual salary. Most frontline retail roles (Sales Associate, Cashier, Stock Associate, etc.) are hourly. Management roles (Store Manager, District Manager, etc.) are typically salaried.
@@ -817,7 +817,7 @@ Based on 466 recent job postings. Austin pays above national average across all 
       this.gathered.title = trimmed;
       this.mockFillRoleStep = 'past_role';
       return {
-        text: `Reflexers in Austin have ${trimmed} experience. Keep building a job description and we can invite them to apply.
+        text: `Austin has Reflexers with previous ${trimmed} experience.
 
 ---WORKER_CARDS_START---
 ["w001", "w002", "w004"]
@@ -833,11 +833,13 @@ Based on 466 recent job postings. Austin pays above national average across all 
     ) {
       this.mockFillRoleStep = 'past_location';
       return {
-        text: `Where do you need help? Select a store location from the dropdown, or search for an address.
-
----LOCATION_INPUT_START---
-{"placeholder": "Search for store address..."}
----LOCATION_INPUT_END---`,
+        text: `Choose a store location:`,
+        chips: [
+          { label: '2222 Rio Grande St' },
+          { label: '2901 S Capital of Texas Hwy' },
+          { label: '11601 Century Oaks Terrace' },
+        ],
+        chipsType: 'single-select',
       };
     }
 

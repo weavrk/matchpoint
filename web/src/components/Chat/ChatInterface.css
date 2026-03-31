@@ -306,10 +306,11 @@
    ============================================================ */
 :root {
   --prompt-width-nav-chips: 800px;      /* Initial nav chips grid */
-  --prompt-width-standard: 480px;       /* Standard assistant bubbles */
-  --prompt-width-benefits: 960px;       /* Benefits multi-select */
+  --prompt-width-standard: 720px;       /* Standard assistant bubbles */
+  --prompt-width-benefits: 100%;        /* Benefits multi-select */
   --prompt-width-role-selector: 100%;   /* Role selector (full width) */
   --prompt-width-worker-cards: 100%;    /* Worker cards grid (full width) */
+  --prompt-width-user: fit-content;     /* User messages hug content */
 }
 
 /* Initial nav chips in message container */
@@ -439,13 +440,15 @@
 .chat-message.user {
   align-self: flex-end;
   flex-direction: row-reverse;
+  width: fit-content;
+  max-width: calc(85% - 24px);
 }
 
 .chat-message.assistant {
   align-self: flex-start;
 }
 
-/* Assistant card bubbles: narrow default; benefits step uses .has-benefits-select (960px) */
+/* Assistant card bubbles: narrow default; benefits step uses .has-benefits-select (full width) */
 .chat-message.assistant:not(.has-worker-cards):not(.has-role-selector):not(.initial-nav-chips) {
   max-width: calc(100% - 24px);
 }
@@ -453,6 +456,7 @@
 /* Full width for messages with worker cards or role selector */
 .chat-message.has-worker-cards,
 .chat-message.has-role-selector {
+  width: 100%;
   max-width: calc(100% - 24px);
 }
 
@@ -494,7 +498,6 @@
 
 .message-content {
   padding: 0;
-  width: 100%;
 }
 
 /* Apply type-body styling to message content */
@@ -526,7 +529,8 @@
   background: var(--stone-700);
   border-radius: 20px;
   padding: 12px 20px;
-  width: auto;
+  width: auto !important;
+  flex: 0 0 auto;
   max-width: 540px;
   font-size: 16px;
   font-weight: 400;
@@ -1341,7 +1345,7 @@
 
 .role-selector-roles-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px 12px;
 }
 
@@ -1664,7 +1668,7 @@
 
 .location-map-leaflet {
   width: 100%;
-  height: 360px;
+  height: 240px;
 }
 
 .location-map-wrapper .leaflet-container {

@@ -71,6 +71,7 @@ export interface WorkerProfile {
   activelyLooking: boolean;
   targetBrands: string[] | null;
   retailerQuotes?: RetailerQuote[];
+  retailerSummary?: string;
 }
 
 export interface JobSpec {
