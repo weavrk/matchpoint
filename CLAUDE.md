@@ -108,6 +108,9 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
     - `roles` - Job role types (title, category, description). Categories: Entry Level, Specialized, Management, Seasonal.
     - `retailers` - Retailer brands (name, classification). Classifications: Luxury, Mid, Big Box.
     - `job_postings` - Scraped job listings with retailer_id, market_id, role_id, source, salary info, benefits
+    - `workers` - Worker profiles with JSONB columns for nested data (brands_worked, endorsements, previous_experience, etc.)
+    - `jobs_published` - Published job postings (job_id, job_title, job_type, store_location, job_market, pay_type, pay_range, benefits, created_at, unpublished_at)
+    - `jobs_applications` - Junction table for worker interactions with jobs (status: viewed/liked/applied/not_interested, invited: boolean)
 
 ## Environment Variables
 

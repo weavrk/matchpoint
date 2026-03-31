@@ -13,6 +13,7 @@ import {
   fetchRetailers,
   fetchRetailersLive,
   fetchJobPostings,
+  fetchPublishedJobs,
   syncMarkets,
   syncRoles,
   syncRetailers,
@@ -1005,46 +1006,40 @@ export function PermanentHiring() {
   const [, setMatchedWorkers] = useState<MatchedWorker[]>([]);
   const [, setJobSpec] = useState<JobSpec | null>(null);
 
-  // Published jobs state with sample data
-  const [publishedJobs, setPublishedJobs] = useState<PublishedJob[]>([
-    {
-      id: '1',
-      role: 'Brand Representative',
-      employmentType: 'Part-time',
-      market: 'Austin',
-      pay: '$18-20/hr',
-      traits: ['Customer Engagement', 'Self-Starter'],
-      benefits: ['Employee discount', 'Flexible scheduling'],
-      publishedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-      status: 'active',
-      engagement: { views: 47, likes: 12, applications: 6 },
-      candidates: [
-        { workerId: 'w1', workerName: 'Sofia M.', shiftVerified: true, shiftsOnReflex: 47, status: 'applied', statusDate: new Date(), matchScore: 94, topEndorsements: ['Customer Engagement', 'Positive Attitude'] },
-        { workerId: 'w2', workerName: 'Marcus T.', shiftVerified: true, shiftsOnReflex: 32, status: 'applied', statusDate: new Date(), matchScore: 89, topEndorsements: ['Self-Starter', 'Work Pace'] },
-        { workerId: 'w3', workerName: 'Elena R.', shiftVerified: true, shiftsOnReflex: 28, status: 'interested', statusDate: new Date(), matchScore: 87, topEndorsements: ['Team Player', 'Adaptable'] },
-        { workerId: 'w4', workerName: 'James K.', shiftVerified: false, shiftsOnReflex: 15, status: 'viewed', statusDate: new Date(), matchScore: 82, topEndorsements: ['Preparedness'] },
-        { workerId: 'w5', workerName: 'Priya S.', shiftVerified: true, shiftsOnReflex: 51, status: 'applied', statusDate: new Date(), matchScore: 96, topEndorsements: ['Customer Engagement', 'Self-Starter'] },
-        { workerId: 'w6', workerName: 'David L.', shiftVerified: true, shiftsOnReflex: 22, status: 'invited', statusDate: new Date(), matchScore: 78, topEndorsements: ['Work Pace'] },
-      ],
-    },
-    {
-      id: '2',
-      role: 'Sales Associate',
-      employmentType: 'Full-time',
-      market: 'Austin',
-      pay: '$17-19/hr',
-      traits: ['Team Player', 'Positive Attitude', 'Adaptable'],
-      benefits: ['Health insurance', '401(k) matching', 'Paid time off'],
-      publishedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-      status: 'active',
-      engagement: { views: 89, likes: 24, applications: 11 },
-      candidates: [
-        { workerId: 'w7', workerName: 'Jordan F.', shiftVerified: true, shiftsOnReflex: 63, status: 'applied', statusDate: new Date(), matchScore: 92, topEndorsements: ['Team Player', 'Positive Attitude'] },
-        { workerId: 'w8', workerName: 'Ashley N.', shiftVerified: true, shiftsOnReflex: 41, status: 'applied', statusDate: new Date(), matchScore: 88, topEndorsements: ['Adaptable', 'Customer Engagement'] },
-        { workerId: 'w9', workerName: 'Chris W.', shiftVerified: true, shiftsOnReflex: 35, status: 'interested', statusDate: new Date(), matchScore: 85, topEndorsements: ['Self-Starter'] },
-      ],
-    },
-  ]);
+  // Published jobs state - fetched from Supabase
+  const [publishedJobs, setPublishedJobs] = useState<PublishedJob[]>([]);
+  const [_publishedJobsLoading, setPublishedJobsLoading] = useState(true);
+
+  // Fetch published jobs from Supabase on mount
+  useEffect(() => {
+    async function loadPublishedJobs() {
+      try {
+        const jobs = await fetchPublishedJobs();
+        // Convert DB format to UI format
+        const uiJobs: PublishedJob[] = jobs
+          .filter(job => !job.unpublished_at) // Only show active jobs
+          .map(job => ({
+            id: job.job_id,
+            role: job.job_title,
+            employmentType: job.job_type === 'Either' ? 'Open to either' : job.job_type,
+            market: job.job_market,
+            pay: job.pay_range,
+            traits: [], // Traits stored separately or not used yet
+            benefits: job.benefits || [],
+            publishedAt: new Date(job.created_at),
+            status: 'active' as const,
+            engagement: { views: 0, likes: 0, applications: 0 }, // Will come from separate table later
+            candidates: [], // Will come from separate table later
+          }));
+        setPublishedJobs(uiJobs);
+      } catch (error) {
+        console.error('Failed to load published jobs:', error);
+      } finally {
+        setPublishedJobsLoading(false);
+      }
+    }
+    loadPublishedJobs();
+  }, []);
 
   // Handle job actions (pause/resume/close)
   const handleJobAction = useCallback((jobId: string, action: 'pause' | 'resume' | 'close') => {
@@ -1056,21 +1051,63 @@ export function PermanentHiring() {
   }, []);
 
   // Publish a new job from chat
-  const publishJob = useCallback((jobData: { role: string; employmentType: string; market: string; pay: string; traits: string[]; benefits: string[] }) => {
-    const newJob: PublishedJob = {
-      id: Date.now().toString(),
-      role: jobData.role,
-      employmentType: jobData.employmentType as 'Full-time' | 'Part-time' | 'Open to either',
-      market: jobData.market,
-      pay: jobData.pay,
-      traits: jobData.traits,
-      benefits: jobData.benefits,
-      publishedAt: new Date(),
-      status: 'active',
-      engagement: { views: 0, likes: 0, applications: 0 },
-      candidates: [],
+  const publishJob = useCallback(async (jobData: { role: string; employmentType: string; market: string; pay: string; traits: string[]; benefits: string[] }) => {
+    // Map employment type to DB format
+    const jobTypeMap: Record<string, 'Part-time' | 'Full-time' | 'Either'> = {
+      'Full-time': 'Full-time',
+      'Part-time': 'Part-time',
+      'Open to either': 'Either',
     };
-    setPublishedJobs(prev => [newJob, ...prev]);
+    const jobType = jobTypeMap[jobData.employmentType] || 'Either';
+
+    // Determine pay type from pay string (contains "hr" or "/hour" = hourly, otherwise salary)
+    const payType: 'hourly' | 'salary' = jobData.pay.toLowerCase().includes('hr') || jobData.pay.toLowerCase().includes('hour') ? 'hourly' : 'salary';
+
+    try {
+      // Save to Supabase
+      const dbJob = await createPublishedJob({
+        job_id: Date.now().toString(),
+        job_title: jobData.role,
+        job_type: jobType,
+        job_market: jobData.market,
+        pay_type: payType,
+        pay_range: jobData.pay,
+        benefits: jobData.benefits,
+      });
+
+      // Add to local state
+      const newJob: PublishedJob = {
+        id: dbJob.job_id,
+        role: dbJob.job_title,
+        employmentType: jobData.employmentType as 'Full-time' | 'Part-time' | 'Open to either',
+        market: dbJob.job_market,
+        pay: dbJob.pay_range,
+        traits: jobData.traits,
+        benefits: dbJob.benefits || [],
+        publishedAt: new Date(dbJob.created_at),
+        status: 'active',
+        engagement: { views: 0, likes: 0, applications: 0 },
+        candidates: [],
+      };
+      setPublishedJobs(prev => [newJob, ...prev]);
+    } catch (error) {
+      console.error('Failed to publish job:', error);
+      // Still add to local state as fallback
+      const newJob: PublishedJob = {
+        id: Date.now().toString(),
+        role: jobData.role,
+        employmentType: jobData.employmentType as 'Full-time' | 'Part-time' | 'Open to either',
+        market: jobData.market,
+        pay: jobData.pay,
+        traits: jobData.traits,
+        benefits: jobData.benefits,
+        publishedAt: new Date(),
+        status: 'active',
+        engagement: { views: 0, likes: 0, applications: 0 },
+        candidates: [],
+      };
+      setPublishedJobs(prev => [newJob, ...prev]);
+    }
     // Don't auto-navigate - stay in chat so user can see success banner and optionally view candidates
   }, []);
   const [geminiService] = useState(() => {

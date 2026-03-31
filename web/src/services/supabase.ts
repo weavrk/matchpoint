@@ -495,45 +495,24 @@ export async function fetchRetailersLive(): Promise<RetailerLive[]> {
 
 export interface PublishedJobDB {
   id: string;
-  retailer_id: string | null;
-  role: string;
-  employment_type: 'Full-time' | 'Part-time' | 'Open to either';
-  market: string;
-  store_location: string | null;
-  pay: string;
-  traits: string[];
-  benefits: string[];
-  published_at: string;
-  status: 'active' | 'paused' | 'closed';
-  views: number;
-  likes: number;
-  applications: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface JobCandidateDB {
-  id: string;
   job_id: string;
-  worker_id: string;
-  worker_name: string;
-  worker_photo: string | null;
-  shift_verified: boolean;
-  shifts_on_reflex: number;
-  status: 'invited' | 'viewed' | 'interested' | 'applied';
-  status_date: string;
-  match_score: number;
-  top_endorsements: string[];
+  job_title: string;
+  job_type: 'Part-time' | 'Full-time' | 'Either';
+  store_location: string | null;
+  job_market: string;
+  pay_type: 'hourly' | 'salary';
+  pay_range: string;
+  benefits: string[];
   created_at: string;
-  updated_at: string;
+  unpublished_at: string | null;
 }
 
-// Fetch all published jobs with their candidates
+// Fetch all published jobs
 export async function fetchPublishedJobs(): Promise<PublishedJobDB[]> {
   const { data, error } = await supabase
-    .from('published_jobs')
+    .from('jobs_published')
     .select('*')
-    .order('published_at', { ascending: false });
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching published jobs:', error);
@@ -542,90 +521,28 @@ export async function fetchPublishedJobs(): Promise<PublishedJobDB[]> {
   return data || [];
 }
 
-// Fetch candidates for a specific job
-export async function fetchJobCandidates(jobId: string): Promise<JobCandidateDB[]> {
-  const { data, error } = await supabase
-    .from('job_candidates')
-    .select('*')
-    .eq('job_id', jobId)
-    .order('match_score', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching job candidates:', error);
-    throw error;
-  }
-  return data || [];
-}
-
-// Fetch all published jobs with candidates in one call
-export async function fetchPublishedJobsWithCandidates(): Promise<(PublishedJobDB & { candidates: JobCandidateDB[] })[]> {
-  const { data: jobs, error: jobsError } = await supabase
-    .from('published_jobs')
-    .select('*')
-    .order('published_at', { ascending: false });
-
-  if (jobsError) {
-    console.error('Error fetching published jobs:', jobsError);
-    throw jobsError;
-  }
-
-  if (!jobs || jobs.length === 0) {
-    return [];
-  }
-
-  const jobIds = jobs.map(j => j.id);
-  const { data: candidates, error: candidatesError } = await supabase
-    .from('job_candidates')
-    .select('*')
-    .in('job_id', jobIds);
-
-  if (candidatesError) {
-    console.error('Error fetching job candidates:', candidatesError);
-    throw candidatesError;
-  }
-
-  // Group candidates by job_id
-  const candidatesByJob = new Map<string, JobCandidateDB[]>();
-  for (const candidate of (candidates || [])) {
-    const existing = candidatesByJob.get(candidate.job_id) || [];
-    existing.push(candidate);
-    candidatesByJob.set(candidate.job_id, existing);
-  }
-
-  // Merge candidates into jobs
-  return jobs.map(job => ({
-    ...job,
-    candidates: candidatesByJob.get(job.id) || [],
-  }));
-}
-
 // Create a new published job
 export async function createPublishedJob(job: {
-  retailer_id?: string;
-  role: string;
-  employment_type: 'Full-time' | 'Part-time' | 'Open to either';
-  market: string;
+  job_id: string;
+  job_title: string;
+  job_type: 'Part-time' | 'Full-time' | 'Either';
   store_location?: string;
-  pay: string;
-  traits: string[];
+  job_market: string;
+  pay_type: 'hourly' | 'salary';
+  pay_range: string;
   benefits: string[];
 }): Promise<PublishedJobDB> {
   const { data, error } = await supabase
-    .from('published_jobs')
+    .from('jobs_published')
     .insert({
-      retailer_id: job.retailer_id || null,
-      role: job.role,
-      employment_type: job.employment_type,
-      market: job.market,
+      job_id: job.job_id,
+      job_title: job.job_title,
+      job_type: job.job_type,
       store_location: job.store_location || null,
-      pay: job.pay,
-      traits: job.traits,
+      job_market: job.job_market,
+      pay_type: job.pay_type,
+      pay_range: job.pay_range,
       benefits: job.benefits,
-      published_at: new Date().toISOString(),
-      status: 'active',
-      views: 0,
-      likes: 0,
-      applications: 0,
     })
     .select()
     .single();
@@ -637,101 +554,249 @@ export async function createPublishedJob(job: {
   return data;
 }
 
-// Update job status (pause/resume/close)
-export async function updatePublishedJobStatus(
-  jobId: string,
-  status: 'active' | 'paused' | 'closed'
-): Promise<PublishedJobDB> {
+// Unpublish a job (set unpublished_at timestamp)
+export async function unpublishJob(jobId: string): Promise<PublishedJobDB> {
   const { data, error } = await supabase
-    .from('published_jobs')
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq('id', jobId)
+    .from('jobs_published')
+    .update({ unpublished_at: new Date().toISOString() })
+    .eq('job_id', jobId)
     .select()
     .single();
 
   if (error) {
-    console.error('Error updating job status:', error);
+    console.error('Error unpublishing job:', error);
     throw error;
   }
   return data;
 }
 
-// Update job engagement metrics
-export async function updateJobEngagement(
-  jobId: string,
-  engagement: { views?: number; likes?: number; applications?: number }
-): Promise<PublishedJobDB> {
-  const { data, error } = await supabase
-    .from('published_jobs')
-    .update({ ...engagement, updated_at: new Date().toISOString() })
-    .eq('id', jobId)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating job engagement:', error);
-    throw error;
-  }
-  return data;
-}
-
-// Add a candidate to a job
-export async function addJobCandidate(candidate: {
-  job_id: string;
-  worker_id: string;
-  worker_name: string;
-  worker_photo?: string;
-  shift_verified: boolean;
-  shifts_on_reflex: number;
-  status: 'invited' | 'viewed' | 'interested' | 'applied';
-  match_score: number;
-  top_endorsements: string[];
-}): Promise<JobCandidateDB> {
-  const { data, error } = await supabase
-    .from('job_candidates')
-    .insert({
-      ...candidate,
-      worker_photo: candidate.worker_photo || null,
-      status_date: new Date().toISOString(),
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error adding job candidate:', error);
-    throw error;
-  }
-  return data;
-}
-
-// Update candidate status
-export async function updateCandidateStatus(
-  candidateId: string,
-  status: 'invited' | 'viewed' | 'interested' | 'applied'
-): Promise<JobCandidateDB> {
-  const { data, error } = await supabase
-    .from('job_candidates')
-    .update({ status, status_date: new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq('id', candidateId)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error updating candidate status:', error);
-    throw error;
-  }
-  return data;
-}
-
-// Delete a published job (and its candidates via cascade)
+// Delete a published job
 export async function deletePublishedJob(jobId: string): Promise<void> {
   const { error } = await supabase
-    .from('published_jobs')
+    .from('jobs_published')
     .delete()
-    .eq('id', jobId);
+    .eq('job_id', jobId);
 
   if (error) {
     console.error('Error deleting published job:', error);
     throw error;
   }
+}
+
+// ============================================================
+// WORKERS API
+// ============================================================
+
+export interface WorkerRow {
+  id: string;
+  name: string;
+  photo: string | null;
+  market: string;
+  shift_verified: boolean;
+  shifts_on_reflex: number;
+  invited_back_stores: number;
+  on_time_rating: 'Exceptional' | null;
+  commitment_score: 'Exceptional' | null;
+  preference: 'FT' | 'PT' | 'Both';
+  actively_looking: boolean;
+  target_brands: string[] | null;
+  about: string | null;
+  brands_worked: { name: string; tier: 'luxury' | 'elevated' | 'mid' }[];
+  endorsements: string[];
+  previous_experience: { company: string; duration: string; roles: string[] }[];
+  work_style: { rolePreferences: string[]; traits: string[] } | null;
+  reliability: { noShows: number; cancellations: number; lastMinuteFills: number } | null;
+  availability: { weekends: boolean; openingShifts: boolean; closingShifts: boolean };
+  reflex_activity: {
+    shiftsByTier: { luxury: number; elevated: number; mid: number };
+    longestRelationship?: { brand: string; flexCount: number };
+    tierProgression?: string;
+    storeFavoriteCount?: number;
+  } | null;
+  retailer_quotes: { quote: string; brand: string; role: string }[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkerApplicationRow {
+  id: string;
+  worker_id: string;
+  job_id: string;
+  status: 'viewed' | 'liked' | 'applied' | 'not_interested';
+  invited: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Fetch all workers
+export async function fetchWorkers(): Promise<WorkerRow[]> {
+  const { data, error } = await supabase
+    .from('workers')
+    .select('*')
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching workers:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+// Fetch workers with pagination (for lazy loading)
+export async function fetchWorkersPaginated(offset: number, limit: number): Promise<{ workers: WorkerRow[]; hasMore: boolean }> {
+  const { data, error, count } = await supabase
+    .from('workers')
+    .select('*', { count: 'exact' })
+    .order('shift_verified', { ascending: false })
+    .order('shifts_on_reflex', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    console.error('Error fetching workers:', error);
+    throw error;
+  }
+  return {
+    workers: data || [],
+    hasMore: count ? offset + limit < count : false,
+  };
+}
+
+// Fetch a single worker by ID
+export async function fetchWorkerById(id: string): Promise<WorkerRow | null> {
+  const { data, error } = await supabase
+    .from('workers')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null; // Not found
+    console.error('Error fetching worker:', error);
+    throw error;
+  }
+  return data;
+}
+
+// Fetch workers by market
+export async function fetchWorkersByMarket(market: string): Promise<WorkerRow[]> {
+  const { data, error } = await supabase
+    .from('workers')
+    .select('*')
+    .eq('market', market)
+    .order('shift_verified', { ascending: false })
+    .order('shifts_on_reflex', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching workers by market:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+// ============================================================
+// WORKER APPLICATIONS API
+// ============================================================
+
+// Fetch applications for a job
+export async function fetchApplicationsForJob(jobId: string): Promise<WorkerApplicationRow[]> {
+  const { data, error } = await supabase
+    .from('jobs_applications')
+    .select('*')
+    .eq('job_id', jobId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching applications:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+// Fetch applications by worker
+export async function fetchApplicationsByWorker(workerId: string): Promise<WorkerApplicationRow[]> {
+  const { data, error } = await supabase
+    .from('jobs_applications')
+    .select('*')
+    .eq('worker_id', workerId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching worker applications:', error);
+    throw error;
+  }
+  return data || [];
+}
+
+// Create or update a worker application
+export async function upsertWorkerApplication(
+  workerId: string,
+  jobId: string,
+  status: 'viewed' | 'liked' | 'applied' | 'not_interested',
+  invited: boolean = false
+): Promise<WorkerApplicationRow> {
+  const { data, error } = await supabase
+    .from('jobs_applications')
+    .upsert(
+      { worker_id: workerId, job_id: jobId, status, invited },
+      { onConflict: 'worker_id,job_id' }
+    )
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error upserting worker application:', error);
+    throw error;
+  }
+  return data;
+}
+
+// Invite a worker to a job
+export async function inviteWorkerToJob(workerId: string, jobId: string): Promise<WorkerApplicationRow> {
+  return upsertWorkerApplication(workerId, jobId, 'viewed', true);
+}
+
+// Convert database row to WorkerProfile format used by the app
+import type { WorkerProfile, Endorsement, BrandTier } from '../types';
+
+export function workerRowToProfile(row: WorkerRow): WorkerProfile {
+  return {
+    id: row.id,
+    name: row.name,
+    photo: row.photo || undefined,
+    shiftVerified: row.shift_verified,
+    shiftsOnReflex: row.shifts_on_reflex,
+    brandsWorked: row.brands_worked as { name: string; tier: BrandTier }[],
+    market: row.market,
+    preference: row.preference,
+    endorsements: row.endorsements as Endorsement[],
+    onTimeRating: row.on_time_rating,
+    commitmentScore: row.commitment_score,
+    invitedBackStores: row.invited_back_stores,
+    about: row.about || '',
+    previousExperience: row.previous_experience,
+    workStyle: row.work_style || { rolePreferences: [], traits: [] },
+    reliability: row.reliability,
+    availability: row.availability,
+    reflexActivity: row.reflex_activity ? {
+      shiftsByTier: row.reflex_activity.shiftsByTier,
+      longestRelationship: row.reflex_activity.longestRelationship || null,
+      tierProgression: (row.reflex_activity.tierProgression as 'upward' | 'stable') || 'stable',
+      storeFavoriteCount: row.reflex_activity.storeFavoriteCount || null,
+    } : null,
+    activelyLooking: row.actively_looking,
+    targetBrands: row.target_brands,
+    retailerQuotes: row.retailer_quotes || undefined,
+  };
+}
+
+// Fetch all workers as WorkerProfile objects
+export async function fetchWorkersAsProfiles(): Promise<WorkerProfile[]> {
+  const rows = await fetchWorkers();
+  return rows.map(workerRowToProfile);
+}
+
+// Fetch workers by market as WorkerProfile objects
+export async function fetchWorkersByMarketAsProfiles(market: string): Promise<WorkerProfile[]> {
+  const rows = await fetchWorkersByMarket(market);
+  return rows.map(workerRowToProfile);
 }
