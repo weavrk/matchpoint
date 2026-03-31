@@ -1,10 +1,10 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Check, Info, Loader2, Clipboard, CircleMinus, BotOff, BotMessageSquare, UserStar, Database, Palette } from 'lucide-react';
+import { Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Check, Info, Loader2, Clipboard, CircleMinus, BotOff, BotMessageSquare, UserStar, Database, Palette, BadgeCheck, Star, CalendarDays, Briefcase, Heart, Clock } from 'lucide-react';
 import { ChatInterface } from '../components/Chat';
 import { ScrapeModal, type ScrapeConfig } from '../components/ScrapeModal';
 import { ScrapeProgressModal, type ScrapeProgressData } from '../components/ScrapeProgressModal';
 import { UnmatchedRolesModal } from '../components/UnmatchedRolesModal';
-import { WorkerCard, WorkerCardHeader, WorkerCardTeaser, WorkerCardCompact, WorkerCardFull } from '../components/Workers';
+import { WorkerCardHeader, WorkerCardTeaser, WorkerCardCompact, WorkerCardFull } from '../components/Workers';
 import { GeminiService, MockGeminiService } from '../services/gemini';
 import { matchWorkers } from '../services/workerMatching';
 import {
@@ -744,6 +744,8 @@ export function PermanentHiring() {
   const talentLoadMoreRef = useRef<HTMLDivElement>(null);
   const [allTalentWorkers, setAllTalentWorkers] = useState<MatchedWorker[]>([]);
   const [_workersLoading, setWorkersLoading] = useState(true);
+  const [selectedTalentWorker, setSelectedTalentWorker] = useState<MatchedWorker | null>(null);
+  const workerCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Fetch data from Supabase on mount
   useEffect(() => {
@@ -1209,28 +1211,28 @@ export function PermanentHiring() {
 
       const response = await geminiService.sendMessage(content);
 
-      // Check if response contains worker cards AND follow-up text (compensation question)
-      // If so, split into two separate messages
-      const workerCardsMatch = response.text.match(/---WORKER_CARDS_START---([\s\S]*?)---WORKER_CARDS_END---/);
+      // Add the assistant message
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response.text,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
 
-      if (workerCardsMatch) {
-        // Combine worker cards and any follow-up text into a single message
-        const workerCardsMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
+      // If there's a followUp, auto-send it after a short delay
+      if (response.followUp) {
+        setIsLoading(true);
+        // Small delay for visual separation
+        await new Promise(resolve => setTimeout(resolve, 500));
+        const followUpResponse = await geminiService.sendMessage(response.followUp);
+        const followUpMessage: ChatMessage = {
+          id: (Date.now() + 2).toString(),
           role: 'assistant',
-          content: response.text,
+          content: followUpResponse.text,
           timestamp: new Date(),
         };
-        setMessages((prev) => [...prev, workerCardsMessage]);
-      } else {
-        // No worker cards, just add the message normally
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: response.text,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
+        setMessages((prev) => [...prev, followUpMessage]);
       }
 
       if (response.jobSpec) {
@@ -1755,21 +1757,90 @@ export function PermanentHiring() {
         </div>
       )}
 
-      {activeTab === 'reflex-talent' && (
-        <div className="reflex-talent-content">
-          <div className="reflex-talent-grid">
-            {allTalentWorkers.slice(0, talentDisplayCount).map((worker) => (
-              <WorkerCard key={worker.id} worker={worker} />
-            ))}
-          </div>
-          {talentDisplayCount < allTalentWorkers.length && (
-            <div ref={talentLoadMoreRef} className="reflex-talent-load-more">
-              <Loader2 size={24} className="oz-spinner" />
-              <span>Loading more...</span>
+      {activeTab === 'reflex-talent' && (() => {
+        const shiftVerifiedWorkers = allTalentWorkers.filter(w => w.shiftVerified);
+        const communityWorkers = allTalentWorkers.filter(w => !w.shiftVerified);
+        return (
+          <div className={`reflex-talent-content${selectedTalentWorker ? ' has-detail-panel' : ''}`}>
+            <div className="reflex-talent-main">
+              <p className="reflex-talent-header type-prompt-question">
+                Explore Reflex talent in Austin
+              </p>
+
+              {/* Shift Verified Workers */}
+              {shiftVerifiedWorkers.length > 0 && (
+                <div className="reflex-talent-group">
+                  <h3 className="reflex-talent-subheader">Shift Verified</h3>
+                  <div className="reflex-talent-grid">
+                    {shiftVerifiedWorkers.map((worker) => (
+                      <div
+                        key={worker.id}
+                        ref={(el) => { workerCardRefs.current[worker.id] = el; }}
+                      >
+                        <WorkerCardTeaser
+                          worker={worker}
+                          onClick={() => {
+                            setSelectedTalentWorker(worker);
+                            // Scroll card into view after panel opens
+                            setTimeout(() => {
+                              workerCardRefs.current[worker.id]?.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start',
+                              });
+                            }, 50);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Broader Worker Community */}
+              {communityWorkers.length > 0 && (
+                <div className="reflex-talent-group">
+                  <h3 className="reflex-talent-subheader">Broader worker community</h3>
+                  <div className="reflex-talent-grid">
+                    {communityWorkers.map((worker) => (
+                      <div
+                        key={worker.id}
+                        ref={(el) => { workerCardRefs.current[worker.id] = el; }}
+                      >
+                        <WorkerCardTeaser
+                          worker={worker}
+                          onClick={() => {
+                            setSelectedTalentWorker(worker);
+                            // Scroll card into view after panel opens
+                            setTimeout(() => {
+                              workerCardRefs.current[worker.id]?.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start',
+                              });
+                            }, 50);
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {talentDisplayCount < allTalentWorkers.length && (
+                <div ref={talentLoadMoreRef} className="reflex-talent-load-more">
+                  <Loader2 size={24} className="oz-spinner" />
+                  <span>Loading more...</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+            {selectedTalentWorker && (
+              <WorkerCardFull
+                worker={selectedTalentWorker}
+                onClose={() => setSelectedTalentWorker(null)}
+              />
+            )}
+          </div>
+        );
+      })()}
 
       {activeTab === 'oz' && (
         <div className="oz-content">
@@ -2971,6 +3042,209 @@ export function PermanentHiring() {
                       <span>Self-Starter</span>
                       <span className="chip-icon"><Check size={14} /></span>
                     </button>
+                  </div>
+                </div>
+              </section>
+
+              {/* Pills / Tags Section */}
+              <section className="ds-section">
+                <h3>Pills / Tags</h3>
+                <p className="ds-description">
+                  Rounded pill badges with consistent sizing. Combine style + size classes.
+                  Usage: <code>className="pill pill-[style] pill-[size]"</code>
+                </p>
+
+                <div className="ds-subsection">
+                  <h4>Styles</h4>
+                  <div className="ds-pills-grid">
+                    <div className="ds-pill-group">
+                      <span className="ds-pill-label">pill-lite-gray</span>
+                      <span className="pill pill-lite-gray pill-md">
+                        <span className="pill-text">Lite Gray</span>
+                      </span>
+                    </div>
+                    <div className="ds-pill-group">
+                      <span className="ds-pill-label">pill-green</span>
+                      <span className="pill pill-green pill-md">
+                        <span className="pill-icon"><BadgeCheck size={14} /></span>
+                        <span className="pill-text">Shift Verified</span>
+                      </span>
+                    </div>
+                    <div className="ds-pill-group">
+                      <span className="ds-pill-label">pill-dark-gray</span>
+                      <span className="pill pill-dark-gray pill-md">
+                        <span className="pill-text">Dark Gray</span>
+                      </span>
+                    </div>
+                    <div className="ds-pill-group">
+                      <span className="ds-pill-label">pill-stroke</span>
+                      <span className="pill pill-stroke pill-md">
+                        <span className="pill-text">Stroke</span>
+                      </span>
+                    </div>
+                    <div className="ds-pill-group">
+                      <span className="ds-pill-label">pill-blue</span>
+                      <span className="pill pill-blue pill-md">
+                        <span className="pill-text">Blue</span>
+                      </span>
+                    </div>
+                    <div className="ds-pill-group">
+                      <span className="ds-pill-label">pill-navy</span>
+                      <span className="pill pill-navy pill-md">
+                        <span className="pill-text">Navy</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>Sizes</h4>
+                  <div className="ds-pills-row">
+                    <div className="ds-pill-group">
+                      <span className="ds-pill-label">pill-sm (12px)</span>
+                      <span className="pill pill-lite-gray pill-sm">
+                        <span className="pill-text">Small</span>
+                      </span>
+                    </div>
+                    <div className="ds-pill-group">
+                      <span className="ds-pill-label">pill-md (14px)</span>
+                      <span className="pill pill-lite-gray pill-md">
+                        <span className="pill-text">Medium</span>
+                      </span>
+                    </div>
+                    <div className="ds-pill-group">
+                      <span className="ds-pill-label">pill-lg (16px)</span>
+                      <span className="pill pill-lite-gray pill-lg">
+                        <span className="pill-text">Large</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>Variants: Counter (left of text)</h4>
+                  <div className="ds-pills-row">
+                    <span className="pill pill-lite-gray pill-sm">
+                      <span className="pill-counter">24</span>
+                      <span className="pill-text">shifts</span>
+                    </span>
+                    <span className="pill pill-lite-gray pill-md">
+                      <span className="pill-counter">24</span>
+                      <span className="pill-text">shifts</span>
+                    </span>
+                    <span className="pill pill-lite-gray pill-lg">
+                      <span className="pill-counter">24</span>
+                      <span className="pill-text">shifts</span>
+                    </span>
+                  </div>
+                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
+                    <span className="pill pill-green pill-md">
+                      <span className="pill-counter">12</span>
+                      <span className="pill-text">stores favorited</span>
+                    </span>
+                    <span className="pill pill-stroke pill-md">
+                      <span className="pill-counter">8</span>
+                      <span className="pill-text">endorsements</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>Variants: Icon (left of text)</h4>
+                  <div className="ds-pills-row">
+                    <span className="pill pill-green pill-sm">
+                      <span className="pill-icon"><BadgeCheck size={12} /></span>
+                      <span className="pill-text">Shift Verified</span>
+                    </span>
+                    <span className="pill pill-green pill-md">
+                      <span className="pill-icon"><BadgeCheck size={14} /></span>
+                      <span className="pill-text">Shift Verified</span>
+                    </span>
+                    <span className="pill pill-green pill-lg">
+                      <span className="pill-icon"><BadgeCheck size={16} /></span>
+                      <span className="pill-text">Shift Verified</span>
+                    </span>
+                  </div>
+                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
+                    <span className="pill pill-stroke pill-md">
+                      <span className="pill-icon"><CalendarDays size={14} /></span>
+                      <span className="pill-text">Weekends</span>
+                    </span>
+                    <span className="pill pill-stroke pill-md">
+                      <span className="pill-icon"><Briefcase size={14} /></span>
+                      <span className="pill-text">Full-time</span>
+                    </span>
+                    <span className="pill pill-navy pill-md">
+                      <span className="pill-icon"><Search size={14} /></span>
+                      <span className="pill-text">Actively looking</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>Variants: Text only</h4>
+                  <div className="ds-pills-row">
+                    <span className="pill pill-lite-gray pill-md">
+                      <span className="pill-text">Luxury</span>
+                    </span>
+                    <span className="pill pill-lite-gray pill-md">
+                      <span className="pill-text">Elevated</span>
+                    </span>
+                    <span className="pill pill-lite-gray pill-md">
+                      <span className="pill-text">Mid</span>
+                    </span>
+                  </div>
+                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
+                    <span className="pill pill-stroke pill-md">
+                      <span className="pill-text">Team Player</span>
+                    </span>
+                    <span className="pill pill-stroke pill-md">
+                      <span className="pill-text">Self-Starter</span>
+                    </span>
+                    <span className="pill pill-stroke pill-md">
+                      <span className="pill-text">Adaptable</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="ds-subsection">
+                  <h4>Real-world Examples</h4>
+                  <p className="ds-description">Common patterns from worker cards</p>
+                  <div className="ds-pills-row">
+                    <span className="pill pill-green pill-md">
+                      <span className="pill-icon"><BadgeCheck size={14} /></span>
+                      <span className="pill-text">Shift Verified</span>
+                    </span>
+                    <span className="pill pill-lite-gray pill-md">
+                      <span className="pill-counter">24</span>
+                      <span className="pill-text">shifts</span>
+                    </span>
+                    <span className="pill pill-lite-gray pill-md">
+                      <span className="pill-counter">12</span>
+                      <span className="pill-text">stores favorited</span>
+                    </span>
+                  </div>
+                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
+                    <span className="pill pill-stroke pill-sm">
+                      <span className="pill-icon"><Star size={12} /></span>
+                      <span className="pill-text">Customer Engagement</span>
+                      <span className="pill-counter">+5</span>
+                    </span>
+                    <span className="pill pill-stroke pill-sm">
+                      <span className="pill-icon"><Heart size={12} /></span>
+                      <span className="pill-text">Positive Attitude</span>
+                      <span className="pill-counter">+3</span>
+                    </span>
+                  </div>
+                  <div className="ds-pills-row" style={{ marginTop: '12px' }}>
+                    <span className="pill pill-stroke pill-md">
+                      <span className="pill-icon"><CalendarDays size={14} /></span>
+                      <span className="pill-text">Weekends</span>
+                    </span>
+                    <span className="pill pill-stroke pill-md">
+                      <span className="pill-icon"><Clock size={14} /></span>
+                      <span className="pill-text">Opening shifts</span>
+                    </span>
                   </div>
                 </div>
               </section>

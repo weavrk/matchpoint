@@ -362,23 +362,23 @@ Show the role selector using this EXACT format (copy verbatim).
   "groups": [
     {
       "header": "Sales Floor",
-      "roles": ["Sales Associate", "Store Associate", "Brand Representative"]
+      "roles": ["Brand Representative", "Sales Associate", "Store Associate"]
     },
     {
       "header": "Sales Support",
-      "roles": ["Sales Assistant", "Cashier", "Fitting Room Attendant", "Team Member", "Retail Customer Service"]
+      "roles": ["Cashier", "Fitting Room Attendant", "Retail Customer Service", "Sales Assistant", "Team Member"]
     },
     {
       "header": "Back of House",
-      "roles": ["Stock Associate", "Inventory Associate", "Operations Associate", "Operations Assistant"]
+      "roles": ["Inventory Associate", "Operations Assistant", "Operations Associate", "Stock Associate"]
     },
     {
       "header": "Specialized",
-      "roles": ["Beauty Advisor", "Stylist", "Visual Merchandiser", "Pop Up Associate"]
+      "roles": ["Beauty Advisor", "Stylist", "Visual Merchandiser"]
     },
     {
       "header": "Management",
-      "roles": ["New Store Lead", "Store Team Leader", "Supervisor", "Key Holder", "Department Supervisor", "Assistant Store Manager", "Store Manager", "District Manager"]
+      "roles": ["Assistant Store Manager", "Department Supervisor", "District Manager", "Key Holder", "New Store Lead", "Store Manager", "Store Team Leader", "Supervisor"]
     }
   ]
 }
@@ -408,7 +408,7 @@ Use the roles from the category they selected in Step 2b:
 - If Sales Floor: [Sales Associate] [Store Associate] [Brand Representative]
 - If Sales Support: [Sales Assistant] [Cashier] [Fitting Room Attendant] [Team Member] [Retail Customer Service]
 - If Back of House: [Stock Associate] [Inventory Associate] [Operations Associate] [Operations Assistant]
-- If Specialized: [Beauty Advisor] [Stylist] [Visual Merchandiser] [Pop Up Associate]
+- If Specialized: [Beauty Advisor] [Stylist] [Visual Merchandiser]
 - If Management: [New Store Lead] [Store Team Leader] [Supervisor] [Key Holder] [Department Supervisor] [Assistant Store Manager] [Store Manager] [District Manager]
 
 ⚠️ STOP. Wait for response.
@@ -426,20 +426,9 @@ Then show 3 worker cards by referencing worker IDs from the database. Use this E
 ["w001", "w002", "w004"]
 ---WORKER_CARDS_END---
 
-Offer a single chip to continue: [Continue to store location]
+⚠️ STOP after showing worker cards. The app will auto-trigger Step 4.
 
-⚠️ STOP. Wait for response.
-
-/* STEP 4 (Traits) - COMMENTED OUT FOR NOW - can restore as separate chat prompt later
-**Step 4: Desired Traits** — (rendered below worker cards in the same message bubble)
-"What top traits should we look for in a new candidate? Select or type qualities you're looking for."
-
-Offer chips: [Customer Engagement] [Self-Starter] [Preparedness] [Work Pace] [Productivity] [Attention to Detail] [Team Player] [Positive Attitude] [Adaptable] [Flexible availability] [Open to feedback] [Bilingual] [Coaching others] [Product knowledge]
-
-⚠️ STOP. Wait for response.
-*/
-
-**Step 4: Store Location** — SEPARATE message (triggered when user clicks "Continue to store location")
+**Step 4: Store Location** — Auto-triggered as SEPARATE chat bubble after worker cards
 "Where do you need help? Select a store location from the dropdown, or search for an address."
 
 Output this EXACT format (the app shows the dropdown and map):
@@ -559,6 +548,27 @@ When user clicks "Create a job posting", redirect them to the Fill a role flow:
 "Great! Let's build a job posting together."
 Then continue with **Step 1 (Situation)** of the "Fill a role" flow.
 
+### For "Explore market comps" flow (Market Salary Summary)
+When user selects "Explore market comps" or asks about market data, show a comparison table of salary ranges across the top retail roles in their market vs national averages. Do NOT ask which role they're interested in - show all roles together in a table.
+
+Respond with this format (use markdown table):
+
+"Here's {{MARKET}} retail compensation compared to national averages:
+
+| Role | {{MARKET}} | National | vs Avg |
+|------|--------|----------|--------|
+| Sales Associate | **$17-20/hr** | $15-18/hr | +12% |
+| Stock Associate | **$16-19/hr** | $14-17/hr | +10% |
+| Cashier | **$15-18/hr** | $13-16/hr | +13% |
+| Team Member | **$16-18/hr** | $14-16/hr | +11% |
+| Operations Associate | **$17-20/hr** | $15-18/hr | +9% |
+| Asst. Store Manager | **$48-58k** | $42-52k | +12% |
+| Store Manager | **$62-78k** | $55-70k | +11% |
+
+Based on X recent job postings. {{MARKET}} pays [above/below/at] national average across all roles."
+
+Offer chips: [Fill a role at my store] [Meet {{MARKET}} talent] [Explore a different market]
+
 ### For "Tell me how Talent Connect works" flow
 When user asks how Talent Connect works, respond with this EXACT text (preserving paragraph breaks and bold formatting):
 
@@ -655,7 +665,7 @@ export class GeminiService {
     return `Hey ${userName}, I'm here to connect you with retail talent. Want to create a job posting or explore the ${market} market first?`;
   }
 
-  async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec }> {
+  async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec; followUp?: string }> {
     if (!this.chat) {
       throw new Error('Chat not started');
     }
@@ -700,7 +710,6 @@ const MOCK_ROLE_SELECTOR_TITLES = new Set([
   'Beauty Advisor',
   'Stylist',
   'Visual Merchandiser',
-  'Pop Up Associate',
   'New Store Lead',
   'Store Team Leader',
   'Supervisor',
@@ -746,12 +755,34 @@ export class MockGeminiService {
     return `Hi ${userName}! I can help you with salary insights and job postings for ${retailerName} in ${market}. What role are you looking to hire for, or would you like to see current market rates?`;
   }
 
-  async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec }> {
+  async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec; followUp?: string }> {
     const lower = message.toLowerCase();
     const fillRoleIntent =
       /fill\s+(a\s+)?permanent|permanent\s+role|create\s+a\s+job\s+posting|start\s+a\s+job\s+posting|job\s+posting\s+together/i.test(
         lower
       );
+
+    // Handle "Explore market comps" / "Show me market data" flow
+    const marketDataIntent = /market\s*(data|comps|rates|salary)|explore.*market|show\s+me\s+.*market/i.test(lower);
+    if (marketDataIntent) {
+      return {
+        text: `Here's Austin retail compensation compared to national averages:
+
+| Role | Austin | National | vs Avg |
+|------|--------|----------|--------|
+| Sales Associate | **$17-20/hr** | $15-18/hr | +12% |
+| Stock Associate | **$16-19/hr** | $14-17/hr | +10% |
+| Cashier | **$15-18/hr** | $13-16/hr | +13% |
+| Team Member | **$16-18/hr** | $14-16/hr | +11% |
+| Operations Associate | **$17-20/hr** | $15-18/hr | +9% |
+| Asst. Store Manager | **$48-58k** | $42-52k | +12% |
+| Store Manager | **$62-78k** | $55-70k | +11% |
+
+Based on 466 recent job postings. Austin pays above national average across all roles.
+
+[Fill a role at my store] [Meet Austin talent] [Explore a different market]`,
+      };
+    }
 
     // Step 1: Situation (first step now)
     if (this.mockFillRoleStep === 'off' && fillRoleIntent) {
@@ -773,7 +804,7 @@ export class MockGeminiService {
         text: `What job title are you looking for?
 
 ---ROLE_SELECTOR_START---
-{"groups":[{"header":"Sales Floor","roles":["Sales Associate","Store Associate","Brand Representative"]},{"header":"Sales Support","roles":["Sales Assistant","Cashier","Fitting Room Attendant","Team Member","Retail Customer Service"]},{"header":"Back of House","roles":["Stock Associate","Inventory Associate","Operations Associate","Operations Assistant"]},{"header":"Specialized","roles":["Beauty Advisor","Stylist","Visual Merchandiser","Pop Up Associate"]},{"header":"Management","roles":["New Store Lead","Store Team Leader","Supervisor","Key Holder","Department Supervisor","Assistant Store Manager","Store Manager","District Manager"]}]}
+{"groups":[{"header":"Sales Floor","roles":["Brand Representative","Sales Associate","Store Associate"]},{"header":"Sales Support","roles":["Cashier","Fitting Room Attendant","Retail Customer Service","Sales Assistant","Team Member"]},{"header":"Back of House","roles":["Inventory Associate","Operations Assistant","Operations Associate","Stock Associate"]},{"header":"Specialized","roles":["Beauty Advisor","Stylist","Visual Merchandiser"]},{"header":"Management","roles":["Assistant Store Manager","Department Supervisor","District Manager","Key Holder","New Store Lead","Store Manager","Store Team Leader","Supervisor"]}]}
 ---ROLE_SELECTOR_END---`,
       };
     }
@@ -786,20 +817,19 @@ export class MockGeminiService {
       this.gathered.title = trimmed;
       this.mockFillRoleStep = 'past_role';
       return {
-        text: `Austin has Reflexers with previous ${trimmed} experience. Keep building a job description and we can invite them to apply.
+        text: `Reflexers in Austin have ${trimmed} experience. Keep building a job description and we can invite them to apply.
 
 ---WORKER_CARDS_START---
 ["w001", "w002", "w004"]
----WORKER_CARDS_END---
-
-[Continue to store location]`,
+---WORKER_CARDS_END---`,
+        followUp: '__auto_location__',
       };
     }
 
-    // Step 4: Store location (after user clicks continue)
+    // Step 4: Store location (auto-triggered after worker cards)
     if (
       this.mockFillRoleStep === 'past_role' &&
-      /continue|store location/i.test(lower)
+      message === '__auto_location__'
     ) {
       this.mockFillRoleStep = 'past_location';
       return {

@@ -1224,49 +1224,62 @@ export function ChatInterface({
                     })()}
                     {/* Inline input area for last assistant message */}
                     {isLastAssistantMessage && !isLoading && (
-                      <form className="inline-input-form" onSubmit={handleSubmit}>
-                        <div
-                          className={`inline-input-wrapper${parsed?.locationInput ? ' inline-input-wrapper--send-only' : ''}`}
-                        >
-                          {!parsed?.locationInput && (
-                            <textarea
-                              ref={inputRef}
-                              className="inline-input"
-                              value={input}
-                              onChange={(e) => setInput(e.target.value)}
-                              onKeyDown={handleKeyDown}
-                              placeholder={
-                                hasRoleSelector
-                                  ? 'Looking for a different job title?'
-                                  : hasChips
-                                    ? 'Something else?'
-                                    : 'Type your message...'
-                              }
-                              rows={1}
-                            />
-                          )}
-                          {(() => {
-                            const thisMessageChips = selectedChipsByMessage[message.id] || [];
-                            const canSend = parsed?.locationInput
-                              ? Boolean(pendingLocationAddress)
-                              : input.trim().length > 0 || thisMessageChips.length > 0;
-                            return (
+                      <>
+                        {parsed?.locationInput ? (
+                          /* Location step: show chip button instead of text input */
+                          <form className="inline-input-form" onSubmit={handleSubmit}>
+                            <div className="message-chips">
                               <button
                                 type="submit"
-                                className={`inline-send-btn${canSend ? ' can-send' : ''}`}
-                                disabled={!canSend}
-                                aria-label={parsed?.locationInput ? 'Send selected store location' : 'Send message'}
+                                className={`chip single-select type-chip-label-md${pendingLocationAddress ? ' selected' : ''}`}
+                                disabled={!pendingLocationAddress}
                               >
-                                <Send size={18} />
+                                <span className="chip-icon">↳</span>
+                                {pendingLocationAddress || 'Select a store location'}
                               </button>
-                            );
-                          })()}
-                        </div>
-                      </form>
+                            </div>
+                          </form>
+                        ) : (
+                          /* Regular input */
+                          <form className="inline-input-form" onSubmit={handleSubmit}>
+                            <div className="inline-input-wrapper">
+                              <textarea
+                                ref={inputRef}
+                                className="inline-input"
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder={
+                                  hasRoleSelector
+                                    ? 'Looking for a different job title?'
+                                    : hasChips
+                                      ? 'Something else?'
+                                      : 'Type your message...'
+                                }
+                                rows={1}
+                              />
+                              {(() => {
+                                const thisMessageChips = selectedChipsByMessage[message.id] || [];
+                                const canSend = input.trim().length > 0 || thisMessageChips.length > 0;
+                                return (
+                                  <button
+                                    type="submit"
+                                    className={`inline-send-btn${canSend ? ' can-send' : ''}`}
+                                    disabled={!canSend}
+                                    aria-label="Send message"
+                                  >
+                                    <Send size={18} />
+                                  </button>
+                                );
+                              })()}
+                            </div>
+                          </form>
+                        )}
+                      </>
                     )}
                   </>
                 ) : (
-                  <p>{toTitleCase(message.content)}</p>
+                  <p>{message.content}</p>
                 )}
               </div>
             </div>

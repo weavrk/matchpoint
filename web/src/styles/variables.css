@@ -592,3 +592,257 @@ h3.type-chip-header,
   scrollbar-width: thin;
   scrollbar-color: var(--gray-200) transparent;
 }
+
+/* ==========================================
+   Pill / Tag Component System
+
+   Styles: lite-gray, green, dark-gray, stroke
+   Sizes: sm (12px), md (14px), lg (16px)
+   Variants: counter, text, icon
+   ========================================== */
+
+/* Base pill - shared styles across all variants */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 100px;
+  font-family: var(--font-primary);
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Pill Sizes ─────────────────────────────── */
+
+/* Small: 12px font */
+.pill-sm {
+  font-size: 12px;
+  line-height: 16px;
+  padding: 4px 10px;
+  gap: 4px;
+}
+
+.pill-sm .pill-icon {
+  width: 12px;
+  height: 12px;
+}
+
+.pill-sm .pill-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.pill-sm .pill-counter {
+  font-size: 11px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+}
+
+/* Medium: 14px font (default) */
+.pill-md {
+  font-size: 14px;
+  line-height: 20px;
+  padding: 6px 12px;
+  gap: 6px;
+}
+
+.pill-md .pill-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.pill-md .pill-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.pill-md .pill-counter {
+  font-size: 12px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+}
+
+/* Large: 16px font */
+.pill-lg {
+  font-size: 16px;
+  line-height: 22px;
+  padding: 8px 14px;
+  gap: 8px;
+}
+
+.pill-lg .pill-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.pill-lg .pill-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pill-lg .pill-counter {
+  font-size: 13px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+}
+
+/* ── Pill Styles ────────────────────────────── */
+
+/* Lite Gray - light background, primary text */
+.pill-lite-gray {
+  background: var(--stone-100);
+  color: var(--text-primary);
+  border: none;
+}
+
+.pill-lite-gray .pill-counter {
+  background: var(--stone-200);
+  color: var(--text-primary);
+}
+
+.pill-lite-gray .pill-icon {
+  color: var(--text-secondary);
+}
+
+/* Green - green background, dark green text (shift verified style) */
+.pill-green {
+  background: var(--green-100);
+  color: var(--green-700);
+  border: none;
+}
+
+.pill-green .pill-counter {
+  background: var(--green-200);
+  color: var(--green-700);
+}
+
+.pill-green .pill-icon {
+  color: var(--green-600);
+}
+
+/* Dark Gray - dark background, light text */
+.pill-dark-gray {
+  background: var(--stone-700);
+  color: #ffffff;
+  border: none;
+}
+
+.pill-dark-gray .pill-counter {
+  background: var(--stone-600);
+  color: #ffffff;
+}
+
+.pill-dark-gray .pill-icon {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Stroke - white background, border, primary text */
+.pill-stroke {
+  background: #ffffff;
+  color: var(--text-primary);
+  border: 1px solid var(--quaternary);
+}
+
+.pill-stroke .pill-counter {
+  background: var(--stone-100);
+  color: var(--text-primary);
+}
+
+.pill-stroke .pill-icon {
+  color: var(--text-secondary);
+}
+
+/* ── Pill Variant Elements ──────────────────── */
+
+/* Counter - always left of text */
+.pill-counter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 100px;
+  font-weight: 600;
+}
+
+/* Icon container - always left of text */
+.pill-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Text */
+.pill-text {
+  display: inline;
+}
+
+/* ── Additional Pill Color Variants ─────────── */
+
+/* Blue */
+.pill-blue {
+  background: var(--blue-100);
+  color: var(--blue-700);
+  border: none;
+}
+
+.pill-blue .pill-counter {
+  background: var(--blue-200);
+  color: var(--blue-700);
+}
+
+.pill-blue .pill-icon {
+  color: var(--blue-600);
+}
+
+/* Pink */
+.pill-pink {
+  background: var(--pink-200);
+  color: var(--pink-700);
+  border: none;
+}
+
+.pill-pink .pill-counter {
+  background: var(--pink-300);
+  color: var(--pink-700);
+}
+
+.pill-pink .pill-icon {
+  color: var(--pink-600);
+}
+
+/* Yellow */
+.pill-yellow {
+  background: var(--yellow-100);
+  color: var(--yellow-700);
+  border: none;
+}
+
+.pill-yellow .pill-counter {
+  background: var(--yellow-200);
+  color: var(--yellow-700);
+}
+
+.pill-yellow .pill-icon {
+  color: var(--yellow-600);
+}
+
+/* Navy */
+.pill-navy {
+  background: var(--navy-100);
+  color: var(--navy-700);
+  border: none;
+}
+
+.pill-navy .pill-counter {
+  background: var(--navy-200);
+  color: var(--navy-700);
+}
+
+.pill-navy .pill-icon {
+  color: var(--navy-500);
+}

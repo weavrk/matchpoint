@@ -500,14 +500,56 @@
 /* Reflex Talent Tab Styles */
 .reflex-talent-content {
   flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.reflex-talent-content.has-detail-panel .reflex-talent-main {
+  flex: 1;
+  min-width: 0;
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.08);
+  z-index: 1;
+  padding-right: 24px;
+}
+
+.reflex-talent-content .worker-card-full-overlay {
+  flex: 0 0 35vw;
+  height: 100%;
+  border-left: none;
+  background: #ffffff;
+}
+
+.reflex-talent-main {
+  flex: 1;
   overflow-y: auto;
   padding-top: 24px;
   padding-bottom: 24px;
 }
 
+.reflex-talent-header {
+  margin: 0 0 24px 0;
+}
+
+.reflex-talent-group {
+  margin-bottom: 32px;
+}
+
+.reflex-talent-group:last-child {
+  margin-bottom: 0;
+}
+
+.reflex-talent-subheader {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--app-secondary);
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .reflex-talent-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 16px;
 }
 
@@ -2439,6 +2481,36 @@
 .ds-state-desc {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+/* Pills Grid */
+.ds-pills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.ds-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.ds-pill-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.ds-pill-label {
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: var(--gray-100);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 /* Card Preview */
