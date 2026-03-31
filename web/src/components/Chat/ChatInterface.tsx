@@ -6,7 +6,7 @@ import type { ChatMessage, MatchedWorker } from '../../types';
 import chatbotAvatarUrl from '../../../../assets/logo-and-backgrounds/chatbot.svg?url';
 import { NavChipGrid, getNavChips } from '../NavChips';
 import { WorkerCardTeaser, WorkerCardFull } from '../Workers';
-import { SAMPLE_WORKERS } from '../../data/workers';
+import type { WorkerProfile } from '../../types';
 import { ARIAT_STORE_GROUPS, ARIAT_STORE_OPTIONS } from '../../data/ariatStores';
 import { BENEFIT_SELECT_CHIPS } from '../../services/gemini';
 import L from 'leaflet';
@@ -106,6 +106,8 @@ interface ChatInterfaceProps {
   onBranchFromMessage?: (messageId: string, newMessage: string) => void;
   isLoading: boolean;
   market?: string;
+  userName?: string;
+  workers?: WorkerProfile[];
 }
 
 // Worker card IDs parsed from AI response - we look these up from SAMPLE_WORKERS
@@ -747,11 +749,11 @@ function SuccessBannerComponent({ banner }: { banner: SuccessBanner }) {
   );
 }
 
-// Helper to look up workers from SAMPLE_WORKERS by ID
-function getWorkersByIds(ids: string[]): MatchedWorker[] {
+// Helper to look up workers by ID from provided worker list
+function getWorkersByIds(ids: string[], workerList: WorkerProfile[]): MatchedWorker[] {
   return ids
-    .map(id => SAMPLE_WORKERS.find(w => w.id === id))
-    .filter((w): w is MatchedWorker => w !== undefined)
+    .map(id => workerList.find(w => w.id === id))
+    .filter((w): w is WorkerProfile => w !== undefined)
     .map(w => ({ ...w, matchScore: 95, matchReasons: ['Strong match'] }));
 }
 
@@ -805,13 +807,16 @@ export function ChatInterface({
   onSendMessage,
   onBranchFromMessage,
   isLoading,
-  market = 'Austin'
+  market = 'Austin',
+  userName,
+  workers = []
 }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const [inputsByMessage, setInputsByMessage] = useState<Record<string, string>>({});
   const [selectedChipsByMessage, setSelectedChipsByMessage] = useState<Record<string, string[]>>({});
   const [activeNavChip, setActiveNavChip] = useState<string | null>(null);
-  const [displayName] = useState(getRandomName);
+  const [fallbackName] = useState(getRandomName);
+  const displayName = userName || fallbackName;
   const [selectedWorker, setSelectedWorker] = useState<MatchedWorker | null>(null);
   const [pendingLocationAddress, setPendingLocationAddress] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -998,7 +1003,7 @@ export function ChatInterface({
           const isAssistant = message.role === 'assistant';
           const parsed = isAssistant ? parseMessageWithChips(message.content) : null;
           const isLastAssistantMessage = isAssistant && messageIndex === lastAssistantIndex;
-          const workerCards = parsed?.workerCardIds ? getWorkersByIds(parsed.workerCardIds) : [];
+          const workerCards = parsed?.workerCardIds ? getWorkersByIds(parsed.workerCardIds, workers) : [];
           const hasWorkerCards = workerCards.length > 0;
           const hasRoleSelector = parsed?.roleSelector !== null;
           const hasBenefitsSelect =

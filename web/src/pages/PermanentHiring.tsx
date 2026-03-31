@@ -14,6 +14,7 @@ import {
   fetchRetailersLive,
   fetchJobPostings,
   fetchPublishedJobs,
+  createPublishedJob,
   syncMarkets,
   syncRoles,
   syncRetailers,
@@ -27,7 +28,7 @@ import {
   type ScrapedJob,
   type JobPosting,
 } from '../services/supabase';
-import { SAMPLE_WORKERS } from '../data/workers';
+import { fetchWorkersAsProfiles } from '../services/supabase';
 import { SAMPLE_RETAILER } from '../data/retailer';
 import type { ChatMessage, MatchedWorker, JobSpec, PublishedJob } from '../types';
 import { PublishedJobCard } from '../components/Jobs';
@@ -44,6 +45,14 @@ function chatMessagesToGeminiHistory(
 }
 
 type TabId = 'ask-reflex' | 'published-jobs' | 'reflex-talent' | 'oz';
+
+// Names for the greeting - shared with ChatInterface
+const GREETING_NAMES = [
+  'Mike', 'Trevor', 'Shannon', 'Nate', 'Micah', 'Katherine', 'Cayley',
+  'Evan', 'Juan', 'Julie', 'Ashlee', 'Jeremy', 'Sam', 'Jasmine',
+  'Emily', 'Olivia', 'Mary', 'Hans', 'Hadley', 'Leigh Ann',
+];
+const getRandomUserName = () => GREETING_NAMES[Math.floor(Math.random() * GREETING_NAMES.length)];
 
 // All job roles flattened for the Oz admin
 const ALL_ROLES = [
@@ -733,21 +742,21 @@ export function PermanentHiring() {
   // Reflex Talent tab state - lazy loading
   const [talentDisplayCount, setTalentDisplayCount] = useState(6);
   const talentLoadMoreRef = useRef<HTMLDivElement>(null);
-  const allTalentWorkers: MatchedWorker[] = useMemo(() =>
-    SAMPLE_WORKERS.map(w => ({ ...w, matchScore: 0, matchReasons: [] })),
-    []
-  );
+  const [allTalentWorkers, setAllTalentWorkers] = useState<MatchedWorker[]>([]);
+  const [_workersLoading, setWorkersLoading] = useState(true);
 
   // Fetch data from Supabase on mount
   useEffect(() => {
     async function loadData() {
       setIsLoadingData(true);
+      setWorkersLoading(true);
       try {
-        const [marketsData, rolesData, retailersData, retailersLiveData] = await Promise.all([
+        const [marketsData, rolesData, retailersData, retailersLiveData, workersData] = await Promise.all([
           fetchMarkets(),
           fetchRoles(),
           fetchRetailers(),
           fetchRetailersLive(),
+          fetchWorkersAsProfiles(),
         ]);
 
         // Transform markets data
@@ -773,6 +782,9 @@ export function PermanentHiring() {
 
         // Set retailers live data
         setRetailersLive(retailersLiveData);
+
+        // Set workers data (converted to MatchedWorker format)
+        setAllTalentWorkers(workersData.map(w => ({ ...w, matchScore: 0, matchReasons: [] })));
       } catch (error) {
         console.error('Failed to load data from Supabase:', error);
         // Fall back to local data
@@ -781,6 +793,7 @@ export function PermanentHiring() {
         setOzRetailers(RETAILERS);
       }
       setIsLoadingData(false);
+      setWorkersLoading(false);
     }
     loadData();
   }, []);
@@ -1003,6 +1016,7 @@ export function PermanentHiring() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [userName] = useState(getRandomUserName);
   const [, setMatchedWorkers] = useState<MatchedWorker[]>([]);
   const [, setJobSpec] = useState<JobSpec | null>(null);
 
@@ -1184,7 +1198,7 @@ export function PermanentHiring() {
             : messages;
         const existingHistory = chatMessagesToGeminiHistory(historySource);
         await geminiService.startChat(
-          'Mike', // userName
+          userName,
           SAMPLE_RETAILER.name,
           classificationMap[SAMPLE_RETAILER.brandTier] || 'Specialty',
           'Austin', // market
@@ -1222,7 +1236,9 @@ export function PermanentHiring() {
       if (response.jobSpec) {
         const spec = { ...response.jobSpec, retailerName: SAMPLE_RETAILER.name } as any;
         setJobSpec(spec);
-        const matches = matchWorkers(SAMPLE_WORKERS, spec);
+        // Use fetched workers for matching (extract WorkerProfile from MatchedWorker)
+        const workerProfiles = allTalentWorkers.map(({ matchScore: _ms, matchReasons: _mr, ...w }) => w);
+        const matches = matchWorkers(workerProfiles, spec);
         setMatchedWorkers(matches);
 
         // Publish the job when spec is received
@@ -1706,6 +1722,8 @@ export function PermanentHiring() {
               onSendMessage={handleSendMessage}
               onBranchFromMessage={handleBranchFromMessage}
               isLoading={isLoading}
+              userName={userName}
+              workers={allTalentWorkers}
             />
           </div>
         </div>
@@ -2985,7 +3003,7 @@ export function PermanentHiring() {
                   <h4>Shared Header</h4>
                   <p className="ds-description">Reusable header: avatar + name + badges, all vertically centered. Shift Verified badge right-aligned via margin-left: auto.</p>
                   <div className="ds-card-preview">
-                    <WorkerCardHeader worker={SAMPLE_WORKERS[0] as MatchedWorker} />
+                    {allTalentWorkers[0] && <WorkerCardHeader worker={allTalentWorkers[0]} />}
                   </div>
                   <div className="ds-card-spec">
                     <span className="ds-spec-item">Component: <code>WorkerCardHeader</code></span>
@@ -3000,7 +3018,7 @@ export function PermanentHiring() {
                   <h4>WorkerCardTeaser</h4>
                   <p className="ds-description">Minimal card to entice. Shows: header + "What retailers are saying about [Name]" AI summary. No Actively Looking badge.</p>
                   <div className="ds-card-preview">
-                    <WorkerCardTeaser worker={SAMPLE_WORKERS[0] as MatchedWorker} />
+                    {allTalentWorkers[0] && <WorkerCardTeaser worker={allTalentWorkers[0]} />}
                   </div>
                   <div className="ds-card-spec">
                     <span className="ds-spec-item">Class: <code>.worker-card-teaser</code></span>
@@ -3014,7 +3032,7 @@ export function PermanentHiring() {
                   <h4>WorkerCardCompact</h4>
                   <p className="ds-description">More robust for chat view. Shows: quote, work history, endorsements with counts, store quotes</p>
                   <div className="ds-card-preview">
-                    <WorkerCardCompact worker={SAMPLE_WORKERS[0] as MatchedWorker} />
+                    {allTalentWorkers[0] && <WorkerCardCompact worker={allTalentWorkers[0]} />}
                   </div>
                   <div className="ds-card-spec">
                     <span className="ds-spec-item">Class: <code>.worker-card-compact</code></span>
@@ -3028,10 +3046,10 @@ export function PermanentHiring() {
                   <p className="ds-description">Comprehensive detail panel. Opens right of chat, 60% width, close button</p>
                   <div className="ds-card-preview ds-card-preview-full">
                     <div className="worker-card-full-inline">
-                      <WorkerCardFull
-                        worker={SAMPLE_WORKERS[0] as MatchedWorker}
+                      {allTalentWorkers[0] && <WorkerCardFull
+                        worker={allTalentWorkers[0]}
                         onClose={() => {}}
-                      />
+                      />}
                     </div>
                   </div>
                   <div className="ds-card-spec">
