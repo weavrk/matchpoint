@@ -779,7 +779,7 @@ function RoleSelectorComponent({
                 <button
                   key={roleIdx}
                   type="button"
-                  className={`role-selector-chip type-chip-label-lg ${isSelected ? 'selected' : ''}`}
+                  className={`role-selector-chip type-chip-label-md ${isSelected ? 'selected' : ''}`}
                   onClick={() => onRoleSelect(role)}
                   disabled={disabled}
                 >
@@ -1156,7 +1156,7 @@ export function ChatInterface({
                                 <button
                                   key={`${message.id}-${chip}`}
                                   type="button"
-                                  className={`message-chip type-chip-label-lg ${isSelected ? 'selected' : ''}`}
+                                  className={`message-chip type-chip-label-md ${isSelected ? 'selected' : ''}`}
                                   onClick={handleChipClick}
                                   disabled={isLoading}
                                 >

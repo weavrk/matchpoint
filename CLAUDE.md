@@ -573,9 +573,9 @@ Definitions: `web/src/styles/variables.css`
 
 - Welcome nav chips (static): `.type-chip-header-lg`
 - Conversational nav chips (compact): `.type-chip-header-md`
-- Single-select message chips: `.type-chip-label-lg`
-- Multi-select message chips: `.type-chip-label-lg`
-- Role selector chips: `.type-chip-label-lg`
+- Single-select message chips: `.type-chip-label-md`
+- Multi-select message chips: `.type-chip-label-md`
+- Role selector chips: `.type-chip-label-md`
 
 ### Components
 
