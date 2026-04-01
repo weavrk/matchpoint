@@ -24,7 +24,7 @@ const VARIANTS: { id: VariantId; label: string; component: React.ComponentType<V
 export function PermanentHiring() {
   const [currentVariant, setCurrentVariant] = useState<VariantId>(() => {
     const saved = localStorage.getItem('matchpoint-variant');
-    return (saved as VariantId) || 'v1-job-focus';
+    return (saved as VariantId) || 'v2-talent-centric';
   });
   const [showVariantMenu, setShowVariantMenu] = useState(false);
 

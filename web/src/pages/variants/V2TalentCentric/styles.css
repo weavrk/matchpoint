@@ -1,18 +1,92 @@
-/* V2 Talent Centric - Two column layout */
-.v2-container {
+/* V2 Talent Centric - Page wrapper */
+.v2-page {
   display: flex;
-  min-height: 100vh;
-  background: var(--white);
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
-/* Main content area - left side */
+/* Page Header - fixed at top */
+.v2-page .page-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-bottom: 1px solid var(--quaternary);
+}
+
+.v2-page .page-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-primary);
+  flex-shrink: 0;
+}
+
+.v2-page .page-header-content {
+  flex: 1;
+}
+
+.v2-page .page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--app-primary);
+  margin: 0;
+}
+
+/* Page Tabs - fixed below header */
+.v2-page .page-tabs {
+  display: flex;
+  gap: 24px;
+  padding: 0 24px;
+  background: var(--white);
+  border-bottom: 1px solid var(--quaternary);
+  flex-shrink: 0;
+}
+
+.v2-page .page-tabs .tab {
+  padding: 12px 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--secondary);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  font-family: inherit;
+}
+
+.v2-page .page-tabs .tab:hover {
+  color: var(--primary);
+}
+
+.v2-page .page-tabs .tab.active {
+  color: var(--primary);
+  font-weight: 600;
+  border-bottom-color: var(--primary);
+}
+
+/* Two column layout - scrollable */
+.v2-container {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background: var(--white);
+  overflow: hidden;
+}
+
+/* Main content area - left side, scrollable */
 .v2-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: 48px 64px;
-  max-width: 720px;
-  margin: 0 auto;
+  overflow-y: auto;
 }
 
 /* Progress bar */
@@ -56,8 +130,8 @@
 
 .v2-brand-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
   margin-bottom: 40px;
 }
 
@@ -66,12 +140,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: 12px 16px;
   background: var(--white);
   border: 1px solid var(--quaternary);
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
+  height: 72px;
 }
 
 .v2-brand-tile:hover {
@@ -85,17 +160,11 @@
 }
 
 .v2-brand-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-}
-
-.v2-brand-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--primary);
-  text-align: center;
+  max-width: 100%;
+  max-height: 56px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .v2-brand-check {
@@ -333,9 +402,7 @@
   border-left: 1px solid var(--quaternary);
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  position: sticky;
-  top: 0;
+  min-height: 0;
 }
 
 .v2-sidebar-header {
@@ -407,6 +474,36 @@
   animation: cardSlideIn 0.3s ease forwards;
 }
 
+/* Empty state for tabs */
+.tab-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 400px;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--quaternary);
+  margin-top: 24px;
+}
+
+.empty-state-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--secondary);
+}
+
+.empty-state-content svg {
+  color: var(--tertiary);
+}
+
+.empty-state-content p {
+  margin: 0;
+  font-size: 14px;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
   .v2-sidebar {
@@ -433,6 +530,21 @@
   }
 
   .v2-brand-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .v2-brand-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .v2-brand-tile {
+    height: 64px;
+    padding: 10px 12px;
+  }
+
+  .v2-brand-logo {
+    max-height: 48px;
   }
 }

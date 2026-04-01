@@ -1,33 +1,180 @@
 import { useState, useMemo } from 'react';
-import { Check, ChevronRight, Sparkles } from 'lucide-react';
+import { Check, ChevronRight, Sparkles, Link, Heart } from 'lucide-react';
 import { SAMPLE_WORKERS } from '../../../data/workers';
 import { WorkerCardTeaser } from '../../../components/Workers/WorkerCardTeaser';
-import type { MatchedWorker, BrandTier } from '../../../types';
+import type { MatchedWorker } from '../../../types';
 import './styles.css';
 
-// Brand logos - grouped by tier
-const BRAND_LOGOS: { name: string; tier: BrandTier; logo: string }[] = [
-  // Luxury
-  { name: 'Gucci', tier: 'luxury', logo: '/images/logos/gucci.svg' },
-  { name: 'Chanel', tier: 'luxury', logo: '/images/logos/chanel.svg' },
-  { name: 'Louis Vuitton', tier: 'luxury', logo: '/images/logos/lv.svg' },
-  { name: 'Prada', tier: 'luxury', logo: '/images/logos/prada.svg' },
-  { name: 'Dior', tier: 'luxury', logo: '/images/logos/dior.svg' },
-  { name: 'Burberry', tier: 'luxury', logo: '/images/logos/burberry.svg' },
-  // Elevated
-  { name: 'Rag & Bone', tier: 'elevated', logo: '/images/logos/rag-bone.svg' },
-  { name: 'Theory', tier: 'elevated', logo: '/images/logos/theory.svg' },
-  { name: 'Madewell', tier: 'elevated', logo: '/images/logos/madewell.svg' },
-  { name: 'Club Monaco', tier: 'elevated', logo: '/images/logos/club-monaco.svg' },
-  { name: 'Nordstrom', tier: 'elevated', logo: '/images/logos/nordstrom.svg' },
-  { name: 'Lululemon', tier: 'elevated', logo: '/images/logos/lululemon.svg' },
-  // Mid
-  { name: 'Nike', tier: 'mid', logo: '/images/logos/nike.svg' },
-  { name: 'Adidas', tier: 'mid', logo: '/images/logos/adidas.svg' },
-  { name: 'Anthropologie', tier: 'mid', logo: '/images/logos/anthropologie.svg' },
-  { name: 'Free People', tier: 'mid', logo: '/images/logos/free-people.svg' },
-  { name: 'Urban Outfitters', tier: 'mid', logo: '/images/logos/urban-outfitters.svg' },
-  { name: 'UNIQLO', tier: 'mid', logo: '/images/logos/uniqlo.svg' },
+// Import all brand logos
+import logo7ForAllMankind from '../../../../../assets/brand-logos/7-for-all-mankind.png';
+import logoAbercrombie from '../../../../../assets/brand-logos/abercrombie-and-fitch.png';
+import logoAldo from '../../../../../assets/brand-logos/aldo.png';
+import logoAllbirds from '../../../../../assets/brand-logos/allbirds.png';
+import logoAllsaints from '../../../../../assets/brand-logos/allsaints.png';
+import logoAloYoga from '../../../../../assets/brand-logos/alo-yoga.png';
+import logoAnnTaylor from '../../../../../assets/brand-logos/ann-taylor.png';
+import logoAnthropologie from '../../../../../assets/brand-logos/anthropologie.png';
+import logoAriat from '../../../../../assets/brand-logos/ariat.png';
+import logoArmaniExchange from '../../../../../assets/brand-logos/armani-exchange.png';
+import logoBananaRepublic from '../../../../../assets/brand-logos/banana-republic.png';
+import logoBurberry from '../../../../../assets/brand-logos/burberry.png';
+import logoCalvinKlein from '../../../../../assets/brand-logos/calvin-klein.png';
+import logoChanel from '../../../../../assets/brand-logos/chanel.png';
+import logoCosmeticsCompanyStore from '../../../../../assets/brand-logos/cosmetics-company-store.png';
+import logoDeckers from '../../../../../assets/brand-logos/deckers.png';
+import logoDkny from '../../../../../assets/brand-logos/dkny.png';
+import logoEberjey from '../../../../../assets/brand-logos/eberjey.png';
+import logoElysewalker from '../../../../../assets/brand-logos/elysewalker.png';
+import logoEsteeLauder from '../../../../../assets/brand-logos/estee-lauder.png';
+import logoEverlane from '../../../../../assets/brand-logos/everlane.png';
+import logoFossil from '../../../../../assets/brand-logos/fossil.png';
+import logoFreePeople from '../../../../../assets/brand-logos/free-people.png';
+import logoGap from '../../../../../assets/brand-logos/gap.png';
+import logoGoldenGoose from '../../../../../assets/brand-logos/golden-goose.png';
+import logoGuess from '../../../../../assets/brand-logos/guess.png';
+import logoHoka from '../../../../../assets/brand-logos/hoka.png';
+import logoHuckberry from '../../../../../assets/brand-logos/huckberry.png';
+import logoJCrew from '../../../../../assets/brand-logos/j-crew.png';
+import logoKarlLagerfeld from '../../../../../assets/brand-logos/karl-lagerfeld.png';
+import logoKateSpade from '../../../../../assets/brand-logos/kate-spade.png';
+import logoKuhnRikon from '../../../../../assets/brand-logos/kuhn-rikon.png';
+import logoLevis from '../../../../../assets/brand-logos/levis.png';
+import logoLively from '../../../../../assets/brand-logos/lively.png';
+import logoLongchamp from '../../../../../assets/brand-logos/longchamp.png';
+import logoLuckyBrand from '../../../../../assets/brand-logos/lucky-brand.png';
+import logoMac from '../../../../../assets/brand-logos/mac.png';
+import logoMackage from '../../../../../assets/brand-logos/mackage.png';
+import logoMadewell from '../../../../../assets/brand-logos/madewell.png';
+import logoMarcJacobs from '../../../../../assets/brand-logos/marc-jacobs.png';
+import logoMavi from '../../../../../assets/brand-logos/mavi.png';
+import logoMcm from '../../../../../assets/brand-logos/mcm.png';
+import logoMeem from '../../../../../assets/brand-logos/meem.png';
+import logoMichaelKors from '../../../../../assets/brand-logos/michael-kors.png';
+import logoMizzenMain from '../../../../../assets/brand-logos/mizzenmain.png';
+import logoNeimanMarcus from '../../../../../assets/brand-logos/neiman-marcus.png';
+import logoNike from '../../../../../assets/brand-logos/nike.png';
+import logoNordstrom from '../../../../../assets/brand-logos/nordstrom.png';
+import logoNorthFace from '../../../../../assets/brand-logos/north-face.png';
+import logoOldNavy from '../../../../../assets/brand-logos/old-navy.png';
+import logoPacsun from '../../../../../assets/brand-logos/pacsun.png';
+import logoPatagonia from '../../../../../assets/brand-logos/patagonia.png';
+import logoPoloRalphLauren from '../../../../../assets/brand-logos/polo-ralph-lauren.png';
+import logoPuma from '../../../../../assets/brand-logos/puma.png';
+import logoRagAndBone from '../../../../../assets/brand-logos/rag-and-bone.png';
+import logoReclectic from '../../../../../assets/brand-logos/reclectic.png';
+import logoReiss from '../../../../../assets/brand-logos/reiss.png';
+import logoRhone from '../../../../../assets/brand-logos/rhone.png';
+import logoSabah from '../../../../../assets/brand-logos/sabah.png';
+import logoSaks from '../../../../../assets/brand-logos/saks-fifth-avenue.png';
+import logoSephora from '../../../../../assets/brand-logos/sephora.png';
+import logoSezane from '../../../../../assets/brand-logos/sezane.png';
+import logoShinola from '../../../../../assets/brand-logos/shinola.png';
+import logoSplendid from '../../../../../assets/brand-logos/splendid.png';
+import logoSteveMadden from '../../../../../assets/brand-logos/steve-madden.png';
+import logoTecovas from '../../../../../assets/brand-logos/tecovas.png';
+import logoTheory from '../../../../../assets/brand-logos/theory.png';
+import logoTommyJohn from '../../../../../assets/brand-logos/tommy-john.png';
+import logoTrueClassic from '../../../../../assets/brand-logos/true-classic.png';
+import logoUgg from '../../../../../assets/brand-logos/ugg.png';
+import logoUltaBeauty from '../../../../../assets/brand-logos/ulta-beauty.png';
+import logoUnderArmour from '../../../../../assets/brand-logos/under-armour.png';
+import logoUniqlo from '../../../../../assets/brand-logos/uniqlo.png';
+import logoUrbanOutfitters from '../../../../../assets/brand-logos/urban-outfitters.png';
+import logoUrbn from '../../../../../assets/brand-logos/urbn.png';
+import logoVans from '../../../../../assets/brand-logos/vans.png';
+import logoVeraBradley from '../../../../../assets/brand-logos/vera-bradley.png';
+import logoVeraWang from '../../../../../assets/brand-logos/vera-wang.png';
+import logoVictoriasSecret from '../../../../../assets/brand-logos/victorias-secret.png';
+import logoWarbyParker from '../../../../../assets/brand-logos/warby-parker.png';
+import logoWolfAndShephard from '../../../../../assets/brand-logos/wolf-and-shephard.png';
+import logoZara from '../../../../../assets/brand-logos/zara.png';
+
+type TabId = 'discover' | 'saved' | 'connected';
+
+// Brand logos array - edit this to add/remove brands
+const BRAND_LOGOS: { id: string; logo: string }[] = [
+  { id: '7-for-all-mankind', logo: logo7ForAllMankind },
+  { id: 'abercrombie', logo: logoAbercrombie },
+  { id: 'aldo', logo: logoAldo },
+  { id: 'allbirds', logo: logoAllbirds },
+  { id: 'allsaints', logo: logoAllsaints },
+  { id: 'alo-yoga', logo: logoAloYoga },
+  { id: 'ann-taylor', logo: logoAnnTaylor },
+  { id: 'anthropologie', logo: logoAnthropologie },
+  { id: 'ariat', logo: logoAriat },
+  { id: 'armani-exchange', logo: logoArmaniExchange },
+  { id: 'banana-republic', logo: logoBananaRepublic },
+  { id: 'burberry', logo: logoBurberry },
+  { id: 'calvin-klein', logo: logoCalvinKlein },
+  { id: 'chanel', logo: logoChanel },
+  { id: 'cosmetics-company-store', logo: logoCosmeticsCompanyStore },
+  { id: 'deckers', logo: logoDeckers },
+  { id: 'dkny', logo: logoDkny },
+  { id: 'eberjey', logo: logoEberjey },
+  { id: 'elysewalker', logo: logoElysewalker },
+  { id: 'estee-lauder', logo: logoEsteeLauder },
+  { id: 'everlane', logo: logoEverlane },
+  { id: 'fossil', logo: logoFossil },
+  { id: 'free-people', logo: logoFreePeople },
+  { id: 'gap', logo: logoGap },
+  { id: 'golden-goose', logo: logoGoldenGoose },
+  { id: 'guess', logo: logoGuess },
+  { id: 'hoka', logo: logoHoka },
+  { id: 'huckberry', logo: logoHuckberry },
+  { id: 'j-crew', logo: logoJCrew },
+  { id: 'karl-lagerfeld', logo: logoKarlLagerfeld },
+  { id: 'kate-spade', logo: logoKateSpade },
+  { id: 'kuhn-rikon', logo: logoKuhnRikon },
+  { id: 'levis', logo: logoLevis },
+  { id: 'lively', logo: logoLively },
+  { id: 'longchamp', logo: logoLongchamp },
+  { id: 'lucky-brand', logo: logoLuckyBrand },
+  { id: 'mac', logo: logoMac },
+  { id: 'mackage', logo: logoMackage },
+  { id: 'madewell', logo: logoMadewell },
+  { id: 'marc-jacobs', logo: logoMarcJacobs },
+  { id: 'mavi', logo: logoMavi },
+  { id: 'mcm', logo: logoMcm },
+  { id: 'meem', logo: logoMeem },
+  { id: 'michael-kors', logo: logoMichaelKors },
+  { id: 'mizzen-main', logo: logoMizzenMain },
+  { id: 'neiman-marcus', logo: logoNeimanMarcus },
+  { id: 'nike', logo: logoNike },
+  { id: 'nordstrom', logo: logoNordstrom },
+  { id: 'north-face', logo: logoNorthFace },
+  { id: 'old-navy', logo: logoOldNavy },
+  { id: 'pacsun', logo: logoPacsun },
+  { id: 'patagonia', logo: logoPatagonia },
+  { id: 'polo-ralph-lauren', logo: logoPoloRalphLauren },
+  { id: 'puma', logo: logoPuma },
+  { id: 'rag-and-bone', logo: logoRagAndBone },
+  { id: 'reclectic', logo: logoReclectic },
+  { id: 'reiss', logo: logoReiss },
+  { id: 'rhone', logo: logoRhone },
+  { id: 'sabah', logo: logoSabah },
+  { id: 'saks', logo: logoSaks },
+  { id: 'sephora', logo: logoSephora },
+  { id: 'sezane', logo: logoSezane },
+  { id: 'shinola', logo: logoShinola },
+  { id: 'splendid', logo: logoSplendid },
+  { id: 'steve-madden', logo: logoSteveMadden },
+  { id: 'tecovas', logo: logoTecovas },
+  { id: 'theory', logo: logoTheory },
+  { id: 'tommy-john', logo: logoTommyJohn },
+  { id: 'true-classic', logo: logoTrueClassic },
+  { id: 'ugg', logo: logoUgg },
+  { id: 'ulta-beauty', logo: logoUltaBeauty },
+  { id: 'under-armour', logo: logoUnderArmour },
+  { id: 'uniqlo', logo: logoUniqlo },
+  { id: 'urban-outfitters', logo: logoUrbanOutfitters },
+  { id: 'urbn', logo: logoUrbn },
+  { id: 'vans', logo: logoVans },
+  { id: 'vera-bradley', logo: logoVeraBradley },
+  { id: 'vera-wang', logo: logoVeraWang },
+  { id: 'victorias-secret', logo: logoVictoriasSecret },
+  { id: 'warby-parker', logo: logoWarbyParker },
+  { id: 'wolf-and-shephard', logo: logoWolfAndShephard },
+  { id: 'zara', logo: logoZara },
 ];
 
 // This-or-that questions
@@ -68,6 +215,7 @@ const QUESTIONS: ThisOrThatQuestion[] = [
 type Step = 'brands' | 'questions' | 'results';
 
 export function V2TalentCentric() {
+  const [activeTab, setActiveTab] = useState<TabId>('discover');
   const [step, setStep] = useState<Step>('brands');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -183,36 +331,65 @@ export function V2TalentCentric() {
   const progress = step === 'brands' ? 0 : step === 'questions' ? ((currentQuestionIndex + 1) / QUESTIONS.length) * 100 : 100;
 
   return (
-    <div className="v2-container">
-      {/* Main content area */}
-      <div className="v2-main">
-        {/* Progress bar */}
-        <div className="v2-progress">
-          <div className="v2-progress-bar" style={{ width: `${progress}%` }} />
+    <div className="v2-page">
+      <header className="page-header">
+        <div className="page-header-icon" aria-hidden="true">
+          <Link size={24} />
         </div>
+        <div className="page-header-content">
+          <h1 className="page-title">Talent Connect</h1>
+        </div>
+      </header>
 
-        {/* Step 1: Brand Selection */}
+      <nav className="page-tabs">
+        <button
+          className={`tab ${activeTab === 'discover' ? 'active' : ''}`}
+          onClick={() => setActiveTab('discover')}
+        >
+          Discover
+        </button>
+        <button
+          className={`tab ${activeTab === 'saved' ? 'active' : ''}`}
+          onClick={() => setActiveTab('saved')}
+        >
+          Saved
+        </button>
+        <button
+          className={`tab ${activeTab === 'connected' ? 'active' : ''}`}
+          onClick={() => setActiveTab('connected')}
+        >
+          Connected
+        </button>
+      </nav>
+
+      {activeTab === 'discover' && (
+        <div className="v2-container">
+          {/* Main content area */}
+          <div className="v2-main">
+            {/* Progress bar */}
+            <div className="v2-progress">
+              <div className="v2-progress-bar" style={{ width: `${progress}%` }} />
+            </div>
+
+          {/* Step 1: Brand Selection */}
         {step === 'brands' && (
           <div className="v2-brands-step">
             <div className="v2-step-header">
-              <h1 className="type-tagline">What brands do you admire?</h1>
+              <h1 className="type-tagline">What brand experience do you trust?</h1>
               <p className="v2-step-subtitle">
-                Select brands whose talent you'd want on your team. We'll show you Reflexers with experience there.
+                Select the brands whose talent you would want on your team. We'll show you Reflexers with experience there.
               </p>
             </div>
 
             <div className="v2-brand-grid">
               {BRAND_LOGOS.map(brand => (
                 <button
-                  key={brand.name}
-                  className={`v2-brand-tile ${selectedBrands.includes(brand.name) ? 'selected' : ''}`}
-                  onClick={() => toggleBrand(brand.name)}
+                  key={brand.id}
+                  className={`v2-brand-tile ${selectedBrands.includes(brand.id) ? 'selected' : ''}`}
+                  onClick={() => toggleBrand(brand.id)}
                 >
-                  <div className="v2-brand-logo">
-                    {/* Fallback to text if no logo */}
-                    <span className="v2-brand-name">{brand.name}</span>
-                  </div>
-                  {selectedBrands.includes(brand.name) && (
+                  <img src={brand.logo} alt="" className="v2-brand-logo" />
+                  {selectedBrands.includes(brand.id) && (
                     <div className="v2-brand-check">
                       <Check size={16} />
                     </div>
@@ -352,6 +529,26 @@ export function V2TalentCentric() {
           )}
         </div>
       </div>
+    </div>
+      )}
+
+      {activeTab === 'saved' && (
+        <div className="tab-empty-state">
+          <div className="empty-state-content">
+            <Heart size={32} strokeWidth={1.5} />
+            <p>No saved workers yet</p>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'connected' && (
+        <div className="tab-empty-state">
+          <div className="empty-state-content">
+            <Link size={32} strokeWidth={1.5} />
+            <p>No connections yet</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
