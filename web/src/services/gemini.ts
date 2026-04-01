@@ -755,7 +755,7 @@ export class MockGeminiService {
     return `Hi ${userName}! I can help you with salary insights and job postings for ${retailerName} in ${market}. What role are you looking to hire for, or would you like to see current market rates?`;
   }
 
-  async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec; followUp?: string }> {
+  async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec; followUp?: string; chips?: { label: string }[]; chipsType?: string }> {
     const lower = message.toLowerCase();
     const fillRoleIntent =
       /fill\s+(a\s+)?permanent|permanent\s+role|create\s+a\s+job\s+posting|start\s+a\s+job\s+posting|job\s+posting\s+together/i.test(

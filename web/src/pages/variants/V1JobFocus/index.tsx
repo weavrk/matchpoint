@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Check, Info, Loader2, Clipboard, CircleMinus, Database, BadgeCheck, Star, CalendarDays, Briefcase, Heart, Clock } from 'lucide-react';
+import { Link, FileText, Pencil, X, Plus, ChevronDown, Search, ChevronLeft, ChevronRight, Check, Info, Loader2, Clipboard, CircleMinus } from 'lucide-react';
 import { ChatInterface } from '../../../components/Chat';
 import { ScrapeModal, type ScrapeConfig } from '../../../components/ScrapeModal';
 import { ScrapeProgressModal, type ScrapeProgressData } from '../../../components/ScrapeProgressModal';
 import { UnmatchedRolesModal } from '../../../components/UnmatchedRolesModal';
-import { WorkerCardHeader, WorkerCardTeaser, WorkerCardCompact, WorkerCardFull } from '../../../components/Workers';
-import { GeminiService, MockGeminiService } from '../../../services/gemini';
+import { WorkerCardTeaser, WorkerCardFull } from '../../../components/Workers';
+import { GeminiService } from '../../../services/gemini';
 import { matchWorkers } from '../../../services/workerMatching';
 import {
   fetchMarkets,
@@ -709,7 +709,7 @@ function formatRetailerDisplayName(name: string): string {
 
 import type { VariantProps } from '../../PermanentHiring';
 
-export function V1JobFocus({ agentActive, showOz, onToggleOz }: VariantProps) {
+export function V1JobFocus({ agentActive, showOz }: VariantProps) {
   const [activeTab, setActiveTab] = useState<TabId>('ask-reflex');
 
   const [showJobSitesInfo, setShowJobSitesInfo] = useState(false);
