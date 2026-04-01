@@ -242,15 +242,27 @@ export function V2TalentCentric() {
     }
   };
 
+  // Helper to normalize brand names for comparison (kebab-case to lowercase, spaces removed)
+  const normalizeBrand = (name: string) => name.toLowerCase().replace(/[\s&'.-]+/g, '');
+
   // Filter and score workers based on selections
   const filteredWorkers = useMemo(() => {
-    let workers = SAMPLE_WORKERS.filter(w => w.shiftVerified); // Only show verified
+    let workers = [...SAMPLE_WORKERS]; // Start with all 40 workers
 
-    // Filter by selected brands
+    // Filter by selected brands - check brandsWorked and previousExperience
     if (selectedBrands.length > 0) {
-      workers = workers.filter(w =>
-        w.brandsWorked.some(b => selectedBrands.includes(b.name))
-      );
+      const normalizedSelected = selectedBrands.map(id => normalizeBrand(id));
+      workers = workers.filter(w => {
+        // Check brandsWorked
+        const hasBrandMatch = w.brandsWorked.some(b =>
+          normalizedSelected.some(sel => normalizeBrand(b.name).includes(sel) || sel.includes(normalizeBrand(b.name)))
+        );
+        // Check previousExperience
+        const hasExpMatch = w.previousExperience?.some(exp =>
+          normalizedSelected.some(sel => normalizeBrand(exp.company).includes(sel) || sel.includes(normalizeBrand(exp.company)))
+        );
+        return hasBrandMatch || hasExpMatch;
+      });
     }
 
     // Apply question filters
@@ -304,7 +316,7 @@ export function V2TalentCentric() {
     });
 
     // Sort by score
-    return scored.sort((a, b) => b.matchScore - a.matchScore).slice(0, 8);
+    return scored.sort((a, b) => b.matchScore - a.matchScore);
   }, [selectedBrands, answers]);
 
   // Get brands the filtered workers have in common
@@ -376,9 +388,19 @@ export function V2TalentCentric() {
           <div className="v2-brands-step">
             <div className="v2-step-header">
               <h1 className="type-tagline">What brand experience do you trust?</h1>
-              <p className="v2-step-subtitle">
+              <p className="type-prompt-question">
                 Select the brands whose talent you would want on your team. We'll show you Reflexers with experience there.
               </p>
+            </div>
+
+            <div className="v2-brand-grid-header">
+              <button
+                className="v2-clear-all"
+                onClick={() => setSelectedBrands([])}
+                disabled={selectedBrands.length === 0}
+              >
+                Clear all
+              </button>
             </div>
 
             <div className="v2-brand-grid">

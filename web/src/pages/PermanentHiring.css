@@ -2749,3 +2749,19 @@
   z-index: -1;
 }
 
+.variant-menu-divider {
+  height: 1px;
+  background: var(--quaternary);
+  margin: 4px 0;
+}
+
+.variant-menu-item-oz {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.variant-menu-item-oz svg {
+  flex-shrink: 0;
+}
+

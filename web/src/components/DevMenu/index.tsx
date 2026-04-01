@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { BotOff, BotMessageSquare, Database, Palette } from 'lucide-react';
+import { BotOff, BotMessageSquare, Palette } from 'lucide-react';
 import { DesignSystemPanel } from './DesignSystemPanel';
 
 interface DevMenuProps {
@@ -48,18 +48,6 @@ export function DevMenu({ agentActive, onToggleAgent, showOz, onToggleOz }: DevM
                 {agentActive ? <BotMessageSquare size={16} /> : <BotOff size={16} />}
               </span>
               <span className="dev-menu-label">Good Bot {agentActive ? 'On' : 'Off'}</span>
-            </button>
-            <button
-              className={`dev-menu-item${showOz ? ' active' : ''}`}
-              onClick={() => {
-                onToggleOz();
-                setShowMenu(false);
-              }}
-            >
-              <span className="dev-menu-icon">
-                <Database size={16} />
-              </span>
-              <span className="dev-menu-label">Oz</span>
             </button>
             <button
               className="dev-menu-item"

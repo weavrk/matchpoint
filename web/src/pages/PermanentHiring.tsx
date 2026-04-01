@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layers } from 'lucide-react';
+import { Layers, Database } from 'lucide-react';
 import { V1JobFocus } from './variants/V1JobFocus';
 import { V2TalentCentric } from './variants/V2TalentCentric';
 import { V3Wildcard } from './variants/V3Wildcard';
@@ -73,6 +73,21 @@ export function PermanentHiring() {
                   {v.label}
                 </button>
               ))}
+              <div className="variant-menu-divider" />
+              <button
+                className={`variant-menu-item variant-menu-item-oz ${showOz ? 'active' : ''}`}
+                onClick={() => {
+                  if (!showOz) {
+                    // Oz content only exists in V1, so switch to it
+                    setCurrentVariant('v1-job-focus');
+                  }
+                  setShowOz(!showOz);
+                  setShowVariantMenu(false);
+                }}
+              >
+                <Database size={16} />
+                <span>Oz</span>
+              </button>
             </div>
             <div
               className="variant-menu-backdrop"
