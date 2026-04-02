@@ -7,9 +7,9 @@
   overflow: hidden;
 }
 
-/* Header wrapper with padding */
+/* Header wrapper (horizontal inset on header + tabs, not wrapper) */
 .v2-page-header-wrapper {
-  padding: 0 64px;
+  padding: 0;
   flex-shrink: 0;
 }
 
@@ -18,7 +18,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 24px;
   margin-bottom: 16px;
+  margin-left: 64px;
+  margin-right: 64px;
   flex-shrink: 0;
 }
 
@@ -46,6 +49,8 @@
   display: flex;
   gap: 24px;
   margin-bottom: 0px;
+  padding-left: 64px;
+  padding-right: 64px;
   flex-shrink: 0;
   border-bottom: 1px solid var(--quaternary);
 }
@@ -79,14 +84,13 @@
   display: flex;
   flex: 1;
   min-height: 0;
-  background: #ffffff;
+  background: transparent;
   overflow: hidden;
 }
 
 .v2-container-welcome {
-  background:
-    linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0) 25%),
-    linear-gradient(15deg, #ffffff 0%, #ffffff 40%, #fff5f5 55%, #ffe6e6 75%, #ffffff 100%);
+  position: relative;
+  overflow: visible;
 }
 
 /* Main content area - left side, scrollable */
@@ -141,13 +145,15 @@
 
 /* Welcome step */
 .v2-welcome-step {
+  position: relative;
+  z-index: 1;
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  padding: 80px 64px 64px;
+  padding: 160px 64px 64px;
 }
 
 .v2-welcome-illustration {
@@ -158,6 +164,20 @@
   justify-content: center;
   margin-bottom: 0px;
   position: relative;
+  overflow: visible;
+}
+
+.v2-welcome-illustration::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle at center, var(--background-gray) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .v2-illustration-circle {
@@ -177,9 +197,10 @@
   position: absolute;
   width: 260px;
   height: 76px;
-  background: var(--gray-50);
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-radius: 8px;
+  border: 3px solid var(--gray-50);
+  box-shadow: 0 8px 24px rgba(63, 63, 70, 0.15), inset 2px 2px 4px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
   padding: 14px 18px;
@@ -263,13 +284,17 @@
 
 
 .v2-welcome-step .type-tagline {
-  margin-bottom: 16px;
-  max-width: 600px;
+  margin-bottom: 0px;
+  max-width: 45vw;
+  font-size: 54px;
+  line-height: 1.1;
 }
 
-.v2-welcome-subtitle {
+.v2-welcome-step .v2-welcome-subtitle {
   margin-bottom: 48px;
-  max-width: 500px;
+  max-width: 70vw;
+  font-size: 24px;
+  line-height: 1.2;
 }
 
 .v2-get-started-btn {
@@ -683,7 +708,7 @@
 .v2-sidebar {
   position: relative;
   width: 380px;
-  background: var(--background-navy);
+  background: #EBF2F6;
   border-left: 1px solid var(--quaternary);
   display: flex;
   flex-direction: column;

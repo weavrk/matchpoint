@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, Sparkle, GraduationCap, Rocket } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, ShieldCheck, Unlock } from 'lucide-react';
 import { SAMPLE_WORKERS } from '../../../data/workers';
 import { WorkerCardTeaser } from '../../../components/Workers/WorkerCardTeaser';
 import type { MatchedWorker } from '../../../types';
@@ -415,6 +415,7 @@ export function V2TalentCentric() {
 
       {activeTab === 'discover' && (
         <div className={`v2-container ${step === 'welcome' ? 'v2-container-welcome' : ''}`}>
+          {step === 'welcome' && <div className="gradient-wash" />}
           {/* Main content area */}
           <div className="v2-main">
             {/* Progress bar - hidden on welcome */}
@@ -433,7 +434,7 @@ export function V2TalentCentric() {
                   <div className="v2-illustration-card v2-illustration-card-1">
                     <div className="v2-card-avatar">
                       <Users size={24} strokeWidth={2} />
-                      <div className="v2-avatar-badge"><Sparkle size={14} strokeWidth={2.5} /></div>
+                      <div className="v2-avatar-badge"><Sparkles size={14} strokeWidth={2.5} /></div>
                     </div>
                     <div className="v2-card-lines">
                       <div className="v2-card-line v2-card-line-long"></div>
@@ -443,7 +444,7 @@ export function V2TalentCentric() {
                   <div className="v2-illustration-card v2-illustration-card-2">
                     <div className="v2-card-avatar">
                       <Users size={24} strokeWidth={2} />
-                      <div className="v2-avatar-badge"><GraduationCap size={14} strokeWidth={2.5} /></div>
+                      <div className="v2-avatar-badge"><ShieldCheck size={14} strokeWidth={2.5} /></div>
                     </div>
                     <div className="v2-card-lines">
                       <div className="v2-card-line v2-card-line-long"></div>
@@ -453,7 +454,7 @@ export function V2TalentCentric() {
                   <div className="v2-illustration-card v2-illustration-card-3">
                     <div className="v2-card-avatar">
                       <Users size={24} strokeWidth={2} />
-                      <div className="v2-avatar-badge"><Rocket size={14} strokeWidth={2.5} /></div>
+                      <div className="v2-avatar-badge"><Unlock size={14} strokeWidth={2.5} /></div>
                     </div>
                     <div className="v2-card-lines">
                       <div className="v2-card-line v2-card-line-long"></div>
@@ -463,9 +464,7 @@ export function V2TalentCentric() {
                 </div>
               </div>
               <h1 className="type-tagline">
-                Hey {userName}, let's connect you with{' '}
-                <br />
-                retail talent in your area.
+                Hey {userName}, let's connect with retail talent in your area.
               </h1>
               <p className="type-prompt-question v2-welcome-subtitle">
                 Find shift-verified Reflexers with experience at brands you trust.
