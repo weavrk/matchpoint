@@ -9,7 +9,7 @@ interface DevMenuProps {
   onToggleOz: () => void;
 }
 
-export function DevMenu({ agentActive, onToggleAgent, showOz, onToggleOz }: DevMenuProps) {
+export function DevMenu({ agentActive, onToggleAgent, showOz: _showOz, onToggleOz: _onToggleOz }: DevMenuProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showDesignSystem, setShowDesignSystem] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
