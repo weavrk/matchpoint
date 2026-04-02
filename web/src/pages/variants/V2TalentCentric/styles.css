@@ -185,7 +185,7 @@
   border: none;
   padding: 2px;
   cursor: pointer;
-  color: var(--tertiary);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -193,7 +193,7 @@
 }
 
 .v2-search-clear:hover {
-  color: var(--primary);
+  color: var(--accent-navy-dark);
 }
 
 .v2-search-input::placeholder {

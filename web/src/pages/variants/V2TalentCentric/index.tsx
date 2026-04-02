@@ -224,13 +224,13 @@ export function V2TalentCentric() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const brandRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  // Search matching brands
+  // Search matching brands - only match from start of name
   const searchResults = useMemo(() => {
     if (!brandSearch.trim()) return null;
     const query = brandSearch.toLowerCase().replace(/[\s&'.-]+/g, '');
     return BRAND_LOGOS.filter(brand => {
       const normalized = brand.id.toLowerCase().replace(/[\s&'.-]+/g, '');
-      return normalized.includes(query) || query.includes(normalized);
+      return normalized.startsWith(query);
     });
   }, [brandSearch]);
 
@@ -241,7 +241,7 @@ export function V2TalentCentric() {
       const query = value.toLowerCase().replace(/[\s&'.-]+/g, '');
       const match = BRAND_LOGOS.find(brand => {
         const normalized = brand.id.toLowerCase().replace(/[\s&'.-]+/g, '');
-        return normalized.includes(query) || query.includes(normalized);
+        return normalized.startsWith(query);
       });
       if (match && brandRefs.current[match.id]) {
         brandRefs.current[match.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
