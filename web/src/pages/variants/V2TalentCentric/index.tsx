@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { Check, ChevronRight, Sparkles, Link, Heart, Search } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X } from 'lucide-react';
 import { SAMPLE_WORKERS } from '../../../data/workers';
 import { WorkerCardTeaser } from '../../../components/Workers/WorkerCardTeaser';
 import type { MatchedWorker } from '../../../types';
@@ -221,6 +221,7 @@ export function V2TalentCentric() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [brandSearch, setBrandSearch] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const brandRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // Search matching brands
@@ -431,6 +432,15 @@ export function V2TalentCentric() {
                     onChange={(e) => handleSearch(e.target.value)}
                     className="v2-search-input"
                   />
+                  {brandSearch && (
+                    <button
+                      className="v2-search-clear"
+                      onClick={() => setBrandSearch('')}
+                      aria-label="Clear search"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
                 </div>
                 {brandSearch && (
                   <span className={`v2-search-results ${searchResults && searchResults.length === 0 ? 'no-results' : ''}`}>
@@ -449,7 +459,7 @@ export function V2TalentCentric() {
               </button>
             </div>
 
-            <div className="v2-brand-grid">
+            <div className={`v2-brand-grid ${!sidebarOpen ? 'expanded' : ''}`}>
               {BRAND_LOGOS.map(brand => (
                 <button
                   key={brand.id}
@@ -570,7 +580,14 @@ export function V2TalentCentric() {
       </div>
 
       {/* Sidebar with worker cards */}
-      <div className="v2-sidebar">
+      <div className={`v2-sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
+        <button
+          className="v2-sidebar-toggle"
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          aria-label={sidebarOpen ? 'Close panel' : 'Open panel'}
+        >
+          {sidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+        </button>
         <div className="v2-sidebar-header">
           <h2 className="type-section-header-md">
             {step === 'brands' && 'Shift Verified Reflexers'}

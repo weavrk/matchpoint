@@ -178,13 +178,32 @@
   border-color: var(--tertiary);
 }
 
+.v2-search-clear {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.v2-search-clear:hover {
+  color: var(--primary);
+}
+
 .v2-search-input::placeholder {
   color: var(--tertiary);
 }
 
 .v2-search-results {
-  font-size: 13px;
-  color: var(--secondary);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--primary);
   white-space: nowrap;
 }
 
@@ -221,6 +240,11 @@
   grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   margin-bottom: 40px;
+  transition: grid-template-columns 0.3s ease;
+}
+
+.v2-brand-grid.expanded {
+  grid-template-columns: repeat(7, 1fr);
 }
 
 .v2-brand-tile {
@@ -488,13 +512,51 @@
 
 /* Sidebar - right side */
 .v2-sidebar {
+  position: relative;
   width: 380px;
   background: var(--background-navy);
   border-left: 1px solid var(--quaternary);
   display: flex;
   flex-direction: column;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
+  transition: width 0.3s ease;
+  flex-shrink: 0;
+}
+
+.v2-sidebar.collapsed {
+  width: 24px;
+}
+
+.v2-sidebar.collapsed .v2-sidebar-header,
+.v2-sidebar.collapsed .v2-sidebar-cards {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.v2-sidebar-toggle {
+  position: absolute;
+  left: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  border: 1px solid var(--quaternary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  color: var(--secondary);
+  transition: all 0.15s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.v2-sidebar-toggle:hover {
+  color: var(--primary);
+  border-color: var(--tertiary);
 }
 
 .v2-sidebar-header {
@@ -503,6 +565,7 @@
   justify-content: space-between;
   padding: 24px;
   border-bottom: 1px solid var(--quaternary);
+  transition: opacity 0.2s ease;
 }
 
 .v2-sidebar-header h2 {
