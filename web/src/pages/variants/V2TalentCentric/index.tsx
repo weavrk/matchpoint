@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Check, ChevronRight, Sparkles, Link, Heart } from 'lucide-react';
+import { useState, useMemo, useRef, useCallback } from 'react';
+import { Check, ChevronRight, Sparkles, Link, Heart, Search } from 'lucide-react';
 import { SAMPLE_WORKERS } from '../../../data/workers';
 import { WorkerCardTeaser } from '../../../components/Workers/WorkerCardTeaser';
 import type { MatchedWorker } from '../../../types';
@@ -220,6 +220,33 @@ export function V2TalentCentric() {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [brandSearch, setBrandSearch] = useState('');
+  const brandRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  // Search matching brands
+  const searchResults = useMemo(() => {
+    if (!brandSearch.trim()) return null;
+    const query = brandSearch.toLowerCase().replace(/[\s&'.-]+/g, '');
+    return BRAND_LOGOS.filter(brand => {
+      const normalized = brand.id.toLowerCase().replace(/[\s&'.-]+/g, '');
+      return normalized.includes(query) || query.includes(normalized);
+    });
+  }, [brandSearch]);
+
+  // Scroll to first matching brand
+  const handleSearch = useCallback((value: string) => {
+    setBrandSearch(value);
+    if (value.trim()) {
+      const query = value.toLowerCase().replace(/[\s&'.-]+/g, '');
+      const match = BRAND_LOGOS.find(brand => {
+        const normalized = brand.id.toLowerCase().replace(/[\s&'.-]+/g, '');
+        return normalized.includes(query) || query.includes(normalized);
+      });
+      if (match && brandRefs.current[match.id]) {
+        brandRefs.current[match.id]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, []);
 
   // Toggle brand selection
   const toggleBrand = (brandName: string) => {
@@ -394,6 +421,25 @@ export function V2TalentCentric() {
             </div>
 
             <div className="v2-brand-grid-header">
+              <div className="v2-brand-search">
+                <div className="v2-search-input-wrapper">
+                  <Search size={16} className="v2-search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search brands..."
+                    value={brandSearch}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="v2-search-input"
+                  />
+                </div>
+                {brandSearch && (
+                  <span className={`v2-search-results ${searchResults && searchResults.length === 0 ? 'no-results' : ''}`}>
+                    {searchResults && searchResults.length === 0
+                      ? 'No results found'
+                      : `${searchResults?.length} brand${searchResults?.length === 1 ? '' : 's'} found`}
+                  </span>
+                )}
+              </div>
               <button
                 className="v2-clear-all"
                 onClick={() => setSelectedBrands([])}
@@ -407,7 +453,8 @@ export function V2TalentCentric() {
               {BRAND_LOGOS.map(brand => (
                 <button
                   key={brand.id}
-                  className={`v2-brand-tile ${selectedBrands.includes(brand.id) ? 'selected' : ''}`}
+                  ref={(el) => { brandRefs.current[brand.id] = el; }}
+                  className={`v2-brand-tile ${selectedBrands.includes(brand.id) ? 'selected' : ''}${searchResults && searchResults.some(r => r.id === brand.id) ? ' search-match' : ''}`}
                   onClick={() => toggleBrand(brand.id)}
                 >
                   <img src={brand.logo} alt="" className="v2-brand-logo" />

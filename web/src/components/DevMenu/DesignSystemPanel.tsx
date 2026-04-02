@@ -186,70 +186,32 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
         <section className="ds-section">
           <h3>Pills / Tags</h3>
           <p className="ds-description">
-            Rounded pill badges. Usage: <code>className="pill pill-[style] pill-[size]"</code>
+            Usage: <code>className="pill pill-[style] pill-[size]"</code>
           </p>
 
           <div className="ds-subsection">
             <h4>Styles</h4>
             <div className="ds-pills-styles-row">
-              <div className="ds-pill-style-item">
-                <span className="pill pill-stroke pill-md">
-                  <span className="pill-text">Stroke</span>
-                </span>
-                <span className="ds-pill-label">pill-stroke</span>
-              </div>
-              <span className="ds-pill-divider" />
-              <div className="ds-pill-style-item">
-                <span className="pill pill-dark-gray pill-md">
-                  <span className="pill-text">Dark Gray</span>
-                </span>
-                <span className="ds-pill-label">pill-dark-gray</span>
-              </div>
-              <span className="ds-pill-divider" />
-              <div className="ds-pill-style-item">
-                <span className="pill pill-green pill-md">
-                  <span className="pill-text">Green</span>
-                </span>
-                <span className="ds-pill-label">pill-green</span>
-              </div>
-              <span className="ds-pill-divider" />
-              <div className="ds-pill-style-item">
-                <span className="pill pill-blue pill-md">
-                  <span className="pill-text">Blue</span>
-                </span>
-                <span className="ds-pill-label">pill-blue</span>
-              </div>
+              <span className="pill pill-stroke pill-md"><span className="pill-text">Stroke</span></span>
+              <span className="pill pill-lite-gray pill-md"><span className="pill-text">Lite Gray</span></span>
+              <span className="pill pill-dark-gray pill-md"><span className="pill-text">Dark Gray</span></span>
+              <span className="pill pill-green pill-md"><span className="pill-text">Green</span></span>
+              <span className="pill pill-blue pill-md"><span className="pill-text">Blue</span></span>
             </div>
           </div>
 
           <div className="ds-subsection">
-            <h4>With Icons</h4>
+            <h4>Variants</h4>
             <div className="ds-pills-styles-row">
-              <span className="pill pill-stroke pill-md"><span className="pill-icon"><CalendarDays size={14} /></span><span className="pill-text">Stroke</span></span>
-              <span className="pill pill-green pill-md"><span className="pill-icon"><BadgeCheck size={14} /></span><span className="pill-text">Green</span></span>
-              <span className="pill pill-blue pill-md"><span className="pill-icon"><Search size={14} /></span><span className="pill-text">Blue</span></span>
+              <span className="pill pill-stroke pill-md"><span className="pill-text">Text Only</span></span>
+              <span className="pill pill-stroke pill-md"><span className="pill-icon"><CalendarDays size={14} /></span><span className="pill-text">Icon Left</span></span>
+              <span className="pill pill-stroke pill-md"><span className="pill-text">Icon Right</span><span className="pill-icon"><CalendarDays size={14} /></span></span>
+              <span className="pill pill-stroke pill-md"><span className="pill-counter">3</span><span className="pill-text">Counter Left</span></span>
+              <span className="pill pill-stroke pill-md"><span className="pill-text">Counter Right</span><span className="pill-counter">3</span></span>
             </div>
           </div>
         </section>
 
-        {/* Shared States Section */}
-        <section className="ds-section">
-          <h3>Shared States</h3>
-          <div className="ds-states-grid">
-            <div className="ds-state">
-              <span className="ds-state-name">Default</span>
-              <span className="ds-state-desc">1px border --black-alpha-100, white bg</span>
-            </div>
-            <div className="ds-state">
-              <span className="ds-state-name">Hover</span>
-              <span className="ds-state-desc">--app-primary border, --gray-50 bg</span>
-            </div>
-            <div className="ds-state">
-              <span className="ds-state-name">Active/Selected</span>
-              <span className="ds-state-desc">--app-primary border, --gray-50 bg, checkmark icon</span>
-            </div>
-          </div>
-        </section>
       </div>
     </div>
   );

@@ -1953,7 +1953,7 @@
 
 .oz-tag {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: #3f3f46;
   padding: 2px 0;
   white-space: nowrap;
   overflow: hidden;
@@ -2096,19 +2096,28 @@
 }
 
 .design-system-panel {
-  position: absolute;
-  bottom: 100%;
+  position: fixed;
+  top: 0;
   right: 0;
-  margin-bottom: 8px;
-  background: #ffffff;
-  border: 1px solid var(--quaternary);
-  border-radius: 12px;
+  bottom: 0;
   width: 60vw;
-  max-height: 90vh;
-  overflow: hidden;
+  height: 100vh;
+  background: #ffffff;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
+  animation: slideInFromRight 0.25s ease-out;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .design-system-header {
@@ -2126,7 +2135,7 @@
 .design-system-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 20px 20px 120px 20px;
 }
 
 /* Design System Sections */

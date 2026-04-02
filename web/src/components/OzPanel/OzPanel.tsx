@@ -512,12 +512,12 @@ export function OzPanel({ isOpen, onClose }: OzPanelProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="oz-panel-overlay">
-      <div className="oz-panel">
+    <div className="oz-panel-overlay" onClick={onClose}>
+      <div className="oz-panel" onClick={(e) => e.stopPropagation()}>
         <div className="oz-panel-header">
           <h1>Oz</h1>
           <button className="oz-panel-close" onClick={onClose}>
-            <X size={24} />
+            <X size={28} />
           </button>
         </div>
 

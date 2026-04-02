@@ -132,9 +132,64 @@
 
 .v2-brand-grid-header {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 32px;
   margin-bottom: 12px;
-  min-height: 28px;
+  min-height: 36px;
+  gap: 16px;
+}
+
+.v2-brand-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  max-width: 400px;
+}
+
+.v2-search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.v2-search-icon {
+  position: absolute;
+  left: 10px;
+  color: var(--secondary);
+  pointer-events: none;
+}
+
+.v2-search-input {
+  width: 100%;
+  padding: 8px 16px 8px 34px;
+  font-size: 14px;
+  border: 1px solid var(--quaternary);
+  border-radius: 20px;
+  background: var(--white);
+  color: var(--primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.v2-search-input:focus {
+  border-color: var(--tertiary);
+}
+
+.v2-search-input::placeholder {
+  color: var(--tertiary);
+}
+
+.v2-search-results {
+  font-size: 13px;
+  color: var(--secondary);
+  white-space: nowrap;
+}
+
+.v2-search-results.no-results {
+  color: var(--accent-coral);
 }
 
 .v2-clear-all {
@@ -190,6 +245,11 @@
 .v2-brand-tile.selected {
   border-color: var(--accent-green-mid);
   background: var(--background-green);
+}
+
+.v2-brand-tile.search-match {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--accent-blue-light, rgba(59, 130, 246, 0.2));
 }
 
 .v2-brand-logo {

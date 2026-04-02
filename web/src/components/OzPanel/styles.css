@@ -14,14 +14,23 @@
 }
 
 .oz-panel {
-  width: 85vw;
-  max-width: 1400px;
+  width: 70vw;
   height: 100vh;
   background: #ffffff;
   display: flex;
   flex-direction: column;
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  animation: slideInFromRight 0.25s ease-out;
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .oz-panel-header {
@@ -44,20 +53,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   background: transparent;
-  border: 1px solid var(--quaternary);
-  border-radius: var(--radius-md);
-  color: var(--app-secondary);
+  border: none;
+  color: #3F3F46;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .oz-panel-close:hover {
-  background: var(--gray-50);
-  border-color: var(--app-primary);
-  color: var(--app-primary);
+  color: #18181B;
 }
 
 .oz-panel-content {
@@ -610,7 +616,7 @@
 
 .oz-tag {
   font-size: 14px;
-  color: var(--app-primary);
+  color: #3f3f46;
   padding: 2px 0;
 }
 
