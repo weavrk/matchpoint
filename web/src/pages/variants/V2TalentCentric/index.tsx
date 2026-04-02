@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, Sparkle, GraduationCap, Rocket } from 'lucide-react';
 import { SAMPLE_WORKERS } from '../../../data/workers';
 import { WorkerCardTeaser } from '../../../components/Workers/WorkerCardTeaser';
 import type { MatchedWorker } from '../../../types';
@@ -90,6 +90,14 @@ import logoWolfAndShephard from '../../../../../assets/brand-logos/wolf-and-shep
 import logoZara from '../../../../../assets/brand-logos/zara.png';
 
 type TabId = 'discover' | 'saved' | 'connected';
+
+// Names for the greeting - shared with V1
+const GREETING_NAMES = [
+  'Mike', 'Trevor', 'Shannon', 'Nate', 'Micah', 'Katherine', 'Cayley',
+  'Evan', 'Juan', 'Julie', 'Ashlee', 'Jeremy', 'Sam', 'Jasmine',
+  'Emily', 'Olivia', 'Mary', 'Hans', 'Hadley', 'Leigh Ann',
+];
+const getRandomUserName = () => GREETING_NAMES[Math.floor(Math.random() * GREETING_NAMES.length)];
 
 // Brand logos array - edit this to add/remove brands
 const BRAND_LOGOS: { id: string; logo: string }[] = [
@@ -212,16 +220,17 @@ const QUESTIONS: ThisOrThatQuestion[] = [
   },
 ];
 
-type Step = 'brands' | 'questions' | 'results';
+type Step = 'welcome' | 'brands' | 'questions' | 'results';
 
 export function V2TalentCentric() {
   const [activeTab, setActiveTab] = useState<TabId>('discover');
-  const [step, setStep] = useState<Step>('brands');
+  const [step, setStep] = useState<Step>('welcome');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [brandSearch, setBrandSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [userName] = useState(() => getRandomUserName());
   const brandRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // Search matching brands - only match from start of name
@@ -368,48 +377,108 @@ export function V2TalentCentric() {
   };
 
   const currentQuestion = QUESTIONS[currentQuestionIndex];
-  const progress = step === 'brands' ? 0 : step === 'questions' ? ((currentQuestionIndex + 1) / QUESTIONS.length) * 100 : 100;
+  const progress = step === 'welcome' ? 0 : step === 'brands' ? 25 : step === 'questions' ? 25 + ((currentQuestionIndex + 1) / QUESTIONS.length) * 50 : 100;
 
   return (
     <div className="v2-page">
-      <header className="page-header">
-        <div className="page-header-icon" aria-hidden="true">
-          <Link size={24} />
-        </div>
-        <div className="page-header-content">
-          <h1 className="page-title">Talent Connect</h1>
-        </div>
-      </header>
+      <div className="v2-page-header-wrapper">
+        <header className="page-header">
+          <div className="page-header-icon" aria-hidden="true">
+            <Link size={24} />
+          </div>
+          <div className="page-header-content">
+            <h1 className="page-title">Talent Connect</h1>
+          </div>
+        </header>
 
-      <nav className="page-tabs">
-        <button
-          className={`tab ${activeTab === 'discover' ? 'active' : ''}`}
-          onClick={() => setActiveTab('discover')}
-        >
-          Discover
-        </button>
-        <button
-          className={`tab ${activeTab === 'saved' ? 'active' : ''}`}
-          onClick={() => setActiveTab('saved')}
-        >
-          Saved
-        </button>
-        <button
-          className={`tab ${activeTab === 'connected' ? 'active' : ''}`}
-          onClick={() => setActiveTab('connected')}
-        >
-          Connected
-        </button>
-      </nav>
+        <nav className="page-tabs">
+          <button
+            className={`tab ${activeTab === 'discover' ? 'active' : ''}`}
+            onClick={() => setActiveTab('discover')}
+          >
+            Discover
+          </button>
+          <button
+            className={`tab ${activeTab === 'saved' ? 'active' : ''}`}
+            onClick={() => setActiveTab('saved')}
+          >
+            Saved
+          </button>
+          <button
+            className={`tab ${activeTab === 'connected' ? 'active' : ''}`}
+            onClick={() => setActiveTab('connected')}
+          >
+            Connected
+          </button>
+        </nav>
+      </div>
 
       {activeTab === 'discover' && (
-        <div className="v2-container">
+        <div className={`v2-container ${step === 'welcome' ? 'v2-container-welcome' : ''}`}>
           {/* Main content area */}
           <div className="v2-main">
-            {/* Progress bar */}
+            {/* Progress bar - hidden on welcome */}
+            {step !== 'welcome' && (
             <div className="v2-progress">
               <div className="v2-progress-bar" style={{ width: `${progress}%` }} />
             </div>
+            )}
+
+          {/* Step 0: Welcome */}
+          {step === 'welcome' && (
+            <div className="v2-welcome-step">
+              <div className="v2-welcome-illustration">
+                <div className="v2-illustration-circle"></div>
+                <div className="v2-illustration-cards">
+                  <div className="v2-illustration-card v2-illustration-card-1">
+                    <div className="v2-card-avatar">
+                      <Users size={24} strokeWidth={2} />
+                      <div className="v2-avatar-badge"><Sparkle size={14} strokeWidth={2.5} /></div>
+                    </div>
+                    <div className="v2-card-lines">
+                      <div className="v2-card-line v2-card-line-long"></div>
+                      <div className="v2-card-line v2-card-line-short"></div>
+                    </div>
+                  </div>
+                  <div className="v2-illustration-card v2-illustration-card-2">
+                    <div className="v2-card-avatar">
+                      <Users size={24} strokeWidth={2} />
+                      <div className="v2-avatar-badge"><GraduationCap size={14} strokeWidth={2.5} /></div>
+                    </div>
+                    <div className="v2-card-lines">
+                      <div className="v2-card-line v2-card-line-long"></div>
+                      <div className="v2-card-line v2-card-line-short"></div>
+                    </div>
+                  </div>
+                  <div className="v2-illustration-card v2-illustration-card-3">
+                    <div className="v2-card-avatar">
+                      <Users size={24} strokeWidth={2} />
+                      <div className="v2-avatar-badge"><Rocket size={14} strokeWidth={2.5} /></div>
+                    </div>
+                    <div className="v2-card-lines">
+                      <div className="v2-card-line v2-card-line-long"></div>
+                      <div className="v2-card-line v2-card-line-short"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <h1 className="type-tagline">
+                Hey {userName}, let's connect you with{' '}
+                <br />
+                retail talent in your area.
+              </h1>
+              <p className="type-prompt-question v2-welcome-subtitle">
+                Find shift-verified Reflexers with experience at brands you trust.
+              </p>
+              <button
+                className="v2-get-started-btn"
+                onClick={() => setStep('brands')}
+              >
+                Get started
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
 
           {/* Step 1: Brand Selection */}
         {step === 'brands' && (
@@ -579,7 +648,8 @@ export function V2TalentCentric() {
         )}
       </div>
 
-      {/* Sidebar with worker cards */}
+      {/* Sidebar with worker cards - hidden on welcome step */}
+      {step !== 'welcome' && (
       <div className={`v2-sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
         <button
           className="v2-sidebar-toggle"
@@ -615,6 +685,7 @@ export function V2TalentCentric() {
           )}
         </div>
       </div>
+      )}
     </div>
       )}
 
