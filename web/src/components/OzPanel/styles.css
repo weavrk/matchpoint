@@ -1,0 +1,804 @@
+/* OzPanel - Global Overlay Component */
+
+.oz-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+}
+
+.oz-panel {
+  width: 85vw;
+  max-width: 1400px;
+  height: 100vh;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.oz-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--quaternary);
+  flex-shrink: 0;
+}
+
+.oz-panel-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--app-primary);
+}
+
+.oz-panel-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  color: var(--app-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.oz-panel-close:hover {
+  background: var(--gray-50);
+  border-color: var(--app-primary);
+  color: var(--app-primary);
+}
+
+.oz-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Loading state */
+.oz-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+  color: var(--text-hint);
+}
+
+.oz-loading p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.oz-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Sections */
+.oz-section {
+  background: #ffffff;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.oz-section-markets {
+  height: 420px;
+}
+
+.oz-section-jobs {
+  flex: 1;
+  min-height: 800px;
+  display: flex;
+  flex-direction: column;
+}
+
+.oz-section-jobs .oz-section-body {
+  flex: 1;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.oz-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--app-primary);
+}
+
+.oz-section-header .section-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--app-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title-sub {
+  font-size: 0.8em;
+  font-weight: 400;
+  color: var(--gray-400);
+  margin-left: 4px;
+}
+
+.oz-section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 1100px) {
+  .oz-section-header.oz-section-header--editing {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .oz-section-header.oz-section-header--editing .oz-section-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+}
+
+/* Vertical divider between search and edit controls */
+.oz-section-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--app-primary);
+  margin: 0 4px;
+}
+
+/* Section body */
+.oz-section-body {
+  max-height: 240px;
+  overflow-y: auto;
+  margin-top: 16px;
+}
+
+.oz-header-footnotes + .oz-section-body {
+  margin-top: 8px;
+}
+
+.oz-header-footnotes {
+  font-size: 14px;
+  color: var(--text-hint);
+  margin: 16px 0 0;
+  line-height: 1.5;
+}
+
+/* Search control */
+.oz-search-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #ffffff;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+}
+
+.oz-search-icon {
+  color: var(--text-hint);
+  flex-shrink: 0;
+}
+
+.oz-search-input {
+  width: 100px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+  background: transparent;
+}
+
+.oz-search-input::placeholder {
+  color: var(--text-hint);
+}
+
+.oz-search-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-hint);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.oz-search-clear:hover {
+  color: var(--app-primary);
+}
+
+.oz-search-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  padding-left: 8px;
+  border-left: 1px solid var(--quaternary);
+}
+
+.oz-search-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--app-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.oz-search-nav-btn:hover:not(:disabled) {
+  background: var(--gray-100);
+  color: var(--app-primary);
+}
+
+.oz-search-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.oz-search-count {
+  font-size: 11px;
+  color: var(--text-hint);
+  min-width: 32px;
+  text-align: center;
+}
+
+/* Search highlighting */
+.oz-search-match {
+  background: #fef08a !important;
+}
+
+.oz-search-current {
+  background: #fbbf24 !important;
+  outline: 2px solid #f59e0b;
+  color: var(--app-secondary);
+}
+
+/* Edit button */
+.oz-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--app-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.oz-edit-btn:hover {
+  background: var(--gray-50);
+  border-color: var(--quaternary);
+  color: var(--app-primary);
+}
+
+/* Cancel button */
+.oz-cancel-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--text-hint);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.oz-cancel-btn:hover {
+  background: var(--gray-50);
+  border-color: var(--quaternary);
+  color: var(--app-secondary);
+}
+
+/* Save button */
+.oz-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--blue-600, #2563eb);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.oz-save-btn:hover:not(:disabled) {
+  background: var(--blue-700, #1d4ed8);
+}
+
+.oz-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.oz-save-error {
+  color: var(--red-600, #dc2626);
+  font-size: 13px;
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  background: var(--red-50, #fef2f2);
+  border-radius: var(--radius-md);
+}
+
+/* Header inputs for inline editing */
+.oz-header-input {
+  padding: 6px 10px;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.oz-header-input:focus {
+  border-color: var(--app-primary);
+}
+
+.oz-header-input.oz-city-input {
+  width: 100px;
+}
+
+.oz-header-input.oz-state-input {
+  width: 50px;
+}
+
+.oz-header-select {
+  padding: 6px 10px;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-family: inherit;
+  background: #ffffff;
+  cursor: pointer;
+  outline: none;
+}
+
+.oz-header-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--app-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.oz-header-add-btn:hover {
+  background: var(--app-primary-dark, #1a1a2e);
+}
+
+/* Markets grouped by state - 6 column layout */
+.oz-markets-by-state {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px 24px;
+}
+
+.oz-state-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.oz-state-header {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--app-primary);
+  margin: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--quaternary);
+}
+
+.oz-state-cities {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.oz-city-item {
+  font-size: 12px;
+  color: var(--app-primary);
+  padding: 2px 0;
+}
+
+/* Chips */
+.oz-chips-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.oz-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--gray-50);
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--app-primary);
+}
+
+.oz-chip-readonly {
+  padding: 6px 12px;
+}
+
+.oz-chip-inline {
+  display: inline-flex;
+  width: auto;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.oz-chip-inline .oz-chip-remove {
+  color: var(--app-primary);
+}
+
+.oz-chip-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-hint);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.oz-chip-remove:hover {
+  background: var(--quaternary);
+  color: var(--app-primary);
+}
+
+/* Retailers grouped display - 3 columns */
+.oz-retailers-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 0;
+}
+
+.oz-retailer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.oz-retailer-class-header {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--app-primary);
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--quaternary);
+}
+
+.oz-retailer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.oz-retailer-item {
+  font-size: 14px;
+  color: var(--app-primary);
+  padding: 2px 0;
+}
+
+/* Job Postings Filters */
+.oz-job-filters {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.oz-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.oz-filter-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--app-primary);
+}
+
+.oz-filter-group select {
+  padding: 8px 12px;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: inherit;
+  background: #ffffff;
+  cursor: pointer;
+  height: 36px;
+}
+
+.oz-clear-filters {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text-hint);
+  cursor: pointer;
+  transition: all 0.15s;
+  height: fit-content;
+}
+
+.oz-clear-filters:hover {
+  border-color: var(--app-primary);
+  color: var(--app-primary);
+}
+
+/* Retailers Live Grid */
+.oz-tag-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px 24px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.oz-tag {
+  font-size: 14px;
+  color: var(--app-primary);
+  padding: 2px 0;
+}
+
+.oz-no-data {
+  color: var(--text-hint);
+  font-size: 14px;
+  text-align: center;
+  padding: 24px;
+  margin: 0;
+}
+
+/* Jobs Table */
+.oz-jobs-table-wrapper {
+  flex: 1;
+  min-height: 400px;
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+}
+
+.oz-jobs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.oz-jobs-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--gray-50);
+  z-index: 1;
+}
+
+.oz-jobs-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--app-primary);
+  border-bottom: 1px solid var(--quaternary);
+  white-space: nowrap;
+}
+
+.oz-sortable-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.oz-sortable-header:hover {
+  background: var(--gray-100);
+}
+
+.oz-jobs-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--quaternary);
+  color: var(--app-primary);
+}
+
+.oz-jobs-table tbody tr:hover {
+  background: var(--blue-50, #eff6ff);
+}
+
+.oz-jobs-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.oz-job-source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.oz-job-source-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--app-primary);
+  opacity: 0.6;
+  transition: opacity 0.15s;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.oz-job-source-link:hover {
+  opacity: 1;
+}
+
+.oz-no-jobs {
+  color: var(--text-hint);
+  font-size: 14px;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+/* Scrape button */
+.oz-scrape-btn {
+  padding: 8px 16px;
+  background: var(--app-primary);
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.oz-scrape-btn:hover {
+  background: var(--app-primary-dark, #1a1a2e);
+}
+
+/* Job sites info */
+.oz-job-sites-info-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.oz-job-sites-info-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-hint);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.oz-job-sites-info-btn:hover {
+  color: var(--app-primary);
+}
+
+.oz-job-sites-info-bubble {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: #ffffff;
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 12px 16px;
+  min-width: 250px;
+  z-index: 100;
+}
+
+.oz-job-sites-info-bubble p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--app-primary);
+}
+
+.oz-job-sites-info-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 1200px) {
+  .oz-panel {
+    width: 95vw;
+  }
+
+  .oz-markets-by-state {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .oz-panel {
+    width: 100vw;
+  }
+
+  .oz-markets-by-state {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .oz-retailers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .oz-job-filters {
+    flex-direction: column;
+  }
+
+  .oz-filter-group {
+    width: 100%;
+  }
+}

@@ -4,6 +4,7 @@ import { V1JobFocus } from './variants/V1JobFocus';
 import { V2TalentCentric } from './variants/V2TalentCentric';
 import { V3Wildcard } from './variants/V3Wildcard';
 import { DevMenu } from '../components/DevMenu';
+import { OzPanel } from '../components/OzPanel';
 import './PermanentHiring.css';
 
 type VariantId = 'v1-job-focus' | 'v2-talent-centric' | 'v3-wildcard';
@@ -77,10 +78,6 @@ export function PermanentHiring() {
               <button
                 className={`variant-menu-item variant-menu-item-oz ${showOz ? 'active' : ''}`}
                 onClick={() => {
-                  if (!showOz) {
-                    // Oz content only exists in V1, so switch to it
-                    setCurrentVariant('v1-job-focus');
-                  }
                   setShowOz(!showOz);
                   setShowVariantMenu(false);
                 }}
@@ -104,6 +101,9 @@ export function PermanentHiring() {
         showOz={showOz}
         onToggleOz={() => setShowOz(!showOz)}
       />
+
+      {/* Global Oz Panel Overlay */}
+      <OzPanel isOpen={showOz} onClose={() => setShowOz(false)} />
     </>
   );
 }
