@@ -9,11 +9,20 @@ import './PermanentHiring.css';
 
 type VariantId = 'v1-job-focus' | 'v2-talent-centric' | 'v3-wildcard';
 
+// Names for the greeting
+const GREETING_NAMES = [
+  'Mike', 'Trevor', 'Shannon', 'Nate', 'Micah', 'Katherine', 'Cayley',
+  'Evan', 'Juan', 'Julie', 'Ashlee', 'Jeremy', 'Sam', 'Jasmine',
+  'Emily', 'Olivia', 'Mary', 'Hans', 'Hadley', 'Leigh Ann',
+];
+const getRandomUserName = () => GREETING_NAMES[Math.floor(Math.random() * GREETING_NAMES.length)];
+
 // Props passed down to variants
 export interface VariantProps {
   agentActive: boolean;
   showOz: boolean;
   onToggleOz: () => void;
+  userName?: string;
 }
 
 const VARIANTS: { id: VariantId; label: string; component: React.ComponentType<VariantProps> }[] = [
@@ -32,6 +41,29 @@ export function PermanentHiring() {
   // Global state for dev tools
   const [agentActive, setAgentActive] = useState(true);
   const [showOz, setShowOz] = useState(false);
+  const [userName, setUserName] = useState(() => getRandomUserName());
+  const [customUserName, setCustomUserName] = useState<string | null>(() => {
+    const saved = localStorage.getItem('matchpoint-custom-name');
+    return saved || null;
+  });
+
+  const toTitleCase = (str: string) => {
+    return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  };
+
+  const displayUserName = customUserName || userName;
+
+  const handleSetCustomName = (name: string) => {
+    const titleCased = toTitleCase(name);
+    setCustomUserName(titleCased);
+    localStorage.setItem('matchpoint-custom-name', titleCased);
+  };
+
+  const handleClearCustomName = () => {
+    setCustomUserName(null);
+    localStorage.removeItem('matchpoint-custom-name');
+    setUserName(getRandomUserName());
+  };
 
   useEffect(() => {
     localStorage.setItem('matchpoint-variant', currentVariant);
@@ -46,6 +78,7 @@ export function PermanentHiring() {
         agentActive={agentActive}
         showOz={showOz}
         onToggleOz={() => setShowOz(!showOz)}
+        userName={displayUserName}
       />
 
       {/* Variant Switcher */}
@@ -100,6 +133,9 @@ export function PermanentHiring() {
         onToggleAgent={() => setAgentActive(!agentActive)}
         showOz={showOz}
         onToggleOz={() => setShowOz(!showOz)}
+        customUserName={customUserName}
+        onSetCustomName={handleSetCustomName}
+        onClearCustomName={handleClearCustomName}
       />
 
       {/* Global Oz Panel Overlay */}

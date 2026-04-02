@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { BotOff, BotMessageSquare, Palette } from 'lucide-react';
+import { BotOff, BotMessageSquare, Palette, Send, X } from 'lucide-react';
 import { DesignSystemPanel } from './DesignSystemPanel';
 
 interface DevMenuProps {
@@ -7,11 +7,15 @@ interface DevMenuProps {
   onToggleAgent: () => void;
   showOz: boolean;
   onToggleOz: () => void;
+  customUserName: string | null;
+  onSetCustomName: (name: string) => void;
+  onClearCustomName: () => void;
 }
 
-export function DevMenu({ agentActive, onToggleAgent, showOz: _showOz, onToggleOz: _onToggleOz }: DevMenuProps) {
+export function DevMenu({ agentActive, onToggleAgent, showOz: _showOz, onToggleOz: _onToggleOz, customUserName, onSetCustomName, onClearCustomName }: DevMenuProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showDesignSystem, setShowDesignSystem] = useState(false);
+  const [nameInput, setNameInput] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close menu on click outside
@@ -61,6 +65,44 @@ export function DevMenu({ agentActive, onToggleAgent, showOz: _showOz, onToggleO
               </span>
               <span className="dev-menu-label">Design System</span>
             </button>
+            <div className="dev-menu-divider" />
+            <div className="dev-menu-name-input">
+              <input
+                type="text"
+                placeholder={customUserName || "Change name..."}
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && nameInput.trim()) {
+                    onSetCustomName(nameInput.trim());
+                    setNameInput('');
+                  }
+                }}
+              />
+              <button
+                className="dev-menu-name-send"
+                onClick={() => {
+                  if (nameInput.trim()) {
+                    onSetCustomName(nameInput.trim());
+                    setNameInput('');
+                  }
+                }}
+                disabled={!nameInput.trim()}
+              >
+                <Send size={12} />
+              </button>
+              {customUserName && (
+                <button
+                  className="dev-menu-name-clear"
+                  onClick={() => {
+                    onClearCustomName();
+                    setNameInput('');
+                  }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
           </div>
         )}
 

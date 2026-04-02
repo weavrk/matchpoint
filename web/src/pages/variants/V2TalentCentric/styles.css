@@ -7,10 +7,76 @@
   overflow: hidden;
 }
 
+/* Step transition animations */
+.v2-step-content {
+  transition: transform 200ms ease-out, opacity 200ms ease-out;
+}
+
+.v2-step-content.slide-in {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.v2-step-content.slide-in-right {
+  animation: slideInRight 200ms ease-in forwards;
+}
+
+.v2-step-content.slide-out-left {
+  animation: slideOutLeft 200ms ease-out forwards;
+}
+
+.v2-step-content.slide-out-right {
+  animation: slideOutRight 200ms ease-out forwards;
+}
+
+@keyframes slideOutLeft {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50px);
+    opacity: 0;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(50px);
+    opacity: 0;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Header wrapper (horizontal inset on header + tabs, not wrapper) */
 .v2-page-header-wrapper {
   padding: 0;
   flex-shrink: 0;
+}
+
+.v2-header-welcome {
+  background:
+    radial-gradient(ellipse 60% 200% at 65% 150%, #ffffff 0%, #ffffff 20%, transparent 50%),
+    #EBF2F6;
+  transition: background 200ms ease-out;
+}
+
+.v2-page-header-wrapper {
+  transition: background 200ms ease-out;
 }
 
 /* Page Header - matches V1 */
@@ -88,9 +154,32 @@
   overflow: hidden;
 }
 
+.v2-container {
+  transition: background 200ms ease-out;
+}
+
 .v2-container-welcome {
   position: relative;
   overflow: visible;
+  background: #EBF2F6;
+}
+
+.v2-container-welcome::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 65% 85% at calc(52% + 100px) calc(42% + 10px), #ffffff 0%, #ffffff 40%, transparent 65%),
+    radial-gradient(ellipse 50% 60% at calc(15% + 200px) calc(85% - 200px), #ffffff 0%, #ffffff 30%, transparent 50%),
+    linear-gradient(155deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 95%, rgba(255,255,255,0.4) 100%);
+  transition: opacity 200ms ease-out;
+}
+
+.v2-container-welcome > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Main content area - left side, scrollable */

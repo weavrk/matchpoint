@@ -2073,6 +2073,84 @@
   background: var(--gray-50);
 }
 
+.dev-menu-divider {
+  height: 1px;
+  background: var(--quaternary);
+  margin: 8px 0;
+}
+
+.dev-menu-name-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+
+.dev-menu-name-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--quaternary);
+  border-radius: 6px;
+  outline: none;
+  font-family: inherit;
+}
+
+.dev-menu-name-input input:focus {
+  border-color: var(--tertiary);
+}
+
+.dev-menu-name-input input::placeholder {
+  color: var(--tertiary);
+}
+
+.dev-menu-name-send {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.dev-menu-name-send svg {
+  color: #ffffff;
+}
+
+.dev-menu-name-send:hover:not(:disabled) {
+  background: var(--stone-800);
+}
+
+.dev-menu-name-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dev-menu-name-clear {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--primary);
+  transition: background 0.15s;
+}
+
+.dev-menu-name-clear:hover {
+  background: var(--gray-100);
+}
+
 /* ============================================
    Dev Menu (Bottom Right)
    ============================================ */

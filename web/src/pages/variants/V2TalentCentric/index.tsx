@@ -222,15 +222,22 @@ const QUESTIONS: ThisOrThatQuestion[] = [
 
 type Step = 'welcome' | 'brands' | 'questions' | 'results';
 
-export function V2TalentCentric() {
+interface V2TalentCentricProps {
+  userName?: string;
+}
+
+export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps) {
   const [activeTab, setActiveTab] = useState<TabId>('discover');
   const [step, setStep] = useState<Step>('welcome');
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState<'forward' | 'back'>('forward');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [brandSearch, setBrandSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [userName] = useState(() => getRandomUserName());
+  const [fallbackUserName] = useState(() => getRandomUserName());
+  const userName = propUserName || fallbackUserName;
   const brandRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   // Search matching brands - only match from start of name
@@ -267,6 +274,16 @@ export function V2TalentCentric() {
     );
   };
 
+  // Transition to a new step with animation
+  const transitionToStep = (newStep: Step, direction: 'forward' | 'back' = 'forward') => {
+    setTransitionDirection(direction);
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setStep(newStep);
+      setIsTransitioning(false);
+    }, 200);
+  };
+
   // Handle this-or-that answer
   const handleAnswer = (questionId: string, value: string) => {
     setAnswers(prev => ({ ...prev, [questionId]: value }));
@@ -275,7 +292,7 @@ export function V2TalentCentric() {
     if (currentQuestionIndex < QUESTIONS.length - 1) {
       setTimeout(() => setCurrentQuestionIndex(prev => prev + 1), 300);
     } else {
-      setTimeout(() => setStep('results'), 300);
+      setTimeout(() => transitionToStep('results', 'forward'), 300);
     }
   };
 
@@ -380,8 +397,8 @@ export function V2TalentCentric() {
   const progress = step === 'welcome' ? 0 : step === 'brands' ? 25 : step === 'questions' ? 25 + ((currentQuestionIndex + 1) / QUESTIONS.length) * 50 : 100;
 
   return (
-    <div className="v2-page">
-      <div className="v2-page-header-wrapper">
+    <div className={`v2-page ${step === 'welcome' ? 'v2-page-welcome' : ''}`}>
+      <div className={`v2-page-header-wrapper ${step === 'welcome' ? 'v2-header-welcome' : ''}`}>
         <header className="page-header">
           <div className="page-header-icon" aria-hidden="true">
             <Link size={24} />
@@ -427,7 +444,7 @@ export function V2TalentCentric() {
 
           {/* Step 0: Welcome */}
           {step === 'welcome' && (
-            <div className="v2-welcome-step">
+            <div className={`v2-welcome-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in'}`}>
               <div className="v2-welcome-illustration">
                 <div className="v2-illustration-circle"></div>
                 <div className="v2-illustration-cards">
@@ -471,7 +488,7 @@ export function V2TalentCentric() {
               </p>
               <button
                 className="v2-get-started-btn"
-                onClick={() => setStep('brands')}
+                onClick={() => transitionToStep('brands', 'forward')}
               >
                 Get started
                 <ChevronRight size={20} />
@@ -481,7 +498,7 @@ export function V2TalentCentric() {
 
           {/* Step 1: Brand Selection */}
         {step === 'brands' && (
-          <div className="v2-brands-step">
+          <div className={`v2-brands-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
             <div className="v2-step-header">
               <h1 className="type-tagline">What brand experience do you trust?</h1>
               <p className="type-prompt-question">
