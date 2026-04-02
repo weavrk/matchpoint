@@ -28,6 +28,26 @@
   flex: 0 0 auto;
 }
 
+.worker-name-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 0 0 auto;
+}
+
+.worker-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--primary);
+}
+
+.worker-location svg {
+  flex-shrink: 0;
+}
+
 .worker-card-header .badge:first-of-type {
   margin-left: auto;
   flex-shrink: 0;

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, ShieldCheck, Unlock } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, ShieldCheck, Unlock, MapPin } from 'lucide-react';
 import { SAMPLE_WORKERS } from '../../../data/workers';
 import { WorkerCardTeaser } from '../../../components/Workers/WorkerCardTeaser';
 import type { MatchedWorker } from '../../../types';
@@ -220,7 +220,174 @@ const QUESTIONS: ThisOrThatQuestion[] = [
   },
 ];
 
-type Step = 'welcome' | 'brands' | 'questions' | 'results';
+type Step = 'welcome' | 'location' | 'focus' | 'employment' | 'roles' | 'brands' | 'questions' | 'results';
+
+type FocusArea = 'employment' | 'brands' | 'roles';
+
+// Store locations (retailer's locations they have permission to hire for)
+const STORE_LOCATIONS = [
+  { id: 'domain-northside', name: 'Domain Northside', marketId: 'austin-tx' },
+  { id: 'market-town-center', name: 'The Market at Town Center', marketId: 'phoenix-az' },
+  { id: 'south-congress', name: 'South Congress', marketId: 'dallas-tx' },
+  { id: 'waterview-plaza', name: 'Waterview Plaza', marketId: 'dallas-tx' },
+  { id: 'main-street-shops', name: 'Main Street Shops', marketId: 'houston-tx' },
+  { id: 'lakeline-mall', name: 'Lakeline Mall', marketId: 'fresno-ca' },
+  { id: 'milton-creek-square', name: 'Milton Creek Square', marketId: 'san-antonio-tx' },
+  { id: 'hill-country-galleria', name: 'Hill Country Galleria', marketId: 'austin-tx' },
+  { id: 'the-arboretum', name: 'The Arboretum', marketId: 'baton-rouge-la' },
+  { id: 'sunset-valley-village', name: 'Sunset Valley Village', marketId: 'las-vegas-nv' },
+  // 5 more southwest locations
+  { id: 'scottsdale-fashion', name: 'Scottsdale Fashion Square', marketId: 'phoenix-az' },
+  { id: 'uptown-park', name: 'Uptown Park', marketId: 'san-marcos-tx' },
+  { id: 'cherry-creek', name: 'Cherry Creek', marketId: 'denver-co' },
+  { id: 'la-cantera', name: 'La Cantera', marketId: 'san-antonio-tx' },
+  { id: 'town-square', name: 'Town Square', marketId: 'los-angeles-ca' },
+];
+
+// All available markets for city search (from Oz table - 58 live markets)
+const MARKETS = [
+  // AZ
+  { id: 'phoenix-az', name: 'Phoenix', state: 'AZ' },
+  // CA
+  { id: 'bakersfield-ca', name: 'Bakersfield', state: 'CA' },
+  { id: 'cabazon-ca', name: 'Cabazon', state: 'CA' },
+  { id: 'fresno-ca', name: 'Fresno', state: 'CA' },
+  { id: 'los-angeles-ca', name: 'Los Angeles', state: 'CA' },
+  { id: 'sacramento-ca', name: 'Sacramento', state: 'CA' },
+  { id: 'san-diego-ca', name: 'San Diego', state: 'CA' },
+  { id: 'san-francisco-ca', name: 'San Francisco', state: 'CA' },
+  { id: 'san-jose-ca', name: 'San Jose', state: 'CA' },
+  // CO
+  { id: 'boulder-co', name: 'Boulder', state: 'CO' },
+  { id: 'denver-co', name: 'Denver', state: 'CO' },
+  // CT
+  { id: 'westport-ct', name: 'Westport', state: 'CT' },
+  // D.C.
+  { id: 'washington-dc', name: 'Washington', state: 'D.C.' },
+  // DE
+  { id: 'wilmington-de', name: 'Wilmington', state: 'DE' },
+  // FL
+  { id: 'fort-myers-fl', name: 'Fort Myers', state: 'FL' },
+  { id: 'fort-walton-beach-fl', name: 'Fort Walton Beach', state: 'FL' },
+  { id: 'miami-fl', name: 'Miami', state: 'FL' },
+  { id: 'orlando-fl', name: 'Orlando', state: 'FL' },
+  { id: 'tampa-fl', name: 'Tampa', state: 'FL' },
+  // GA
+  { id: 'atlanta-ga', name: 'Atlanta', state: 'GA' },
+  { id: 'savannah-ga', name: 'Savannah', state: 'GA' },
+  // IL
+  { id: 'chicago-il', name: 'Chicago', state: 'IL' },
+  // IN
+  { id: 'indianapolis-in', name: 'Indianapolis', state: 'IN' },
+  // LA
+  { id: 'baton-rouge-la', name: 'Baton Rouge', state: 'LA' },
+  { id: 'new-orleans-la', name: 'New Orleans', state: 'LA' },
+  // MA
+  { id: 'boston-ma', name: 'Boston', state: 'MA' },
+  // MI
+  { id: 'detroit-mi', name: 'Detroit', state: 'MI' },
+  // MN
+  { id: 'minneapolis-mn', name: 'Minneapolis', state: 'MN' },
+  // MO
+  { id: 'st-louis-mo', name: 'St. Louis', state: 'MO' },
+  // MS
+  { id: 'biloxi-ms', name: 'Biloxi', state: 'MS' },
+  // NC
+  { id: 'charlotte-nc', name: 'Charlotte', state: 'NC' },
+  { id: 'raleigh-durham-nc', name: 'Raleigh-Durham', state: 'NC' },
+  // NE
+  { id: 'omaha-ne', name: 'Omaha', state: 'NE' },
+  // NH
+  { id: 'merrimack-nh', name: 'Merrimack', state: 'NH' },
+  // NJ
+  { id: 'newark-nj', name: 'Newark', state: 'NJ' },
+  // NV
+  { id: 'las-vegas-nv', name: 'Las Vegas', state: 'NV' },
+  // NY
+  { id: 'long-island-east-ny', name: 'Long Island East', state: 'NY' },
+  { id: 'long-island-west-ny', name: 'Long Island West', state: 'NY' },
+  { id: 'new-york-ny', name: 'New York', state: 'NY' },
+  { id: 'westchester-ny', name: 'Westchester', state: 'NY' },
+  { id: 'woodbury-ny', name: 'Woodbury', state: 'NY' },
+  // OH
+  { id: 'cincinnati-oh', name: 'Cincinnati', state: 'OH' },
+  { id: 'columbus-oh', name: 'Columbus', state: 'OH' },
+  // OK
+  { id: 'tulsa-ok', name: 'Tulsa', state: 'OK' },
+  // OR
+  { id: 'portland-or', name: 'Portland', state: 'OR' },
+  // PA
+  { id: 'king-of-prussia-pa', name: 'King of Prussia', state: 'PA' },
+  // SC
+  { id: 'charleston-sc', name: 'Charleston', state: 'SC' },
+  // TN
+  { id: 'knoxville-tn', name: 'Knoxville', state: 'TN' },
+  { id: 'memphis-tn', name: 'Memphis', state: 'TN' },
+  { id: 'nashville-tn', name: 'Nashville', state: 'TN' },
+  // TX
+  { id: 'austin-tx', name: 'Austin', state: 'TX' },
+  { id: 'dallas-tx', name: 'Dallas', state: 'TX' },
+  { id: 'houston-tx', name: 'Houston', state: 'TX' },
+  { id: 'san-antonio-tx', name: 'San Antonio', state: 'TX' },
+  { id: 'san-marcos-tx', name: 'San Marcos', state: 'TX' },
+  // UT
+  { id: 'salt-lake-city-ut', name: 'Salt Lake City', state: 'UT' },
+  // WA
+  { id: 'seattle-wa', name: 'Seattle', state: 'WA' },
+  // WI
+  { id: 'milwaukee-wi', name: 'Milwaukee', state: 'WI' },
+];
+
+// Job roles by category
+const JOB_ROLES = {
+  salesFloor: {
+    label: 'Sales Floor',
+    roles: [
+      { title: 'Sales Associate / Retail Associate', description: 'Customer service, sales floor support, POS transactions' },
+      { title: 'Store Associate', description: 'General sales floor support and customer assistance' },
+      { title: 'Brand Representative', description: 'Brand ambassador, product expertise, customer engagement' },
+    ],
+  },
+  salesSupport: {
+    label: 'Sales Support',
+    roles: [
+      { title: 'Sales Assistant', description: 'Support sales team, customer service backup' },
+      { title: 'Cashier', description: 'Checkout operations, handling payments' },
+      { title: 'Fitting Room Attendant', description: 'Managing dressing rooms, returning items to floor' },
+      { title: 'Team Member', description: 'General retail support, multi-functional role' },
+      { title: 'Retail Customer Service', description: 'Customer inquiries, returns, service desk' },
+    ],
+  },
+  backOfHouse: {
+    label: 'Back of House',
+    roles: [
+      { title: 'Stock Associate / Stocker', description: 'Receiving, organizing, replenishing inventory' },
+      { title: 'Inventory Associate', description: 'Inventory management, cycle counts, stock accuracy' },
+      { title: 'Operations Associate', description: 'Store operations, logistics, back-office support' },
+    ],
+  },
+  specialized: {
+    label: 'Specialized',
+    roles: [
+      { title: 'Beauty Advisor / Cosmetics Associate', description: 'Product expertise, demos (Sephora, Ulta, department stores)' },
+      { title: 'Stylist', description: 'Personal styling, outfit consultation, clienteling' },
+      { title: 'Visual Merchandiser', description: 'Displays, store layout, product presentation' },
+      { title: 'Pop Up', description: 'Temporary retail events, brand activations' },
+    ],
+  },
+  management: {
+    label: 'Management',
+    roles: [
+      { title: 'Store Team Leader', description: 'Team leadership, shift coordination' },
+      { title: 'Supervisor', description: 'Floor supervision, team oversight' },
+      { title: 'Key Holder / Lead Associate', description: 'Opening/closing, shift supervision' },
+      { title: 'Department Supervisor', description: 'Oversees specific section (shoes, menswear, etc.)' },
+      { title: 'Assistant Store Manager', description: 'Operations support, staff scheduling' },
+      { title: 'Store Manager', description: 'Full P&L responsibility, hiring, performance' },
+      { title: 'District / Area Manager', description: 'Multi-store oversight' },
+    ],
+  },
+};
 
 interface V2TalentCentricProps {
   userName?: string;
@@ -232,6 +399,8 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionDirection, setTransitionDirection] = useState<'forward' | 'back'>('forward');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [locationSearch, setLocationSearch] = useState('');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [brandSearch, setBrandSearch] = useState('');
@@ -239,6 +408,12 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
   const [fallbackUserName] = useState(() => getRandomUserName());
   const userName = propUserName || fallbackUserName;
   const brandRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  // New flow state
+  const [focusArea, setFocusArea] = useState<FocusArea | null>(null);
+  const [employmentType, setEmploymentType] = useState<'full-time' | 'part-time' | null>(null);
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+  const [roleSearch, setRoleSearch] = useState('');
 
   // Search matching brands - only match from start of name
   const searchResults = useMemo(() => {
@@ -302,6 +477,17 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
   // Filter and score workers based on selections
   const filteredWorkers = useMemo(() => {
     let workers = [...SAMPLE_WORKERS]; // Start with all 40 workers
+
+    // Filter by selected location
+    if (selectedLocation) {
+      const selectedMarket = MARKETS.find(m => m.id === selectedLocation);
+      if (selectedMarket) {
+        workers = workers.filter(w =>
+          w.market.toLowerCase().includes(selectedMarket.name.toLowerCase()) ||
+          selectedMarket.name.toLowerCase().includes(w.market.toLowerCase())
+        );
+      }
+    }
 
     // Filter by selected brands - check brandsWorked and previousExperience
     if (selectedBrands.length > 0) {
@@ -371,7 +557,7 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
 
     // Sort by score
     return scored.sort((a, b) => b.matchScore - a.matchScore);
-  }, [selectedBrands, answers]);
+  }, [selectedBrands, answers, selectedLocation]);
 
   // Get brands the filtered workers have in common
   const commonBrands = useMemo(() => {
@@ -419,13 +605,7 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
             className={`tab ${activeTab === 'saved' ? 'active' : ''}`}
             onClick={() => setActiveTab('saved')}
           >
-            Saved
-          </button>
-          <button
-            className={`tab ${activeTab === 'connected' ? 'active' : ''}`}
-            onClick={() => setActiveTab('connected')}
-          >
-            Connected
+            Connections
           </button>
         </nav>
       </div>
@@ -435,8 +615,8 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
           {step === 'welcome' && <div className="gradient-wash" />}
           {/* Main content area */}
           <div className="v2-main">
-            {/* Progress bar - hidden on welcome */}
-            {step !== 'welcome' && (
+            {/* Progress bar - hidden on welcome, location, focus, employment, roles */}
+            {!['welcome', 'location', 'focus', 'employment', 'roles'].includes(step) && (
             <div className="v2-progress">
               <div className="v2-progress-bar" style={{ width: `${progress}%` }} />
             </div>
@@ -488,7 +668,7 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
               </p>
               <button
                 className="v2-get-started-btn"
-                onClick={() => transitionToStep('brands', 'forward')}
+                onClick={() => transitionToStep('location', 'forward')}
               >
                 Get started
                 <ChevronRight size={20} />
@@ -496,7 +676,240 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
             </div>
           )}
 
-          {/* Step 1: Brand Selection */}
+          {/* Step 1: Location Selection */}
+          {step === 'location' && (
+            <div className={`v2-location-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
+              <div className="v2-step-header">
+                <h1 className="type-tagline">First, let's establish what city you're looking to hire in.</h1>
+                <p className="type-prompt-question v2-step-subtitle">Select a location or search for a city</p>
+              </div>
+
+              <div className="v2-location-controls">
+                <div className="v2-location-dropdown">
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const store = STORE_LOCATIONS.find(s => s.id === e.target.value);
+                        if (store) {
+                          setSelectedLocation(store.marketId);
+                        }
+                      }
+                    }}
+                    className="v2-location-select"
+                  >
+                    <option value="">Select a location</option>
+                    {STORE_LOCATIONS.map(location => (
+                      <option key={location.id} value={location.id}>
+                        {location.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <span className="v2-location-or">or</span>
+
+                <div className="v2-search-input-wrapper v2-location-search">
+                  <Search size={18} className="v2-search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search cities..."
+                    value={locationSearch}
+                    onChange={(e) => setLocationSearch(e.target.value)}
+                    className="v2-search-input"
+                  />
+                  {locationSearch && (
+                    <button
+                      className="v2-search-clear"
+                      onClick={() => setLocationSearch('')}
+                      aria-label="Clear search"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="v2-location-grid">
+                {[...MARKETS]
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .filter(m => {
+                    if (!locationSearch.trim()) return true;
+                    const search = locationSearch.toLowerCase();
+                    return m.name.toLowerCase().includes(search) || m.state.toLowerCase().includes(search);
+                  })
+                  .map(market => (
+                    <button
+                      key={market.id}
+                      className={`v2-location-chip ${selectedLocation === market.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedLocation(selectedLocation === market.id ? null : market.id)}
+                    >
+                      <span className="v2-chip-text">{market.name}, <strong>{market.state}</strong></span>
+                      <span className="v2-chip-icon">
+                        {selectedLocation === market.id && <Check size={14} />}
+                      </span>
+                    </button>
+                  ))}
+              </div>
+
+              <div className="v2-location-buttons">
+                <button
+                  className="v2-btn-back"
+                  onClick={() => transitionToStep('welcome', 'back')}
+                >
+                  <ChevronLeft size={20} />
+                  Back
+                </button>
+                <button
+                  className="v2-btn-next"
+                  onClick={() => transitionToStep('focus', 'forward')}
+                  disabled={!selectedLocation}
+                >
+                  Next
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Focus Area Selection */}
+          {step === 'focus' && (
+            <div className={`v2-focus-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
+              <div className="v2-step-header">
+                <h1 className="type-tagline">What's a key area you want to establish for a new hire?</h1>
+              </div>
+
+              <div className="v2-focus-chips">
+                <button
+                  className={`v2-focus-chip ${focusArea === 'employment' ? 'selected' : ''}`}
+                  onClick={() => {
+                    setFocusArea('employment');
+                    transitionToStep('employment', 'forward');
+                  }}
+                >
+                  <span className="v2-focus-chip-title">Type of employment</span>
+                  <span className="v2-focus-chip-subtitle">Part-time or Full-time</span>
+                </button>
+                <button
+                  className={`v2-focus-chip ${focusArea === 'brands' ? 'selected' : ''}`}
+                  onClick={() => {
+                    setFocusArea('brands');
+                    transitionToStep('brands', 'forward');
+                  }}
+                >
+                  <span className="v2-focus-chip-title">Previous brand experience</span>
+                </button>
+                <button
+                  className={`v2-focus-chip ${focusArea === 'roles' ? 'selected' : ''}`}
+                  onClick={() => {
+                    setFocusArea('roles');
+                    transitionToStep('roles', 'forward');
+                  }}
+                >
+                  <span className="v2-focus-chip-title">Previous role experience</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2a: Employment Type Selection */}
+          {step === 'employment' && (
+            <div className={`v2-employment-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
+              <div className="v2-step-header">
+                <h1 className="type-tagline">What type of employment?</h1>
+              </div>
+
+              <div className="v2-employment-chips">
+                <button
+                  className={`v2-employment-chip ${employmentType === 'full-time' ? 'selected' : ''}`}
+                  onClick={() => {
+                    setEmploymentType('full-time');
+                    transitionToStep('brands', 'forward');
+                  }}
+                >
+                  Full-time
+                </button>
+                <button
+                  className={`v2-employment-chip ${employmentType === 'part-time' ? 'selected' : ''}`}
+                  onClick={() => {
+                    setEmploymentType('part-time');
+                    transitionToStep('brands', 'forward');
+                  }}
+                >
+                  Part-time
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2b: Role Selection */}
+          {step === 'roles' && (
+            <div className={`v2-roles-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
+              <div className="v2-step-header">
+                <h1 className="type-tagline">What role experience are you looking for?</h1>
+              </div>
+
+              <div className="v2-role-search-wrapper">
+                <div className="v2-search-input-wrapper">
+                  <Search size={16} className="v2-search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Type a role..."
+                    value={roleSearch}
+                    onChange={(e) => setRoleSearch(e.target.value)}
+                    className="v2-search-input"
+                  />
+                  {roleSearch && (
+                    <button
+                      className="v2-search-clear"
+                      onClick={() => setRoleSearch('')}
+                      aria-label="Clear search"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+                {roleSearch.trim() && (
+                  <button
+                    className="v2-role-search-submit"
+                    onClick={() => {
+                      setSelectedRole(roleSearch.trim());
+                      transitionToStep('brands', 'forward');
+                    }}
+                  >
+                    Use "{roleSearch.trim()}"
+                    <ChevronRight size={16} />
+                  </button>
+                )}
+              </div>
+
+              <p className="v2-role-divider-text">Or select from below</p>
+
+              <div className="v2-role-categories">
+                {Object.entries(JOB_ROLES).map(([key, category]) => (
+                  <div key={key} className="v2-role-category">
+                    <h3 className="v2-role-category-header">{category.label}</h3>
+                    <div className="v2-role-chips">
+                      {category.roles.map(role => (
+                        <button
+                          key={role.title}
+                          className={`v2-role-chip ${selectedRole === role.title ? 'selected' : ''}`}
+                          onClick={() => {
+                            setSelectedRole(role.title);
+                            transitionToStep('brands', 'forward');
+                          }}
+                        >
+                          {role.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Brand Selection */}
         {step === 'brands' && (
           <div className={`v2-brands-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
             <div className="v2-step-header">
@@ -664,8 +1077,8 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
         )}
       </div>
 
-      {/* Sidebar with worker cards - hidden on welcome step */}
-      {step !== 'welcome' && (
+      {/* Sidebar with worker cards - hidden on welcome, shown on location when city selected */}
+      {(step !== 'welcome' && (step !== 'location' || selectedLocation)) && (
       <div className={`v2-sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
         <button
           className="v2-sidebar-toggle"
@@ -676,6 +1089,10 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
         </button>
         <div className="v2-sidebar-header">
           <h2 className="type-section-header-md">
+            {step === 'location' && selectedLocation && `${MARKETS.find(m => m.id === selectedLocation)?.name} Reflexers`}
+            {step === 'focus' && 'All Reflexers'}
+            {step === 'employment' && 'All Reflexers'}
+            {step === 'roles' && 'All Reflexers'}
             {step === 'brands' && 'Shift Verified Reflexers'}
             {step === 'questions' && 'Matching talent'}
             {step === 'results' && `${filteredWorkers.length} matches`}

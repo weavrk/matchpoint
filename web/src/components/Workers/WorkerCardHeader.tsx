@@ -1,4 +1,4 @@
-import { BadgeCheck, Search } from 'lucide-react';
+import { BadgeCheck, Search, MapPin } from 'lucide-react';
 import type { MatchedWorker } from '../../types';
 
 interface WorkerCardHeaderProps {
@@ -23,7 +23,15 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
         {worker.photo ? <img src={worker.photo} alt={worker.name} /> : <span>{initials}</span>}
       </div>
 
-      <h3 className={`worker-name type-section-header-lg ${nameSize}`}>{worker.name}</h3>
+      <div className="worker-name-section">
+        <h3 className={`worker-name type-section-header-lg ${nameSize}`}>{worker.name}</h3>
+        {worker.market && (
+          <div className="worker-location">
+            <MapPin size={16} />
+            <span>{worker.market}</span>
+          </div>
+        )}
+      </div>
 
       {worker.shiftVerified && (
         <span className="pill pill-green pill-sm">
