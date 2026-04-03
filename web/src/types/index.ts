@@ -55,9 +55,9 @@ export interface WorkerProfile {
   shiftsOnReflex: number;
   brandsWorked: { name: string; tier: BrandTier }[];
   market: string;
-  endorsementCounts: Record<string, number> | null;
+  endorsementCounts?: Record<string, number> | null;
   invitedBackStores: number;
-  aboutMe: string | null;
+  aboutMe?: string | null;
   previousExperience: {
     company: string;
     duration: string;
@@ -80,6 +80,17 @@ export interface WorkerProfile {
   workerId?: number | null;
   // Interview data
   interviewTranscript?: InterviewTranscriptEntry[] | Record<string, unknown> | null;
+  // Legacy fields from sample workers (for compatibility)
+  preference?: 'FT' | 'PT' | 'Both';
+  endorsements?: Endorsement[];
+  about?: string;
+  workStyle?: {
+    rolePreferences: string[];
+    traits: string[];
+  };
+  reliability?: WorkerReliability | null;
+  availability?: WorkerAvailability | null;
+  targetBrands?: string[] | null;
 }
 
 export interface JobSpec {

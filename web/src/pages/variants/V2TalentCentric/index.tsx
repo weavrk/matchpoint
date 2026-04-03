@@ -523,14 +523,14 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
 
     if (answers.style === 'independent') {
       workers = workers.filter(w =>
-        w.endorsements.includes('self-starter') || w.workStyle.traits.includes('Self-directed')
+        w.endorsements?.includes('self-starter') || w.workStyle?.traits.includes('Self-directed')
       );
     } else if (answers.style === 'collaborative') {
-      workers = workers.filter(w => w.endorsements.includes('team-player'));
+      workers = workers.filter(w => w.endorsements?.includes('team-player'));
     }
 
     if (answers.availability === 'weekends') {
-      workers = workers.filter(w => w.availability.weekends);
+      workers = workers.filter(w => w.availability?.weekends);
     }
 
     // Score workers

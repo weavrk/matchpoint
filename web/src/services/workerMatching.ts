@@ -1,5 +1,10 @@
 import type { WorkerProfile, JobSpec, MatchedWorker, BrandTier } from '../types';
 
+// Convert a WorkerProfile to MatchedWorker with default match values
+export function toMatchedWorker(worker: WorkerProfile): MatchedWorker {
+  return { ...worker, matchScore: 0, matchReasons: [] };
+}
+
 export function matchWorkers(workers: WorkerProfile[], spec: JobSpec): MatchedWorker[] {
   const specTiers = new Set(spec.brandTier);
 
@@ -43,7 +48,7 @@ export function matchWorkers(workers: WorkerProfile[], spec: JobSpec): MatchedWo
     score += Math.min(5, Math.floor(worker.shiftsOnReflex / 10));
 
     // Endorsements bonus (up to 5 pts)
-    score += Math.min(5, worker.endorsements.length);
+    score += Math.min(5, worker.endorsements?.length ?? 0);
 
     return { ...worker, matchScore: score, matchReasons: reasons };
   });

@@ -665,7 +665,7 @@ export async function fetchWorkers(): Promise<WorkerRow[]> {
     console.error('Error fetching workers:', error);
     throw error;
   }
-  return data || [];
+  return (data || []) as unknown as WorkerRow[];
 }
 
 // Fetch workers with pagination (for lazy loading - list columns only)
@@ -682,7 +682,7 @@ export async function fetchWorkersPaginated(offset: number, limit: number): Prom
     throw error;
   }
   return {
-    workers: data || [],
+    workers: (data || []) as unknown as WorkerRow[],
     hasMore: count ? offset + limit < count : false,
   };
 }
@@ -700,7 +700,7 @@ export async function fetchWorkerById(id: string): Promise<WorkerRow | null> {
     console.error('Error fetching worker:', error);
     throw error;
   }
-  return data;
+  return data as unknown as WorkerRow | null;
 }
 
 // Fetch workers by market (card display)
@@ -716,7 +716,7 @@ export async function fetchWorkersByMarket(market: string): Promise<WorkerRow[]>
     console.error('Error fetching workers by market:', error);
     throw error;
   }
-  return data || [];
+  return (data || []) as unknown as WorkerRow[];
 }
 
 // ============================================================
@@ -849,7 +849,7 @@ export async function fetchActivelyLookingWorker(): Promise<WorkerRow | null> {
     console.error('Error fetching actively looking worker:', error);
     throw error;
   }
-  return data;
+  return data as unknown as WorkerRow | null;
 }
 
 // Fetch two sample workers for DSL (one actively looking, one not)
@@ -872,7 +872,7 @@ export async function fetchSampleWorkersForDSL(): Promise<{ worker1: WorkerRow |
   if (error2) console.error('Error fetching other worker:', error2);
 
   return {
-    worker1: activeWorkers?.[0] || null,
-    worker2: otherWorkers?.[0] || null,
+    worker1: (activeWorkers as WorkerRow[] | null)?.[0] || null,
+    worker2: (otherWorkers as WorkerRow[] | null)?.[0] || null,
   };
 }

@@ -1,26 +1,12 @@
 import {
   BadgeCheck,
   MapPin,
-  MessageSquareText,
-  Zap,
-  CheckSquare,
-  Users,
-  Timer,
   TrendingUp,
-  CircleSlash2,
-  Smile,
-  Shuffle,
   RotateCcw,
   Star,
   Search,
-  Sun,
-  Moon,
-  CalendarDays,
-  ShieldCheck,
-  AlertCircle,
-  Flame,
 } from 'lucide-react';
-import type { MatchedWorker, Endorsement, RetailerQuote } from '../../types';
+import type { MatchedWorker, RetailerQuote } from '../../types';
 import './WorkerCard.css';
 
 // Generate a unique AI-style summary from retailer quotes (3-5 sentences)
@@ -111,22 +97,14 @@ function generateQuoteSummary(firstName: string, quotes: RetailerQuote[]): strin
   return finalSentences.join(' ');
 }
 
-const ENDORSEMENT_CONFIG: Record<Endorsement, { icon: React.ReactNode; label: string }> = {
-  'customer-engagement': { icon: <MessageSquareText size={16} />, label: 'Customer Engagement' },
-  'self-starter':        { icon: <Zap size={16} />,               label: 'Self-Starter' },
-  'preparedness':        { icon: <CheckSquare size={16} />,       label: 'Preparedness' },
-  'perfect-attire':      { icon: <Users size={16} />,             label: 'Perfect Attire' },
-  'work-pace':           { icon: <Timer size={16} />,             label: 'Work Pace' },
-  'productivity':        { icon: <TrendingUp size={16} />,        label: 'Productivity' },
-  'attention-to-detail': { icon: <CircleSlash2 size={16} />,      label: 'Attention to Detail' },
-  'team-player':         { icon: <Users size={16} />,             label: 'Team Player' },
-  'positive-attitude':   { icon: <Smile size={16} />,             label: 'Positive Attitude' },
-  'adaptable':           { icon: <Shuffle size={16} />,           label: 'Adaptable' },
-};
-
 interface WorkerCardProps {
   worker: MatchedWorker;
 }
+
+// Convert string to title case
+const toTitleCase = (str: string) => {
+  return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+};
 
 export function WorkerCard({ worker }: WorkerCardProps) {
   const initials = worker.name
@@ -135,7 +113,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
     .join('')
     .toUpperCase();
 
-  const { reflexActivity, reliability, availability } = worker;
+  const { reflexActivity } = worker;
 
   const totalReflexShifts = reflexActivity
     ? reflexActivity.shiftsByTier.luxury + reflexActivity.shiftsByTier.elevated + reflexActivity.shiftsByTier.mid
@@ -155,10 +133,10 @@ export function WorkerCard({ worker }: WorkerCardProps) {
       : null
     : null;
 
-  const availabilityTags: { label: string; icon: React.ReactNode }[] = [];
-  if (availability.weekends)      availabilityTags.push({ label: 'Weekends', icon: <CalendarDays size={12} /> });
-  if (availability.openingShifts) availabilityTags.push({ label: 'Opening shifts', icon: <Sun size={12} /> });
-  if (availability.closingShifts) availabilityTags.push({ label: 'Closing shifts', icon: <Moon size={12} /> });
+  // Get endorsements sorted by count
+  const endorsementEntries = worker.endorsementCounts
+    ? Object.entries(worker.endorsementCounts).sort((a, b) => b[1] - a[1])
+    : [];
 
   const hasReflexData = !!reflexActivity;
 
@@ -189,7 +167,6 @@ export function WorkerCard({ worker }: WorkerCardProps) {
           </div>
           <div className="worker-meta">
             <span className="worker-meta-item"><MapPin size={14} />{worker.market}</span>
-            <span className="worker-meta-item">Looking for: {worker.preference === 'FT' ? 'Full-Time' : worker.preference === 'PT' ? 'Part-Time' : 'Full or Part-Time'}</span>
           </div>
         </div>
 
@@ -199,7 +176,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
       <div className="worker-card-body">
 
         {/* 1. About */}
-        <p className="worker-about">{worker.about}</p>
+        {worker.aboutMe && <p className="worker-about">{worker.aboutMe}</p>}
 
         {/* 2. Work history */}
         {worker.previousExperience.length > 0 && (
@@ -249,27 +226,6 @@ export function WorkerCard({ worker }: WorkerCardProps) {
 
               <div className="reflex-inner-divider" />
 
-              {/* Reliability */}
-              {reliability && (
-                <div className="reliability-row">
-                  <span className={`reliability-chip ${reliability.noShows === 0 ? 'good' : 'warn'}`}>
-                    <ShieldCheck size={12} />
-                    {reliability.noShows === 0 ? '0 no-shows' : `${reliability.noShows} no-show${reliability.noShows > 1 ? 's' : ''}`}
-                  </span>
-                  {reliability.cancellations === 0 && (
-                    <span className="reliability-chip good">
-                      <AlertCircle size={12} />
-                      0 cancellations
-                    </span>
-                  )}
-                  {reliability.lastMinuteFills >= 5 && (
-                    <span className="reliability-chip good">
-                      <Flame size={12} />
-                      {reliability.lastMinuteFills} last-min fills
-                    </span>
-                  )}
-                </div>
-              )}
 
               {/* Store metrics */}
               <div className="reflex-metrics-row">
@@ -283,10 +239,10 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                     <Star size={12} /> Store favorite at {reflexActivity.storeFavoriteCount} locations
                   </span>
                 )}
-                {worker.tardyPercent !== undefined && worker.tardyPercent < 10 && (
+                {worker.tardyPercent != null && worker.tardyPercent < 10 && (
                   <span className="reflex-metric good">Exceptional Punctuality</span>
                 )}
-                {worker.urgentCancelPercent !== undefined && worker.urgentCancelPercent < 5 && (
+                {worker.urgentCancelPercent != null && worker.urgentCancelPercent < 5 && (
                   <span className="reflex-metric good">Low Cancellations</span>
                 )}
               </div>
@@ -300,7 +256,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <div className="brands-list">
                     {worker.brandsWorked.map((brand, idx) => (
                       <span key={idx} className="tag tag-lite-gray tag-sm">
-                        <span className="tag-text">{brand.name}</span>
+                        <span className="tag-text">{toTitleCase(brand.name)}</span>
                       </span>
                     ))}
                   </div>
@@ -308,14 +264,14 @@ export function WorkerCard({ worker }: WorkerCardProps) {
               )}
 
               {/* Retailer endorsements */}
-              {worker.endorsements.length > 0 && (
+              {endorsementEntries.length > 0 && (
                 <div className="endorsements-section">
                   <span className="section-label">Retailer Endorsements</span>
                   <div className="endorsements-list">
-                    {worker.endorsements.map((e, idx) => (
+                    {endorsementEntries.map(([name, count], idx) => (
                       <span key={idx} className="tag tag-stroke tag-sm">
-                        <span className="tag-icon">{ENDORSEMENT_CONFIG[e]?.icon}</span>
-                        <span className="tag-text">{ENDORSEMENT_CONFIG[e]?.label}</span>
+                        <span className="tag-counter">{count}</span>
+                        <span className="tag-text">{name}</span>
                       </span>
                     ))}
                   </div>
@@ -346,30 +302,6 @@ export function WorkerCard({ worker }: WorkerCardProps) {
           </>
         )}
 
-        {/* 4. Preferences footer */}
-        {(availabilityTags.length > 0 || (worker.targetBrands && worker.targetBrands.length > 0)) && (
-          <>
-            <div className="card-divider" />
-            <div className="card-footer">
-              {availabilityTags.length > 0 && (
-                <div className="availability-row">
-                  {availabilityTags.map((tag, idx) => (
-                    <span key={idx} className="tag tag-stroke tag-sm">
-                      <span className="tag-icon">{tag.icon}</span>
-                      <span className="tag-text">{tag.label}</span>
-                    </span>
-                  ))}
-                </div>
-              )}
-              {worker.targetBrands && worker.targetBrands.length > 0 && (
-                <div className="target-brands-row">
-                  <span className="target-brands-label">Interested in</span>
-                  <span className="target-brands-text">{worker.targetBrands.join(' · ')}</span>
-                </div>
-              )}
-            </div>
-          </>
-        )}
 
       </div>
     </div>
