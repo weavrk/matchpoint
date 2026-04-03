@@ -526,9 +526,38 @@
   padding-bottom: 24px;
 }
 
+.reflex-talent-header-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
 .reflex-talent-header {
   font-size: 24px;
-  margin: 0 0 24px 0;
+  margin: 0;
+}
+
+.reflex-talent-market-select {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--primary);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--primary);
+  padding: 0 4px 2px 0;
+  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+}
+
+.reflex-talent-market-select:focus {
+  border-bottom-color: var(--accent);
+}
+
+.reflex-talent-market-select option {
+  font-size: 16px;
+  font-weight: 400;
 }
 
 .reflex-talent-group {
@@ -2385,7 +2414,8 @@
   flex-shrink: 0;
 }
 
-.ds-chip-demo.message-chip-single:hover {
+.ds-chip-demo.message-chip-single:hover,
+.ds-chip-demo.message-chip-single.hover {
   border-color: var(--app-primary);
   background: var(--gray-50);
 }
@@ -2440,12 +2470,14 @@
   flex-shrink: 0;
 }
 
-.ds-chip-demo.message-chip-multi:hover {
+.ds-chip-demo.message-chip-multi:hover,
+.ds-chip-demo.message-chip-multi.hover {
   border-color: var(--app-primary);
   background: var(--gray-50);
 }
 
-.ds-chip-demo.message-chip-multi:hover .chip-icon {
+.ds-chip-demo.message-chip-multi:hover .chip-icon,
+.ds-chip-demo.message-chip-multi.hover .chip-icon {
   color: var(--primary);
 }
 

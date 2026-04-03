@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import type { ChatMessage, MatchedWorker } from '../../types';
 import chatbotAvatarUrl from '../../../../assets/logo-and-backgrounds/chatbot.svg?url';
 import { NavChipGrid, getNavChips } from '../NavChips';
-import { WorkerCardTeaser, WorkerCardFull } from '../Workers';
+import { WorkerCardCompact, WorkerCardFull } from '../Workers';
 import type { WorkerProfile } from '../../types';
 import { ARIAT_STORE_GROUPS, ARIAT_STORE_OPTIONS } from '../../data/ariatStores';
 import { BENEFIT_SELECT_CHIPS } from '../../services/gemini';
@@ -1046,11 +1046,11 @@ export function ChatInterface({
                     <ReactMarkdown>
                       {boldSalaryValuesInMarkdown(parsed?.text || message.content)}
                     </ReactMarkdown>
-                    {/* Worker Cards Grid - uses shared WorkerCardTeaser component */}
+                    {/* Worker Cards Grid - uses shared WorkerCardCompact component */}
                     {hasWorkerCards && (
                       <div className="worker-cards-grid">
                         {workerCards.map((worker) => (
-                          <WorkerCardTeaser
+                          <WorkerCardCompact
                             key={worker.id}
                             worker={worker}
                             onClick={() => setSelectedWorker(worker)}

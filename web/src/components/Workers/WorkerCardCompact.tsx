@@ -1,42 +1,6 @@
-import {
-  MessageSquareText,
-  Zap,
-  CheckSquare,
-  Users,
-  Timer,
-  TrendingUp,
-  CircleSlash2,
-  Smile,
-  Shuffle,
-} from 'lucide-react';
-import type { MatchedWorker, Endorsement } from '../../types';
+import type { MatchedWorker } from '../../types';
 import { WorkerCardHeader } from './WorkerCardHeader';
-
-const ENDORSEMENT_ICONS: Record<Endorsement, React.ReactNode> = {
-  'customer-engagement': <MessageSquareText size={14} />,
-  'self-starter': <Zap size={14} />,
-  'preparedness': <CheckSquare size={14} />,
-  'perfect-attire': <Users size={14} />,
-  'work-pace': <Timer size={14} />,
-  'productivity': <TrendingUp size={14} />,
-  'attention-to-detail': <CircleSlash2 size={14} />,
-  'team-player': <Users size={14} />,
-  'positive-attitude': <Smile size={14} />,
-  'adaptable': <Shuffle size={14} />,
-};
-
-const ENDORSEMENT_LABELS: Record<Endorsement, string> = {
-  'customer-engagement': 'Customer Engagement',
-  'self-starter': 'Self-Starter',
-  'preparedness': 'Preparedness',
-  'perfect-attire': 'Perfect Attire',
-  'work-pace': 'Work Pace',
-  'productivity': 'Productivity',
-  'attention-to-detail': 'Attention to Detail',
-  'team-player': 'Team Player',
-  'positive-attitude': 'Positive Attitude',
-  'adaptable': 'Adaptable',
-};
+import { generateQuoteSummary } from './utils';
 
 interface WorkerCardCompactProps {
   worker: MatchedWorker;
@@ -44,76 +8,76 @@ interface WorkerCardCompactProps {
 }
 
 /**
- * WorkerCardCompact - More robust but still abridged for chat view
- * Shows: Header, quote, work history, endorsements with counts, store quotes
+ * WorkerCardCompact - Compact teaser card for grids and chat view
+ * For shift-verified workers: Shows Header + Reflex stats + Retailer summary
+ * For non-verified workers: Shows Header + Work History
+ * Uses DSL pills for endorsements and stats
  */
 export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
+  const firstName = worker.name.split(' ')[0];
+  const hasQuotes = worker.retailerQuotes && worker.retailerQuotes.length > 0;
+  const quoteSummary = worker.retailerSummary || (hasQuotes ? generateQuoteSummary(firstName, worker.retailerQuotes!) : null);
   const topExperience = worker.previousExperience.slice(0, 3);
-  const topEndorsements = worker.endorsements.slice(0, 3);
 
-  // Generate fake endorsement counts for demo
-  const getEndorsementCount = (idx: number) => {
-    const counts = [117, 89, 97, 84, 102, 76];
-    return counts[idx % counts.length];
-  };
+  // Get top 3 endorsements sorted by count
+  const endorsementEntries = worker.endorsementCounts
+    ? Object.entries(worker.endorsementCounts).sort((a, b) => b[1] - a[1]).slice(0, 3)
+    : [];
 
   return (
     <div className="worker-card worker-card-compact" onClick={onClick}>
-      <WorkerCardHeader worker={worker} />
+      <WorkerCardHeader worker={worker} showActivelyLooking={false} />
 
       <div className="worker-card-body">
-        {/* Quote/About */}
-        {worker.about && (
-          <p className="worker-quote">
-            <span className="quote-mark">"</span>
-            {worker.about}
-          </p>
+        {/* Shift verified: show reflex stats + retailer summary */}
+        {worker.shiftVerified && (
+          <>
+            <div className="compact-stats">
+              <span className="tag tag-lite-gray tag-sm">
+                <span className="tag-counter">{worker.shiftsOnReflex}</span>
+                <span className="tag-text">shifts</span>
+              </span>
+              {worker.reflexActivity?.storeFavoriteCount && worker.reflexActivity.storeFavoriteCount > 0 && (
+                <span className="tag tag-lite-gray tag-sm">
+                  <span className="tag-counter">{worker.reflexActivity.storeFavoriteCount}</span>
+                  <span className="tag-text">stores favorited</span>
+                </span>
+              )}
+            </div>
+            {quoteSummary && (
+              <div className="compact-section">
+                <span className="section-label">What retailers say about {firstName}</span>
+                <p className="compact-summary">{quoteSummary}</p>
+              </div>
+            )}
+          </>
         )}
 
-        {/* Work History */}
-        {topExperience.length > 0 && (
+        {/* Non-verified: show work history */}
+        {!worker.shiftVerified && topExperience.length > 0 && (
           <div className="compact-section">
             <span className="section-label">Work History</span>
-            <div className="experience-list">
+            <div className="compact-experience-list">
               {topExperience.map((exp, idx) => (
-                <div key={idx} className="experience-item">
-                  <span className="exp-company">{exp.company}</span>
-                  <span className="exp-detail">· {exp.roles[0]} · {exp.duration}</span>
+                <div key={idx} className="compact-experience-item">
+                  <span className="compact-exp-company">{exp.company}</span>
+                  <span className="compact-exp-detail">{exp.roles[0]} · {exp.duration}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Endorsements with counts */}
-        {topEndorsements.length > 0 && (
+        {/* Endorsements with counts - show for all workers */}
+        {endorsementEntries.length > 0 && (
           <div className="compact-section">
             <span className="section-label">Endorsements</span>
-            <div className="endorsements-with-counts">
-              {topEndorsements.map((e, idx) => (
-                <span key={idx} className="pill pill-stroke pill-sm">
-                  <span className="pill-icon">{ENDORSEMENT_ICONS[e]}</span>
-                  <span className="pill-text">{ENDORSEMENT_LABELS[e]}</span>
-                  <span className="pill-counter">+{getEndorsementCount(idx)}</span>
+            <div className="compact-endorsements">
+              {endorsementEntries.map(([name, count], idx) => (
+                <span key={idx} className="tag tag-stroke tag-sm">
+                  <span className="tag-counter">{count}</span>
+                  <span className="tag-text">{name}</span>
                 </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* What stores say */}
-        {worker.retailerQuotes && worker.retailerQuotes.length > 0 && (
-          <div className="compact-section">
-            <span className="section-label">What Stores Say</span>
-            <div className="store-quotes">
-              {worker.retailerQuotes.slice(0, 2).map((quote, idx) => (
-                <div key={idx} className="store-quote">
-                  <span className="quote-icon">💬</span>
-                  <div className="quote-content">
-                    <p className="quote-text">"{quote.quote}"</p>
-                    <span className="quote-attribution">{quote.brand} {quote.role}</span>
-                  </div>
-                </div>
               ))}
             </div>
           </div>

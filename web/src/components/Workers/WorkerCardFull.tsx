@@ -1,38 +1,6 @@
-import {
-  X,
-  MapPin,
-  BadgeCheck,
-  MessageSquareText,
-  Zap,
-  CheckSquare,
-  Users,
-  Timer,
-  TrendingUp,
-  CircleSlash2,
-  Smile,
-  Shuffle,
-  ShieldCheck,
-  AlertCircle,
-  Flame,
-  CalendarDays,
-  Sun,
-  Moon,
-} from 'lucide-react';
-import type { MatchedWorker, Endorsement } from '../../types';
-import { generateQuoteSummary } from './utils';
-
-const ENDORSEMENT_CONFIG: Record<Endorsement, { icon: React.ReactNode; label: string }> = {
-  'customer-engagement': { icon: <MessageSquareText size={16} />, label: 'Customer Engagement' },
-  'self-starter': { icon: <Zap size={16} />, label: 'Self-Starter' },
-  'preparedness': { icon: <CheckSquare size={16} />, label: 'Preparedness' },
-  'perfect-attire': { icon: <Users size={16} />, label: 'Perfect Attire' },
-  'work-pace': { icon: <Timer size={16} />, label: 'Work Pace' },
-  'productivity': { icon: <TrendingUp size={16} />, label: 'Productivity' },
-  'attention-to-detail': { icon: <CircleSlash2 size={16} />, label: 'Attention to Detail' },
-  'team-player': { icon: <Users size={16} />, label: 'Team Player' },
-  'positive-attitude': { icon: <Smile size={16} />, label: 'Positive Attitude' },
-  'adaptable': { icon: <Shuffle size={16} />, label: 'Adaptable' },
-};
+import { X } from 'lucide-react';
+import type { MatchedWorker } from '../../types';
+import { WorkerCardHeader } from './WorkerCardHeader';
 
 interface WorkerCardFullProps {
   worker: MatchedWorker;
@@ -41,74 +9,49 @@ interface WorkerCardFullProps {
 
 /**
  * WorkerCardFull - Comprehensive detail card
- * Opens to the right of chat interface, takes 60% width
- * Includes close button, all worker details
+ * Opens to the right of chat interface
+ * Uses same styling as WorkerCardTesting
  */
+// Convert string to title case
+const toTitleCase = (str: string) => {
+  return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+};
+
 export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
-  const initials = worker.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase();
+  const { reflexActivity } = worker;
 
-  const { reflexActivity, reliability, availability } = worker;
-
-  const totalReflexShifts = reflexActivity
-    ? reflexActivity.shiftsByTier.luxury + reflexActivity.shiftsByTier.elevated + reflexActivity.shiftsByTier.mid
-    : 0;
-
-  const availabilityTags: { label: string; icon: React.ReactNode }[] = [];
-  if (availability.weekends) availabilityTags.push({ label: 'Weekends', icon: <CalendarDays size={14} /> });
-  if (availability.openingShifts) availabilityTags.push({ label: 'Opening shifts', icon: <Sun size={14} /> });
-  if (availability.closingShifts) availabilityTags.push({ label: 'Closing shifts', icon: <Moon size={14} /> });
+  // Get endorsements sorted by count
+  const endorsementEntries = worker.endorsementCounts
+    ? Object.entries(worker.endorsementCounts).sort((a, b) => b[1] - a[1])
+    : [];
 
   return (
     <div className="worker-card-full-overlay">
-      {/* Close button - outside scrollable area */}
+      {/* Close button */}
       <button className="worker-card-full-close" onClick={onClose}>
         <X size={20} />
       </button>
 
-      <div className="worker-card-full">
-        {/* Header - avatar with name and meta stacked to the right */}
-        <div className="worker-card-full-header">
-          <div className="worker-avatar worker-avatar-lg">
-            {worker.photo ? <img src={worker.photo} alt={worker.name} /> : <span>{initials}</span>}
-          </div>
+      <div className="worker-card worker-card-testing">
+        <WorkerCardHeader worker={worker} />
 
-          <div className="worker-card-full-header-content">
-            <h2 className="worker-name worker-name-lg">{worker.name}</h2>
-            <div className="worker-card-full-meta">
-              <span className="meta-item"><MapPin size={16} /> {worker.market}</span>
-              {worker.shiftVerified && (
-                <span className="pill pill-green pill-md">
-                  <span className="pill-icon"><BadgeCheck size={14} /></span>
-                  <span className="pill-text">Shift Verified</span>
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Body content */}
-        <div className="worker-card-full-body">
-          {/* About */}
-          {worker.about && (
-            <div className="full-section">
-              <h4 className="section-title type-section-header">About</h4>
-              <p className="worker-about-full type-body">{worker.about}</p>
+        <div className="worker-card-body">
+          {/* About Me */}
+          {worker.aboutMe && (
+            <div className="testing-section">
+              <span className="testing-label">About</span>
+              <p className="testing-about">{worker.aboutMe}</p>
             </div>
           )}
 
           {/* Work History */}
           {worker.previousExperience.length > 0 && (
-            <div className="full-section">
-              <h4 className="section-title type-section-header">Work History</h4>
-              <div className="experience-list-full">
+            <div className="testing-section">
+              <span className="testing-label">Work History ({worker.previousExperience.length})</span>
+              <div className="testing-data">
                 {worker.previousExperience.map((exp, idx) => (
-                  <div key={idx} className="experience-item-full">
-                    <span className="exp-company type-body">{exp.company}</span>
-                    <span className="exp-detail type-body-sm">· {exp.roles[0]} · {exp.duration}</span>
+                  <div key={idx} className="testing-row">
+                    <span className="testing-key">{exp.company}:</span> {exp.roles.join(', ')} ({exp.duration})
                   </div>
                 ))}
               </div>
@@ -117,55 +60,29 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
 
           {/* Reflex Activity */}
           {reflexActivity && (
-            <div className="full-section">
-              <h4 className="section-title type-section-header">On Reflex</h4>
-              <div className="reflex-stats">
-                <div className="reflex-stat">
-                  <span className="stat-value">{totalReflexShifts}</span>
-                  <span className="stat-label type-label">Total Shifts</span>
-                </div>
-                <div className="reflex-stat">
-                  <span className="stat-value">{worker.invitedBackStores}</span>
-                  <span className="stat-label type-label">Stores Invited Back</span>
-                </div>
+            <div className="testing-section">
+              <span className="testing-label">On Reflex</span>
+              <div className="testing-data">
+                <div className="testing-row"><span className="testing-key">Total Shifts:</span> {worker.shiftsOnReflex}</div>
+                <div className="testing-row"><span className="testing-key">Stores Invited Back:</span> {worker.invitedBackStores}</div>
                 {reflexActivity.storeFavoriteCount && (
-                  <div className="reflex-stat highlight">
-                    <span className="stat-value">{reflexActivity.storeFavoriteCount}</span>
-                    <span className="stat-label type-label">Store Favorite</span>
-                  </div>
+                  <div className="testing-row"><span className="testing-key">Store Favorite:</span> {reflexActivity.storeFavoriteCount}</div>
                 )}
+                <div className="testing-row"><span className="testing-key">Luxury Shifts:</span> {reflexActivity.shiftsByTier.luxury}</div>
+                <div className="testing-row"><span className="testing-key">Elevated Shifts:</span> {reflexActivity.shiftsByTier.elevated}</div>
+                <div className="testing-row"><span className="testing-key">Mid Shifts:</span> {reflexActivity.shiftsByTier.mid}</div>
               </div>
-
-              {/* Reliability */}
-              {reliability && (
-                <div className="reliability-badges">
-                  <span className={`reliability-badge type-body-sm ${reliability.noShows === 0 ? 'good' : 'warn'}`}>
-                    <ShieldCheck size={14} />
-                    {reliability.noShows === 0 ? '0 no-shows' : `${reliability.noShows} no-show${reliability.noShows > 1 ? 's' : ''}`}
-                  </span>
-                  {reliability.cancellations === 0 && (
-                    <span className="reliability-badge type-body-sm good">
-                      <AlertCircle size={14} /> 0 cancellations
-                    </span>
-                  )}
-                  {reliability.lastMinuteFills >= 5 && (
-                    <span className="reliability-badge type-body-sm good">
-                      <Flame size={14} /> {reliability.lastMinuteFills} last-min fills
-                    </span>
-                  )}
-                </div>
-              )}
             </div>
           )}
 
-          {/* Brands */}
+          {/* Brands Worked */}
           {worker.brandsWorked.length > 0 && (
-            <div className="full-section">
-              <h4 className="section-title type-section-header">Retailers on Reflex</h4>
-              <div className="brands-grid">
+            <div className="testing-section">
+              <span className="testing-label">Retailers on Reflex ({worker.brandsWorked.length})</span>
+              <div className="testing-pills">
                 {worker.brandsWorked.map((brand, idx) => (
-                  <span key={idx} className="pill pill-lite-gray pill-sm">
-                    <span className="pill-text">{brand.name}</span>
+                  <span key={idx} className="tag tag-lite-gray tag-sm">
+                    <span className="tag-text">{toTitleCase(brand.name)}</span>
                   </span>
                 ))}
               </div>
@@ -173,14 +90,14 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
           )}
 
           {/* Endorsements */}
-          {worker.endorsements.length > 0 && (
-            <div className="full-section">
-              <h4 className="section-title type-section-header">Retailer Endorsements</h4>
-              <div className="endorsements-grid">
-                {worker.endorsements.map((e, idx) => (
-                  <span key={idx} className="pill pill-stroke pill-sm">
-                    <span className="pill-icon">{ENDORSEMENT_CONFIG[e]?.icon}</span>
-                    <span className="pill-text">{ENDORSEMENT_CONFIG[e]?.label}</span>
+          {endorsementEntries.length > 0 && (
+            <div className="testing-section">
+              <span className="testing-label">Endorsements ({endorsementEntries.length})</span>
+              <div className="testing-pills">
+                {endorsementEntries.map(([name, count], idx) => (
+                  <span key={idx} className="tag tag-stroke tag-sm">
+                    <span className="tag-counter">{count}</span>
+                    <span className="tag-text">{name}</span>
                   </span>
                 ))}
               </div>
@@ -189,45 +106,33 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
 
           {/* Retailer Quotes */}
           {worker.retailerQuotes && worker.retailerQuotes.length > 0 && (
-            <div className="full-section">
-              <h4 className="section-title type-section-header">What Stores Say</h4>
-              <p className="quotes-summary-full type-body">
-                {generateQuoteSummary(worker.name.split(' ')[0], worker.retailerQuotes, 5)}
-              </p>
-              <div className="quotes-list-full">
+            <div className="testing-section">
+              <span className="testing-label">What Stores Say ({worker.retailerQuotes.length})</span>
+              <div className="testing-data">
                 {worker.retailerQuotes.map((quote, idx) => (
-                  <div key={idx} className="quote-item-full">
-                    <span className="quote-icon-full">💬</span>
-                    <div className="quote-content-full">
-                      <p className="quote-text-full type-body">"{quote.quote}"</p>
-                      <span className="quote-attribution-full type-chip-header">{quote.role}, {quote.brand}</span>
-                    </div>
+                  <div key={idx} className="testing-quote">
+                    <div className="testing-row">"{quote.quote}"</div>
+                    {(quote.role || quote.brand) && (
+                      <div className="testing-row"><span className="testing-key">from:</span> {quote.role}{quote.role && quote.brand ? ', ' : ''}{quote.brand}</div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Availability */}
-          {availabilityTags.length > 0 && (
-            <div className="full-section">
-              <h4 className="section-title type-section-header">Availability</h4>
-              <div className="availability-tags-full">
-                {availabilityTags.map((tag, idx) => (
-                  <span key={idx} className="pill pill-stroke pill-sm">
-                    <span className="pill-icon">{tag.icon}</span>
-                    <span className="pill-text">{tag.label}</span>
-                  </span>
+          {/* Interview Transcript */}
+          {worker.interviewTranscript && Array.isArray(worker.interviewTranscript) && worker.interviewTranscript.length > 0 && (
+            <div className="testing-section">
+              <span className="testing-label">Interview ({worker.interviewTranscript.length} Q&A)</span>
+              <div className="testing-data">
+                {worker.interviewTranscript.map((entry, idx) => (
+                  <div key={idx} className="testing-quote">
+                    <div className="testing-row"><span className="testing-key">Q:</span> {entry.question}</div>
+                    <div className="testing-row"><span className="testing-key">A:</span> {entry.answer}</div>
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Target Brands */}
-          {worker.targetBrands && worker.targetBrands.length > 0 && (
-            <div className="full-section">
-              <h4 className="section-title type-section-header">Interested In</h4>
-              <p className="target-brands-full type-body">{worker.targetBrands.join(' · ')}</p>
             </div>
           )}
         </div>

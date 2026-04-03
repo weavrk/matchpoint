@@ -1,10 +1,100 @@
-import { Check, Plus, UserStar, CalendarDays, BadgeCheck, Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Check, Plus, UserStar, CalendarDays, BadgeCheck } from 'lucide-react';
+import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
+import { WorkerCardCompact } from '../Workers/WorkerCardCompact';
+import { WorkerCardTesting } from '../Workers/WorkerCardTesting';
+import { WorkerCardFull } from '../Workers/WorkerCardFull';
+import { fetchSampleWorkersForDSL, workerRowToProfile } from '../../services/supabase';
+import type { MatchedWorker } from '../../types';
+
+// Hardcoded sample worker for instant DSL panel load
+// Based on real worker: Elizabeth Momberg from Austin
+const DEFAULT_SAMPLE_WORKER: MatchedWorker = {
+  id: '4aa0f0ba-541a-43b0-9728-8df0cdf69060',
+  name: 'Elizabeth Momberg',
+  photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face',
+  market: 'Austin',
+  shiftVerified: true,
+  activelyLooking: true,
+  shiftsOnReflex: 47,
+  invitedBackStores: 6,
+  currentTier: 'R3',
+  aboutMe: null,
+  brandsWorked: [
+    { name: 'Beehive', tier: 'mid' },
+    { name: 'Everlane', tier: 'elevated' },
+    { name: 'Faherty', tier: 'elevated' },
+    { name: 'Fashion Incubator Pop-up', tier: 'mid' },
+    { name: 'J. Crew Factory', tier: 'mid' },
+    { name: 'Lively', tier: 'mid' },
+    { name: 'Madewell', tier: 'mid' },
+    { name: 'Mizzen+Main', tier: 'mid' },
+    { name: 'PARTY & CO.', tier: 'mid' },
+  ],
+  endorsementCounts: {
+    'Shipment Help': 12,
+    'Greeter': 16,
+    'Sales': 9,
+    'All Around': 4,
+    'Back of House': 4,
+    'Fitting Rooms': 10,
+    'Floor Organization': 10,
+    'Cashier': 4,
+    'Management': 1,
+    'Omni Help': 4,
+    'Inventory Management': 3,
+  },
+  previousExperience: [
+    { company: 'Unknown', duration: 'Unknown', roles: ['Back of House'] },
+    { company: 'Unknown', duration: 'Unknown', roles: ['Sales Associate'] },
+  ],
+  reflexActivity: {
+    shiftsByTier: { luxury: 0, elevated: 2, mid: 7 },
+    longestRelationship: null,
+    tierProgression: 'stable',
+    storeFavoriteCount: 5,
+  },
+  retailerQuotes: [
+    { quote: 'Elizabeth can jump in wherever needed! Efficient and self starter. Customer compliments and great energy!', brand: '', role: '' },
+    { quote: "Elizabeth was a tremendous help! she jumped right in styling customers and greeting and working fitting rooms. super detail oriented and very experienced with retail ins and outs. would love love her back!", brand: '', role: '' },
+    { quote: "Love Liz! She's so helpful and has great energy!", brand: '', role: '' },
+    { quote: 'Liz is great with customers and staying busy when given direction', brand: '', role: '' },
+  ],
+  retailerSummary: undefined,
+  workerUuid: '4fb0c921-eee3-4575-bf1a-f289f9115387',
+  workerId: 984,
+  matchScore: 94,
+  matchReasons: ['Austin market', 'Shift Verified'],
+};
 
 interface DesignSystemPanelProps {
   onClose: () => void;
 }
 
 export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
+  // Start with hardcoded sample, optionally update from Supabase
+  const [sampleWorker, setSampleWorker] = useState<MatchedWorker>(DEFAULT_SAMPLE_WORKER);
+
+  useEffect(() => {
+    // Optionally fetch fresh data from Supabase in background
+    async function loadWorkers() {
+      try {
+        const { worker1 } = await fetchSampleWorkersForDSL();
+        if (worker1) {
+          setSampleWorker({
+            ...workerRowToProfile(worker1),
+            matchScore: 94,
+            matchReasons: ['Luxury experience', 'High reliability'],
+          });
+        }
+      } catch (error) {
+        // Silent fail - we have hardcoded fallback
+        console.error('Failed to load sample workers:', error);
+      }
+    }
+    loadWorkers();
+  }, []);
+
   return (
     <div className="design-system-panel">
       <div className="design-system-header">
@@ -16,18 +106,13 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
         <section className="ds-section">
           <h3>Colors</h3>
           <div className="ds-subsection">
-            <h4>Brand</h4>
+            <h4>Brand + Primary</h4>
             <div className="ds-color-grid">
               <div className="ds-color-swatch">
                 <div className="ds-swatch" style={{ background: 'var(--brand-pink)' }} />
                 <span className="ds-color-name">--brand-pink</span>
                 <span className="ds-color-value">#ff9a9a</span>
               </div>
-            </div>
-          </div>
-          <div className="ds-subsection">
-            <h4>Primary</h4>
-            <div className="ds-color-grid">
               <div className="ds-color-swatch">
                 <div className="ds-swatch" style={{ background: 'var(--primary)' }} />
                 <span className="ds-color-name">--primary</span>
@@ -285,11 +370,15 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             <p className="ds-description">Single-select options with check icon on right</p>
             <div className="ds-example ds-example-list">
               <button className="ds-chip-demo message-chip-single type-chip-label" type="button">
-                <span>Sales Associate</span>
+                <span>Default</span>
+                <span className="chip-icon"></span>
+              </button>
+              <button className="ds-chip-demo message-chip-single type-chip-label hover" type="button">
+                <span>Hover</span>
                 <span className="chip-icon"></span>
               </button>
               <button className="ds-chip-demo message-chip-single type-chip-label selected" type="button">
-                <span>Store Manager</span>
+                <span>Selected</span>
                 <span className="chip-icon"><Check size={14} /></span>
               </button>
             </div>
@@ -300,43 +389,201 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             <p className="ds-description">Multi-select options with plus/check icon on right</p>
             <div className="ds-example ds-example-list">
               <button className="ds-chip-demo message-chip-multi type-chip-label" type="button">
-                <span>Customer Engagement</span>
+                <span>Default</span>
+                <span className="chip-icon"><Plus size={14} /></span>
+              </button>
+              <button className="ds-chip-demo message-chip-multi type-chip-label hover" type="button">
+                <span>Hover</span>
                 <span className="chip-icon"><Plus size={14} /></span>
               </button>
               <button className="ds-chip-demo message-chip-multi type-chip-label selected" type="button">
-                <span>Self-Starter</span>
+                <span>Selected</span>
                 <span className="chip-icon"><Check size={14} /></span>
               </button>
             </div>
           </div>
         </section>
 
-        {/* Pills / Tags Section */}
+        {/* Tags Section */}
         <section className="ds-section">
-          <h3>Pills / Tags</h3>
+          <h3>Tags</h3>
           <p className="ds-description">
-            Usage: <code>className="pill pill-[style] pill-[size]"</code>
+            Usage: <code>className="tag tag-[style] tag-[size]"</code>
           </p>
+
+          <div className="ds-subsection">
+            <h4>Sizes</h4>
+            <div className="ds-pills-styles-row">
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-lite-gray tag-sm"><span className="tag-icon"><BadgeCheck size={12} /></span><span className="tag-text">Small</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">class: tag-sm</span>
+                  <span className="ds-spec-text">font: 12px / 16px</span>
+                  <span className="ds-spec-text">weight: 500</span>
+                  <span className="ds-spec-text">padding: 4px 12px</span>
+                  <span className="ds-spec-text">icon: 12px</span>
+                  <span className="ds-spec-text">gap: 4px</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-lite-gray tag-md"><span className="tag-icon"><BadgeCheck size={14} /></span><span className="tag-text">Medium</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">class: tag-md</span>
+                  <span className="ds-spec-text">font: 14px / 20px</span>
+                  <span className="ds-spec-text">weight: 500</span>
+                  <span className="ds-spec-text">padding: 4px 12px</span>
+                  <span className="ds-spec-text">icon: 14px</span>
+                  <span className="ds-spec-text">gap: 6px</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-lite-gray tag-lg"><span className="tag-icon"><BadgeCheck size={16} /></span><span className="tag-text">Large</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">class: tag-lg</span>
+                  <span className="ds-spec-text">font: 16px / 22px</span>
+                  <span className="ds-spec-text">weight: 500</span>
+                  <span className="ds-spec-text">padding: 6px 14px</span>
+                  <span className="ds-spec-text">icon: 16px</span>
+                  <span className="ds-spec-text">gap: 6px</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <div className="ds-subsection">
             <h4>Styles</h4>
             <div className="ds-pills-styles-row">
-              <span className="pill pill-stroke pill-md"><span className="pill-text">Stroke</span></span>
-              <span className="pill pill-lite-gray pill-md"><span className="pill-text">Lite Gray</span></span>
-              <span className="pill pill-dark-gray pill-md"><span className="pill-text">Dark Gray</span></span>
-              <span className="pill pill-green pill-md"><span className="pill-text">Green</span></span>
-              <span className="pill pill-blue pill-md"><span className="pill-text">Blue</span></span>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-stroke tag-md"><span className="tag-text">Stroke</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-stroke</span>
+                  <span className="ds-spec-text">bg: #ffffff</span>
+                  <span className="ds-spec-text">border: quaternary</span>
+                  <span className="ds-spec-text">text: primary</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-lite-gray tag-md"><span className="tag-text">Lite Gray</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-lite-gray</span>
+                  <span className="ds-spec-text">bg: background-navy</span>
+                  <span className="ds-spec-text">text: primary</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-dark-gray tag-md"><span className="tag-text">Dark Gray</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-dark-gray</span>
+                  <span className="ds-spec-text">bg: stone-700</span>
+                  <span className="ds-spec-text">text: #ffffff</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-green tag-md"><span className="tag-text">Green</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-green</span>
+                  <span className="ds-spec-text">bg: green-100</span>
+                  <span className="ds-spec-text">text: primary</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-blue tag-md"><span className="tag-text">Blue</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-blue</span>
+                  <span className="ds-spec-text">bg: blue-100</span>
+                  <span className="ds-spec-text">text: primary</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-pink tag-md"><span className="tag-text">Pink</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-pink</span>
+                  <span className="ds-spec-text">bg: pink-200</span>
+                  <span className="ds-spec-text">text: primary</span>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="ds-subsection">
             <h4>Variants</h4>
             <div className="ds-pills-styles-row">
-              <span className="pill pill-stroke pill-md"><span className="pill-text">Text Only</span></span>
-              <span className="pill pill-stroke pill-md"><span className="pill-icon"><CalendarDays size={14} /></span><span className="pill-text">Icon Left</span></span>
-              <span className="pill pill-stroke pill-md"><span className="pill-text">Icon Right</span><span className="pill-icon"><CalendarDays size={14} /></span></span>
-              <span className="pill pill-stroke pill-md"><span className="pill-counter">3</span><span className="pill-text">Counter Left</span></span>
-              <span className="pill pill-stroke pill-md"><span className="pill-text">Counter Right</span><span className="pill-counter">3</span></span>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-stroke tag-md"><span className="tag-text">Text Only</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-text only</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-stroke tag-md"><span className="tag-icon"><CalendarDays size={14} /></span><span className="tag-text">Icon Left</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-icon</span>
+                  <span className="ds-spec-text">tag-text</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-stroke tag-md"><span className="tag-text">Icon Right</span><span className="tag-icon"><CalendarDays size={14} /></span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-text</span>
+                  <span className="ds-spec-text">tag-icon</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-stroke tag-md"><span className="tag-counter">3</span><span className="tag-text">Counter Left</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-counter</span>
+                  <span className="ds-spec-text">tag-text</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-stroke tag-md"><span className="tag-text">Counter Right</span><span className="tag-counter">3</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-text</span>
+                  <span className="ds-spec-text">tag-counter</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Worker Cards Section */}
+        <section className="ds-section">
+          <h3>Worker Cards</h3>
+          <p className="ds-description">
+            Worker profile cards used across all variants. Import from <code>components/Workers</code>.
+          </p>
+
+          <div className="ds-subsection">
+            <h4>WorkerCardHeader (Reusable)</h4>
+            <p className="ds-description">Reusable header component used by all card variants. Shows avatar, name, location, and status pills.</p>
+            <div className="ds-worker-card-example">
+              <div className="worker-card" style={{ background: '#fff' }}>
+                <WorkerCardHeader worker={sampleWorker} />
+              </div>
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>WorkerCardCompact</h4>
+            <p className="ds-description">Compact teaser card for grids and chat. Shows header + Reflex stats + retailer summary (verified) or work history (non-verified) + endorsements.</p>
+            <div className="ds-worker-card-example">
+              <WorkerCardCompact worker={sampleWorker} />
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>WorkerCardTesting</h4>
+            <p className="ds-description">Testing card that shows ALL available worker data fields. Use for prototyping to see what data is available.</p>
+            <div className="ds-worker-card-example">
+              <WorkerCardTesting worker={sampleWorker} />
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>WorkerCardFull</h4>
+            <p className="ds-description">Full detail overlay card. Opens to the right of chat interface (60% width). Includes close button and comprehensive worker details. Triggered by clicking on a worker card.</p>
+            <div className="ds-worker-card-full-example">
+              <WorkerCardFull worker={sampleWorker} onClose={() => {}} />
             </div>
           </div>
         </section>

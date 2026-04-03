@@ -42,6 +42,11 @@ export interface RetailerFeedback {
   quotes: RetailerQuote[];
 }
 
+export interface InterviewTranscriptEntry {
+  question: string;
+  answer: string;
+}
+
 export interface WorkerProfile {
   id: string;
   name: string;
@@ -50,28 +55,31 @@ export interface WorkerProfile {
   shiftsOnReflex: number;
   brandsWorked: { name: string; tier: BrandTier }[];
   market: string;
-  preference: 'FT' | 'PT' | 'Both';
-  endorsements: Endorsement[];
-  onTimeRating: 'Exceptional' | null;
-  commitmentScore: 'Exceptional' | null;
+  endorsementCounts: Record<string, number> | null;
   invitedBackStores: number;
-  about: string;
+  aboutMe: string | null;
   previousExperience: {
     company: string;
     duration: string;
     roles: string[];
   }[];
-  workStyle: {
-    rolePreferences: string[];
-    traits: string[];
-  };
-  reliability: WorkerReliability | null;
-  availability: WorkerAvailability;
   reflexActivity: WorkerReflexActivity | null;
   activelyLooking: boolean;
-  targetBrands: string[] | null;
   retailerQuotes?: RetailerQuote[];
   retailerSummary?: string;
+  // Reliability metrics
+  onTimeRating?: string | null;
+  commitmentScore?: string | null;
+  tardyRatio?: string | null;
+  tardyPercent?: number | null;
+  urgentCancelRatio?: string | null;
+  urgentCancelPercent?: number | null;
+  // Tier and IDs
+  currentTier?: string | null;
+  workerUuid?: string | null;
+  workerId?: number | null;
+  // Interview data
+  interviewTranscript?: InterviewTranscriptEntry[] | Record<string, unknown> | null;
 }
 
 export interface JobSpec {

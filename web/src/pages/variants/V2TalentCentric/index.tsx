@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, ShieldCheck, Unlock, Clock, Store, Briefcase, CalendarDays, CalendarClock, CalendarRange } from 'lucide-react';
 import { SAMPLE_WORKERS } from '../../../data/workers';
-import { WorkerCardTeaser } from '../../../components/Workers/WorkerCardTeaser';
+import { WorkerCardCompact } from '../../../components/Workers/WorkerCardCompact';
 import { V2NavFooter } from './V2NavFooter';
 import type { MatchedWorker } from '../../../types';
 import './styles.css';
@@ -1094,8 +1094,8 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
                 <span className="v2-common-brands-label">Experience at:</span>
                 <div className="v2-common-brands-list">
                   {commonBrands.map(brand => (
-                    <span key={brand} className="pill pill-stroke pill-sm">
-                      <span className="pill-text">{brand}</span>
+                    <span key={brand} className="tag tag-stroke tag-sm">
+                      <span className="tag-text">{brand}</span>
                     </span>
                   ))}
                 </div>
@@ -1151,7 +1151,7 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
             </div>
           ) : (
             filteredWorkers.map(worker => (
-              <WorkerCardTeaser
+              <WorkerCardCompact
                 key={worker.id}
                 worker={worker}
                 onClick={() => {/* TODO: open full card */}}

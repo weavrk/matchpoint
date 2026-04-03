@@ -2269,7 +2269,7 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--primary);
-  margin: 0;
+  margin: 0 0 8px 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -2278,6 +2278,20 @@
   font-size: 13px;
   color: var(--primary);
   margin: 0 0 12px 0;
+}
+
+/* Pill with spec text below */
+.ds-pill-with-spec {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.ds-spec-text {
+  font-size: 10px;
+  color: var(--primary);
+  font-family: var(--font-mono, monospace);
 }
 
 /* Color Swatches */
@@ -2531,7 +2545,8 @@
   flex-shrink: 0;
 }
 
-.ds-chip-demo.message-chip-single:hover {
+.ds-chip-demo.message-chip-single:hover,
+.ds-chip-demo.message-chip-single.hover {
   border-color: var(--app-primary);
   background: var(--gray-50);
 }
@@ -2586,12 +2601,14 @@
   flex-shrink: 0;
 }
 
-.ds-chip-demo.message-chip-multi:hover {
+.ds-chip-demo.message-chip-multi:hover,
+.ds-chip-demo.message-chip-multi.hover {
   border-color: var(--app-primary);
   background: var(--gray-50);
 }
 
-.ds-chip-demo.message-chip-multi:hover .chip-icon {
+.ds-chip-demo.message-chip-multi:hover .chip-icon,
+.ds-chip-demo.message-chip-multi.hover .chip-icon {
   color: var(--primary);
 }
 
@@ -2651,7 +2668,7 @@
 /* Pills - Styles Row */
 .ds-pills-styles-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 24px;
   flex-wrap: wrap;
 }
@@ -2706,6 +2723,40 @@
   width: 1px;
   align-self: stretch;
   background: var(--gray-200);
+}
+
+/* Worker Card Examples */
+.ds-worker-card-example {
+  max-width: 400px;
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 12px;
+}
+
+.ds-worker-card-example .worker-card {
+  margin: 0;
+}
+
+/* Full Card Example in DSL */
+.ds-worker-card-full-example {
+  max-width: 500px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--gray-50);
+}
+
+.ds-worker-card-full-example .worker-card-full-overlay {
+  position: relative;
+  width: 100%;
+  height: auto;
+  border: none;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.ds-worker-card-full-example .worker-card-full-close {
+  display: none;
 }
 
 /* Card Preview */

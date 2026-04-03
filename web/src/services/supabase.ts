@@ -587,36 +587,61 @@ export async function deletePublishedJob(jobId: string): Promise<void> {
 // WORKERS API
 // ============================================================
 
+// Column sets for optimized queries
+const WORKER_COLUMNS_CARD = `
+  id, name, photo, market, actively_looking, shift_verified,
+  shifts_on_reflex, brands_worked, endorsement_counts, invited_back_stores,
+  about_me, previous_experience, reflex_activity, retailer_quotes, retailer_summary,
+  current_tier
+`.replace(/\s+/g, ' ').trim();
+
+const WORKER_COLUMNS_FULL = `
+  id, name, photo, market, actively_looking, about_me, previous_experience,
+  shift_verified, reflex_activity, shifts_on_reflex, brands_worked,
+  retailer_quotes, retailer_summary, endorsement_counts, invited_back_stores,
+  on_time_rating, commitment_score, tardy_ratio, tardy_percent,
+  urgent_cancel_ratio, urgent_cancel_percent, current_tier,
+  interview_transcript, worker_uuid, worker_id
+`.replace(/\s+/g, ' ').trim();
+
+const WORKER_COLUMNS_LIST = `
+  id, name, photo, market, shift_verified, shifts_on_reflex, actively_looking, current_tier
+`.replace(/\s+/g, ' ').trim();
+
 export interface WorkerRow {
   id: string;
   name: string;
-  photo: string | null;
   market: string;
-  shift_verified: boolean;
-  shifts_on_reflex: number;
-  invited_back_stores: number;
-  on_time_rating: 'Exceptional' | null;
-  commitment_score: 'Exceptional' | null;
-  preference: 'FT' | 'PT' | 'Both';
   actively_looking: boolean;
-  target_brands: string[] | null;
-  about: string | null;
-  brands_worked: { name: string; tier: 'luxury' | 'elevated' | 'mid' }[];
-  endorsements: string[];
+  about_me: string | null;
   previous_experience: { company: string; duration: string; roles: string[] }[];
-  work_style: { rolePreferences: string[]; traits: string[] } | null;
-  reliability: { noShows: number; cancellations: number; lastMinuteFills: number } | null;
-  availability: { weekends: boolean; openingShifts: boolean; closingShifts: boolean };
+  shift_verified: boolean;
   reflex_activity: {
     shiftsByTier: { luxury: number; elevated: number; mid: number };
     longestRelationship?: { brand: string; flexCount: number };
     tierProgression?: string;
     storeFavoriteCount?: number;
   } | null;
+  shifts_on_reflex: number;
+  brands_worked: { name: string; tier: 'luxury' | 'elevated' | 'mid' }[];
   retailer_quotes: { quote: string; brand: string; role: string }[] | null;
   retailer_summary: string | null;
-  created_at: string;
-  updated_at: string;
+  endorsement_counts: Record<string, number> | null;
+  invited_back_stores: number;
+  // Reliability metrics
+  on_time_rating: string | null;
+  commitment_score: string | null;
+  tardy_ratio: string | null;
+  tardy_percent: number | null;
+  urgent_cancel_ratio: string | null;
+  urgent_cancel_percent: number | null;
+  // Tier and IDs
+  current_tier: string | null;
+  worker_uuid: string | null;
+  worker_id: number | null;
+  // Interview data
+  interview_transcript: { question: string; answer: string }[] | Record<string, unknown> | null;
+  photo: string | null;
 }
 
 export interface WorkerApplicationRow {
@@ -629,11 +654,11 @@ export interface WorkerApplicationRow {
   updated_at: string;
 }
 
-// Fetch all workers
+// Fetch all workers (card display - optimized columns)
 export async function fetchWorkers(): Promise<WorkerRow[]> {
   const { data, error } = await supabase
     .from('workers')
-    .select('*')
+    .select(WORKER_COLUMNS_CARD)
     .order('name');
 
   if (error) {
@@ -643,11 +668,11 @@ export async function fetchWorkers(): Promise<WorkerRow[]> {
   return data || [];
 }
 
-// Fetch workers with pagination (for lazy loading)
+// Fetch workers with pagination (for lazy loading - list columns only)
 export async function fetchWorkersPaginated(offset: number, limit: number): Promise<{ workers: WorkerRow[]; hasMore: boolean }> {
   const { data, error, count } = await supabase
     .from('workers')
-    .select('*', { count: 'exact' })
+    .select(WORKER_COLUMNS_CARD, { count: 'exact' })
     .order('shift_verified', { ascending: false })
     .order('shifts_on_reflex', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -662,11 +687,11 @@ export async function fetchWorkersPaginated(offset: number, limit: number): Prom
   };
 }
 
-// Fetch a single worker by ID
+// Fetch a single worker by ID (full data for detail view)
 export async function fetchWorkerById(id: string): Promise<WorkerRow | null> {
   const { data, error } = await supabase
     .from('workers')
-    .select('*')
+    .select(WORKER_COLUMNS_FULL)
     .eq('id', id)
     .single();
 
@@ -678,11 +703,11 @@ export async function fetchWorkerById(id: string): Promise<WorkerRow | null> {
   return data;
 }
 
-// Fetch workers by market
+// Fetch workers by market (card display)
 export async function fetchWorkersByMarket(market: string): Promise<WorkerRow[]> {
   const { data, error } = await supabase
     .from('workers')
-    .select('*')
+    .select(WORKER_COLUMNS_CARD)
     .eq('market', market)
     .order('shift_verified', { ascending: false })
     .order('shifts_on_reflex', { ascending: false });
@@ -757,7 +782,7 @@ export async function inviteWorkerToJob(workerId: string, jobId: string): Promis
 }
 
 // Convert database row to WorkerProfile format used by the app
-import type { WorkerProfile, Endorsement, BrandTier } from '../types';
+import type { WorkerProfile, BrandTier } from '../types';
 
 export function workerRowToProfile(row: WorkerRow): WorkerProfile {
   return {
@@ -768,16 +793,10 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     shiftsOnReflex: row.shifts_on_reflex,
     brandsWorked: row.brands_worked as { name: string; tier: BrandTier }[],
     market: row.market,
-    preference: row.preference,
-    endorsements: row.endorsements as Endorsement[],
-    onTimeRating: row.on_time_rating,
-    commitmentScore: row.commitment_score,
+    endorsementCounts: row.endorsement_counts,
     invitedBackStores: row.invited_back_stores,
-    about: row.about || '',
-    previousExperience: row.previous_experience,
-    workStyle: row.work_style || { rolePreferences: [], traits: [] },
-    reliability: row.reliability,
-    availability: row.availability,
+    aboutMe: row.about_me,
+    previousExperience: row.previous_experience || [],
     reflexActivity: row.reflex_activity ? {
       shiftsByTier: row.reflex_activity.shiftsByTier,
       longestRelationship: row.reflex_activity.longestRelationship || null,
@@ -785,9 +804,21 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
       storeFavoriteCount: row.reflex_activity.storeFavoriteCount || null,
     } : null,
     activelyLooking: row.actively_looking,
-    targetBrands: row.target_brands,
     retailerQuotes: row.retailer_quotes || undefined,
     retailerSummary: row.retailer_summary || undefined,
+    // Reliability metrics
+    onTimeRating: row.on_time_rating,
+    commitmentScore: row.commitment_score,
+    tardyRatio: row.tardy_ratio,
+    tardyPercent: row.tardy_percent,
+    urgentCancelRatio: row.urgent_cancel_ratio,
+    urgentCancelPercent: row.urgent_cancel_percent,
+    // Tier and IDs
+    currentTier: row.current_tier,
+    workerUuid: row.worker_uuid,
+    workerId: row.worker_id,
+    // Interview data
+    interviewTranscript: row.interview_transcript,
   };
 }
 
@@ -801,4 +832,47 @@ export async function fetchWorkersAsProfiles(): Promise<WorkerProfile[]> {
 export async function fetchWorkersByMarketAsProfiles(market: string): Promise<WorkerProfile[]> {
   const rows = await fetchWorkersByMarket(market);
   return rows.map(workerRowToProfile);
+}
+
+// Fetch a single actively looking worker for DSL samples
+export async function fetchActivelyLookingWorker(): Promise<WorkerRow | null> {
+  const { data, error } = await supabase
+    .from('workers')
+    .select(WORKER_COLUMNS_FULL)
+    .eq('actively_looking', true)
+    .order('shifts_on_reflex', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    console.error('Error fetching actively looking worker:', error);
+    throw error;
+  }
+  return data;
+}
+
+// Fetch two sample workers for DSL (one actively looking, one not)
+export async function fetchSampleWorkersForDSL(): Promise<{ worker1: WorkerRow | null; worker2: WorkerRow | null }> {
+  const { data: activeWorkers, error: error1 } = await supabase
+    .from('workers')
+    .select(WORKER_COLUMNS_FULL)
+    .eq('actively_looking', true)
+    .order('shifts_on_reflex', { ascending: false })
+    .limit(1);
+
+  const { data: otherWorkers, error: error2 } = await supabase
+    .from('workers')
+    .select(WORKER_COLUMNS_FULL)
+    .eq('actively_looking', false)
+    .order('shifts_on_reflex', { ascending: false })
+    .limit(1);
+
+  if (error1) console.error('Error fetching active worker:', error1);
+  if (error2) console.error('Error fetching other worker:', error2);
+
+  return {
+    worker1: activeWorkers?.[0] || null,
+    worker2: otherWorkers?.[0] || null,
+  };
 }

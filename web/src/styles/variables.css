@@ -601,8 +601,8 @@ h3.type-chip-header,
    Variants: counter, text, icon
    ========================================== */
 
-/* Base pill - shared styles across all variants */
-.pill {
+/* Base tag - shared styles across all variants */
+.tag {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -614,27 +614,27 @@ h3.type-chip-header,
   flex-shrink: 0;
 }
 
-/* ── Pill Sizes ─────────────────────────────── */
+/* ── Tag Sizes ─────────────────────────────── */
 
 /* Small: 12px font */
-.pill-sm {
+.tag-sm {
   font-size: 12px;
   line-height: 16px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   gap: 4px;
 }
 
-.pill-sm .pill-icon {
+.tag-sm .tag-icon {
   width: 12px;
   height: 12px;
 }
 
-.pill-sm .pill-icon svg {
+.tag-sm .tag-icon svg {
   width: 12px;
   height: 12px;
 }
 
-.pill-sm .pill-counter {
+.tag-sm .tag-counter {
   font-size: 11px;
   min-width: 16px;
   height: 16px;
@@ -642,24 +642,24 @@ h3.type-chip-header,
 }
 
 /* Medium: 14px font (default) */
-.pill-md {
+.tag-md {
   font-size: 14px;
   line-height: 20px;
-  padding: 6px 12px;
+  padding: 4px 12px;
   gap: 6px;
 }
 
-.pill-md .pill-icon {
+.tag-md .tag-icon {
   width: 14px;
   height: 14px;
 }
 
-.pill-md .pill-icon svg {
+.tag-md .tag-icon svg {
   width: 14px;
   height: 14px;
 }
 
-.pill-md .pill-counter {
+.tag-md .tag-counter {
   font-size: 12px;
   min-width: 18px;
   height: 18px;
@@ -667,100 +667,100 @@ h3.type-chip-header,
 }
 
 /* Large: 16px font */
-.pill-lg {
+.tag-lg {
   font-size: 16px;
   line-height: 22px;
-  padding: 8px 14px;
-  gap: 8px;
+  padding: 6px 14px;
+  gap: 6px;
 }
 
-.pill-lg .pill-icon {
+.tag-lg .tag-icon {
   width: 16px;
   height: 16px;
 }
 
-.pill-lg .pill-icon svg {
+.tag-lg .tag-icon svg {
   width: 16px;
   height: 16px;
 }
 
-.pill-lg .pill-counter {
+.tag-lg .tag-counter {
   font-size: 13px;
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
 }
 
-/* ── Pill Styles ────────────────────────────── */
+/* ── Tag Styles ────────────────────────────── */
 
 /* Lite Gray - navy tint background, primary text */
-.pill-lite-gray {
+.tag-lite-gray {
   background: var(--background-navy);
   color: var(--text-primary);
   border: none;
 }
 
-.pill-lite-gray .pill-counter {
+.tag-lite-gray .tag-counter {
   background: var(--navy-200);
   color: var(--text-primary);
 }
 
-.pill-lite-gray .pill-icon {
+.tag-lite-gray .tag-icon {
   color: var(--text-secondary);
 }
 
-/* Green - green background, dark green text (shift verified style) */
-.pill-green {
+/* Green - green background, primary text */
+.tag-green {
   background: var(--green-100);
-  color: var(--green-700);
+  color: var(--text-primary);
   border: none;
 }
 
-.pill-green .pill-counter {
+.tag-green .tag-counter {
   background: var(--green-200);
-  color: var(--green-700);
+  color: var(--text-primary);
 }
 
-.pill-green .pill-icon {
-  color: var(--green-600);
+.tag-green .tag-icon {
+  color: var(--text-primary);
 }
 
 /* Dark Gray - dark background, light text */
-.pill-dark-gray {
+.tag-dark-gray {
   background: var(--stone-700);
   color: #ffffff;
   border: none;
 }
 
-.pill-dark-gray .pill-counter {
+.tag-dark-gray .tag-counter {
   background: var(--stone-600);
   color: #ffffff;
 }
 
-.pill-dark-gray .pill-icon {
+.tag-dark-gray .tag-icon {
   color: rgba(255, 255, 255, 0.8);
 }
 
 /* Stroke - white background, border, primary text */
-.pill-stroke {
+.tag-stroke {
   background: #ffffff;
   color: var(--text-primary);
   border: 1px solid var(--quaternary);
 }
 
-.pill-stroke .pill-counter {
+.tag-stroke .tag-counter {
   background: var(--stone-100);
   color: var(--text-primary);
 }
 
-.pill-stroke .pill-icon {
+.tag-stroke .tag-icon {
   color: var(--text-secondary);
 }
 
-/* ── Pill Variant Elements ──────────────────── */
+/* ── Tag Variant Elements ──────────────────── */
 
 /* Counter - always left of text */
-.pill-counter {
+.tag-counter {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -769,7 +769,7 @@ h3.type-chip-header,
 }
 
 /* Icon container - always left of text */
-.pill-icon {
+.tag-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -777,58 +777,73 @@ h3.type-chip-header,
 }
 
 /* Text */
-.pill-text {
+.tag-text {
   display: inline;
 }
 
-/* ── Additional Pill Color Variants ─────────── */
+/* ── Additional Tag Color Variants ─────────── */
 
 /* Blue */
-.pill-blue {
+.tag-blue {
   background: var(--blue-100);
-  color: var(--blue-700);
+  color: var(--text-primary);
   border: none;
 }
 
-.pill-blue .pill-counter {
+.tag-blue .tag-counter {
   background: var(--blue-200);
-  color: var(--blue-700);
+  color: var(--text-primary);
 }
 
-.pill-blue .pill-icon {
-  color: var(--blue-600);
+.tag-blue .tag-icon {
+  color: var(--text-primary);
 }
 
 /* Pink */
-.pill-pink {
+.tag-pink {
   background: var(--pink-200);
-  color: var(--pink-700);
+  color: var(--text-primary);
   border: none;
 }
 
-.pill-pink .pill-counter {
+.tag-pink .tag-counter {
   background: var(--pink-300);
-  color: var(--pink-700);
+  color: var(--text-primary);
 }
 
-.pill-pink .pill-icon {
-  color: var(--pink-600);
+.tag-pink .tag-icon {
+  color: var(--text-primary);
 }
 
-/* Yellow */
-.pill-yellow {
-  background: var(--yellow-100);
-  color: var(--yellow-700);
-  border: none;
+
+/* ==========================================
+   Design System Panel - Shared styles
+   ========================================== */
+
+.ds-pill-with-spec {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 
-.pill-yellow .pill-counter {
-  background: var(--yellow-200);
-  color: var(--yellow-700);
+.ds-spec-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-.pill-yellow .pill-icon {
-  color: var(--yellow-600);
+.ds-spec-text {
+  font-size: 10px;
+  color: var(--primary);
+  font-family: monospace;
+}
+
+.ds-pills-styles-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
 }
 
 /* ==========================================

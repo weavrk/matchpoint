@@ -4,7 +4,7 @@ import { ChatInterface } from '../../../components/Chat';
 import { ScrapeModal, type ScrapeConfig } from '../../../components/ScrapeModal';
 import { ScrapeProgressModal, type ScrapeProgressData } from '../../../components/ScrapeProgressModal';
 import { UnmatchedRolesModal } from '../../../components/UnmatchedRolesModal';
-import { WorkerCardTeaser, WorkerCardFull } from '../../../components/Workers';
+import { WorkerCardCompact, WorkerCardFull } from '../../../components/Workers';
 import { GeminiService } from '../../../services/gemini';
 import { matchWorkers } from '../../../services/workerMatching';
 import {
@@ -28,7 +28,7 @@ import {
   type ScrapedJob,
   type JobPosting,
 } from '../../../services/supabase';
-import { fetchWorkersAsProfiles } from '../../../services/supabase';
+import { fetchWorkersAsProfiles, fetchWorkersByMarketAsProfiles } from '../../../services/supabase';
 import { SAMPLE_RETAILER } from '../../../data/retailer';
 import type { ChatMessage, MatchedWorker, JobSpec, PublishedJob } from '../../../types';
 import { PublishedJobCard } from '../../../components/Jobs';
@@ -742,19 +742,18 @@ export function V1JobFocus({ agentActive, showOz: _showOz }: VariantProps) {
   const [_workersLoading, setWorkersLoading] = useState(true);
   const [selectedTalentWorker, setSelectedTalentWorker] = useState<MatchedWorker | null>(null);
   const workerCardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const [talentMarketFilter, setTalentMarketFilter] = useState('Austin');
 
   // Fetch data from Supabase on mount
   useEffect(() => {
     async function loadData() {
       setIsLoadingData(true);
-      setWorkersLoading(true);
       try {
-        const [marketsData, rolesData, retailersData, retailersLiveData, workersData] = await Promise.all([
+        const [marketsData, rolesData, retailersData, retailersLiveData] = await Promise.all([
           fetchMarkets(),
           fetchRoles(),
           fetchRetailers(),
           fetchRetailersLive(),
-          fetchWorkersAsProfiles(),
         ]);
 
         // Transform markets data
@@ -781,8 +780,7 @@ export function V1JobFocus({ agentActive, showOz: _showOz }: VariantProps) {
         // Set retailers live data
         setRetailersLive(retailersLiveData);
 
-        // Set workers data (converted to MatchedWorker format)
-        setAllTalentWorkers(workersData.map(w => ({ ...w, matchScore: 0, matchReasons: [] })));
+        // Workers are now fetched separately by market filter
       } catch (error) {
         console.error('Failed to load data from Supabase:', error);
         // Fall back to local data
@@ -791,7 +789,6 @@ export function V1JobFocus({ agentActive, showOz: _showOz }: VariantProps) {
         setOzRetailers(RETAILERS);
       }
       setIsLoadingData(false);
-      setWorkersLoading(false);
     }
     loadData();
   }, []);
@@ -884,6 +881,22 @@ export function V1JobFocus({ agentActive, showOz: _showOz }: VariantProps) {
       el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }, [retailersMatchIndex, retailersMatches.length]);
+
+  // Reflex Talent - fetch workers when market filter changes
+  useEffect(() => {
+    async function loadWorkersForMarket() {
+      setWorkersLoading(true);
+      try {
+        const workersData = await fetchWorkersByMarketAsProfiles(talentMarketFilter);
+        setAllTalentWorkers(workersData.map(w => ({ ...w, matchScore: 0, matchReasons: [] })));
+        setTalentDisplayCount(6); // Reset pagination
+      } catch (error) {
+        console.error('Error fetching workers for market:', error);
+      }
+      setWorkersLoading(false);
+    }
+    loadWorkersForMarket();
+  }, [talentMarketFilter]);
 
   // Reflex Talent lazy load - intersection observer
   useEffect(() => {
@@ -1741,12 +1754,25 @@ export function V1JobFocus({ agentActive, showOz: _showOz }: VariantProps) {
       {activeTab === 'reflex-talent' && (() => {
         const shiftVerifiedWorkers = allTalentWorkers.filter(w => w.shiftVerified);
         const communityWorkers = allTalentWorkers.filter(w => !w.shiftVerified);
+        // Get unique markets from ozMarkets for the dropdown
+        const uniqueMarkets = [...new Set(ozMarkets.map(m => m.name))].sort();
         return (
           <div className={`reflex-talent-content${selectedTalentWorker ? ' has-detail-panel' : ''}`}>
             <div className="reflex-talent-main">
-              <p className="reflex-talent-header type-prompt-question">
-                Explore Reflex talent in Austin
-              </p>
+              <div className="reflex-talent-header-row">
+                <p className="reflex-talent-header type-prompt-question">
+                  Explore Reflex talent in
+                </p>
+                <select
+                  className="reflex-talent-market-select"
+                  value={talentMarketFilter}
+                  onChange={(e) => setTalentMarketFilter(e.target.value)}
+                >
+                  {uniqueMarkets.map((market) => (
+                    <option key={market} value={market}>{market}</option>
+                  ))}
+                </select>
+              </div>
 
               {/* Shift Verified Workers */}
               {shiftVerifiedWorkers.length > 0 && (
@@ -1758,7 +1784,7 @@ export function V1JobFocus({ agentActive, showOz: _showOz }: VariantProps) {
                         key={worker.id}
                         ref={(el) => { workerCardRefs.current[worker.id] = el; }}
                       >
-                        <WorkerCardTeaser
+                        <WorkerCardCompact
                           worker={worker}
                           onClick={() => {
                             setSelectedTalentWorker(worker);
@@ -1788,7 +1814,7 @@ export function V1JobFocus({ agentActive, showOz: _showOz }: VariantProps) {
                         key={worker.id}
                         ref={(el) => { workerCardRefs.current[worker.id] = el; }}
                       >
-                        <WorkerCardTeaser
+                        <WorkerCardCompact
                           worker={worker}
                           onClick={() => {
                             setSelectedTalentWorker(worker);

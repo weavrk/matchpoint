@@ -175,15 +175,15 @@ export function WorkerCard({ worker }: WorkerCardProps) {
           <div className="worker-name-row">
             <h3 className="worker-name">{worker.name}</h3>
             {worker.shiftVerified && (
-              <span className="pill pill-green pill-sm">
-                <span className="pill-icon"><BadgeCheck size={12} /></span>
-                <span className="pill-text">Shift Verified</span>
+              <span className="tag tag-green tag-sm">
+                <span className="tag-icon"><BadgeCheck size={12} /></span>
+                <span className="tag-text">Shift Verified</span>
               </span>
             )}
             {worker.activelyLooking && (
-              <span className="pill pill-lite-gray pill-sm">
-                <span className="pill-icon"><Search size={12} /></span>
-                <span className="pill-text">Actively looking</span>
+              <span className="tag tag-lite-gray tag-sm">
+                <span className="tag-icon"><Search size={12} /></span>
+                <span className="tag-text">Actively looking</span>
               </span>
             )}
           </div>
@@ -283,11 +283,11 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                     <Star size={12} /> Store favorite at {reflexActivity.storeFavoriteCount} locations
                   </span>
                 )}
-                {worker.onTimeRating && (
-                  <span className="reflex-metric good">On-time: {worker.onTimeRating}</span>
+                {worker.tardyPercent !== undefined && worker.tardyPercent < 10 && (
+                  <span className="reflex-metric good">Exceptional Punctuality</span>
                 )}
-                {worker.commitmentScore && (
-                  <span className="reflex-metric good">Commitment: {worker.commitmentScore}</span>
+                {worker.urgentCancelPercent !== undefined && worker.urgentCancelPercent < 5 && (
+                  <span className="reflex-metric good">Low Cancellations</span>
                 )}
               </div>
 
@@ -299,8 +299,8 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <span className="section-label">Retailers on Reflex</span>
                   <div className="brands-list">
                     {worker.brandsWorked.map((brand, idx) => (
-                      <span key={idx} className="pill pill-lite-gray pill-sm">
-                        <span className="pill-text">{brand.name}</span>
+                      <span key={idx} className="tag tag-lite-gray tag-sm">
+                        <span className="tag-text">{brand.name}</span>
                       </span>
                     ))}
                   </div>
@@ -313,9 +313,9 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <span className="section-label">Retailer Endorsements</span>
                   <div className="endorsements-list">
                     {worker.endorsements.map((e, idx) => (
-                      <span key={idx} className="pill pill-stroke pill-sm">
-                        <span className="pill-icon">{ENDORSEMENT_CONFIG[e]?.icon}</span>
-                        <span className="pill-text">{ENDORSEMENT_CONFIG[e]?.label}</span>
+                      <span key={idx} className="tag tag-stroke tag-sm">
+                        <span className="tag-icon">{ENDORSEMENT_CONFIG[e]?.icon}</span>
+                        <span className="tag-text">{ENDORSEMENT_CONFIG[e]?.label}</span>
                       </span>
                     ))}
                   </div>
@@ -354,9 +354,9 @@ export function WorkerCard({ worker }: WorkerCardProps) {
               {availabilityTags.length > 0 && (
                 <div className="availability-row">
                   {availabilityTags.map((tag, idx) => (
-                    <span key={idx} className="pill pill-stroke pill-sm">
-                      <span className="pill-icon">{tag.icon}</span>
-                      <span className="pill-text">{tag.label}</span>
+                    <span key={idx} className="tag tag-stroke tag-sm">
+                      <span className="tag-icon">{tag.icon}</span>
+                      <span className="tag-text">{tag.label}</span>
                     </span>
                   ))}
                 </div>
