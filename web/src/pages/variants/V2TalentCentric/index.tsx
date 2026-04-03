@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, ShieldCheck, Unlock, MapPin } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, ShieldCheck, Unlock, Clock, Store, Briefcase, CalendarDays, CalendarClock, CalendarRange } from 'lucide-react';
 import { SAMPLE_WORKERS } from '../../../data/workers';
 import { WorkerCardTeaser } from '../../../components/Workers/WorkerCardTeaser';
+import { V2NavFooter } from './V2NavFooter';
 import type { MatchedWorker } from '../../../types';
 import './styles.css';
 
@@ -191,14 +192,16 @@ interface ThisOrThatQuestion {
   question: string;
   optionA: { label: string; value: string };
   optionB: { label: string; value: string };
+  optionC?: { label: string; value: string };
 }
 
 const QUESTIONS: ThisOrThatQuestion[] = [
   {
     id: 'employment',
-    question: 'What type of role?',
+    question: 'What type of employment?',
     optionA: { label: 'Full-time', value: 'FT' },
     optionB: { label: 'Part-time', value: 'PT' },
+    optionC: { label: 'Open to either', value: 'either' },
   },
   {
     id: 'experience',
@@ -679,358 +682,397 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
           {/* Step 1: Location Selection */}
           {step === 'location' && (
             <div className={`v2-location-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
-              <div className="v2-step-header">
-                <h1 className="type-tagline">First, let's establish what city you're looking to hire in.</h1>
-                <p className="type-prompt-question v2-step-subtitle">Select a location or search for a city</p>
-              </div>
+              <div className="v2-location-header-section">
+                <div className="v2-step-header">
+                  <h1 className="type-tagline">First, let's establish what city you're looking to hire in.</h1>
+                  <p className="type-prompt-question v2-step-subtitle">Select a location or search for a city</p>
+                </div>
 
-              <div className="v2-location-controls">
-                <div className="v2-location-dropdown">
-                  <select
-                    value=""
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        const store = STORE_LOCATIONS.find(s => s.id === e.target.value);
-                        if (store) {
-                          setSelectedLocation(store.marketId);
+                <div className="v2-location-controls">
+                  <div className="v2-location-dropdown">
+                    <select
+                      value={STORE_LOCATIONS.find(s => s.marketId === selectedLocation)?.id || ''}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const store = STORE_LOCATIONS.find(s => s.id === e.target.value);
+                          if (store) {
+                            setSelectedLocation(store.marketId);
+                          }
+                        } else {
+                          setSelectedLocation(null);
                         }
-                      }
-                    }}
-                    className="v2-location-select"
-                  >
-                    <option value="">Select a location</option>
-                    {STORE_LOCATIONS.map(location => (
-                      <option key={location.id} value={location.id}>
-                        {location.name}
-                      </option>
+                      }}
+                      className="v2-location-select"
+                    >
+                      <option value="">Select a location</option>
+                      {STORE_LOCATIONS.map(location => (
+                        <option key={location.id} value={location.id}>
+                          {location.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <span className="v2-location-or">or</span>
+
+                  <div className="v2-search-input-wrapper v2-location-search">
+                    <Search size={18} className="v2-search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search cities..."
+                      value={locationSearch}
+                      onChange={(e) => setLocationSearch(e.target.value)}
+                      className="v2-search-input"
+                    />
+                    {locationSearch && (
+                      <button
+                        className="v2-search-clear"
+                        onClick={() => setLocationSearch('')}
+                        aria-label="Clear search"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="v2-location-grid-wrapper">
+                <div className={`v2-location-grid ${selectedLocation && sidebarOpen ? 'sidebar-open' : ''}`}>
+                  {[...MARKETS]
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .filter(m => {
+                      if (!locationSearch.trim()) return true;
+                      const search = locationSearch.toLowerCase();
+                      return m.name.toLowerCase().includes(search) || m.state.toLowerCase().includes(search);
+                    })
+                    .map(market => (
+                      <button
+                        key={market.id}
+                        className={`v2-location-chip ${selectedLocation === market.id ? 'selected' : ''}`}
+                        onClick={() => setSelectedLocation(selectedLocation === market.id ? null : market.id)}
+                      >
+                        <span className="v2-chip-text">{market.name}, <strong>{market.state}</strong></span>
+                        <span className="v2-chip-icon">
+                          {selectedLocation === market.id && <Check size={14} />}
+                        </span>
+                      </button>
                     ))}
-                  </select>
-                </div>
-
-                <span className="v2-location-or">or</span>
-
-                <div className="v2-search-input-wrapper v2-location-search">
-                  <Search size={18} className="v2-search-icon" />
-                  <input
-                    type="text"
-                    placeholder="Search cities..."
-                    value={locationSearch}
-                    onChange={(e) => setLocationSearch(e.target.value)}
-                    className="v2-search-input"
-                  />
-                  {locationSearch && (
-                    <button
-                      className="v2-search-clear"
-                      onClick={() => setLocationSearch('')}
-                      aria-label="Clear search"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
                 </div>
               </div>
 
-              <div className="v2-location-grid">
-                {[...MARKETS]
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .filter(m => {
-                    if (!locationSearch.trim()) return true;
-                    const search = locationSearch.toLowerCase();
-                    return m.name.toLowerCase().includes(search) || m.state.toLowerCase().includes(search);
-                  })
-                  .map(market => (
-                    <button
-                      key={market.id}
-                      className={`v2-location-chip ${selectedLocation === market.id ? 'selected' : ''}`}
-                      onClick={() => setSelectedLocation(selectedLocation === market.id ? null : market.id)}
-                    >
-                      <span className="v2-chip-text">{market.name}, <strong>{market.state}</strong></span>
-                      <span className="v2-chip-icon">
-                        {selectedLocation === market.id && <Check size={14} />}
-                      </span>
-                    </button>
-                  ))}
-              </div>
-
-              <div className="v2-location-buttons">
-                <button
-                  className="v2-btn-back"
-                  onClick={() => transitionToStep('welcome', 'back')}
-                >
-                  <ChevronLeft size={20} />
-                  Back
-                </button>
-                <button
-                  className="v2-btn-next"
-                  onClick={() => transitionToStep('focus', 'forward')}
-                  disabled={!selectedLocation}
-                >
-                  Next
-                  <ChevronRight size={20} />
-                </button>
-              </div>
+              <V2NavFooter
+                showBack={false}
+                onNext={() => transitionToStep('focus', 'forward')}
+                nextDisabled={!selectedLocation}
+              />
             </div>
           )}
 
           {/* Step 2: Focus Area Selection */}
           {step === 'focus' && (
             <div className={`v2-focus-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
-              <div className="v2-step-header">
-                <h1 className="type-tagline">What's a key area you want to establish for a new hire?</h1>
+              <div className="v2-step-content-inner">
+                <div className="v2-step-header">
+                  <h1 className="type-tagline">What's a key area you want to establish for a new hire?</h1>
+                </div>
+
+                <div className="v2-focus-chips">
+                  <button
+                    className={`welcome-card ${focusArea === 'employment' ? 'active' : ''}`}
+                    onClick={() => {
+                      setFocusArea('employment');
+                      transitionToStep('employment', 'forward');
+                    }}
+                  >
+                    <div className="welcome-card-icon">
+                      {focusArea === 'employment' ? <Check size={24} /> : <Clock size={24} />}
+                    </div>
+                    <h3 className="welcome-card-title type-chip-header-lg">Type of employment</h3>
+                  </button>
+                  <button
+                    className={`welcome-card ${focusArea === 'brands' ? 'active' : ''}`}
+                    onClick={() => {
+                      setFocusArea('brands');
+                      transitionToStep('brands', 'forward');
+                    }}
+                  >
+                    <div className="welcome-card-icon">
+                      {focusArea === 'brands' ? <Check size={24} /> : <Store size={24} />}
+                    </div>
+                    <h3 className="welcome-card-title type-chip-header-lg">Previous brand experience</h3>
+                  </button>
+                  <button
+                    className={`welcome-card ${focusArea === 'roles' ? 'active' : ''}`}
+                    onClick={() => {
+                      setFocusArea('roles');
+                      transitionToStep('roles', 'forward');
+                    }}
+                  >
+                    <div className="welcome-card-icon">
+                      {focusArea === 'roles' ? <Check size={24} /> : <Briefcase size={24} />}
+                    </div>
+                    <h3 className="welcome-card-title type-chip-header-lg">Previous role experience</h3>
+                  </button>
+                </div>
               </div>
 
-              <div className="v2-focus-chips">
-                <button
-                  className={`v2-focus-chip ${focusArea === 'employment' ? 'selected' : ''}`}
-                  onClick={() => {
-                    setFocusArea('employment');
-                    transitionToStep('employment', 'forward');
-                  }}
-                >
-                  <span className="v2-focus-chip-title">Type of employment</span>
-                  <span className="v2-focus-chip-subtitle">Part-time or Full-time</span>
-                </button>
-                <button
-                  className={`v2-focus-chip ${focusArea === 'brands' ? 'selected' : ''}`}
-                  onClick={() => {
-                    setFocusArea('brands');
-                    transitionToStep('brands', 'forward');
-                  }}
-                >
-                  <span className="v2-focus-chip-title">Previous brand experience</span>
-                </button>
-                <button
-                  className={`v2-focus-chip ${focusArea === 'roles' ? 'selected' : ''}`}
-                  onClick={() => {
-                    setFocusArea('roles');
-                    transitionToStep('roles', 'forward');
-                  }}
-                >
-                  <span className="v2-focus-chip-title">Previous role experience</span>
-                </button>
-              </div>
+              <V2NavFooter
+                onBack={() => transitionToStep('location', 'back')}
+              />
             </div>
           )}
 
           {/* Step 2a: Employment Type Selection */}
           {step === 'employment' && (
             <div className={`v2-employment-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
-              <div className="v2-step-header">
-                <h1 className="type-tagline">What type of employment?</h1>
+              <div className="v2-step-content-inner">
+                <div className="v2-step-header">
+                  <h1 className="type-tagline">What type of employment?</h1>
+                </div>
+
+                <div className="v2-employment-chips">
+                  <button
+                    className={`welcome-card ${employmentType === 'full-time' ? 'active' : ''}`}
+                    onClick={() => {
+                      setEmploymentType('full-time');
+                      transitionToStep('brands', 'forward');
+                    }}
+                  >
+                    <div className="welcome-card-icon">
+                      {employmentType === 'full-time' ? <Check size={24} /> : <CalendarDays size={24} />}
+                    </div>
+                    <h3 className="welcome-card-title type-chip-header-lg">Full-time</h3>
+                  </button>
+                  <button
+                    className={`welcome-card ${employmentType === 'part-time' ? 'active' : ''}`}
+                    onClick={() => {
+                      setEmploymentType('part-time');
+                      transitionToStep('brands', 'forward');
+                    }}
+                  >
+                    <div className="welcome-card-icon">
+                      {employmentType === 'part-time' ? <Check size={24} /> : <CalendarClock size={24} />}
+                    </div>
+                    <h3 className="welcome-card-title type-chip-header-lg">Part-time</h3>
+                  </button>
+                  <button
+                    className={`welcome-card ${employmentType === 'either' ? 'active' : ''}`}
+                    onClick={() => {
+                      setEmploymentType('either');
+                      transitionToStep('brands', 'forward');
+                    }}
+                  >
+                    <div className="welcome-card-icon">
+                      {employmentType === 'either' ? <Check size={24} /> : <CalendarRange size={24} />}
+                    </div>
+                    <h3 className="welcome-card-title type-chip-header-lg">Open to either</h3>
+                  </button>
+                </div>
               </div>
 
-              <div className="v2-employment-chips">
-                <button
-                  className={`v2-employment-chip ${employmentType === 'full-time' ? 'selected' : ''}`}
-                  onClick={() => {
-                    setEmploymentType('full-time');
-                    transitionToStep('brands', 'forward');
-                  }}
-                >
-                  Full-time
-                </button>
-                <button
-                  className={`v2-employment-chip ${employmentType === 'part-time' ? 'selected' : ''}`}
-                  onClick={() => {
-                    setEmploymentType('part-time');
-                    transitionToStep('brands', 'forward');
-                  }}
-                >
-                  Part-time
-                </button>
-              </div>
+              <V2NavFooter
+                onBack={() => transitionToStep('focus', 'back')}
+              />
             </div>
           )}
 
           {/* Step 2b: Role Selection */}
           {step === 'roles' && (
             <div className={`v2-roles-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
-              <div className="v2-step-header">
-                <h1 className="type-tagline">What role experience are you looking for?</h1>
-              </div>
+              <div className="v2-step-content-inner v2-step-content-scroll">
+                <div className="v2-step-header">
+                  <h1 className="type-tagline">What role experience are you looking for?</h1>
+                </div>
 
-              <div className="v2-role-search-wrapper">
-                <div className="v2-search-input-wrapper">
-                  <Search size={16} className="v2-search-icon" />
-                  <input
-                    type="text"
-                    placeholder="Type a role..."
-                    value={roleSearch}
-                    onChange={(e) => setRoleSearch(e.target.value)}
-                    className="v2-search-input"
-                  />
-                  {roleSearch && (
+                <div className="v2-role-search-wrapper">
+                  <div className="v2-search-input-wrapper">
+                    <Search size={16} className="v2-search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Type a role..."
+                      value={roleSearch}
+                      onChange={(e) => setRoleSearch(e.target.value)}
+                      className="v2-search-input"
+                    />
+                    {roleSearch && (
+                      <button
+                        className="v2-search-clear"
+                        onClick={() => setRoleSearch('')}
+                        aria-label="Clear search"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                  {roleSearch.trim() && (
                     <button
-                      className="v2-search-clear"
-                      onClick={() => setRoleSearch('')}
-                      aria-label="Clear search"
+                      className="v2-role-search-submit"
+                      onClick={() => {
+                        setSelectedRole(roleSearch.trim());
+                        transitionToStep('brands', 'forward');
+                      }}
                     >
-                      <X size={14} />
+                      Use "{roleSearch.trim()}"
+                      <ChevronRight size={16} />
                     </button>
                   )}
                 </div>
-                {roleSearch.trim() && (
-                  <button
-                    className="v2-role-search-submit"
-                    onClick={() => {
-                      setSelectedRole(roleSearch.trim());
-                      transitionToStep('brands', 'forward');
-                    }}
-                  >
-                    Use "{roleSearch.trim()}"
-                    <ChevronRight size={16} />
-                  </button>
-                )}
-              </div>
 
-              <p className="v2-role-divider-text">Or select from below</p>
+                <p className="v2-role-divider-text">Or select from below</p>
 
-              <div className="v2-role-categories">
-                {Object.entries(JOB_ROLES).map(([key, category]) => (
-                  <div key={key} className="v2-role-category">
-                    <h3 className="v2-role-category-header">{category.label}</h3>
-                    <div className="v2-role-chips">
-                      {category.roles.map(role => (
-                        <button
-                          key={role.title}
-                          className={`v2-role-chip ${selectedRole === role.title ? 'selected' : ''}`}
-                          onClick={() => {
-                            setSelectedRole(role.title);
-                            transitionToStep('brands', 'forward');
-                          }}
-                        >
-                          {role.title}
-                        </button>
-                      ))}
+                <div className="v2-role-categories">
+                  {Object.entries(JOB_ROLES).map(([key, category]) => (
+                    <div key={key} className="v2-role-category">
+                      <h3 className="v2-role-category-header">{category.label}</h3>
+                      <div className="v2-role-chips">
+                        {category.roles.map(role => (
+                          <button
+                            key={role.title}
+                            className={`v2-role-chip ${selectedRole === role.title ? 'selected' : ''}`}
+                            onClick={() => {
+                              setSelectedRole(role.title);
+                              transitionToStep('brands', 'forward');
+                            }}
+                          >
+                            {role.title}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+
+              <V2NavFooter
+                onBack={() => transitionToStep('focus', 'back')}
+              />
             </div>
           )}
 
           {/* Step 3: Brand Selection */}
         {step === 'brands' && (
           <div className={`v2-brands-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
-            <div className="v2-step-header">
-              <h1 className="type-tagline">What brand experience do you trust?</h1>
-              <p className="type-prompt-question">
-                Select the brands whose talent you would want on your team. We'll show you Reflexers with experience there.
-              </p>
-            </div>
+            <div className="v2-brands-header-section">
+              <div className="v2-step-header">
+                <h1 className="type-tagline">What brand experience do you trust?</h1>
+                <p className="type-prompt-question">
+                  Select the brands whose talent you would want on your team. We'll show you Reflexers with experience there.
+                </p>
+              </div>
 
-            <div className="v2-brand-grid-header">
-              <div className="v2-brand-search">
-                <div className="v2-search-input-wrapper">
-                  <Search size={16} className="v2-search-icon" />
-                  <input
-                    type="text"
-                    placeholder="Search brands..."
-                    value={brandSearch}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="v2-search-input"
-                  />
+              <div className="v2-brand-grid-header">
+                <div className="v2-brand-search">
+                  <div className="v2-search-input-wrapper">
+                    <Search size={16} className="v2-search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Search brands..."
+                      value={brandSearch}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      className="v2-search-input"
+                    />
+                    {brandSearch && (
+                      <button
+                        className="v2-search-clear"
+                        onClick={() => setBrandSearch('')}
+                        aria-label="Clear search"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
                   {brandSearch && (
-                    <button
-                      className="v2-search-clear"
-                      onClick={() => setBrandSearch('')}
-                      aria-label="Clear search"
-                    >
-                      <X size={14} />
-                    </button>
+                    <span className={`v2-search-results ${searchResults && searchResults.length === 0 ? 'no-results' : ''}`}>
+                      {searchResults && searchResults.length === 0
+                        ? 'No results found'
+                        : `${searchResults?.length} brand${searchResults?.length === 1 ? '' : 's'} found`}
+                    </span>
                   )}
                 </div>
-                {brandSearch && (
-                  <span className={`v2-search-results ${searchResults && searchResults.length === 0 ? 'no-results' : ''}`}>
-                    {searchResults && searchResults.length === 0
-                      ? 'No results found'
-                      : `${searchResults?.length} brand${searchResults?.length === 1 ? '' : 's'} found`}
-                  </span>
-                )}
-              </div>
-              <button
-                className="v2-clear-all"
-                onClick={() => setSelectedBrands([])}
-                disabled={selectedBrands.length === 0}
-              >
-                Clear all
-              </button>
-            </div>
-
-            <div className={`v2-brand-grid ${!sidebarOpen ? 'expanded' : ''}`}>
-              {BRAND_LOGOS.map(brand => (
                 <button
-                  key={brand.id}
-                  ref={(el) => { brandRefs.current[brand.id] = el; }}
-                  className={`v2-brand-tile ${selectedBrands.includes(brand.id) ? 'selected' : ''}${searchResults && searchResults.some(r => r.id === brand.id) ? ' search-match' : ''}`}
-                  onClick={() => toggleBrand(brand.id)}
+                  className="v2-clear-all"
+                  onClick={() => setSelectedBrands([])}
+                  disabled={selectedBrands.length === 0}
                 >
-                  <img src={brand.logo} alt="" className="v2-brand-logo" />
-                  {selectedBrands.includes(brand.id) && (
-                    <div className="v2-brand-check">
-                      <Check size={16} />
-                    </div>
-                  )}
+                  Clear all
                 </button>
-              ))}
+              </div>
             </div>
 
-            <div className="v2-step-footer">
-              <button
-                className="v2-continue-btn"
-                disabled={selectedBrands.length === 0}
-                onClick={handleContinue}
-              >
-                Continue
-                <ChevronRight size={20} />
-              </button>
-              {selectedBrands.length > 0 && (
-                <span className="v2-selection-count">{selectedBrands.length} selected</span>
-              )}
+            <div className="v2-brands-grid-wrapper">
+              <div className={`v2-brand-grid ${!sidebarOpen ? 'expanded' : ''}`}>
+                {BRAND_LOGOS.map(brand => (
+                  <button
+                    key={brand.id}
+                    ref={(el) => { brandRefs.current[brand.id] = el; }}
+                    className={`v2-brand-tile ${selectedBrands.includes(brand.id) ? 'selected' : ''}${searchResults && searchResults.some(r => r.id === brand.id) ? ' search-match' : ''}`}
+                    onClick={() => toggleBrand(brand.id)}
+                  >
+                    <img src={brand.logo} alt="" className="v2-brand-logo" />
+                    {selectedBrands.includes(brand.id) && (
+                      <div className="v2-brand-check">
+                        <Check size={16} />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            <V2NavFooter
+              onBack={() => transitionToStep(focusArea || 'focus', 'back')}
+              onNext={handleContinue}
+              nextDisabled={selectedBrands.length === 0}
+              nextLabel={selectedBrands.length > 0 ? `Continue (${selectedBrands.length})` : 'Continue'}
+            />
           </div>
         )}
 
         {/* Step 2: This or That Questions */}
         {step === 'questions' && currentQuestion && (
-          <div className="v2-questions-step">
-            <div className="v2-step-header">
-              <span className="v2-question-count">Question {currentQuestionIndex + 1} of {QUESTIONS.length}</span>
-              <h1 className="type-tagline">{currentQuestion.question}</h1>
-            </div>
+          <div className={`v2-employment-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
+            <div className="v2-step-content-inner">
+              <div className="v2-step-header">
+                <h1 className="type-tagline">{currentQuestion.question}</h1>
+              </div>
 
-            <div className="v2-this-or-that">
-              <button
-                className={`v2-choice-btn ${answers[currentQuestion.id] === currentQuestion.optionA.value ? 'selected' : ''}`}
-                onClick={() => handleAnswer(currentQuestion.id, currentQuestion.optionA.value)}
-              >
-                <span className="v2-choice-label">{currentQuestion.optionA.label}</span>
-                {answers[currentQuestion.id] === currentQuestion.optionA.value && (
-                  <Check size={24} className="v2-choice-check" />
+              <div className="v2-employment-chips">
+                <button
+                  className={`welcome-card ${answers[currentQuestion.id] === currentQuestion.optionA.value ? 'active' : ''}`}
+                  onClick={() => handleAnswer(currentQuestion.id, currentQuestion.optionA.value)}
+                >
+                  <div className="welcome-card-icon">
+                    {answers[currentQuestion.id] === currentQuestion.optionA.value ? <Check size={24} /> : <CalendarDays size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">{currentQuestion.optionA.label}</h3>
+                </button>
+                <button
+                  className={`welcome-card ${answers[currentQuestion.id] === currentQuestion.optionB.value ? 'active' : ''}`}
+                  onClick={() => handleAnswer(currentQuestion.id, currentQuestion.optionB.value)}
+                >
+                  <div className="welcome-card-icon">
+                    {answers[currentQuestion.id] === currentQuestion.optionB.value ? <Check size={24} /> : <CalendarClock size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">{currentQuestion.optionB.label}</h3>
+                </button>
+                {currentQuestion.optionC && (
+                  <button
+                    className={`welcome-card ${answers[currentQuestion.id] === currentQuestion.optionC.value ? 'active' : ''}`}
+                    onClick={() => handleAnswer(currentQuestion.id, currentQuestion.optionC!.value)}
+                  >
+                    <div className="welcome-card-icon">
+                      {answers[currentQuestion.id] === currentQuestion.optionC.value ? <Check size={24} /> : <CalendarRange size={24} />}
+                    </div>
+                    <h3 className="welcome-card-title type-chip-header-lg">{currentQuestion.optionC.label}</h3>
+                  </button>
                 )}
-              </button>
-
-              <span className="v2-or-divider">or</span>
-
-              <button
-                className={`v2-choice-btn ${answers[currentQuestion.id] === currentQuestion.optionB.value ? 'selected' : ''}`}
-                onClick={() => handleAnswer(currentQuestion.id, currentQuestion.optionB.value)}
-              >
-                <span className="v2-choice-label">{currentQuestion.optionB.label}</span>
-                {answers[currentQuestion.id] === currentQuestion.optionB.value && (
-                  <Check size={24} className="v2-choice-check" />
-                )}
-              </button>
+              </div>
             </div>
 
-            <div className="v2-question-dots">
-              {QUESTIONS.map((q, idx) => (
-                <span
-                  key={q.id}
-                  className={`v2-dot ${idx === currentQuestionIndex ? 'active' : ''} ${idx < currentQuestionIndex ? 'completed' : ''}`}
-                />
-              ))}
-            </div>
+            <V2NavFooter
+              onBack={() => transitionToStep('brands', 'back')}
+            />
           </div>
         )}
 

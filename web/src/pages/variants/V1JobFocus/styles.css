@@ -2151,8 +2151,9 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--primary);
-  margin: 0 0 16px 0;
+  margin: 0 0 0 0;
   padding-top: 8px;
+  padding-bottom: 8px;
   border-top: 2px solid var(--primary);
 }
 
@@ -2168,7 +2169,7 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--primary);
-  margin: 0 0 12px 0;
+  margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -2206,7 +2207,7 @@
 }
 
 .ds-color-swatch:not(:has(h4)) {
-  padding-top: 22px;
+  padding-top: 8px;
 }
 
 .ds-swatch {

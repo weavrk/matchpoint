@@ -16,15 +16,19 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
         <section className="ds-section">
           <h3>Colors</h3>
           <div className="ds-subsection">
+            <h4>Brand</h4>
             <div className="ds-color-grid">
               <div className="ds-color-swatch">
-                <h4>Brand</h4>
                 <div className="ds-swatch" style={{ background: 'var(--brand-pink)' }} />
                 <span className="ds-color-name">--brand-pink</span>
                 <span className="ds-color-value">#ff9a9a</span>
               </div>
+            </div>
+          </div>
+          <div className="ds-subsection">
+            <h4>Primary</h4>
+            <div className="ds-color-grid">
               <div className="ds-color-swatch">
-                <h4>Primary</h4>
                 <div className="ds-swatch" style={{ background: 'var(--primary)' }} />
                 <span className="ds-color-name">--primary</span>
                 <span className="ds-color-value">stone-700 #3F3F46</span>
@@ -78,6 +82,131 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 <div className="ds-swatch" style={{ background: 'var(--background-yellow)' }} />
                 <span className="ds-color-name">--background-yellow</span>
                 <span className="ds-color-value">#fff8ec</span>
+              </div>
+            </div>
+          </div>
+          <div className="ds-subsection">
+            <h4>Accent</h4>
+            <div className="ds-color-grid">
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-navy-dark)' }} />
+                <span className="ds-color-name">--accent-navy-dark</span>
+                <span className="ds-color-value">#1e384a</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-navy-mid)' }} />
+                <span className="ds-color-name">--accent-navy-mid</span>
+                <span className="ds-color-value">#698192</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-navy-light)' }} />
+                <span className="ds-color-name">--accent-navy-light</span>
+                <span className="ds-color-value">#a9b7c1</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-green-dark)' }} />
+                <span className="ds-color-name">--accent-green-dark</span>
+                <span className="ds-color-value">#327a72</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-green-mid)' }} />
+                <span className="ds-color-name">--accent-green-mid</span>
+                <span className="ds-color-value">#4ba098</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-green-light)' }} />
+                <span className="ds-color-name">--accent-green-light</span>
+                <span className="ds-color-value">#9dd9cf</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-blue-dark)' }} />
+                <span className="ds-color-name">--accent-blue-dark</span>
+                <span className="ds-color-value">#2a5aa7</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-blue-mid)' }} />
+                <span className="ds-color-name">--accent-blue-mid</span>
+                <span className="ds-color-value">#3b73ce</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-blue-light)' }} />
+                <span className="ds-color-name">--accent-blue-light</span>
+                <span className="ds-color-value">#90bbef</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-yellow-dark)' }} />
+                <span className="ds-color-name">--accent-yellow-dark</span>
+                <span className="ds-color-value">#e6a93b</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-yellow-mid)' }} />
+                <span className="ds-color-name">--accent-yellow-mid</span>
+                <span className="ds-color-value">#ffd07b</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-yellow-light)' }} />
+                <span className="ds-color-name">--accent-yellow-light</span>
+                <span className="ds-color-value">#ffeed0</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-orange-dark)' }} />
+                <span className="ds-color-name">--accent-orange-dark</span>
+                <span className="ds-color-value">#db781f</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-orange-mid)' }} />
+                <span className="ds-color-name">--accent-orange-mid</span>
+                <span className="ds-color-value">#f2a55e</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-orange-light)' }} />
+                <span className="ds-color-name">--accent-orange-light</span>
+                <span className="ds-color-value">#f8cfa9</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-purple-dark)' }} />
+                <span className="ds-color-name">--accent-purple-dark</span>
+                <span className="ds-color-value">#5055b7</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-purple-mid)' }} />
+                <span className="ds-color-name">--accent-purple-mid</span>
+                <span className="ds-color-value">#676bd7</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-purple-light)' }} />
+                <span className="ds-color-name">--accent-purple-light</span>
+                <span className="ds-color-value">#a7a5f3</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-red-dark)' }} />
+                <span className="ds-color-name">--accent-red-dark</span>
+                <span className="ds-color-value">#aa3838</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-red-mid)' }} />
+                <span className="ds-color-name">--accent-red-mid</span>
+                <span className="ds-color-value">#dc4a4a</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-red-light)' }} />
+                <span className="ds-color-name">--accent-red-light</span>
+                <span className="ds-color-value">#fcc7c7</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-pink-dark)' }} />
+                <span className="ds-color-name">--accent-pink-dark</span>
+                <span className="ds-color-value">#e68b8b</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-pink-mid)' }} />
+                <span className="ds-color-name">--accent-pink-mid</span>
+                <span className="ds-color-value">#ffb8b8</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--accent-pink-light)' }} />
+                <span className="ds-color-name">--accent-pink-light</span>
+                <span className="ds-color-value">#ffd7d7</span>
               </div>
             </div>
           </div>

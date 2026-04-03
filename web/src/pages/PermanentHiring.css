@@ -2251,8 +2251,9 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--primary);
-  margin: 0 0 16px 0;
+  margin: 0 0 0 0;
   padding-top: 8px;
+  padding-bottom: 8px;
   border-top: 2px solid var(--primary);
 }
 
@@ -2268,7 +2269,7 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--primary);
-  margin: 0 0 12px 0;
+  margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -2281,8 +2282,8 @@
 
 /* Color Swatches */
 .ds-color-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 12px;
 }
 
@@ -2291,7 +2292,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 4px;
+  gap: 2px;
   min-width: 100px;
 }
 
@@ -2306,7 +2307,7 @@
 }
 
 .ds-color-swatch:not(:has(h4)) {
-  padding-top: 22px;
+  padding-top: 8px;
 }
 
 .ds-swatch {
@@ -2325,8 +2326,54 @@
 
 .ds-color-value {
   font-size: 10px;
-  color: var(--secondary);
+  color: var(--primary);
   font-family: monospace;
+}
+
+/* Accent Colors Grid - 4 groups per row */
+.ds-accent-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px 24px;
+}
+
+.ds-accent-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ds-accent-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ds-accent-swatches {
+  display: flex;
+  gap: 8px;
+}
+
+.ds-accent-swatches .ds-color-swatch {
+  min-width: auto;
+  padding-top: 0;
+}
+
+.ds-accent-swatches .ds-swatch {
+  width: 40px;
+  height: 40px;
+}
+
+.ds-accent-swatches .ds-color-name {
+  font-size: 9px;
+  color: var(--primary);
+}
+
+.ds-accent-swatches .ds-color-value {
+  font-size: 9px;
+  color: var(--primary);
 }
 
 /* Typography Samples */
