@@ -414,7 +414,7 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
 
   // New flow state
   const [focusArea, setFocusArea] = useState<FocusArea | null>(null);
-  const [employmentType, setEmploymentType] = useState<'full-time' | 'part-time' | null>(null);
+  const [employmentType, setEmploymentType] = useState<'full-time' | 'part-time' | 'either' | null>(null);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [roleSearch, setRoleSearch] = useState('');
 
