@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store } from 'lucide-react';
 import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
 import { WorkerCardChip } from '../Workers/WorkerCardChip';
 import { WorkerCardCompact } from '../Workers/WorkerCardCompact';
@@ -388,6 +388,45 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                   <Check size={24} />
                 </div>
                 <h3 className="welcome-card-title type-chip-header-lg">Active</h3>
+              </div>
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>2. V2 focus welcome-card (variant description)</h4>
+            <p className="ds-description">
+              Used inside <code>.v2-main</code> + <code>.v2-focus-chips</code> for persona, focus, and experience steps. Structure: icon, then{' '}
+              <code>.v2-welcome-card-text</code> wrapping title + description (<code>gap: 2px</code> between lines; <code>.welcome-card</code> flex{' '}
+              <code>gap: 12px</code> separates icon from the text block). Title: <code>h3.welcome-card-title.type-chip-header-lg</code> (18px / 24px in V2). Subtitle:{' '}
+              <code>p.welcome-card-description.type-body-md</code>.
+            </p>
+            <div className="ds-example ds-example-chips ds-example-v2-focus-welcome">
+              <div className="ds-chip-demo welcome-card">
+                <div className="welcome-card-icon">
+                  <Store size={18} />
+                </div>
+                <div className="v2-welcome-card-text">
+                  <h3 className="welcome-card-title type-chip-header-lg">Single-Store Manager</h3>
+                  <p className="welcome-card-description type-body-md">Managing a team at one location</p>
+                </div>
+              </div>
+              <div className="ds-chip-demo welcome-card" style={{ borderColor: 'var(--app-primary)', background: 'var(--gray-50)' }}>
+                <div className="welcome-card-icon" style={{ background: 'var(--app-primary)', color: '#ffffff' }}>
+                  <Store size={18} />
+                </div>
+                <div className="v2-welcome-card-text">
+                  <h3 className="welcome-card-title type-chip-header-lg">Hover State</h3>
+                  <p className="welcome-card-description type-body-md">Description text here</p>
+                </div>
+              </div>
+              <div className="ds-chip-demo welcome-card active">
+                <div className="welcome-card-icon" style={{ background: 'var(--app-primary)', color: '#ffffff' }}>
+                  <Check size={18} />
+                </div>
+                <div className="v2-welcome-card-text">
+                  <h3 className="welcome-card-title type-chip-header-lg">Active</h3>
+                  <p className="welcome-card-description type-body-md">Description text here</p>
+                </div>
               </div>
             </div>
           </div>
@@ -793,6 +832,34 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <li><span className="ds-style-prop">align-items:</span> <code>center</code></li>
               <li><span className="ds-style-prop">justify-content:</span> <code>flex-start</code></li>
               <li><span className="ds-style-prop">text-align:</span> <code>center</code></li>
+            </ul>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>.v2-main-centered</h4>
+            <p className="ds-description">Centered content container. Horizontally centered with centered text. Use for step content that should be constrained width but not full-bleed.</p>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
+              <li><span className="ds-style-prop">flex-direction:</span> <code>column</code></li>
+              <li><span className="ds-style-prop">align-items:</span> <code>center</code></li>
+              <li><span className="ds-style-prop">padding-top:</span> <code>240px</code></li>
+              <li><span className="ds-style-prop">text-align:</span> <code>center</code></li>
+              <li><span className="ds-style-prop">children max-width:</span> <code>720px</code></li>
+            </ul>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>.v2-focus-chips and .v2-welcome-card-text</h4>
+            <p className="ds-description">
+              Focus rows use <code>.v2-focus-chips</code> (2-column grid, <code>gap: 16px</code>; single column below 500px). Each item is <code>button.welcome-card</code> with shared Chat styles, then a{' '}
+              <code>.v2-welcome-card-text</code> wrapper around <code>h3.welcome-card-title.type-chip-header-lg</code> and{' '}
+              <code>p.welcome-card-description.type-body-md</code>. Inside <code>.v2-main</code>, titles use 18px / 24px line-height. The text wrapper is flex column with{' '}
+              <code>gap: 2px</code> between title and subtitle; the card’s 12px gap applies only between icon and the text block.
+            </p>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">.v2-focus-chips:</span> <code>display: grid</code>, <code>grid-template-columns: repeat(2, 1fr)</code>, <code>gap: 16px</code></li>
+              <li><span className="ds-style-prop">.v2-welcome-card-text:</span> <code>display: flex</code>, <code>flex-direction: column</code>, <code>gap: 2px</code>, centered</li>
+              <li><span className="ds-style-prop">.v2-main h3.welcome-card-title:</span> <code>font-size: 18px</code>, <code>line-height: 24px</code></li>
             </ul>
           </div>
 

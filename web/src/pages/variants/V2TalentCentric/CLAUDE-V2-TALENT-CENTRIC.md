@@ -206,6 +206,20 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
                               │   └─────────────────────────────┘   │
                               └─────────────────┬───────────────────┘
                                                 │
+                                                │  (all personas)
+                                                │
+                                                ▼
+                              ┌─────────────────────────────────────┐
+                              │           FOCUS STEP                │
+                              │   "Where would you like to start?"  │
+                              │                                     │
+                              │   ┌─────────┐ ┌─────────┐ ┌───────┐ │
+                              │   │ Type of │ │ Brand   │ │ Exp   │ │
+                              │   │ employ- │ │ affinity│ │ level │ │
+                              │   │ ment    │ │         │ │       │ │
+                              │   └─────────┘ └─────────┘ └───────┘ │
+                              └─────────────────┬───────────────────┘
+                                                │
                     ┌───────────────────────────┼───────────────────────────┐
                     │                           │                           │
                     ▼                           ▼                           ▼
@@ -454,9 +468,13 @@ Worker-specific shift booking flow:
 | **Page Components**       |                                                      |
 | `V2ContentShell`          | Step wrapper with animations, padding, footer        |
 | `V2NavFooter`             | Sticky back/next navigation buttons                  |
-| **User Persona**          |                                                      |
-| `.welcome-card`           | Persona selection cards (icon + title)               |
-| `.welcome-card.active`    | Selected persona state                               |
+| **User Persona / Focus**  |                                                      |
+| `.v2-focus-chips`         | 2-column grid of focus/persona cards (`gap: 16px`; stacks to 1 column at max-width 500px) |
+| `.welcome-card`           | Selection card (`button`): icon + text; uses Chat base styles |
+| `.v2-welcome-card-text`   | Wraps title + description inside card; `flex` column, `gap: 0` (tight stack); card `gap: 12px` is icon ↔ block only |
+| `h3.welcome-card-title` + `.type-chip-header-lg` | Card title; inside `.v2-main`: **18px / 24px** line-height |
+| `p.welcome-card-description` + `.type-body-md` | Card subtitle                                           |
+| `.welcome-card.active`    | Selected state                                       |
 | **Location**              |                                                      |
 | `.v2-location-grid`       | City chip grid (4 columns, 3 with sidebar)           |
 | `.v2-location-chip`       | Individual city selection chip                       |

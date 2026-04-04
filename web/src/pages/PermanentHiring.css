@@ -2536,6 +2536,31 @@
   padding: 0;
 }
 
+/* V2 focus chip demo: same 2-column grid as .v2-focus-chips in the variant */
+.ds-example-v2-focus-welcome.ds-example-chips {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 500px) {
+  .ds-example-v2-focus-welcome.ds-example-chips {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Matches V2TalentCentric focus welcome-cards in DSL Chips tab */
+.ds-example-v2-focus-welcome .ds-chip-demo .welcome-card-title {
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.ds-example-v2-focus-welcome .ds-chip-demo .v2-welcome-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  text-align: center;
+}
+
 .ds-chip-demo.welcome-card::after,
 .ds-chip-demo.welcome-card::before {
   display: none;

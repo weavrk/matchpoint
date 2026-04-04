@@ -208,8 +208,8 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 65% 85% at calc(52% + 100px) calc(42% + 10px), #ffffff 0%, #ffffff 40%, transparent 65%),
-    radial-gradient(ellipse 50% 60% at calc(15% + 200px) calc(85% - 200px), #ffffff 0%, #ffffff 30%, transparent 50%),
+    radial-gradient(ellipse 56.25% 68.75% at calc(52% + 50px) calc(42% - 165px), #ffffff 0%, #ffffff 25%, transparent 50%),
+    radial-gradient(ellipse 63% 72% at calc(15% + 300px) calc(85% - 450px), #ffffff 0%, #ffffff 20%, transparent 40%),
     linear-gradient(155deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 95%, rgba(255,255,255,0.4) 100%);
   transition: opacity 200ms ease-out;
 }
@@ -236,7 +236,7 @@
 
 /* Beats .v2-container-welcome .v2-main so welcome hero keeps vertical inset */
 .v2-container-welcome .v2-main.v2-welcome-step {
-  padding: 140px 64px 140px;
+  padding: 180px 64px 180px;
 }
 
 /* Step header */
@@ -256,7 +256,9 @@
 .v2-step-header-chips {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 42px;
+  height: fit-content;
+  font-size: 24px;
 }
 
 .v2-step-header-chips > .v2-step-header {
@@ -272,6 +274,32 @@
 .v2-step-header-chips > .v2-step-header h1:only-child {
   margin-top: 0;
   margin-bottom: 0;
+}
+
+/* Centered content container - horizontally centered, text centered */
+.v2-main-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 240px;
+  text-align: center;
+}
+
+.v2-main-centered > * {
+  width: 100%;
+  max-width: 720px;
+}
+
+/* Shrink-wrap header + chips instead of stretching to 720px (overrides rule above) */
+.v2-main-centered > .v2-step-header-chips {
+  width: fit-content;
+  max-width: none;
+}
+
+/* Footer should stretch full width in centered layout */
+.v2-main-centered > .v2-nav-footer {
+  max-width: none;
+  width: 100%;
 }
 
 .v2-step-subtitle {
@@ -424,13 +452,13 @@
 .v2-welcome-step .type-tagline {
   margin-top: 24px;
   margin-bottom: 0px;
-  max-width: 55vw;
+  max-width: 50vw;
   font-size: 48px;
   line-height: 1.1;
 }
 
 .v2-welcome-step .v2-welcome-subtitle {
-  margin-bottom: 32px;
+  margin-bottom: 40px;
   max-width: 70vw;
   font-size: 24px;
   line-height: 1.2;
@@ -457,16 +485,55 @@
 }
 
 .v2-focus-chips {
-  display: flex;
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   margin-top: 32px;
 }
 
-/* Ensure equal-width chips inside focus chips container */
+@media (max-width: 500px) {
+  .v2-focus-chips {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Centered onboarding: chip grid wider than the 720px title column */
+.v2-main-centered .v2-focus-chips {
+  width: 60vw;
+  max-width: 60vw;
+  align-self: center;
+}
+
+/* Equal-width cells; min-width allows text to shrink inside grid items */
 .v2-focus-chips > .welcome-card {
-  flex: 1 1 0;
   min-width: 0;
+  width: 100%;
+}
+
+/* 3-column single row layout for focus step */
+.v2-focus-chips.v2-focus-chips-3col {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* V2Main / v2-main: step headlines (global .type-tagline is 36px) */
+.v2-main h1.type-tagline {
+  font-size: 42px;
+  line-height: 49px;
+}
+
+/* V2Main / v2-main: welcome-card titles (overrides .welcome-card-title + .type-chip-header-lg) */
+.v2-main h3.welcome-card-title {
+  font-size: 18px;
+  line-height: 24px;
+}
+
+/* Title + subtitle stack (parent .welcome-card gap separates icon from this block) */
+.v2-welcome-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  text-align: center;
 }
 
 .v2-focus-chip {

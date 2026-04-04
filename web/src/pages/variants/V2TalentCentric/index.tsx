@@ -867,17 +867,20 @@ export function V2TalentCentric({
           {/* Step 1: User Persona Selection */}
           {step === "persona" && (
             <V2Main
-              stepClassName=""
+              stepClassName="v2-main-centered"
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
                 onBack: () => transitionToStep("welcome", "back"),
+                onNext: () => {},
                 showBack: true,
+                nextDisabled: true,
+                nextLabel: "Continue",
               }}
             >
               <div className="v2-step-header-chips">
                 <div className="v2-step-header">
-                  <h1 className="type-tagline">Tell us about yourself</h1>
+                  <h1 className="type-tagline">Tell us about yourself.</h1>
                 </div>
 
                 <div className="v2-focus-chips">
@@ -897,12 +900,14 @@ export function V2TalentCentric({
                         <Store size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Single-Store Manager
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
+                    <p className="welcome-card-description type-body-md">
                       Managing a team at one location
                     </p>
+                    </div>
                   </button>
                   <button
                     className={`welcome-card ${persona === "multi-store" ? "active" : ""}`}
@@ -918,12 +923,14 @@ export function V2TalentCentric({
                         <Building2 size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Multi-Store Manager
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
+                    <p className="welcome-card-description type-body-md">
                       Managing multiple locations in same market
                     </p>
+                    </div>
                   </button>
                   <button
                     className={`welcome-card ${persona === "field" ? "active" : ""}`}
@@ -939,12 +946,14 @@ export function V2TalentCentric({
                         <MapPin size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Field / Multi-Market
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
-                      Overseeing stores across markets
+                    <p className="welcome-card-description type-body-md">
+                      Overseeing stores across region(s)
                     </p>
+                    </div>
                   </button>
                   <button
                     className={`welcome-card ${persona === "recruiter" ? "active" : ""}`}
@@ -960,12 +969,14 @@ export function V2TalentCentric({
                         <UserCircle size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Recruiter
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
+                    <p className="welcome-card-description type-body-md">
                       Centralized hiring function
                     </p>
+                    </div>
                   </button>
                 </div>
               </div>
@@ -1088,7 +1099,7 @@ export function V2TalentCentric({
           {/* Step 3: Focus Area Selection (CYOA - Pick starting point) */}
           {step === "focus" && (
             <V2Main
-              stepClassName=""
+              stepClassName="v2-main-centered"
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
@@ -1097,7 +1108,10 @@ export function V2TalentCentric({
                     persona === "individual" ? "persona" : "location",
                     "back",
                   ),
+                onNext: () => {},
                 showBack: true,
+                nextDisabled: true,
+                nextLabel: "Continue",
               }}
             >
               <div className="v2-step-header-chips">
@@ -1105,12 +1119,9 @@ export function V2TalentCentric({
                   <h1 className="type-tagline">
                     Where would you like to start?
                   </h1>
-                  <p className="type-prompt-question v2-step-subtitle">
-                    We'll cover all three areas - pick what matters most first
-                  </p>
                 </div>
 
-                <div className="v2-focus-chips">
+                <div className="v2-focus-chips v2-focus-chips-3col">
                   <button
                     className={`welcome-card ${completedSections.has("employment") ? "completed" : focusArea === "employment" ? "active" : ""}`}
                     onClick={() => {
@@ -1128,12 +1139,14 @@ export function V2TalentCentric({
                         <Clock size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Type of employment
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
-                      Full-time, part-time, or flexible
+                    <p className="welcome-card-description type-body-md">
+                      Full-time, part-time, or open to both
                     </p>
+                    </div>
                   </button>
                   <button
                     className={`welcome-card ${completedSections.has("brands") ? "completed" : focusArea === "brands" ? "active" : ""}`}
@@ -1152,12 +1165,14 @@ export function V2TalentCentric({
                         <Store size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Brand affinity
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
+                    <p className="welcome-card-description type-body-md">
                       Whose talent would you trust?
                     </p>
+                    </div>
                   </button>
                   <button
                     className={`welcome-card ${completedSections.has("roles") ? "completed" : focusArea === "roles" ? "active" : ""}`}
@@ -1176,12 +1191,14 @@ export function V2TalentCentric({
                         <Briefcase size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Experience level
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
-                      New, rising, seasoned, or management
+                    <p className="welcome-card-description type-body-md">
+                      Where are they in their career?
                     </p>
+                    </div>
                   </button>
                 </div>
               </div>
@@ -1245,12 +1262,14 @@ export function V2TalentCentric({
                         <Users size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       New to Reflex
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
+                    <p className="welcome-card-description type-body-md">
                       0-5 shifts completed
                     </p>
+                    </div>
                   </button>
                   <button
                     className={`welcome-card ${experienceLevel === "rising" ? "active" : ""}`}
@@ -1266,12 +1285,14 @@ export function V2TalentCentric({
                         <Sparkles size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Rising talent
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
+                    <p className="welcome-card-description type-body-md">
                       5-30 shifts, building momentum
                     </p>
+                    </div>
                   </button>
                   <button
                     className={`welcome-card ${experienceLevel === "seasoned" ? "active" : ""}`}
@@ -1287,12 +1308,14 @@ export function V2TalentCentric({
                         <ShieldCheck size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Seasoned pro
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
+                    <p className="welcome-card-description type-body-md">
                       30+ shifts, proven reliability
                     </p>
+                    </div>
                   </button>
                   <button
                     className={`welcome-card ${experienceLevel === "management" ? "active" : ""}`}
@@ -1308,12 +1331,14 @@ export function V2TalentCentric({
                         <Briefcase size={24} />
                       )}
                     </div>
+                    <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
                       Management ready
                     </h3>
-                    <p className="welcome-card-description type-body-sm">
+                    <p className="welcome-card-description type-body-md">
                       Leadership role experience
                     </p>
+                    </div>
                   </button>
                 </div>
               </div>
