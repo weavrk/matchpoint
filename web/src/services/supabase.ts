@@ -589,14 +589,14 @@ export async function deletePublishedJob(jobId: string): Promise<void> {
 
 // Column sets for optimized queries
 const WORKER_COLUMNS_CARD = `
-  id, name, photo, market, actively_looking, shift_verified,
+  id, name, photo, gender, market, actively_looking, shift_verified,
   shifts_on_reflex, brands_worked, endorsement_counts, shift_experience, invited_back_stores,
   about_me, previous_experience, reflex_activity, retailer_quotes, retailer_summary,
   current_tier, unique_store_count, tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent
 `.replace(/\s+/g, ' ').trim();
 
 const WORKER_COLUMNS_FULL = `
-  id, name, photo, market, actively_looking, about_me, previous_experience,
+  id, name, photo, gender, market, actively_looking, about_me, previous_experience,
   shift_verified, reflex_activity, shifts_on_reflex, brands_worked,
   retailer_quotes, retailer_summary, endorsement_counts, shift_experience, invited_back_stores,
   commitment_score, tardy_ratio, tardy_percent,
@@ -605,12 +605,13 @@ const WORKER_COLUMNS_FULL = `
 `.replace(/\s+/g, ' ').trim();
 
 const WORKER_COLUMNS_LIST = `
-  id, name, photo, market, shift_verified, shifts_on_reflex, actively_looking, current_tier
+  id, name, photo, gender, market, shift_verified, shifts_on_reflex, actively_looking, current_tier
 `.replace(/\s+/g, ' ').trim();
 
 export interface WorkerRow {
   id: string;
   name: string;
+  gender: 'male' | 'female' | null;
   market: string;
   actively_looking: boolean;
   about_me: string | null;
@@ -790,6 +791,7 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     id: row.id,
     name: row.name,
     photo: row.photo || undefined,
+    gender: row.gender || undefined,
     shiftVerified: row.shift_verified,
     shiftsOnReflex: row.shifts_on_reflex,
     brandsWorked: row.brands_worked as { name: string; tier: BrandTier }[],

@@ -61,7 +61,7 @@ Here's the breakdown if we want to choose other methods
 | Icons         | Lucide React                                                                         |
 | Hosting       | Vercel                                                                               |
 | Github        | [https://github.com/weavrk/matchpoint.git](https://github.com/weavrk/matchpoint.git) |
-| Worker Photos | [Cloudinary](https://console.cloudinary.com), [Pexels](https://www.pexels.com/api/), [RandomUser](https://randomuser.me/). Review: [review-portraits.html](file:///Users/katherine_1/Dropbox/x.wip/x.Tools/matchpoint/scripts/review-portraits.html). Replace: `node scripts/replacement-server.mjs` |
+| Worker Photos | Sources: [Cloudinary](https://console.cloudinary.com), [Pexels](https://www.pexels.com/api/), [RandomUser](https://randomuser.me/). **To update photos:** 1) Run `node scripts/replacement-server.mjs` 2) Open [review-portraits.html](file:///Users/katherine_1/Dropbox/x.wip/x.Tools/matchpoint/scripts/review-portraits.html) in browser 3) Click photos to flag for replacement |
 
 
 ### Supabase
@@ -79,16 +79,16 @@ Here's the breakdown if we want to choose other methods
 ### Tables
 
 
-| Table               | Columns                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `markets`           | `id`, `city`, `state`                                                                                                                                                                                                                                                                                                                                                                                |
-| `roles`             | `id`, `title`, `category`, `description`                                                                                                                                                                                                                                                                                                                                                             |
-| `retailers`         | `id`, `name`, `classification`                                                                                                                                                                                                                                                                                                                                                                       |
-| `job_postings`      | `id`, `retailer_id`, `market_id`, `role_id`, `source`, `salary_min`, `salary_max`, `benefits`                                                                                                                                                                                                                                                                                                        |
-| `workers`           | `id`, `worker_id`, `worker_uuid`, `name`, `photo`, `market`, `shift_verified`, `actively_looking`, `shifts_on_reflex`, `invited_back_stores`, `current_tier`, `brands_worked`, `endorsement_counts`, `shift_experience`, `previous_experience`, `reflex_activity`, `retailer_quotes`, `retailer_summary`, `about_me`, `tardy_ratio`, `tardy_percent`, `urgent_cancel_ratio`, `urgent_cancel_percent` |
-| `workers_full`      | Full worker dataset before filter to workers                                                                                                                                                                                                                                                                                                                                                         |
-| `jobs_published`    | `job_id`, `job_title`, `job_type`, `store_location`, `job_market`, `pay_type`, `pay_range`, `benefits`, `created_at`, `unpublished_at`                                                                                                                                                                                                                                                               |
-| `jobs_applications` | `id`, `worker_id`, `job_id`, `status`, `invited`, `created_at`                                                                                                                                                                                                                                                                                                                                       |
+| Table               | Description                                           |
+| ------------------- | ----------------------------------------------------- |
+| `markets`           | Geographic markets (city, state)                      |
+| `roles`             | Job role types (title, category, description)         |
+| `retailers`         | Retailer brands (name, classification)                |
+| `job_postings`      | Scraped job listings with salary, benefits            |
+| `workers`           | Filtered worker profiles for display (1,116 workers)  |
+| `workers_full`      | Full worker dataset before filtering                  |
+| `jobs_published`    | Published job postings with status                    |
+| `jobs_applications` | Worker applications to jobs                           |
 
 
 ### Useful Scripts
