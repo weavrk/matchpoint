@@ -10,6 +10,14 @@ const supabase = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZmJpc21mcG1qd3ZlbWZ6bnZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NzIzODIsImV4cCI6MjA4OTQ0ODM4Mn0.DB_d_RvlhKNOPDrnEySJPWHvLn3_HacXY3O5xoSS6bI'
 );
 
+const CLOUDINARY_CLOUD = 'dj6tp0f1q';
+
+// Wrap URL with Cloudinary face detection
+function wrapWithCloudinary(url) {
+  const encoded = encodeURIComponent(url);
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/fetch/c_thumb,g_face,w_400,h_400,f_auto/${encoded}`;
+}
+
 // Generate all 100 randomuser.me URLs for a gender
 function getRandomUserUrls(gender) {
   const folder = gender === 'male' ? 'men' : 'women';
@@ -33,7 +41,8 @@ async function searchPexels(query, perPage = 80, page = 1) {
   }
 
   const data = await res.json();
-  return data.photos.map(p => p.src.medium);
+  // Wrap Pexels URLs with Cloudinary for face detection cropping
+  return data.photos.map(p => wrapWithCloudinary(p.src.medium));
 }
 
 async function fetchPexelsPhotos(query, count) {

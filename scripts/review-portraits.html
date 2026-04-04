@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Pexels Worker Photos Review</title>
+  <title>Worker Photos Review - Cloudinary Processed</title>
   <style>
     body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
     h2 { margin-top: 40px; border-bottom: 2px solid #333; padding-bottom: 10px; }
@@ -23,80 +23,62 @@
     .portrait span { font-size: 10px; color: #666; margin-top: 4px; text-align: center; }
     .section { margin-bottom: 40px; }
     .stats { background: #333; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    .loading { text-align: center; padding: 40px; color: #666; }
   </style>
 </head>
 <body>
-  <h1>Worker Photos from Pexels</h1>
-  <div class="stats" id="stats">Loading from Supabase...</div>
+  <h1>Worker Photos - Cloudinary Processed (Local Files)</h1>
+  <div class="stats" id="stats">Loading...</div>
 
   <div class="section">
-    <h2>Male Workers</h2>
-    <div class="grid" id="males"><div class="loading">Loading...</div></div>
+    <h2>Male Workers (93 photos)</h2>
+    <div class="grid" id="males"></div>
   </div>
 
   <div class="section">
-    <h2>Female Workers</h2>
-    <div class="grid" id="females"><div class="loading">Loading...</div></div>
+    <h2>Female Workers (516 photos)</h2>
+    <div class="grid" id="females"></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const { createClient } = supabase;
-    const db = createClient(
-      'https://kxfbismfpmjwvemfznvm.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZmJpc21mcG1qd3ZlbWZ6bnZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NzIzODIsImV4cCI6MjA4OTQ0ODM4Mn0.DB_d_RvlhKNOPDrnEySJPWHvLn3_HacXY3O5xoSS6bI'
-    );
+    const MALE_COUNT = 93;
+    const FEMALE_COUNT = 516;
+    const BASE_PATH = '../web/public/images/avatars';
 
-    async function loadWorkers() {
-      const workers = [];
-      let offset = 0;
-
-      while (true) {
-        const { data, error } = await db
-          .from('workers')
-          .select('id, name, gender, photo')
-          .order('id', { ascending: true })
-          .range(offset, offset + 999);
-
-        if (error || !data || data.length === 0) break;
-        workers.push(...data);
-        offset += 1000;
-        if (data.length < 1000) break;
-      }
-
-      return workers;
-    }
-
-    async function render() {
-      const workers = await loadWorkers();
-      const males = workers.filter(w => w.gender === 'male');
-      const females = workers.filter(w => w.gender === 'female');
-
-      const uniquePhotos = new Set(workers.map(w => w.photo));
-
+    function render() {
       document.getElementById('stats').innerHTML = `
-        <strong>Total Workers:</strong> ${workers.length} |
-        <strong>Males:</strong> ${males.length} |
-        <strong>Females:</strong> ${females.length} |
-        <strong>Unique Photos:</strong> ${uniquePhotos.size}
+        <strong>Total Photos:</strong> ${MALE_COUNT + FEMALE_COUNT} |
+        <strong>Male:</strong> ${MALE_COUNT} |
+        <strong>Female:</strong> ${FEMALE_COUNT} |
+        <strong>Source:</strong> Cloudinary face-detected, 400x400
       `;
 
+      // Render males
       const malesGrid = document.getElementById('males');
-      malesGrid.innerHTML = males.map(w => `
-        <div class="portrait">
-          <img src="${w.photo}" alt="${w.name}" onerror="this.src='https://via.placeholder.com/80?text=Error'">
-          <span>${w.name.split(' ')[0]}</span>
-        </div>
-      `).join('');
+      let malesHtml = '';
+      for (let i = 1; i <= MALE_COUNT; i++) {
+        const filename = String(i).padStart(3, '0') + '.jpg';
+        malesHtml += `
+          <div class="portrait">
+            <img src="${BASE_PATH}/male/${filename}" alt="Male ${i}" onerror="this.src='https://via.placeholder.com/80?text=Error'">
+            <span>${filename}</span>
+          </div>
+        `;
+      }
+      malesGrid.innerHTML = malesHtml;
 
+      // Render females
       const femalesGrid = document.getElementById('females');
-      femalesGrid.innerHTML = females.map(w => `
-        <div class="portrait">
-          <img src="${w.photo}" alt="${w.name}" onerror="this.src='https://via.placeholder.com/80?text=Error'">
-          <span>${w.name.split(' ')[0]}</span>
-        </div>
-      `).join('');
+      let femalesHtml = '';
+      for (let i = 1; i <= FEMALE_COUNT; i++) {
+        const filename = String(i).padStart(3, '0') + '.jpg';
+        femalesHtml += `
+          <div class="portrait">
+            <img src="${BASE_PATH}/female/${filename}" alt="Female ${i}" onerror="this.src='https://via.placeholder.com/80?text=Error'">
+            <span>${filename}</span>
+          </div>
+        `;
+      }
+      femalesGrid.innerHTML = femalesHtml;
     }
 
     render();

@@ -18,12 +18,20 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 - **Shift Verified**: Existing Reflex workers with completed shifts. Carries a trust badge.
 - **Waitlist / New**: Excluded them for now, this could be an extension the results are null
 
+---
+
 ### Worker Quality Segmentation
 
-Filtering workers table (n=1,701) by #any s  
+Filtering workers table by  
 
+- Favorite ≥50% (1,116 workers)
 
+Tags to add
 
+- If favorite is >60% -> {x}% Favorite Rate 
+- If tardy is <10%-> add "Exceptional Punctuality {232/295}" -> so total on time (so inverse of tardy) out of total
+- If UC is <5%, add "Last minute call-out {1/total}"
+- If invite back is >90% -> add "Invite back {x}%"
 
 Here's the breakdown if we want to choose other methods
 
@@ -31,85 +39,85 @@ Here's the breakdown if we want to choose other methods
 | Filter               | Count   | %         |
 | -------------------- | ------- | --------- |
 | Total workers        | 1,701   | 100%      |
-| 1. Invite back ≥75%  | 1,110   | 65.3%     |
+| 1. Invite back ≥90%  | 706     | 41.5%     |
 | 2. Favorite ≥50%     | 1,116   | 65.6%     |
-| 3. Tardy <20%        | 1,242   | 73.0%     |
+| 3. Tardy <10%        | 1,013   | 59.6%     |
 | 4. Urgent cancel <5% | 1,399   | 82.2%     |
-| **Cumulative (2-4)** | **715** | **42.0%** |
-| **Cumulative (1-4)** | **584** | **34.3%** |
+| **Cumulative (2-4)** | **613** | **36.0%** |
+| **Cumulative (1-4)** | **378** | **22.2%** |
 
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-## Variants
-
-Three UX variants exist under `web/src/pages/variants/`. Variant-specific logic (system prompts, flow trees, data structures) lives in each variant's MD file.
-
-
-| Variant            | Docs                                                                                              | Focus                                          |
-| ------------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| V1: Job Focus      | [CLAUDE-V1-JOB-FOCUS.md](web/src/pages/variants/V1JobFocus/CLAUDE-V1-JOB-FOCUS.md)                | Linear chat flow to create job posting         |
-| V2: Talent Centric | [CLAUDE-V2-TALENT-CENTRIC.md](web/src/pages/variants/V2TalentCentric/CLAUDE-V2-TALENT-CENTRIC.md) | Browse Reflexers first, connect or book shifts |
-| V3: Wildcard       | [CLAUDE-V3-WILDCARD.md](web/src/pages/variants/V3Wildcard/CLAUDE-V3-WILDCARD.md)                  | Experimental canvas                            |
-
-
-**Switching variants:** Use the Layers icon button (bottom-right, next to dev menu)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ## Tech Stack
 
-- **Frontend:** React + TypeScript (Vite), located in `web/`
-- **Backend:** Node.js + Express + TypeScript, located in `src/`
-- **AI Provider:** Google AI Studio (Gemini)
-- **Styling:** CSS (no framework) - **never use italics**
-- **Icons:** Lucide React
-- Github repo: [https://github.com/weavrk/matchpoint.git](https://github.com/weavrk/matchpoint.git)
-- Supabase: [weavrk@gmail.com](mailto:weavrk@gmail.com)
-  - project url: [https://kxfbismfpmjwvemfznvm.supabase.co](https://kxfbismfpmjwvemfznvm.supabase.co)
-  - anon key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZmJpc21mcG1qd3ZlbWZ6bnZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NzIzODIsImV4cCI6MjA4OTQ0ODM4Mn0.DB_d_RvlhKNOPDrnEySJPWHvLn3_HacXY3O5xoSS6bI
-  - database connection: postgresql://postgres:[YOUR-PASSWORD]@db.kxfbismfpmjwvemfznvm.supabase.co:5432/postgres
-  - password: reflexmatchpoint123
-  - **Tables:**
-    - `markets` - Geographic markets where Reflex operates (city, state). Used for job filtering.
-    - `roles` - Job role types (title, category, description). Categories: Entry Level, Specialized, Management, Seasonal.
-    - `retailers` - Retailer brands (name, classification). Classifications: Luxury, Mid, Big Box.
-    - `job_postings` - Scraped job listings with retailer_id, market_id, role_id, source, salary info, benefits
-    - `workers` - Worker profiles (13K+ rows). Columns:
-      - `id` (PK), `worker_id`, `worker_uuid` - identifiers
-      - `name`, `photo`, `market` - basic info
-      - `shift_verified`, `actively_looking` - status flags
-      - `shifts_on_reflex`, `invited_back_stores`, `current_tier` - Reflex metrics
-      - `brands_worked` (JSONB) - array of {name, tier}
-      - `endorsement_counts` (JSONB) - behavioral traits only (Team Player, Punctual, etc.)
-      - `shift_experience` (JSONB) - role counts from shifts (Sales Associate, Greeter, Inventory Management, etc.)
-      - `previous_experience` (JSONB) - work history array
-      - `reflex_activity` (JSONB) - shiftsByTier, longestRelationship, storeFavoriteCount
-      - `retailer_quotes` (JSONB) - array of {quote, role, brand}
-      - `retailer_summary` - AI-generated summary
-      - `about_me` - worker bio
-      - `on_time_rating`, `commitment_score`, `tardy_percent`, `urgent_cancel_percent` - reliability
-    - `workers_full` - Backup copy of workers table with all data
-    - `jobs_published` - Published job postings (job_id, job_title, job_type, store_location, job_market, pay_type, pay_range, benefits, created_at, unpublished_at)
-    - `jobs_applications` - Junction table for worker interactions with jobs (status: viewed/liked/applied/not_interested, invited: boolean)
+### Overview
 
-## Environment Variables
+
+| Component   | Technology                                                                           |
+| ----------- | ------------------------------------------------------------------------------------ |
+| Frontend    | React + TypeScript (Vite), located in `web/`                                         |
+| Backend     | Node.js + Express + TypeScript, located in `src/`                                    |
+| AI Provider | Google AI Studio (Gemini)                                                            |
+| Styling     | CSS (no framework), see design system section                                        |
+| Icons       | Lucide React                                                                         |
+| Hosting     | Vercel                                                                               |
+| Github      | [https://github.com/weavrk/matchpoint.git](https://github.com/weavrk/matchpoint.git) |
+
+
+### Supabase
+
+
+| Key           | Value                                                                                                                                                                                                              |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Account       | [weavrk@gmail.com](mailto:weavrk@gmail.com)                                                                                                                                                                        |
+| Project URL   | [https://kxfbismfpmjwvemfznvm.supabase.co](https://kxfbismfpmjwvemfznvm.supabase.co)                                                                                                                               |
+| Anon Key      | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZmJpc21mcG1qd3ZlbWZ6bnZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NzIzODIsImV4cCI6MjA4OTQ0ODM4Mn0.DB_d_RvlhKNOPDrnEySJPWHvLn3_HacXY3O5xoSS6bI` |
+| DB Connection | `postgresql://postgres:[YOUR-PASSWORD]@db.kxfbismfpmjwvemfznvm.supabase.co:5432/postgres`                                                                                                                          |
+| Password      | reflexmatchpoint123                                                                                                                                                                                                |
+
+
+### Tables
+
+
+| Table               | Columns                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `markets`           | `id`, `city`, `state`                                                                                                                                                                                                                                                                                                                                                                                |
+| `roles`             | `id`, `title`, `category`, `description`                                                                                                                                                                                                                                                                                                                                                             |
+| `retailers`         | `id`, `name`, `classification`                                                                                                                                                                                                                                                                                                                                                                       |
+| `job_postings`      | `id`, `retailer_id`, `market_id`, `role_id`, `source`, `salary_min`, `salary_max`, `benefits`                                                                                                                                                                                                                                                                                                        |
+| `workers`           | `id`, `worker_id`, `worker_uuid`, `name`, `photo`, `market`, `shift_verified`, `actively_looking`, `shifts_on_reflex`, `invited_back_stores`, `current_tier`, `brands_worked`, `endorsement_counts`, `shift_experience`, `previous_experience`, `reflex_activity`, `retailer_quotes`, `retailer_summary`, `about_me`, `tardy_ratio`, `tardy_percent`, `urgent_cancel_ratio`, `urgent_cancel_percent` |
+| `workers_full`      | Full worker dataset before filter to workers                                                                                                                                                                                                                                                                                                                                                         |
+| `jobs_published`    | `job_id`, `job_title`, `job_type`, `store_location`, `job_market`, `pay_type`, `pay_range`, `benefits`, `created_at`, `unpublished_at`                                                                                                                                                                                                                                                               |
+| `jobs_applications` | `id`, `worker_id`, `job_id`, `status`, `invited`, `created_at`                                                                                                                                                                                                                                                                                                                                       |
+
+
+### Useful Scripts
+
+Located in `scripts/`. Run with `npx tsx scripts/<name>.ts`
+
+
+| Script                         | Description                                                                                                                                                                                                                                                                                                             |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `clean-worker-data.ts`         | Removes "Unknown" companies from previous_experience, maps duration codes (SHORT/MEDIUM/LONG/EXTENDED) to readable text, fixes single-word names by extracting first names from retailer quotes, generates first names based on gender when not found. Optional: `--shifts=<csv>` to populate shift_experience from CSV |
+| `update-worker-photos-all.mjs` | Update worker photos from various sources                                                                                                                                                                                                                                                                               |
+
+
+### Environment Variables
 
 Stored in `.env` (gitignored). Do NOT hardcode keys in source files.
 
-```
-GEMINI_API_KEY=your_key_here
-VITE_GEMINI_API_KEY=your_key_here
-SCRAPERAPI_KEY=your_key_here
-TWOCAPTCHA_API_KEY=your_key_here
-PEXELS_API_KEY=your_key_here
-```
 
-- **GEMINI_API_KEY** - Google AI Studio API key for Gemini chat (backend)
-- **VITE_GEMINI_API_KEY** - Same key exposed to Vite frontend (must have VITE_ prefix)
-- **SCRAPERAPI_KEY** - ScraperAPI key for Indeed scraping (proxy/anti-bot bypass)
-- **TWOCAPTCHA_API_KEY** - 2Captcha API key for Glassdoor Cloudflare Turnstile solving
-- **PEXELS_API_KEY** - Pexels API key for worker headshot photos (free tier: 200 req/hour)
+| Variable              | Description                                                         |
+| --------------------- | ------------------------------------------------------------------- |
+| `GEMINI_API_KEY`      | Google AI Studio API key for Gemini chat (backend)                  |
+| `VITE_GEMINI_API_KEY` | Same key exposed to Vite frontend (must have VITE_ prefix)          |
+| `SCRAPERAPI_KEY`      | ScraperAPI key for Indeed scraping (proxy/anti-bot bypass)          |
+| `TWOCAPTCHA_API_KEY`  | 2Captcha API key for Glassdoor Cloudflare Turnstile solving         |
+| `PEXELS_API_KEY`      | Pexels API key for worker headshot photos (free tier: 200 req/hour) |
+
+
+---
 
 ## Job Site Scrapers
 
@@ -121,40 +129,59 @@ Scrapers live in `src/scrapers/`. Common behavior:
 - **Role matching:** Job titles fuzzy-matched to roles from Supabase `roles` table
 - **Pagination:** Up to `maxPages` pages scraped per search
 
-### ++Indeed (`src/scrapers/indeed.ts`)++
+### Indeed
 
-- **Proxy:** ScraperAPI for anti-bot bypass (`SCRAPERAPI_KEY`)
-- **HTML Parsing:** Cheerio (extracts from embedded JSON `window.mosaic.providerData`)
-- **Pagination:** `?start=0,10,20...` (10 jobs per page)
-- **URL format:** `https://www.indeed.com/jobs?q=Retail&l=Austin,+TX`
-- **Multi-pass scraping:** Runs 5 passes per market with varied sort/filter params to capture more results
-  - Pass 1: Relevance sort, no date filter
-  - Pass 2: Date sort
-  - Pass 3: Relevance sort, last 7 days
-  - Pass 4: Date sort, last 3 days
-  - Pass 5: Relevance sort, last 14 days
-- **Session rotation:** Each pass uses a unique session number for fresh results
-- **Salary cleanup:** Spanish text auto-converted to English (e.g., "por hora" → "an hour")
+`src/scrapers/indeed.ts`
 
-### ++Glassdoor (`src/scrapers/glassdoor.ts`)- NOPE! Scrape is ridiculous++
 
-- **Browser:** Puppeteer (headless Chrome)
-- **CAPTCHA Bypass:** Session cookie injection from logged-in browser
-- **HTML Parsing:** Cheerio after page load
-- **Pagination:** `?p=1,2,3...`
-- **URL format:** `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=Retail&locKeyword=AUSTIN,+TX`
-- **Cookie Injection Setup:** The scraper loads cookies from `glassdoor-cookies.json` to bypass CAPTCHA. To refresh:
-  1. Log into Glassdoor in Chrome
-  2. Open DevTools Console (Cmd+Option+J)
-  3. Run this command to export cookies:
-    ```javascript
-     JSON.stringify(document.cookie.split('; ').map(c => {
-       const [name, ...v] = c.split('=');
-       return { name, value: v.join('='), domain: '.glassdoor.com', path: '/' };
-     }), null, 2)
-    ```
-  4. Copy the output and save to `glassdoor-cookies.json` in project root
-  5. Cookies typically last a few days before needing refresh
+| Setting             | Value                                                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Proxy               | ScraperAPI for anti-bot bypass (`SCRAPERAPI_KEY`)                                                                                   |
+| HTML Parsing        | Cheerio (extracts from embedded JSON `window.mosaic.providerData`)                                                                  |
+| Pagination          | `?start=0,10,20...` (10 jobs per page)                                                                                              |
+| URL format          | `https://www.indeed.com/jobs?q=Retail&l=Austin,+TX`                                                                                 |
+| Multi-pass scraping | 5 passes per market: (1) Relevance sort, (2) Date sort, (3) Relevance last 7 days, (4) Date last 3 days, (5) Relevance last 14 days |
+| Session rotation    | Each pass uses a unique session number for fresh results                                                                            |
+| Salary cleanup      | Spanish text auto-converted to English (e.g., "por hora" → "an hour")                                                               |
+
+
+### Glassdoor
+
+`src/scrapers/glassdoor.ts` - NOPE! Scrape is ridiculous
+
+
+| Setting        | Value                                                                            |
+| -------------- | -------------------------------------------------------------------------------- |
+| Browser        | Puppeteer (headless Chrome)                                                      |
+| CAPTCHA Bypass | Session cookie injection from logged-in browser                                  |
+| HTML Parsing   | Cheerio after page load                                                          |
+| Pagination     | `?p=1,2,3...`                                                                    |
+| URL format     | `https://www.glassdoor.com/Job/jobs.htm?sc.keyword=Retail&locKeyword=AUSTIN,+TX` |
+
+
+**Cookie Injection Setup:** The scraper loads cookies from `glassdoor-cookies.json` to bypass CAPTCHA. To refresh:
+
+1. Log into Glassdoor in Chrome
+2. Open DevTools Console (Cmd+Option+J)
+3. Run: `JSON.stringify(document.cookie.split('; ').map(c => { const [name, ...v] = c.split('='); return { name, value: v.join('='), domain: '.glassdoor.com', path: '/' }; }), null, 2)`
+4. Copy output and save to `glassdoor-cookies.json` in project root
+5. Cookies typically last a few days before needing refresh
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## Variants
+
+Three UX variants exist under `web/src/pages/variants/`. Variant-specific logic (system prompts, flow trees, data structures) lives in each variant's MD file.
+
+
+| Variant            | Docs                        | Focus                                          |
+| ------------------ | --------------------------- | ---------------------------------------------- |
+| V1: Job Focus      | CLAUDE-V1-JOB-FOCUS.md      | Linear chat flow to create job posting         |
+| V2: Talent Centric | CLAUDE-V2-TALENT-CENTRIC.md | Browse Reflexers first, connect or book shifts |
+| V3: Wildcard       | CLAUDE-V3-WILDCARD.md       | Experimental canvas                            |
+
+
+**Switching variants:** Use the Layers icon button (bottom-right, next to dev menu)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -331,51 +358,36 @@ Definitions: `web/src/styles/variables.css`
 
 ### Text Inputs
 
-All chat text inputs share these styles:
+All chat text inputs share these styles. Classes: `.welcome-input`, `.inline-input`, `.chat-input`, `.location-search-input`
 
-- **Background:** `--background-navy` (#F4F6F7)
-- **Placeholder color:** `--secondary` (#A1A1AA)
-- **Text color:** `--primary` (#3F3F46)
-- **Border:** 1px `--quaternary`, radius `--radius-lg`
-- **Focus:** border changes to `--blue-400`
 
-Input classes: `.welcome-input`, `.inline-input`, `.chat-input`, `.location-search-input`
+| Property          | Value                                    |
+| ----------------- | ---------------------------------------- |
+| Background        | `--primary` (#3F3F46)                    |
+| Placeholder color | `--secondary` (#A1A1AA)                  |
+| Text color        | `--primary` (#3F3F46)                    |
+| Border            | 1px `--quaternary`, radius `--radius-lg` |
+| Focus             | border changes to `--blue-400`           |
+
 
 ### Worker Cards
 
 Three variants with shared header component. All headers have avatar, name, and badges vertically centered (align-items: center).
 
 
-| Variant             | Class                       | Usage                                                                           |
-| ------------------- | --------------------------- | ------------------------------------------------------------------------------- |
-| `WorkerCardTeaser`  | `.worker-card-teaser`       | Minimal to entice. Header + "What retailers are saying about [Name]" AI summary |
-| `WorkerCardCompact` | `.worker-card-compact`      | Chat view. Quote, work history, endorsements with +counts, store quotes         |
-| `WorkerCardFull`    | `.worker-card-full-overlay` | Detail panel. 60% width, fixed right, close button, all sections                |
-
-
-**WorkerCardTeaser specs:**
-
-- Label ("What retailers are saying about [Name]"): `.type-section-header-sm`
-- Summary text: 14px/400 primary color, line-height 20px
-- Gap between label and summary: 4px
-- No Actively Looking badge (suppressed via `showActivelyLooking={false}`)
+| Variant | Class | Specs |
+|---------|-------|-------|
+| `WorkerCardTeaser` | `.worker-card-teaser` | Minimal to entice. Header + "What retailers are saying about [Name]" AI summary. Label: `.type-section-header-sm`, Summary: 14px/400 primary, line-height 20px, Gap: 4px, No Actively Looking badge (`showActivelyLooking={false}`) |
+| `WorkerCardCompact` | `.worker-card-compact` | Chat view. Quote, work history, endorsements with +counts, store quotes |
+| `WorkerCardFull` | `.worker-card-full-overlay` | Detail panel. 35vw width, fixed right, close button (36px circle, primary bg, white X), Header: avatar + name stacked with location/shift verified, Section titles: 18px/700 primary (`.type-section-header`), Sections: 20px padding, 1px dividers, About: 16px primary (no italics), Stats: 28px bold + 12px labels. Clicking WorkerCardTeaser opens this panel |
 
 **Shared Header:** `WorkerCardHeader` component
 
-- Avatar: 40px (default) or 64px (large via `size="large"`)
-- Name: `.type-section-header-lg`
-- Layout: flex row, vertically centered; Shift Verified badge pushed to right via `margin-left: auto`
-- Badges: Shift Verified (green, right-aligned) - Actively Looking badge hidden on WorkerCardTeaser, visible on Compact and Full variants
-- Props: `showActivelyLooking` (default `true`) - pass `false` on WorkerCardTeaser
-
-**WorkerCardFull specs:**
-
-- Position: inline right of chat, 35vw width
-- Close button: sticky top-right, 36px circle, primary background with white X
-- Header: avatar + name stacked with location/shift verified below, full-width divider
-- Section titles: 18px/700 primary (`.type-section-header`)
-- Sections: 20px padding, 1px dividers
-- About: 16px primary font (no italics, no Quincy)
-- Stats: 28px bold numbers with 12px labels
-- Clicking WorkerCardTeaser opens WorkerCardFull panel
+| Property | Value |
+|----------|-------|
+| Avatar | 40px (default) or 64px (large via `size="large"`) |
+| Name | `.type-section-header-lg` |
+| Layout | flex row, vertically centered; Shift Verified badge pushed to right via `margin-left: auto` |
+| Badges | Shift Verified (green, right-aligned) - Actively Looking hidden on Teaser, visible on Compact/Full |
+| Props | `showActivelyLooking` (default `true`) - pass `false` on WorkerCardTeaser |
 

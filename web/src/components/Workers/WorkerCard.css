@@ -97,9 +97,11 @@
 }
 
 .worker-avatar img {
-  width: 100%;
-  height: 100%;
+  width: 140%;
+  height: 140%;
+  margin: -20%;
   object-fit: cover;
+  object-position: center 25%;
 }
 
 .worker-avatar span {
@@ -677,9 +679,11 @@
 }
 
 .worker-avatar-lg img {
-  width: 100%;
-  height: 100%;
+  width: 140%;
+  height: 140%;
+  margin: -20%;
   object-fit: cover;
+  object-position: center 25%;
 }
 
 .worker-avatar-lg span {
