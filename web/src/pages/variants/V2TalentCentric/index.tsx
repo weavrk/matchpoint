@@ -913,7 +913,7 @@ export function V2TalentCentric({
                     className={`welcome-card ${persona === "multi-store" ? "active" : ""}`}
                     onClick={() => {
                       setPersona("multi-store");
-                      transitionToStep("location", "forward");
+                      transitionToStep("focus", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -936,7 +936,7 @@ export function V2TalentCentric({
                     className={`welcome-card ${persona === "field" ? "active" : ""}`}
                     onClick={() => {
                       setPersona("field");
-                      transitionToStep("location", "forward");
+                      transitionToStep("focus", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -959,7 +959,7 @@ export function V2TalentCentric({
                     className={`welcome-card ${persona === "recruiter" ? "active" : ""}`}
                     onClick={() => {
                       setPersona("recruiter");
-                      transitionToStep("location", "forward");
+                      transitionToStep("focus", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -1103,11 +1103,7 @@ export function V2TalentCentric({
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
-                onBack: () =>
-                  transitionToStep(
-                    persona === "individual" ? "persona" : "location",
-                    "back",
-                  ),
+                onBack: () => transitionToStep("persona", "back"),
                 onNext: () => {},
                 showBack: true,
                 nextDisabled: true,

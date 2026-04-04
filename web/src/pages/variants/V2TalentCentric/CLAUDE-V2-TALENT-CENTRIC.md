@@ -220,6 +220,14 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
                               │   └─────────┘ └─────────┘ └───────┘ │
                               └─────────────────┬───────────────────┘
                                                 │
+                                                │  (select any focus)
+                                                │
+                                                ▼
+                              ┌─────────────────────────────────────┐
+                              │         LOCATION STEP               │
+                              │   (persona determines variant)      │
+                              └─────────────────┬───────────────────┘
+                                                │
                     ┌───────────────────────────┼───────────────────────────┐
                     │                           │                           │
                     ▼                           ▼                           ▼
