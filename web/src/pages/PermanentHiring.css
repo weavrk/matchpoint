@@ -2187,7 +2187,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  width: 60vw;
+  width: 75vw;
   height: 100vh;
   background: #ffffff;
   display: flex;
@@ -2195,7 +2195,7 @@
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.15);
   animation: slideInFromRight 0.25s ease-out;
   z-index: 1000;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 @keyframes slideInFromRight {
@@ -2209,17 +2209,52 @@
 
 .design-system-header {
   display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--quaternary);
+}
+
+.design-system-header-top {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--quaternary);
+  padding: 16px 24px;
 }
 
 .design-system-header h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--primary);
+}
+
+.design-system-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px 8px;
+}
+
+.design-system-tab {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--primary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.design-system-tab:hover {
+  background: var(--gray-100);
+}
+
+.design-system-tab.active {
+  color: #ffffff;
+  background: var(--primary);
+  font-weight: 700;
 }
 
 .design-system-close {
@@ -2244,7 +2279,7 @@
 .design-system-content {
   flex: 1;
   overflow-y: auto;
-  padding: 20px 20px 120px 20px;
+  padding: 24px;
 }
 
 /* Design System Sections */
@@ -2257,13 +2292,14 @@
 }
 
 .ds-section h3 {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 40px;
+  font-weight: 300;
   color: var(--primary);
-  margin: 0 0 0 0;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  border-top: 2px solid var(--primary);
+  margin: 0 0 32px 0;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border: none;
+  border-image: none;
 }
 
 .ds-subsection {
@@ -2301,8 +2337,6 @@
   font-weight: 600;
   color: var(--primary);
   margin: 0 0 8px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .ds-description {

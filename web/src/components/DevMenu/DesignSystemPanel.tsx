@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
 import { WorkerCardChip } from '../Workers/WorkerCardChip';
@@ -9,6 +10,17 @@ import type { MatchedWorker } from '../../types';
 interface DesignSystemPanelProps {
   onClose: () => void;
 }
+
+type TabId = 'colors' | 'typography' | 'chips' | 'tags' | 'workers' | 'v2-shells';
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'colors', label: 'Colors' },
+  { id: 'typography', label: 'Typography' },
+  { id: 'chips', label: 'Chips' },
+  { id: 'tags', label: 'Tags' },
+  { id: 'workers', label: 'Worker Cards' },
+  { id: 'v2-shells', label: 'V2 Shells' },
+];
 
 /** Tag style classes shown in Tags → Variants (same layout per row). */
 const DS_TAG_VARIANT_STYLES = [
@@ -90,14 +102,30 @@ const sampleWorker: MatchedWorker = {
 };
 
 export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
+  const [activeTab, setActiveTab] = useState<TabId>('colors');
+
   return (
     <div className="design-system-panel">
       <div className="design-system-header">
-        <h2>Design System</h2>
-        <button className="design-system-close" onClick={onClose}>&times;</button>
+        <div className="design-system-header-top">
+          <h2>Design System</h2>
+          <button className="design-system-close" onClick={onClose}>&times;</button>
+        </div>
+        <div className="design-system-tabs">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`design-system-tab${activeTab === tab.id ? ' active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="design-system-content">
         {/* Colors Section */}
+        {activeTab === 'colors' && (
         <section className="ds-section">
           <h3>Colors</h3>
           <div className="ds-subsection">
@@ -291,8 +319,10 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             </div>
           </div>
         </section>
+        )}
 
         {/* Typography Section */}
+        {activeTab === 'typography' && (
         <section className="ds-section">
           <h3>Typography</h3>
           <div className="ds-subsection">
@@ -330,8 +360,10 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             </div>
           </div>
         </section>
+        )}
 
         {/* Chip Components Section */}
+        {activeTab === 'chips' && (
         <section className="ds-section">
           <h3>Chip Components</h3>
 
@@ -398,8 +430,10 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             </div>
           </div>
         </section>
+        )}
 
         {/* Tags Section */}
+        {activeTab === 'tags' && (
         <section className="ds-section">
           <h3>Tags</h3>
           <p className="ds-description">
@@ -667,8 +701,10 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             </div>
           </div>
         </section>
+        )}
 
         {/* Worker Cards Section */}
+        {activeTab === 'workers' && (
         <section className="ds-section">
           <h3>Worker Cards</h3>
           <p className="ds-description">
@@ -717,8 +753,10 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             </div>
           </div>
         </section>
+        )}
 
         {/* V2 Page Content Shells */}
+        {activeTab === 'v2-shells' && (
         <section className="ds-section">
           <h3>V2 Page Content Shells</h3>
           <p className="ds-description">
@@ -842,6 +880,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             </div>
           </div>
         </section>
+        )}
 
       </div>
     </div>
