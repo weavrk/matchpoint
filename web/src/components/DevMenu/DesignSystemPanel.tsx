@@ -718,22 +718,63 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
           </div>
         </section>
 
-        {/* Page Components Section */}
+        {/* V2 Page Content Shells */}
         <section className="ds-section">
-          <h3>Page Components (V2)</h3>
+          <h3>V2 Page Content Shells</h3>
           <p className="ds-description">
             Reusable layout components for V2 Talent Centric flow. Import from <code>pages/variants/V2TalentCentric</code>.
           </p>
 
           <div className="ds-subsection">
-            <h4>.v2-step-content</h4>
-            <p className="ds-description">Step wrapper with consistent padding and animations. Variants: default, welcome, centered, full-height.</p>
+            <h4>.v2-main</h4>
+            <p className="ds-description">Main content shell. All step content lives inside this container.</p>
             <ul className="ds-style-list">
               <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
               <li><span className="ds-style-prop">flex-direction:</span> <code>column</code></li>
-              <li><span className="ds-style-prop">padding:</span> <code>32px 64px 0 64px</code></li>
-              <li><span className="ds-style-prop">transition:</span> <code>transform 200ms ease-out, opacity 200ms ease-out</code></li>
-              <li><span className="ds-style-prop">animation:</span> <code>slideInRight 200ms ease-in forwards</code></li>
+              <li><span className="ds-style-prop">flex:</span> <code>1</code></li>
+              <li><span className="ds-style-prop">padding:</span> <code>32px 64px 64px 64px</code></li>
+              <li><span className="ds-style-prop">overflow-y:</span> <code>auto</code></li>
+              <li><span className="ds-style-prop">transition:</span> <code>200ms ease-out</code>
+                <ul className="ds-style-list-nested">
+                  <li><code>.slide-in-right-forward</code> translateX(50px) to 0, opacity 0 to 1</li>
+                  <li><code>.slide-out-left-forward</code> translateX(0) to -50px, opacity 1 to 0</li>
+                  <li><code>.slide-in-left-backward</code> translateX(-50px) to 0, opacity 0 to 1</li>
+                  <li><code>.slide-out-right-backward</code> translateX(0) to 50px, opacity 1 to 0</li>
+                  <li><code>.fade-in</code> opacity 0 to 1</li>
+                  <li><code>.fade-out</code> opacity 1 to 0</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>.v2-welcome-step</h4>
+            <p className="ds-description">Welcome hero screen variant. Centered content with special padding.</p>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">padding:</span> <code>140px 64px</code></li>
+              <li><span className="ds-style-prop">align-items:</span> <code>center</code></li>
+              <li><span className="ds-style-prop">justify-content:</span> <code>flex-start</code></li>
+              <li><span className="ds-style-prop">text-align:</span> <code>center</code></li>
+            </ul>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>.v2-shell-header-section</h4>
+            <p className="ds-description">Fixed header area for steps with scrollable content. Contains title, subtitle, and controls.</p>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">flex-shrink:</span> <code>0</code></li>
+              <li><span className="ds-style-prop">padding:</span> <code>48px 64px 0</code></li>
+              <li><span className="ds-style-prop">border-bottom:</span> <code>1px solid var(--quaternary)</code></li>
+            </ul>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>.v2-step-content-scroll</h4>
+            <p className="ds-description">Scrollable content area. Contains grid or list content below the header.</p>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">flex:</span> <code>1</code></li>
+              <li><span className="ds-style-prop">overflow-y:</span> <code>auto</code></li>
+              <li><span className="ds-style-prop">padding:</span> <code>16px 64px 48px</code></li>
             </ul>
           </div>
 
@@ -755,22 +796,50 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <li><span className="ds-style-prop">margin-top:</span> <code>auto</code></li>
               <li><span className="ds-style-prop">background:</span> <code>#ffffff</code></li>
               <li><span className="ds-style-prop">border-top:</span> <code>1px solid var(--quaternary)</code></li>
-              <li><span className="ds-style-prop">padding:</span> <code>16px 0</code></li>
-              <li><span className="ds-style-prop">z-index:</span> <code>10</code></li>
+              <li><span className="ds-style-prop">padding:</span> <code>16px 64px</code></li>
+              <li><span className="ds-style-prop">flex-shrink:</span> <code>0</code></li>
             </ul>
           </div>
 
-          <div className="ds-subsection">
-            <h4>.v2-btn-back, .v2-btn-next</h4>
-            <ul className="ds-style-list">
-              <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
-              <li><span className="ds-style-prop">padding:</span> <code>12px 36px</code></li>
-              <li><span className="ds-style-prop">min-width:</span> <code>140px</code></li>
-              <li><span className="ds-style-prop">border-radius:</span> <code>8px</code></li>
-              <li><span className="ds-style-prop">font-size:</span> <code>16px</code></li>
-              <li><span className="ds-style-prop">font-weight:</span> <code>500</code></li>
-              <li><span className="ds-style-prop">transition:</span> <code>all 0.15s</code></li>
-            </ul>
+          <div className="ds-subsection-row">
+            <div className="ds-subsection">
+              <h4>.v2-btn-back</h4>
+              <ul className="ds-style-list">
+                <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
+                <li><span className="ds-style-prop">padding:</span> <code>12px 36px</code></li>
+                <li><span className="ds-style-prop">min-width:</span> <code>140px</code></li>
+                <li><span className="ds-style-prop">border-radius:</span> <code>8px</code></li>
+                <li><span className="ds-style-prop">font-size:</span> <code>16px</code></li>
+                <li><span className="ds-style-prop">font-weight:</span> <code>500</code></li>
+                <li><span className="ds-style-prop">transition:</span> <code>all 0.15s</code></li>
+                <li><span className="ds-style-prop">background:</span> <code>var(--white)</code></li>
+                <li><span className="ds-style-prop">border:</span> <code>1px solid var(--quaternary)</code></li>
+                <li><span className="ds-style-prop">color:</span> <code>var(--primary)</code></li>
+                <li><span className="ds-style-prop">hover background:</span> <code>var(--gray-50)</code></li>
+                <li><span className="ds-style-prop">hover border:</span> <code>var(--tertiary)</code></li>
+              </ul>
+            </div>
+
+            <div className="ds-subsection">
+              <h4>.v2-btn-next</h4>
+              <ul className="ds-style-list">
+                <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
+                <li><span className="ds-style-prop">padding:</span> <code>12px 36px</code></li>
+                <li><span className="ds-style-prop">min-width:</span> <code>140px</code></li>
+                <li><span className="ds-style-prop">border-radius:</span> <code>8px</code></li>
+                <li><span className="ds-style-prop">font-size:</span> <code>16px</code></li>
+                <li><span className="ds-style-prop">font-weight:</span> <code>500</code></li>
+                <li><span className="ds-style-prop">transition:</span> <code>all 0.15s</code></li>
+                <li><span className="ds-style-prop">background:</span> <code>var(--primary)</code></li>
+                <li><span className="ds-style-prop">border:</span> <code>1px solid var(--primary)</code></li>
+                <li><span className="ds-style-prop">color:</span> <code>#ffffff</code></li>
+                <li><span className="ds-style-prop">hover background:</span> <code>var(--stone-800)</code></li>
+                <li><span className="ds-style-prop">hover border:</span> <code>var(--stone-800)</code></li>
+                <li><span className="ds-style-prop">disabled background:</span> <code>var(--tertiary)</code></li>
+                <li><span className="ds-style-prop">disabled border:</span> <code>var(--tertiary)</code></li>
+                <li><span className="ds-style-prop">disabled color:</span> <code>#ffffff</code></li>
+              </ul>
+            </div>
           </div>
         </section>
 

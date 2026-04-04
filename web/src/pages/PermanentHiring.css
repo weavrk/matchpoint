@@ -2079,6 +2079,15 @@
   margin: 8px 0;
 }
 
+.dev-menu-section-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 12px 4px;
+}
+
 .dev-menu-name-input {
   display: flex;
   align-items: center;
@@ -2259,9 +2268,31 @@
 
 .ds-subsection {
   margin-bottom: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--quaternary);
+}
+
+.ds-subsection:first-child {
+  border-top: none;
+  padding-top: 0;
 }
 
 .ds-subsection:last-child {
+  margin-bottom: 0;
+}
+
+.ds-subsection-row {
+  display: flex;
+  gap: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--quaternary);
+  margin-bottom: 20px;
+}
+
+.ds-subsection-row .ds-subsection {
+  flex: 1;
+  border-top: none;
+  padding-top: 0;
   margin-bottom: 0;
 }
 
@@ -3055,20 +3086,37 @@
   border-radius: 4px;
 }
 
+.ds-style-list-nested {
+  list-style: none;
+  margin: 8px 0 0 0;
+  padding: 0 0 0 16px;
+}
+
+.ds-style-list-nested li {
+  display: block;
+  padding: 4px 0;
+  border-bottom: none;
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.ds-style-list-nested code {
+  font-size: 11px;
+  margin-right: 6px;
+}
+
 .ds-example-nav-footer {
-  padding: 16px;
-  background: var(--gray-50);
-  border-radius: 8px;
+  padding: 0;
+  background: transparent;
 }
 
 .ds-nav-footer-demo {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  padding: 16px 0;
   background: #ffffff;
-  border-radius: 8px;
-  border: 1px solid var(--gray-200);
+  border-top: 1px solid var(--quaternary);
 }
 
 .ds-nav-btn {

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Layers, Database, Users } from 'lucide-react';
 import { V1JobFocus } from './variants/V1JobFocus';
 import { V2TalentCentric } from './variants/V2TalentCentric';
 import { V3Wildcard } from './variants/V3Wildcard';
@@ -36,7 +35,6 @@ export function PermanentHiring({ userName, customUserName, onSetCustomName, onC
     const saved = localStorage.getItem('matchpoint-variant');
     return (saved as VariantId) || 'v2-talent-centric';
   });
-  const [showVariantMenu, setShowVariantMenu] = useState(false);
 
   // Global state for dev tools
   const [agentActive, setAgentActive] = useState(true);
@@ -59,68 +57,16 @@ export function PermanentHiring({ userName, customUserName, onSetCustomName, onC
         userName={userName}
       />
 
-      {/* Variant Switcher */}
-      <div className="variant-switcher">
-        <button
-          className="variant-switcher-trigger"
-          onClick={() => setShowVariantMenu(!showVariantMenu)}
-          title="Switch variant"
-        >
-          <Layers size={18} />
-        </button>
-
-        {showVariantMenu && (
-          <>
-            <div className="variant-menu">
-              <div className="variant-menu-header">Variants</div>
-              {VARIANTS.map((v) => (
-                <button
-                  key={v.id}
-                  className={`variant-menu-item ${v.id === currentVariant ? 'active' : ''}`}
-                  onClick={() => {
-                    setCurrentVariant(v.id);
-                    setShowVariantMenu(false);
-                  }}
-                >
-                  {v.label}
-                </button>
-              ))}
-              <div className="variant-menu-divider" />
-              <button
-                className={`variant-menu-item variant-menu-item-oz ${showOz ? 'active' : ''}`}
-                onClick={() => {
-                  setShowOz(!showOz);
-                  setShowVariantMenu(false);
-                }}
-              >
-                <Database size={16} />
-                <span>Oz</span>
-              </button>
-              <button
-                className={`variant-menu-item variant-menu-item-oz ${showWorkerData ? 'active' : ''}`}
-                onClick={() => {
-                  setShowWorkerData(!showWorkerData);
-                  setShowVariantMenu(false);
-                }}
-              >
-                <Users size={16} />
-                <span>Worker Data</span>
-              </button>
-            </div>
-            <div
-              className="variant-menu-backdrop"
-              onClick={() => setShowVariantMenu(false)}
-            />
-          </>
-        )}
-      </div>
-
       {/* Dev Menu */}
       <DevMenu
         agentActive={agentActive}
         onToggleAgent={() => setAgentActive(!agentActive)}
         showOz={showOz}
         onToggleOz={() => setShowOz(!showOz)}
+        showWorkerData={showWorkerData}
+        onToggleWorkerData={() => setShowWorkerData(!showWorkerData)}
+        currentVariant={currentVariant}
+        onChangeVariant={setCurrentVariant}
         customUserName={customUserName}
         onSetCustomName={onSetCustomName}
         onClearCustomName={onClearCustomName}

@@ -17,12 +17,42 @@
   animation: slideInRight 200ms ease-in forwards;
 }
 
+.v2-main.slide-in-left {
+  animation: slideInLeft 200ms ease-in forwards;
+}
+
 .v2-main.slide-out-left {
   animation: slideOutLeft 200ms ease-out forwards;
 }
 
 .v2-main.slide-out-right {
   animation: slideOutRight 200ms ease-out forwards;
+}
+
+.v2-main.fade-in {
+  animation: fadeIn 200ms ease-out forwards;
+}
+
+.v2-main.fade-out {
+  animation: fadeOut 200ms ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes slideOutLeft {
@@ -50,6 +80,17 @@
 @keyframes slideInRight {
   from {
     transform: translateX(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-50px);
     opacity: 0;
   }
   to {
@@ -183,7 +224,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 32px 64px 0 64px; /* Top padding is 50% of left/right */
+  padding: 32px 64px 64px 64px; /* Top 50% of horizontal inset; bottom clears fixed footer */
   overflow-y: auto;
   transition: transform 200ms ease-out, opacity 200ms ease-out;
 }
@@ -209,6 +250,28 @@
 
 .v2-step-header p {
   margin: 0;
+}
+
+/* Stacks step title + focus chips; gap replaces margin on the two siblings */
+.v2-step-header-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.v2-step-header-chips > .v2-step-header {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.v2-step-header-chips > .v2-focus-chips {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.v2-step-header-chips > .v2-step-header h1:only-child {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .v2-step-subtitle {
@@ -393,16 +456,17 @@
   background: var(--stone-800);
 }
 
-/* Focus area selection step */
-.v2-focus-step {
-  /* Inherits flex layout and padding from .v2-step-content */
-}
-
 .v2-focus-chips {
   display: flex;
   flex-direction: row;
   gap: 16px;
   margin-top: 32px;
+}
+
+/* Ensure equal-width chips inside focus chips container */
+.v2-focus-chips > .welcome-card {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .v2-focus-chip {
@@ -442,25 +506,6 @@
 }
 
 /* Location selection step */
-.v2-location-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-}
-
-.v2-location-header-section {
-  flex-shrink: 0;
-  padding: 48px 0 0;
-  border-bottom: 1px solid var(--quaternary);
-}
-
-.v2-location-grid-wrapper {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0;
-}
 
 /* ============================================================
    V2 CONTENT SHELL - Reusable Page Components
@@ -475,8 +520,15 @@
  *
  * Animation Specs:
  * - Duration: 200ms
- * - Easing: ease-out (exit), ease-in (enter)
- * - Transform: 50px horizontal slide
+ * - Transform: 50px horizontal slide + opacity fade
+ *
+ * Forward (Continue button):
+ * - Exit: slide-out-left (translateX(-50px), opacity 0, ease-out)
+ * - Enter: slide-in-right (translateX(50px) → 0, opacity 0 → 1, ease-in)
+ *
+ * Back button:
+ * - Exit: slide-out-right (translateX(50px), opacity 0, ease-out)
+ * - Enter: slide-in-left (translateX(-50px) → 0, opacity 0 → 1, ease-in)
  *
  * Width/Height:
  * - Shell fills available space in .v2-main
@@ -488,36 +540,6 @@
 .v2-step-content-inner {
   flex: 1;
   padding: 48px 64px;
-}
-
-/* Shell header section - fixed at top of step */
-.v2-shell-header-section {
-  flex-shrink: 0;
-  padding: 48px 64px 0;
-}
-
-/* Centered step variant */
-.v2-centered-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 48px 64px;
-}
-
-/* Full-height step variant (for grids with scroll) */
-.v2-full-height-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-}
-
-.v2-step-content-scroll {
-  overflow-y: auto;
 }
 
 .v2-location-controls {
@@ -679,13 +701,14 @@
   margin-top: auto;
   background: #ffffff;
   border-top: 1px solid var(--quaternary);
-  padding: 16px 0;
+  padding: 16px 64px;
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .v2-nav-footer-buttons {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 16px;
 }
 
@@ -720,6 +743,7 @@
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
+  margin-left: auto;
 }
 
 .v2-btn-next svg {
@@ -759,11 +783,6 @@
   font-weight: 700;
 }
 
-/* Employment type selection step */
-.v2-employment-step {
-  /* Inherits flex layout and padding from .v2-step-content */
-}
-
 .v2-employment-chips {
   display: flex;
   gap: 16px;
@@ -793,13 +812,6 @@
 }
 
 /* Role selection step */
-.v2-roles-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-}
 
 .v2-role-search-wrapper {
   display: flex;
@@ -886,25 +898,6 @@
 }
 
 /* Brand selection step */
-.v2-brands-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
-}
-
-.v2-brands-header-section {
-  flex-shrink: 0;
-  padding: 48px 0 0;
-  border-bottom: 1px solid var(--quaternary);
-}
-
-.v2-brands-grid-wrapper {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0;
-}
 
 .v2-brand-grid-header {
   display: flex;
@@ -1110,16 +1103,6 @@
   color: var(--secondary);
 }
 
-/* This-or-that questions step */
-.v2-questions-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
 .v2-question-count {
   display: inline-block;
   font-size: 12px;
@@ -1203,16 +1186,6 @@
 
 .v2-dot.completed {
   background: var(--accent-green-mid);
-}
-
-/* Results step */
-.v2-results-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
 }
 
 .v2-results-icon {
@@ -1444,7 +1417,7 @@
   }
 
   .v2-main {
-    padding: 32px 48px;
+    padding: 32px 48px 64px;
   }
 }
 

@@ -20,7 +20,7 @@ export interface V2MainProps {
   isTransitioning?: boolean;
   /** Direction of the transition animation */
   transitionDirection?: TransitionDirection;
-  /** Step-specific CSS class (e.g., 'v2-persona-step', 'v2-brands-step') */
+  /** Step-specific CSS class (e.g., 'v2-welcome-step', 'v2-full-height-step') */
   stepClassName?: string;
   /** Navigation footer props */
   footer?: {
@@ -37,15 +37,25 @@ export interface V2MainProps {
 
 /**
  * Get CSS classes for step transition animations
+ *
+ * Forward (Continue button):
+ * - Current content: slides out left + fades out (ease-out)
+ * - New content: slides in from right + fades in (ease-in)
+ *
+ * Back button:
+ * - Current content: slides out right + fades out (ease-out)
+ * - New content: slides in from left + fades in (ease-in)
  */
 function getTransitionClass(
   isTransitioning: boolean,
   direction: TransitionDirection
 ): string {
   if (isTransitioning) {
+    // Exit animation: forward slides left, back slides right
     return direction === 'forward' ? 'slide-out-left' : 'slide-out-right';
   }
-  return 'slide-in-right';
+  // Enter animation: forward slides in from right, back slides in from left
+  return direction === 'forward' ? 'slide-in-right' : 'slide-in-left';
 }
 
 export function V2Main({

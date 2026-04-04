@@ -1,18 +1,30 @@
 import { useState, useRef, useEffect } from 'react';
-import { BotOff, BotMessageSquare, Palette, Send, X } from 'lucide-react';
+import { BotOff, BotMessageSquare, Palette, Send, X, Layers, Database, Users } from 'lucide-react';
 import { DesignSystemPanel } from './DesignSystemPanel';
+
+type VariantId = 'v1-job-focus' | 'v2-talent-centric' | 'v3-wildcard';
 
 interface DevMenuProps {
   agentActive: boolean;
   onToggleAgent: () => void;
   showOz: boolean;
   onToggleOz: () => void;
+  showWorkerData: boolean;
+  onToggleWorkerData: () => void;
+  currentVariant: VariantId;
+  onChangeVariant: (variant: VariantId) => void;
   customUserName: string | null;
   onSetCustomName: (name: string) => void;
   onClearCustomName: () => void;
 }
 
-export function DevMenu({ agentActive, onToggleAgent, showOz: _showOz, onToggleOz: _onToggleOz, customUserName, onSetCustomName, onClearCustomName }: DevMenuProps) {
+const VARIANTS: { id: VariantId; label: string }[] = [
+  { id: 'v1-job-focus', label: 'V1: Job Focus' },
+  { id: 'v2-talent-centric', label: 'V2: Talent Centric' },
+  { id: 'v3-wildcard', label: 'V3: Wildcard' },
+];
+
+export function DevMenu({ agentActive, onToggleAgent, showOz, onToggleOz, showWorkerData, onToggleWorkerData, currentVariant, onChangeVariant, customUserName, onSetCustomName, onClearCustomName }: DevMenuProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showDesignSystem, setShowDesignSystem] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -103,6 +115,48 @@ export function DevMenu({ agentActive, onToggleAgent, showOz: _showOz, onToggleO
                 </button>
               )}
             </div>
+            <div className="dev-menu-divider" />
+            <div className="dev-menu-section-header">Variants</div>
+            {VARIANTS.map((v) => (
+              <button
+                key={v.id}
+                className={`dev-menu-item${v.id === currentVariant ? ' active' : ''}`}
+                onClick={() => {
+                  onChangeVariant(v.id);
+                  setShowMenu(false);
+                }}
+              >
+                <span className="dev-menu-icon">
+                  <Layers size={16} />
+                </span>
+                <span className="dev-menu-label">{v.label}</span>
+              </button>
+            ))}
+            <div className="dev-menu-divider" />
+            <button
+              className={`dev-menu-item${showOz ? ' active' : ''}`}
+              onClick={() => {
+                onToggleOz();
+                setShowMenu(false);
+              }}
+            >
+              <span className="dev-menu-icon">
+                <Database size={16} />
+              </span>
+              <span className="dev-menu-label">Oz</span>
+            </button>
+            <button
+              className={`dev-menu-item${showWorkerData ? ' active' : ''}`}
+              onClick={() => {
+                onToggleWorkerData();
+                setShowMenu(false);
+              }}
+            >
+              <span className="dev-menu-icon">
+                <Users size={16} />
+              </span>
+              <span className="dev-menu-label">Worker Data</span>
+            </button>
           </div>
         )}
 
