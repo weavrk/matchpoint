@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Check, Plus, UserStar, CalendarDays, BadgeCheck } from 'lucide-react';
+import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
 import { WorkerCardCompact } from '../Workers/WorkerCardCompact';
 import { WorkerCardTesting } from '../Workers/WorkerCardTesting';
@@ -7,78 +7,80 @@ import { WorkerCardFull } from '../Workers/WorkerCardFull';
 import { fetchSampleWorkersForDSL, workerRowToProfile } from '../../services/supabase';
 import type { MatchedWorker } from '../../types';
 
-// Hardcoded sample worker for instant DSL panel load
-// Based on real worker: Elizabeth Momberg from Austin
-const DEFAULT_SAMPLE_WORKER: MatchedWorker = {
-  id: '4aa0f0ba-541a-43b0-9728-8df0cdf69060',
-  name: 'Elizabeth Momberg',
-  photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face',
-  market: 'Austin',
-  shiftVerified: true,
-  activelyLooking: true,
-  shiftsOnReflex: 47,
-  invitedBackStores: 6,
-  currentTier: 'R3',
-  aboutMe: 'I genuinely enjoy being the first friendly face customers see and helping them discover pieces they will love. My experience with a range of brands has also made me a pro at keeping the floor organized and jumping in wherever shipment help is needed.',
-  brandsWorked: [
-    { name: 'Beehive', tier: 'mid' },
-    { name: 'Everlane', tier: 'elevated' },
-    { name: 'Faherty', tier: 'elevated' },
-    { name: 'Fashion Incubator Pop-up', tier: 'mid' },
-    { name: 'J. Crew Factory', tier: 'mid' },
-    { name: 'Lively', tier: 'mid' },
-    { name: 'Madewell', tier: 'mid' },
-    { name: 'Mizzen+Main', tier: 'mid' },
-    { name: 'PARTY & CO.', tier: 'mid' },
-  ],
-  endorsementCounts: {
-    'Sales': 9,
-    'All Around': 4,
-    'Back of House': 4,
-    'Management': 1,
-  },
-  shiftExperience: {
-    'Greeter': 16,
-    'Shipment Help': 12,
-    'Fitting Rooms': 10,
-    'Floor Organization': 10,
-    'Omni Help': 4,
-    'Cashier': 4,
-    'Inventory Management': 3,
-  },
-  previousExperience: [
-    { company: 'Unknown', duration: 'Unknown', roles: ['Back of House'] },
-    { company: 'Unknown', duration: 'Unknown', roles: ['Sales Associate'] },
-  ],
-  reflexActivity: {
-    shiftsByTier: { luxury: 0, elevated: 2, mid: 7 },
-    longestRelationship: null,
-    tierProgression: 'stable',
-    storeFavoriteCount: 5,
-  },
-  retailerQuotes: [
-    { quote: 'Elizabeth can jump in wherever needed! Efficient and self starter. Customer compliments and great energy!', brand: '', role: '' },
-    { quote: "Elizabeth was a tremendous help! she jumped right in styling customers and greeting and working fitting rooms. super detail oriented and very experienced with retail ins and outs. would love love her back!", brand: '', role: '' },
-    { quote: "Love Liz! She's so helpful and has great energy!", brand: '', role: '' },
-    { quote: 'Liz is great with customers and staying busy when given direction', brand: '', role: '' },
-  ],
-  retailerSummary: undefined,
-  workerUuid: '4fb0c921-eee3-4575-bf1a-f289f9115387',
-  workerId: 984,
-  matchScore: 94,
-  matchReasons: ['Austin market', 'Shift Verified'],
-};
-
 interface DesignSystemPanelProps {
   onClose: () => void;
 }
 
+// Real worker data from Supabase (Jayzon Trinidad - top actively looking worker)
+const FALLBACK_SAMPLE_WORKER: MatchedWorker = {
+  id: '4659d2fd-a7e0-47c5-86ae-432cf0156671',
+  name: 'Jayzon Trinidad',
+  photo: '/images/avatars/female/pexels_380_cleaned.jpg',
+  market: 'Long Island',
+  shiftVerified: true,
+  activelyLooking: true,
+  shiftsOnReflex: 361,
+  uniqueStoreCount: 39,
+  invitedBackStores: 25,
+  currentTier: 'R1',
+  tardyPercent: 1,
+  tardyRatio: '3 / 361',
+  urgentCancelPercent: 0,
+  urgentCancelRatio: '0 / 361',
+  aboutMe: 'My years in luxury retail, including managing stores for brands like Thierry Mugler and Gant, have given me a sharp eye for detail and a passion for customer engagement. I genuinely enjoy the hustle of the sales floor and collaborating with a team to create a great shopping experience.',
+  brandsWorked: [
+    { name: 'Moncler' },
+    { name: 'Marc Jacobs' },
+    { name: 'Ralph Lauren' },
+    { name: 'Golden Goose' },
+    { name: 'Longchamp' },
+    { name: 'Mackage' },
+    { name: 'Faherty' },
+    { name: 'Everlane' },
+    { name: 'Reiss' },
+    { name: 'SKIMS' },
+  ],
+  previousExperience: [
+    { company: 'Thierry Mugler', duration: '1 - 2 years', roles: ['Store Manager'] },
+    { company: 'Gant', duration: '2+ years', roles: ['Store Manager'] },
+    { company: 'Jitrois Paris', duration: '1 - 2 years', roles: ['Sales Associate'] },
+  ],
+  shiftExperience: {
+    'Sales Associate': 274,
+    'Greeter': 176,
+    'Floor Organization': 94,
+    'Inventory Management': 72,
+    'Fitting Rooms': 67,
+    'Shipments': 37,
+    'Event Help': 26,
+    'Cashier': 25,
+  },
+  endorsementCounts: {
+    'Team Player': 68,
+    'Positive Attitude': 67,
+    'Customer Engagement': 62,
+    'Hustle': 55,
+    'Attention to Detail': 48,
+    'Perfect Attire': 33,
+    'Reviewed Flex Details': 28,
+  },
+  retailerQuotes: [
+    { brand: 'Moncler', quote: 'Jayzon was a pleasure to work with.', role: 'Assistant Store Manager', reviewerName: 'Tiffany K.' },
+    { brand: 'Longchamp', quote: 'He was attentive to guests, jumped right in to help the team and asked questions to make sure he was on track.', role: 'Store Manager', reviewerName: 'Steve A.' },
+  ],
+  retailerSummary: 'Store teams consistently describe Trinidad as a pleasure to work with, highlighting her proactive and customer-focused approach. She is attentive to guests and readily jump in to support the team. Brands appreciate Trinidad\'s initiative in asking questions to ensure she is always on track.',
+  reflexActivity: {
+    storeFavoriteCount: 21,
+  },
+  matchScore: 97,
+  matchReasons: ['361 shifts completed', 'R1 tier', 'Actively looking'],
+};
+
 export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
-  // Start with hardcoded sample, optionally update from Supabase
-  const [sampleWorker, setSampleWorker] = useState<MatchedWorker>(DEFAULT_SAMPLE_WORKER);
+  // Start with fallback, then try to load from Supabase
+  const [sampleWorker, setSampleWorker] = useState<MatchedWorker>(FALLBACK_SAMPLE_WORKER);
 
   useEffect(() => {
-    // Optionally fetch fresh data from Supabase in background
     async function loadWorkers() {
       try {
         const { worker1 } = await fetchSampleWorkersForDSL();
@@ -86,12 +88,11 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
           setSampleWorker({
             ...workerRowToProfile(worker1),
             matchScore: 94,
-            matchReasons: ['Luxury experience', 'High reliability'],
+            matchReasons: ['Actively looking', 'High reliability'],
           });
         }
       } catch (error) {
-        // Silent fail - we have hardcoded fallback
-        console.error('Failed to load sample workers:', error);
+        console.error('DSL: Failed to load from Supabase, using fallback:', error);
       }
     }
     loadWorkers();
@@ -587,6 +588,62 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             <div className="ds-worker-card-example">
               <WorkerCardTesting worker={sampleWorker} />
             </div>
+          </div>
+        </section>
+
+        {/* Page Components Section */}
+        <section className="ds-section">
+          <h3>Page Components (V2)</h3>
+          <p className="ds-description">
+            Reusable layout components for V2 Talent Centric flow. Import from <code>pages/variants/V2TalentCentric</code>.
+          </p>
+
+          <div className="ds-subsection">
+            <h4>.v2-step-content</h4>
+            <p className="ds-description">Step wrapper with consistent padding and animations. Variants: default, welcome, centered, full-height.</p>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
+              <li><span className="ds-style-prop">flex-direction:</span> <code>column</code></li>
+              <li><span className="ds-style-prop">padding:</span> <code>32px 64px 0 64px</code></li>
+              <li><span className="ds-style-prop">transition:</span> <code>transform 200ms ease-out, opacity 200ms ease-out</code></li>
+              <li><span className="ds-style-prop">animation:</span> <code>slideInRight 200ms ease-in forwards</code></li>
+            </ul>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>.v2-nav-footer</h4>
+            <div className="ds-example ds-example-nav-footer">
+              <div className="ds-nav-footer-demo">
+                <button className="ds-nav-btn ds-nav-btn-back">
+                  <ChevronLeft size={20} />
+                  <span>Back</span>
+                </button>
+                <button className="ds-nav-btn ds-nav-btn-next">
+                  <span>Continue</span>
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">margin-top:</span> <code>auto</code></li>
+              <li><span className="ds-style-prop">background:</span> <code>#ffffff</code></li>
+              <li><span className="ds-style-prop">border-top:</span> <code>1px solid var(--quaternary)</code></li>
+              <li><span className="ds-style-prop">padding:</span> <code>16px 0</code></li>
+              <li><span className="ds-style-prop">z-index:</span> <code>10</code></li>
+            </ul>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>.v2-btn-back, .v2-btn-next</h4>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
+              <li><span className="ds-style-prop">padding:</span> <code>12px 36px</code></li>
+              <li><span className="ds-style-prop">min-width:</span> <code>140px</code></li>
+              <li><span className="ds-style-prop">border-radius:</span> <code>8px</code></li>
+              <li><span className="ds-style-prop">font-size:</span> <code>16px</code></li>
+              <li><span className="ds-style-prop">font-weight:</span> <code>500</code></li>
+              <li><span className="ds-style-prop">transition:</span> <code>all 0.15s</code></li>
+            </ul>
           </div>
         </section>
 

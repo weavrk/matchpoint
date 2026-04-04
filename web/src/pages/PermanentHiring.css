@@ -2972,3 +2972,135 @@
   flex-shrink: 0;
 }
 
+/* Page Components Section (V2) */
+.ds-code-example {
+  padding: 16px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.ds-code-example pre {
+  margin: 0;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: var(--primary);
+}
+
+.ds-props-table {
+  overflow-x: auto;
+}
+
+.ds-props-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.ds-props-table th,
+.ds-props-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.ds-props-table th {
+  font-weight: 600;
+  background: var(--gray-50);
+  color: var(--secondary);
+}
+
+.ds-props-table td {
+  color: var(--primary);
+}
+
+.ds-props-table td:first-child {
+  font-weight: 500;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+}
+
+/* Style list for CSS properties */
+.ds-style-list {
+  list-style: none;
+  margin: 12px 0 0 0;
+  padding: 0;
+}
+
+.ds-style-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 13px;
+}
+
+.ds-style-list li:last-child {
+  border-bottom: none;
+}
+
+.ds-style-prop {
+  color: var(--gray-500);
+  min-width: 120px;
+}
+
+.ds-style-list code {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  font-size: 12px;
+  color: var(--primary);
+  background: var(--gray-50);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.ds-example-nav-footer {
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: 8px;
+}
+
+.ds-nav-footer-demo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid var(--gray-200);
+}
+
+.ds-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ds-nav-btn-back {
+  background: transparent;
+  border: 1px solid var(--gray-300);
+  color: var(--primary);
+}
+
+.ds-nav-btn-back:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-400);
+}
+
+.ds-nav-btn-next {
+  background: var(--stone-700);
+  border: none;
+  color: #ffffff;
+}
+
+.ds-nav-btn-next:hover {
+  background: var(--stone-800);
+}
+

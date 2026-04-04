@@ -1,8 +1,10 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
-import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, ShieldCheck, Unlock, Clock, Store, Briefcase, CalendarDays, CalendarClock, CalendarRange } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Sparkles, Link, Heart, Search, X, Users, ShieldCheck, Unlock, Clock, Store, Briefcase, CalendarDays, CalendarClock, CalendarRange, Building2, MapPin, UserCircle } from 'lucide-react';
 import { SAMPLE_WORKERS } from '../../../data/workers';
-import { WorkerCardCompact } from '../../../components/Workers/WorkerCardCompact';
-import { V2NavFooter } from './V2NavFooter';
+import { V2Main } from './V2Main';
+import { V2EmploymentSelector } from './V2EmploymentSelector';
+import { V2WorkerSidebar } from './V2WorkerSidebar';
+import type { EmploymentType } from './V2EmploymentSelector';
 import type { MatchedWorker } from '../../../types';
 import './styles.css';
 
@@ -186,46 +188,14 @@ const BRAND_LOGOS: { id: string; logo: string }[] = [
   { id: 'zara', logo: logoZara },
 ];
 
-// This-or-that questions
-interface ThisOrThatQuestion {
-  id: string;
-  question: string;
-  optionA: { label: string; value: string };
-  optionB: { label: string; value: string };
-  optionC?: { label: string; value: string };
-}
-
-const QUESTIONS: ThisOrThatQuestion[] = [
-  {
-    id: 'employment',
-    question: 'What type of employment?',
-    optionA: { label: 'Full-time', value: 'FT' },
-    optionB: { label: 'Part-time', value: 'PT' },
-    optionC: { label: 'Open to either', value: 'either' },
-  },
-  {
-    id: 'experience',
-    question: 'Experience level?',
-    optionA: { label: 'Seasoned pro', value: 'experienced' },
-    optionB: { label: 'Rising talent', value: 'newer' },
-  },
-  {
-    id: 'style',
-    question: 'Work style?',
-    optionA: { label: 'Self-starter', value: 'independent' },
-    optionB: { label: 'Team player', value: 'collaborative' },
-  },
-  {
-    id: 'availability',
-    question: 'Availability?',
-    optionA: { label: 'Weekends', value: 'weekends' },
-    optionB: { label: 'Weekdays', value: 'weekdays' },
-  },
-];
-
-type Step = 'welcome' | 'location' | 'focus' | 'employment' | 'roles' | 'brands' | 'questions' | 'results';
+type Step = 'welcome' | 'persona' | 'location' | 'focus' | 'employment' | 'brands' | 'experience' | 'results';
 
 type FocusArea = 'employment' | 'brands' | 'roles';
+
+type PersonaType = 'individual' | 'multi-store' | 'field' | 'recruiter';
+
+// Experience levels per Logic Tree
+type ExperienceLevel = 'new' | 'rising' | 'seasoned' | 'management';
 
 // Store locations (retailer's locations they have permission to hire for)
 const STORE_LOCATIONS = [
@@ -404,8 +374,6 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   const [locationSearch, setLocationSearch] = useState('');
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [brandSearch, setBrandSearch] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [fallbackUserName] = useState(() => getRandomUserName());
@@ -414,9 +382,16 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
 
   // New flow state
   const [focusArea, setFocusArea] = useState<FocusArea | null>(null);
-  const [employmentType, setEmploymentType] = useState<'full-time' | 'part-time' | 'either' | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string | null>(null);
-  const [roleSearch, setRoleSearch] = useState('');
+  const [employmentType, setEmploymentType] = useState<EmploymentType>(null);
+
+  // Persona and location flow
+  const [persona, setPersona] = useState<PersonaType | null>(null);
+
+  // Experience level for preference shaping
+  const [experienceLevel, setExperienceLevel] = useState<ExperienceLevel | null>(null);
+
+  // Track which preference sections have been completed (for CYOA flow)
+  const [completedSections, setCompletedSections] = useState<Set<FocusArea>>(new Set());
 
   // Search matching brands - only match from start of name
   const searchResults = useMemo(() => {
@@ -452,6 +427,42 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
     );
   };
 
+  // CYOA flow: Get next incomplete preference section
+  const getNextIncompleteSection = (current: FocusArea): FocusArea | null => {
+    const sections: FocusArea[] = ['employment', 'brands', 'roles'];
+    const currentIndex = sections.indexOf(current);
+
+    // Check sections after current, then wrap around
+    for (let i = 1; i <= sections.length; i++) {
+      const nextIndex = (currentIndex + i) % sections.length;
+      const nextSection = sections[nextIndex];
+      if (!completedSections.has(nextSection)) {
+        return nextSection;
+      }
+    }
+    return null; // All sections complete
+  };
+
+  // Mark a section as complete and navigate to next
+  const completeSection = (section: FocusArea) => {
+    const newCompleted = new Set(completedSections);
+    newCompleted.add(section);
+    setCompletedSections(newCompleted);
+
+    // If all 3 sections done, go to results
+    if (newCompleted.size >= 3) {
+      transitionToStep('results', 'forward');
+    } else {
+      // Go to next incomplete section
+      const next = getNextIncompleteSection(section);
+      if (next) {
+        transitionToStep(next === 'employment' ? 'employment' : next === 'brands' ? 'brands' : 'roles', 'forward');
+      } else {
+        transitionToStep('results', 'forward');
+      }
+    }
+  };
+
   // Transition to a new step with animation
   const transitionToStep = (newStep: Step, direction: 'forward' | 'back' = 'forward') => {
     setTransitionDirection(direction);
@@ -460,18 +471,6 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
       setStep(newStep);
       setIsTransitioning(false);
     }, 200);
-  };
-
-  // Handle this-or-that answer
-  const handleAnswer = (questionId: string, value: string) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
-
-    // Auto-advance to next question or results
-    if (currentQuestionIndex < QUESTIONS.length - 1) {
-      setTimeout(() => setCurrentQuestionIndex(prev => prev + 1), 300);
-    } else {
-      setTimeout(() => transitionToStep('results', 'forward'), 300);
-    }
   };
 
   // Helper to normalize brand names for comparison (kebab-case to lowercase, spaces removed)
@@ -508,29 +507,36 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
       });
     }
 
-    // Apply question filters
-    if (answers.employment) {
-      workers = workers.filter(w =>
-        w.preference === 'Both' || w.preference === answers.employment
-      );
+    // Filter by employment type (from V2EmploymentSelector)
+    if (employmentType) {
+      if (employmentType === 'full-time') {
+        workers = workers.filter(w => w.preference === 'FT' || w.preference === 'Both');
+      } else if (employmentType === 'part-time') {
+        workers = workers.filter(w => w.preference === 'PT' || w.preference === 'Both');
+      }
+      // 'flex' and 'help' options don't filter - they show all workers
     }
 
-    if (answers.experience === 'experienced') {
-      workers = workers.filter(w => w.shiftsOnReflex >= 30);
-    } else if (answers.experience === 'newer') {
-      workers = workers.filter(w => w.shiftsOnReflex < 30);
-    }
-
-    if (answers.style === 'independent') {
-      workers = workers.filter(w =>
-        w.endorsements?.includes('self-starter') || w.workStyle?.traits.includes('Self-directed')
-      );
-    } else if (answers.style === 'collaborative') {
-      workers = workers.filter(w => w.endorsements?.includes('team-player'));
-    }
-
-    if (answers.availability === 'weekends') {
-      workers = workers.filter(w => w.availability?.weekends);
+    // Filter by experience level (Logic Tree specs)
+    if (experienceLevel) {
+      if (experienceLevel === 'new') {
+        // 0-5 shifts
+        workers = workers.filter(w => w.shiftsOnReflex >= 0 && w.shiftsOnReflex <= 5);
+      } else if (experienceLevel === 'rising') {
+        // 5-30 shifts
+        workers = workers.filter(w => w.shiftsOnReflex > 5 && w.shiftsOnReflex <= 30);
+      } else if (experienceLevel === 'seasoned') {
+        // 30+ shifts
+        workers = workers.filter(w => w.shiftsOnReflex > 30);
+      } else if (experienceLevel === 'management') {
+        // Has management role in history - check previousExperience for management titles
+        workers = workers.filter(w => {
+          const mgmtTitles = ['manager', 'supervisor', 'lead', 'coordinator', 'director', 'assistant manager'];
+          return w.previousExperience?.some(exp =>
+            mgmtTitles.some(title => exp.role?.toLowerCase().includes(title))
+          );
+        });
+      }
     }
 
     // Score workers
@@ -560,7 +566,7 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
 
     // Sort by score
     return scored.sort((a, b) => b.matchScore - a.matchScore);
-  }, [selectedBrands, answers, selectedLocation]);
+  }, [selectedBrands, selectedLocation, employmentType, experienceLevel]);
 
   // Get brands the filtered workers have in common
   const commonBrands = useMemo(() => {
@@ -575,15 +581,6 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
       .slice(0, 6)
       .map(([name]) => name);
   }, [filteredWorkers]);
-
-  const handleContinue = () => {
-    if (step === 'brands' && selectedBrands.length > 0) {
-      setStep('questions');
-    }
-  };
-
-  const currentQuestion = QUESTIONS[currentQuestionIndex];
-  const progress = step === 'welcome' ? 0 : step === 'brands' ? 25 : step === 'questions' ? 25 + ((currentQuestionIndex + 1) / QUESTIONS.length) * 50 : 100;
 
   return (
     <div className={`v2-page ${step === 'welcome' ? 'v2-page-welcome' : ''}`}>
@@ -616,18 +613,9 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
       {activeTab === 'discover' && (
         <div className={`v2-container ${step === 'welcome' ? 'v2-container-welcome' : ''}`}>
           {step === 'welcome' && <div className="gradient-wash" />}
-          {/* Main content area */}
-          <div className="v2-main">
-            {/* Progress bar - hidden on welcome, location, focus, employment, roles */}
-            {!['welcome', 'location', 'focus', 'employment', 'roles'].includes(step) && (
-            <div className="v2-progress">
-              <div className="v2-progress-bar" style={{ width: `${progress}%` }} />
-            </div>
-            )}
-
-          {/* Step 0: Welcome */}
+          {/* Step 0: Welcome - uses special container, not V2Main */}
           {step === 'welcome' && (
-            <div className={`v2-welcome-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in'}`}>
+            <div className="v2-main v2-welcome-step">
               <div className="v2-welcome-illustration">
                 <div className="v2-illustration-circle"></div>
                 <div className="v2-illustration-cards">
@@ -671,7 +659,7 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
               </p>
               <button
                 className="v2-get-started-btn"
-                onClick={() => transitionToStep('location', 'forward')}
+                onClick={() => transitionToStep('persona', 'forward')}
               >
                 Get started
                 <ChevronRight size={20} />
@@ -679,13 +667,100 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
             </div>
           )}
 
-          {/* Step 1: Location Selection */}
+          {/* Step 1: User Persona Selection */}
+          {step === 'persona' && (
+            <V2Main
+              stepClassName="v2-persona-step"
+              isTransitioning={isTransitioning}
+              transitionDirection={transitionDirection}
+              footer={{
+                onBack: () => transitionToStep('welcome', 'back'),
+                showBack: true,
+              }}
+            >
+              <div className="v2-step-header">
+                <h1 className="type-tagline">Tell us about yourself</h1>
+                <p className="type-prompt-question v2-step-subtitle">This helps us tailor your hiring experience</p>
+              </div>
+
+              <div className="v2-focus-chips">
+                <button
+                  className={`welcome-card ${persona === 'individual' ? 'active' : ''}`}
+                  onClick={() => {
+                    setPersona('individual');
+                    // For single store, auto-set location and go to focus
+                    setSelectedLocation('austin-tx'); // Default market for MVP
+                    transitionToStep('focus', 'forward');
+                  }}
+                >
+                  <div className="welcome-card-icon">
+                    {persona === 'individual' ? <Check size={24} /> : <Store size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Single-Store Manager</h3>
+                  <p className="welcome-card-description type-body-sm">Managing a team at one location</p>
+                </button>
+                <button
+                  className={`welcome-card ${persona === 'multi-store' ? 'active' : ''}`}
+                  onClick={() => {
+                    setPersona('multi-store');
+                    transitionToStep('location', 'forward');
+                  }}
+                >
+                  <div className="welcome-card-icon">
+                    {persona === 'multi-store' ? <Check size={24} /> : <Building2 size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Multi-Store Manager</h3>
+                  <p className="welcome-card-description type-body-sm">Managing multiple locations in same market</p>
+                </button>
+                <button
+                  className={`welcome-card ${persona === 'field' ? 'active' : ''}`}
+                  onClick={() => {
+                    setPersona('field');
+                    transitionToStep('location', 'forward');
+                  }}
+                >
+                  <div className="welcome-card-icon">
+                    {persona === 'field' ? <Check size={24} /> : <MapPin size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Field / Multi-Market</h3>
+                  <p className="welcome-card-description type-body-sm">Overseeing stores across markets</p>
+                </button>
+                <button
+                  className={`welcome-card ${persona === 'recruiter' ? 'active' : ''}`}
+                  onClick={() => {
+                    setPersona('recruiter');
+                    transitionToStep('location', 'forward');
+                  }}
+                >
+                  <div className="welcome-card-icon">
+                    {persona === 'recruiter' ? <Check size={24} /> : <UserCircle size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Recruiter</h3>
+                  <p className="welcome-card-description type-body-sm">Centralized hiring function</p>
+                </button>
+              </div>
+            </V2Main>
+          )}
+
+          {/* Step 2: Location Selection */}
           {step === 'location' && (
-            <div className={`v2-location-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
+            <V2Main
+              stepClassName="v2-location-step"
+              isTransitioning={isTransitioning}
+              transitionDirection={transitionDirection}
+              footer={{
+                showBack: true,
+                onBack: () => transitionToStep('persona', 'back'),
+                onNext: () => transitionToStep('focus', 'forward'),
+                nextDisabled: !selectedLocation,
+              }}
+            >
               <div className="v2-location-header-section">
                 <div className="v2-step-header">
-                  <h1 className="type-tagline">First, let's establish what city you're looking to hire in.</h1>
-                  <p className="type-prompt-question v2-step-subtitle">Select a location or search for a city</p>
+                  <h1 className="type-tagline">What city are you hiring in?</h1>
+                  <p className="type-prompt-question v2-step-subtitle">
+                    {persona === 'multi-store' ? 'Which location are you hiring for?' : 'Select a market or search for a city'}
+                  </p>
                 </div>
 
                 <div className="v2-location-controls">
@@ -760,199 +835,190 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
                     ))}
                 </div>
               </div>
-
-              <V2NavFooter
-                showBack={false}
-                onNext={() => transitionToStep('focus', 'forward')}
-                nextDisabled={!selectedLocation}
-              />
-            </div>
+            </V2Main>
           )}
 
-          {/* Step 2: Focus Area Selection */}
+          {/* Step 3: Focus Area Selection (CYOA - Pick starting point) */}
           {step === 'focus' && (
-            <div className={`v2-focus-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
-              <div className="v2-step-content-inner">
-                <div className="v2-step-header">
-                  <h1 className="type-tagline">What's a key area you want to establish for a new hire?</h1>
-                </div>
+            <V2Main
+              stepClassName="v2-focus-step"
+              isTransitioning={isTransitioning}
+              transitionDirection={transitionDirection}
+              footer={{
+                onBack: () => transitionToStep(persona === 'individual' ? 'persona' : 'location', 'back'),
+                showBack: true,
+              }}
+            >
+              <div className="v2-step-header">
+                <h1 className="type-tagline">Where would you like to start?</h1>
+                <p className="type-prompt-question v2-step-subtitle">We'll cover all three areas - pick what matters most first</p>
+              </div>
 
-                <div className="v2-focus-chips">
-                  <button
-                    className={`welcome-card ${focusArea === 'employment' ? 'active' : ''}`}
-                    onClick={() => {
+              <div className="v2-focus-chips">
+                <button
+                  className={`welcome-card ${completedSections.has('employment') ? 'completed' : focusArea === 'employment' ? 'active' : ''}`}
+                  onClick={() => {
+                    if (!completedSections.has('employment')) {
                       setFocusArea('employment');
                       transitionToStep('employment', 'forward');
-                    }}
-                  >
-                    <div className="welcome-card-icon">
-                      {focusArea === 'employment' ? <Check size={24} /> : <Clock size={24} />}
-                    </div>
-                    <h3 className="welcome-card-title type-chip-header-lg">Type of employment</h3>
-                  </button>
-                  <button
-                    className={`welcome-card ${focusArea === 'brands' ? 'active' : ''}`}
-                    onClick={() => {
+                    }
+                  }}
+                  disabled={completedSections.has('employment')}
+                >
+                  <div className="welcome-card-icon">
+                    {completedSections.has('employment') ? <Check size={24} /> : <Clock size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Type of employment</h3>
+                  <p className="welcome-card-description type-body-sm">Full-time, part-time, or flexible</p>
+                </button>
+                <button
+                  className={`welcome-card ${completedSections.has('brands') ? 'completed' : focusArea === 'brands' ? 'active' : ''}`}
+                  onClick={() => {
+                    if (!completedSections.has('brands')) {
                       setFocusArea('brands');
                       transitionToStep('brands', 'forward');
-                    }}
-                  >
-                    <div className="welcome-card-icon">
-                      {focusArea === 'brands' ? <Check size={24} /> : <Store size={24} />}
-                    </div>
-                    <h3 className="welcome-card-title type-chip-header-lg">Previous brand experience</h3>
-                  </button>
-                  <button
-                    className={`welcome-card ${focusArea === 'roles' ? 'active' : ''}`}
-                    onClick={() => {
-                      setFocusArea('roles');
-                      transitionToStep('roles', 'forward');
-                    }}
-                  >
-                    <div className="welcome-card-icon">
-                      {focusArea === 'roles' ? <Check size={24} /> : <Briefcase size={24} />}
-                    </div>
-                    <h3 className="welcome-card-title type-chip-header-lg">Previous role experience</h3>
-                  </button>
-                </div>
-              </div>
-
-              <V2NavFooter
-                onBack={() => transitionToStep('location', 'back')}
-              />
-            </div>
-          )}
-
-          {/* Step 2a: Employment Type Selection */}
-          {step === 'employment' && (
-            <div className={`v2-employment-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
-              <div className="v2-step-content-inner">
-                <div className="v2-step-header">
-                  <h1 className="type-tagline">What type of employment?</h1>
-                </div>
-
-                <div className="v2-employment-chips">
-                  <button
-                    className={`welcome-card ${employmentType === 'full-time' ? 'active' : ''}`}
-                    onClick={() => {
-                      setEmploymentType('full-time');
-                      transitionToStep('brands', 'forward');
-                    }}
-                  >
-                    <div className="welcome-card-icon">
-                      {employmentType === 'full-time' ? <Check size={24} /> : <CalendarDays size={24} />}
-                    </div>
-                    <h3 className="welcome-card-title type-chip-header-lg">Full-time</h3>
-                  </button>
-                  <button
-                    className={`welcome-card ${employmentType === 'part-time' ? 'active' : ''}`}
-                    onClick={() => {
-                      setEmploymentType('part-time');
-                      transitionToStep('brands', 'forward');
-                    }}
-                  >
-                    <div className="welcome-card-icon">
-                      {employmentType === 'part-time' ? <Check size={24} /> : <CalendarClock size={24} />}
-                    </div>
-                    <h3 className="welcome-card-title type-chip-header-lg">Part-time</h3>
-                  </button>
-                  <button
-                    className={`welcome-card ${employmentType === 'either' ? 'active' : ''}`}
-                    onClick={() => {
-                      setEmploymentType('either');
-                      transitionToStep('brands', 'forward');
-                    }}
-                  >
-                    <div className="welcome-card-icon">
-                      {employmentType === 'either' ? <Check size={24} /> : <CalendarRange size={24} />}
-                    </div>
-                    <h3 className="welcome-card-title type-chip-header-lg">Open to either</h3>
-                  </button>
-                </div>
-              </div>
-
-              <V2NavFooter
-                onBack={() => transitionToStep('focus', 'back')}
-              />
-            </div>
-          )}
-
-          {/* Step 2b: Role Selection */}
-          {step === 'roles' && (
-            <div className={`v2-roles-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
-              <div className="v2-step-content-inner v2-step-content-scroll">
-                <div className="v2-step-header">
-                  <h1 className="type-tagline">What role experience are you looking for?</h1>
-                </div>
-
-                <div className="v2-role-search-wrapper">
-                  <div className="v2-search-input-wrapper">
-                    <Search size={16} className="v2-search-icon" />
-                    <input
-                      type="text"
-                      placeholder="Type a role..."
-                      value={roleSearch}
-                      onChange={(e) => setRoleSearch(e.target.value)}
-                      className="v2-search-input"
-                    />
-                    {roleSearch && (
-                      <button
-                        className="v2-search-clear"
-                        onClick={() => setRoleSearch('')}
-                        aria-label="Clear search"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
+                    }
+                  }}
+                  disabled={completedSections.has('brands')}
+                >
+                  <div className="welcome-card-icon">
+                    {completedSections.has('brands') ? <Check size={24} /> : <Store size={24} />}
                   </div>
-                  {roleSearch.trim() && (
-                    <button
-                      className="v2-role-search-submit"
-                      onClick={() => {
-                        setSelectedRole(roleSearch.trim());
-                        transitionToStep('brands', 'forward');
-                      }}
-                    >
-                      Use "{roleSearch.trim()}"
-                      <ChevronRight size={16} />
-                    </button>
-                  )}
-                </div>
-
-                <p className="v2-role-divider-text">Or select from below</p>
-
-                <div className="v2-role-categories">
-                  {Object.entries(JOB_ROLES).map(([key, category]) => (
-                    <div key={key} className="v2-role-category">
-                      <h3 className="v2-role-category-header">{category.label}</h3>
-                      <div className="v2-role-chips">
-                        {category.roles.map(role => (
-                          <button
-                            key={role.title}
-                            className={`v2-role-chip ${selectedRole === role.title ? 'selected' : ''}`}
-                            onClick={() => {
-                              setSelectedRole(role.title);
-                              transitionToStep('brands', 'forward');
-                            }}
-                          >
-                            {role.title}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Brand affinity</h3>
+                  <p className="welcome-card-description type-body-sm">Whose talent would you trust?</p>
+                </button>
+                <button
+                  className={`welcome-card ${completedSections.has('roles') ? 'completed' : focusArea === 'roles' ? 'active' : ''}`}
+                  onClick={() => {
+                    if (!completedSections.has('roles')) {
+                      setFocusArea('roles');
+                      transitionToStep('experience', 'forward');
+                    }
+                  }}
+                  disabled={completedSections.has('roles')}
+                >
+                  <div className="welcome-card-icon">
+                    {completedSections.has('roles') ? <Check size={24} /> : <Briefcase size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Experience level</h3>
+                  <p className="welcome-card-description type-body-sm">New, rising, seasoned, or management</p>
+                </button>
               </div>
-
-              <V2NavFooter
-                onBack={() => transitionToStep('focus', 'back')}
-              />
-            </div>
+            </V2Main>
           )}
 
-          {/* Step 3: Brand Selection */}
+          {/* Employment Type Selection */}
+          {step === 'employment' && (
+            <V2Main
+              stepClassName="v2-employment-step"
+              isTransitioning={isTransitioning}
+              transitionDirection={transitionDirection}
+              footer={{
+                onBack: () => transitionToStep('focus', 'back'),
+                showBack: true,
+              }}
+            >
+              <V2EmploymentSelector
+                value={employmentType}
+                onChange={(type) => {
+                  setEmploymentType(type);
+                  completeSection('employment');
+                }}
+              />
+            </V2Main>
+          )}
+
+          {/* Experience Level Selection */}
+          {step === 'experience' && (
+            <V2Main
+              stepClassName="v2-experience-step"
+              isTransitioning={isTransitioning}
+              transitionDirection={transitionDirection}
+              footer={{
+                onBack: () => transitionToStep('focus', 'back'),
+                showBack: true,
+              }}
+            >
+              <div className="v2-step-header">
+                <h1 className="type-tagline">What experience level are you looking for?</h1>
+                <p className="type-prompt-question v2-step-subtitle">Based on shifts completed on Reflex</p>
+              </div>
+
+              <div className="v2-focus-chips">
+                <button
+                  className={`welcome-card ${experienceLevel === 'new' ? 'active' : ''}`}
+                  onClick={() => {
+                    setExperienceLevel('new');
+                    completeSection('roles');
+                  }}
+                >
+                  <div className="welcome-card-icon">
+                    {experienceLevel === 'new' ? <Check size={24} /> : <Users size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">New to Reflex</h3>
+                  <p className="welcome-card-description type-body-sm">0-5 shifts completed</p>
+                </button>
+                <button
+                  className={`welcome-card ${experienceLevel === 'rising' ? 'active' : ''}`}
+                  onClick={() => {
+                    setExperienceLevel('rising');
+                    completeSection('roles');
+                  }}
+                >
+                  <div className="welcome-card-icon">
+                    {experienceLevel === 'rising' ? <Check size={24} /> : <Sparkles size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Rising talent</h3>
+                  <p className="welcome-card-description type-body-sm">5-30 shifts, building momentum</p>
+                </button>
+                <button
+                  className={`welcome-card ${experienceLevel === 'seasoned' ? 'active' : ''}`}
+                  onClick={() => {
+                    setExperienceLevel('seasoned');
+                    completeSection('roles');
+                  }}
+                >
+                  <div className="welcome-card-icon">
+                    {experienceLevel === 'seasoned' ? <Check size={24} /> : <ShieldCheck size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Seasoned pro</h3>
+                  <p className="welcome-card-description type-body-sm">30+ shifts, proven reliability</p>
+                </button>
+                <button
+                  className={`welcome-card ${experienceLevel === 'management' ? 'active' : ''}`}
+                  onClick={() => {
+                    setExperienceLevel('management');
+                    completeSection('roles');
+                  }}
+                >
+                  <div className="welcome-card-icon">
+                    {experienceLevel === 'management' ? <Check size={24} /> : <Briefcase size={24} />}
+                  </div>
+                  <h3 className="welcome-card-title type-chip-header-lg">Management ready</h3>
+                  <p className="welcome-card-description type-body-sm">Leadership role experience</p>
+                </button>
+              </div>
+            </V2Main>
+          )}
+
+          {/* Brand Selection */}
         {step === 'brands' && (
-          <div className={`v2-brands-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
+          <V2Main
+            stepClassName="v2-brands-step"
+            isTransitioning={isTransitioning}
+            transitionDirection={transitionDirection}
+            footer={{
+              onBack: () => transitionToStep('focus', 'back'),
+              onNext: () => {
+                if (selectedBrands.length > 0) {
+                  completeSection('brands');
+                }
+              },
+              nextDisabled: selectedBrands.length === 0,
+              nextLabel: selectedBrands.length > 0 ? `Continue (${selectedBrands.length})` : 'Continue',
+              showBack: true,
+            }}
+          >
             <div className="v2-brands-header-section">
               <div className="v2-step-header">
                 <h1 className="type-tagline">What brand experience do you trust?</h1>
@@ -1019,66 +1085,17 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
                 ))}
               </div>
             </div>
-
-            <V2NavFooter
-              onBack={() => transitionToStep(focusArea || 'focus', 'back')}
-              onNext={handleContinue}
-              nextDisabled={selectedBrands.length === 0}
-              nextLabel={selectedBrands.length > 0 ? `Continue (${selectedBrands.length})` : 'Continue'}
-            />
-          </div>
+          </V2Main>
         )}
 
-        {/* Step 2: This or That Questions */}
-        {step === 'questions' && currentQuestion && (
-          <div className={`v2-employment-step v2-step-content ${isTransitioning ? (transitionDirection === 'forward' ? 'slide-out-left' : 'slide-out-right') : 'slide-in-right'}`}>
-            <div className="v2-step-content-inner">
-              <div className="v2-step-header">
-                <h1 className="type-tagline">{currentQuestion.question}</h1>
-              </div>
-
-              <div className="v2-employment-chips">
-                <button
-                  className={`welcome-card ${answers[currentQuestion.id] === currentQuestion.optionA.value ? 'active' : ''}`}
-                  onClick={() => handleAnswer(currentQuestion.id, currentQuestion.optionA.value)}
-                >
-                  <div className="welcome-card-icon">
-                    {answers[currentQuestion.id] === currentQuestion.optionA.value ? <Check size={24} /> : <CalendarDays size={24} />}
-                  </div>
-                  <h3 className="welcome-card-title type-chip-header-lg">{currentQuestion.optionA.label}</h3>
-                </button>
-                <button
-                  className={`welcome-card ${answers[currentQuestion.id] === currentQuestion.optionB.value ? 'active' : ''}`}
-                  onClick={() => handleAnswer(currentQuestion.id, currentQuestion.optionB.value)}
-                >
-                  <div className="welcome-card-icon">
-                    {answers[currentQuestion.id] === currentQuestion.optionB.value ? <Check size={24} /> : <CalendarClock size={24} />}
-                  </div>
-                  <h3 className="welcome-card-title type-chip-header-lg">{currentQuestion.optionB.label}</h3>
-                </button>
-                {currentQuestion.optionC && (
-                  <button
-                    className={`welcome-card ${answers[currentQuestion.id] === currentQuestion.optionC.value ? 'active' : ''}`}
-                    onClick={() => handleAnswer(currentQuestion.id, currentQuestion.optionC!.value)}
-                  >
-                    <div className="welcome-card-icon">
-                      {answers[currentQuestion.id] === currentQuestion.optionC.value ? <Check size={24} /> : <CalendarRange size={24} />}
-                    </div>
-                    <h3 className="welcome-card-title type-chip-header-lg">{currentQuestion.optionC.label}</h3>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <V2NavFooter
-              onBack={() => transitionToStep('brands', 'back')}
-            />
-          </div>
-        )}
-
-        {/* Step 3: Results */}
+        {/* Results */}
         {step === 'results' && (
-          <div className="v2-results-step">
+          <V2Main
+            stepClassName="v2-results-step"
+            isTransitioning={isTransitioning}
+            transitionDirection={transitionDirection}
+            hideFooter
+          >
             <div className="v2-step-header">
               <div className="v2-results-icon">
                 <Sparkles size={32} />
@@ -1107,59 +1124,33 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
                 Connect with all {filteredWorkers.length}
               </button>
               <button className="v2-action-btn v2-action-secondary" onClick={() => {
-                setStep('brands');
-                setCurrentQuestionIndex(0);
-                setAnswers({});
+                setStep('welcome');
                 setSelectedBrands([]);
+                setEmploymentType(null);
+                setExperienceLevel(null);
+                setCompletedSections(new Set());
               }}>
                 Start over
               </button>
             </div>
-          </div>
+          </V2Main>
         )}
-      </div>
 
-      {/* Sidebar with worker cards - hidden on welcome, shown on location when city selected */}
-      {(step !== 'welcome' && (step !== 'location' || selectedLocation)) && (
-      <div className={`v2-sidebar ${sidebarOpen ? '' : 'collapsed'}`}>
-        <button
-          className="v2-sidebar-toggle"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-label={sidebarOpen ? 'Close panel' : 'Open panel'}
-        >
-          {sidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        </button>
-        <div className="v2-sidebar-header">
-          <h2 className="type-section-header-md">
-            {step === 'location' && selectedLocation && `${MARKETS.find(m => m.id === selectedLocation)?.name} Reflexers`}
-            {step === 'focus' && 'All Reflexers'}
-            {step === 'employment' && 'All Reflexers'}
-            {step === 'roles' && 'All Reflexers'}
-            {step === 'brands' && 'Shift Verified Reflexers'}
-            {step === 'questions' && 'Matching talent'}
-            {step === 'results' && `${filteredWorkers.length} matches`}
-          </h2>
-          {filteredWorkers.length > 0 && step !== 'results' && (
-            <span className="v2-sidebar-count">{filteredWorkers.length} found</span>
-          )}
-        </div>
-
-        <div className="v2-sidebar-cards">
-          {filteredWorkers.length === 0 ? (
-            <div className="v2-no-matches">
-              <p>No matches yet. Try selecting different brands or criteria.</p>
-            </div>
-          ) : (
-            filteredWorkers.map(worker => (
-              <WorkerCardCompact
-                key={worker.id}
-                worker={worker}
-                onClick={() => {/* TODO: open full card */}}
-              />
-            ))
-          )}
-        </div>
-      </div>
+      {/* Sidebar with worker cards - shown on brands, experience, and results steps */}
+      {['brands', 'experience', 'results'].includes(step) && (
+        <V2WorkerSidebar
+          workers={filteredWorkers}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          title={
+            step === 'brands' ? 'Shift Verified Reflexers' :
+            step === 'experience' ? 'Matching talent' :
+            step === 'results' ? `${filteredWorkers.length} matches` :
+            'Reflexers'
+          }
+          showCount={step !== 'results'}
+          onWorkerClick={() => {/* TODO: open full card */}}
+        />
       )}
     </div>
       )}

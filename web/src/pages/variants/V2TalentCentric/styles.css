@@ -7,25 +7,21 @@
   overflow: hidden;
 }
 
-/* Step transition animations */
-.v2-step-content {
-  transition: transform 200ms ease-out, opacity 200ms ease-out;
-}
-
-.v2-step-content.slide-in {
+/* Step transition animations - applied to .v2-main */
+.v2-main.slide-in {
   transform: translateX(0);
   opacity: 1;
 }
 
-.v2-step-content.slide-in-right {
+.v2-main.slide-in-right {
   animation: slideInRight 200ms ease-in forwards;
 }
 
-.v2-step-content.slide-out-left {
+.v2-main.slide-out-left {
   animation: slideOutLeft 200ms ease-out forwards;
 }
 
-.v2-step-content.slide-out-right {
+.v2-main.slide-out-right {
   animation: slideOutRight 200ms ease-out forwards;
 }
 
@@ -182,33 +178,19 @@
   z-index: 1;
 }
 
-/* Main content area - left side, scrollable */
+/* Main content area - reusable container for all V2 steps */
 .v2-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0 64px 48px 64px;
+  padding: 32px 64px 0 64px; /* Top padding is 50% of left/right */
   overflow-y: auto;
+  transition: transform 200ms ease-out, opacity 200ms ease-out;
 }
 
+/* Welcome step has special padding */
 .v2-container-welcome .v2-main {
   padding: 0;
-}
-
-/* Progress bar */
-.v2-progress {
-  height: 4px;
-  background: var(--quaternary);
-  border-radius: 2px;
-  margin-bottom: 48px;
-  overflow: hidden;
-}
-
-.v2-progress-bar {
-  height: 100%;
-  background: var(--accent-green-mid);
-  border-radius: 2px;
-  transition: width 0.4s ease;
 }
 
 /* Step header */
@@ -408,11 +390,7 @@
 
 /* Focus area selection step */
 .v2-focus-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
+  /* Inherits flex layout and padding from .v2-step-content */
 }
 
 .v2-focus-chips {
@@ -479,10 +457,58 @@
   padding: 0;
 }
 
+/* ============================================================
+   V2 CONTENT SHELL - Reusable Page Components
+   ============================================================ */
+
+/**
+ * V2ContentShell Layout Specs:
+ * - Default padding: 48px 64px (top/bottom, left/right)
+ * - Welcome variant: 96px 64px 64px padding, centered content
+ * - Full-height variant: flex: 1, overflow hidden
+ * - Centered variant: flex: 1, centered content
+ *
+ * Animation Specs:
+ * - Duration: 200ms
+ * - Easing: ease-out (exit), ease-in (enter)
+ * - Transform: 50px horizontal slide
+ *
+ * Width/Height:
+ * - Shell fills available space in .v2-main
+ * - Min-height: 0 (allows flex shrinking)
+ * - Max-width: none (controlled by parent)
+ */
+
 /* Generic step content wrapper for scrollable areas */
 .v2-step-content-inner {
   flex: 1;
   padding: 48px 64px;
+}
+
+/* Shell header section - fixed at top of step */
+.v2-shell-header-section {
+  flex-shrink: 0;
+  padding: 48px 64px 0;
+}
+
+/* Centered step variant */
+.v2-centered-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 64px;
+}
+
+/* Full-height step variant (for grids with scroll) */
+.v2-full-height-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
 }
 
 .v2-step-content-scroll {
@@ -643,16 +669,12 @@
   color: #ffffff;
 }
 
-/* Sticky Nav Footer */
+/* Sticky Nav Footer - pinned to bottom of content shell */
 .v2-nav-footer {
-  position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  margin-top: auto;
   background: #ffffff;
   border-top: 1px solid var(--quaternary);
   padding: 16px 0;
-  margin-top: auto;
   z-index: 10;
 }
 
@@ -734,11 +756,7 @@
 
 /* Employment type selection step */
 .v2-employment-step {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  overflow: hidden;
+  /* Inherits flex layout and padding from .v2-step-content */
 }
 
 .v2-employment-chips {
