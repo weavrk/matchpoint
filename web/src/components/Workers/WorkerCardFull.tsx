@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import type { MatchedWorker } from '../../types';
 import { WorkerCardHeader } from './WorkerCardHeader';
+import { WorkerAchievementChips } from './WorkerAchievementChips';
 import { getBrandLogo } from '../../utils/brandLogos';
 
 interface WorkerCardFullProps {
@@ -42,77 +43,14 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
         <WorkerCardHeader worker={worker} />
 
         <div className="worker-card-body">
+          {/* Achievement Chips */}
+          <WorkerAchievementChips worker={worker} />
+
           {/* About Me */}
           {worker.aboutMe && (
             <div className="testing-section">
               <span className="testing-label">About</span>
               <p className="testing-about">{worker.aboutMe}</p>
-            </div>
-          )}
-
-          {/* Retailer Summary */}
-          {worker.retailerSummary && (
-            <div className="testing-section">
-              <span className="testing-label">Retailer Summary</span>
-              <p className="testing-about">{worker.retailerSummary}</p>
-            </div>
-          )}
-
-          {/* Work History */}
-          {worker.previousExperience.length > 0 && (
-            <div className="testing-section">
-              <span className="testing-label">Work History ({worker.previousExperience.length})</span>
-              <div className="testing-data">
-                {worker.previousExperience.map((exp, idx) => (
-                  <div key={idx} className="testing-row">
-                    <span className="testing-key">{exp.company}:</span> {exp.roles.join(', ')} ({exp.duration})
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Reflex Activity */}
-          {reflexActivity && (
-            <div className="testing-section">
-              <span className="testing-label">Reflex Activity</span>
-              <div className="testing-data">
-                <div className="testing-row"><span className="testing-key">shiftsOnReflex:</span> {worker.shiftsOnReflex}</div>
-                <div className="testing-row"><span className="testing-key">uniqueStoreCount:</span> {worker.uniqueStoreCount || 'null'}</div>
-                {reflexActivity.longestRelationship && (
-                  <div className="testing-row">
-                    <span className="testing-key">longestRelationship:</span> {reflexActivity.longestRelationship.brand} ({reflexActivity.longestRelationship.flexCount} shifts)
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Reliability */}
-          <div className="testing-section">
-            <span className="testing-label">Reliability</span>
-            <div className="testing-data">
-              <div className="testing-row"><span className="testing-key">currentTier:</span> {worker.currentTier || 'null'}</div>
-              <div className="testing-row"><span className="testing-key">invitedBackStores:</span> {worker.invitedBackStores}</div>
-              <div className="testing-row"><span className="testing-key">storeFavoriteCount:</span> {reflexActivity?.storeFavoriteCount || 'null'}</div>
-              <div className="testing-row"><span className="testing-key">tardyRatio:</span> {worker.tardyRatio || 'null'}</div>
-              <div className="testing-row"><span className="testing-key">tardyPercent:</span> {worker.tardyPercent != null ? `${worker.tardyPercent}%` : 'null'}</div>
-              <div className="testing-row"><span className="testing-key">urgentCancelRatio:</span> {worker.urgentCancelRatio || 'null'}</div>
-              <div className="testing-row"><span className="testing-key">urgentCancelPercent:</span> {worker.urgentCancelPercent != null ? `${worker.urgentCancelPercent}%` : 'null'}</div>
-            </div>
-          </div>
-
-          {/* Brands Worked */}
-          {worker.brandsWorked.length > 0 && (
-            <div className="testing-section">
-              <span className="testing-label">Retailers on Reflex ({worker.brandsWorked.length})</span>
-              <div className="testing-pills">
-                {worker.brandsWorked.map((brand, idx) => (
-                  <span key={idx} className="tag tag-dark-gray tag-sm">
-                    <span className="tag-text">{toTitleCase(brand.name)}</span>
-                  </span>
-                ))}
-              </div>
             </div>
           )}
 
@@ -131,25 +69,32 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
             </div>
           )}
 
-          {/* Endorsements */}
-          {endorsementEntries.length > 0 && (
+          {/* Work History (Previous Experience) */}
+          {worker.previousExperience.length > 0 && (
             <div className="testing-section">
-              <span className="testing-label">Endorsements ({endorsementEntries.length})</span>
-              <div className="testing-pills">
-                {endorsementEntries.map(([name, count], idx) => (
-                  <span key={idx} className="tag tag-stroke tag-sm">
-                    <span className="tag-text">{name}</span>
-                    <span className="tag-counter">{count}</span>
-                  </span>
+              <span className="testing-label">Other Retail Experience ({worker.previousExperience.length})</span>
+              <div className="testing-data">
+                {worker.previousExperience.map((exp, idx) => (
+                  <div key={idx} className="testing-row">
+                    <span className="testing-key">{exp.company}:</span> {exp.roles.join(', ')} ({exp.duration})
+                  </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Retailer Summary */}
+          {worker.retailerSummary && (
+            <div className="testing-section">
+              <span className="testing-label">What stores say about {worker.name.split(' ')[0]}</span>
+              <p className="testing-about">{worker.retailerSummary}</p>
             </div>
           )}
 
           {/* Retailer Quotes */}
           {worker.retailerQuotes && worker.retailerQuotes.length > 0 && (
             <div className="testing-section">
-              <span className="testing-label">What Stores Say ({worker.retailerQuotes.length})</span>
+              <span className="testing-label">Store team reviews ({worker.retailerQuotes.length})</span>
               <div className="testing-data">
                 {worker.retailerQuotes.map((quote, idx) => {
                   const brandLogo = getBrandLogo(quote.brand);
@@ -173,6 +118,35 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
             </div>
           )}
 
+          {/* Brands Worked */}
+          {worker.brandsWorked.length > 0 && (
+            <div className="testing-section">
+              <span className="testing-label">Retailers on Reflex ({worker.brandsWorked.length})</span>
+              <div className="testing-pills">
+                {worker.brandsWorked.map((brand, idx) => (
+                  <span key={idx} className="tag tag-dark-gray tag-sm">
+                    <span className="tag-text">{toTitleCase(brand.name)}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Endorsements */}
+          {endorsementEntries.length > 0 && (
+            <div className="testing-section">
+              <span className="testing-label">Endorsements ({endorsementEntries.length})</span>
+              <div className="testing-pills">
+                {endorsementEntries.map(([name, count], idx) => (
+                  <span key={idx} className="tag tag-stroke tag-sm">
+                    <span className="tag-text">{name}</span>
+                    <span className="tag-counter">{count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Interview Transcript */}
           {worker.interviewTranscript && Array.isArray(worker.interviewTranscript) && worker.interviewTranscript.length > 0 && (
             <div className="testing-section">
@@ -187,6 +161,7 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
               </div>
             </div>
           )}
+
         </div>
       </div>
     </div>

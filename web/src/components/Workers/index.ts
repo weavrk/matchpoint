@@ -5,3 +5,4 @@ export { WorkerCardChip } from './WorkerCardChip';
 export { WorkerCardCompact } from './WorkerCardCompact';
 export { WorkerCardFull } from './WorkerCardFull';
 export { WorkerCardTesting } from './WorkerCardTesting';
+export { WorkerAchievementChips } from './WorkerAchievementChips';

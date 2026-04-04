@@ -1,4 +1,5 @@
 import type { MatchedWorker, WorkerProfile } from '../../types';
+import { WorkerAchievementChips } from './WorkerAchievementChips';
 import './WorkerCard.css';
 
 interface WorkerCardChipProps {
@@ -9,6 +10,8 @@ interface WorkerCardChipProps {
 /**
  * WorkerCardChip - Minimal horizontal chip showing avatar, name, and stats.
  * Used for inline mentions, selection lists, and compact displays.
+ *
+ * Layout: Avatar + Name in a row (vertically centered), achievement chips below
  */
 export function WorkerCardChip({ worker, onClick }: WorkerCardChipProps) {
   // Format name as "First L."
@@ -34,26 +37,27 @@ export function WorkerCardChip({ worker, onClick }: WorkerCardChipProps) {
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <div className="chip-avatar">
-        {worker.photo ? (
-          <img src={worker.photo} alt="" />
-        ) : (
-          <span>{initials}</span>
-        )}
-      </div>
-      <div className="chip-content">
-        <span className="chip-name">{displayName}</span>
-        <div className="chip-stats">
-          <span className="tag tag-lite-gray tag-sm">
-            <span className="tag-counter">{worker.shiftsOnReflex}</span>
-            <span className="tag-text">shifts</span>
-          </span>
-          <span className="tag tag-lite-gray tag-sm">
-            <span className="tag-counter">{storeLocations}</span>
-            <span className="tag-text">store locations</span>
-          </span>
+      <div className="chip-header">
+        <div className="chip-avatar">
+          {worker.photo ? (
+            <img src={worker.photo} alt="" />
+          ) : (
+            <span>{initials}</span>
+          )}
         </div>
+        <span className="chip-name">{displayName}</span>
       </div>
+      <div className="chip-stats">
+        <span className="tag tag-lite-gray tag-sm">
+          <span className="tag-counter">{worker.shiftsOnReflex}</span>
+          <span className="tag-text">shifts</span>
+        </span>
+        <span className="tag tag-lite-gray tag-sm">
+          <span className="tag-counter">{storeLocations}</span>
+          <span className="tag-text">store locations</span>
+        </span>
+      </div>
+      <WorkerAchievementChips worker={worker} />
     </div>
   );
 }

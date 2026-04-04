@@ -8,9 +8,10 @@ interface AppLayoutProps {
   children: ReactNode;
   activePage?: string;
   onNavigate?: (page: string) => void;
+  userName?: string;
 }
 
-export function AppLayout({ children, activePage, onNavigate }: AppLayoutProps) {
+export function AppLayout({ children, activePage, onNavigate, userName }: AppLayoutProps) {
   const [collapsed, setCollapsed] = useState(true);
 
   return (
@@ -21,6 +22,7 @@ export function AppLayout({ children, activePage, onNavigate }: AppLayoutProps) 
           onNavigate={onNavigate}
           collapsed={collapsed}
           onToggleCollapse={() => setCollapsed(!collapsed)}
+          userName={userName}
         />
       </aside>
       <main className="main-content">

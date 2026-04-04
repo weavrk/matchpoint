@@ -236,6 +236,11 @@
   --accent-pink-mid:   #ffb8b8; /* pink-400 */
   --accent-pink-light: #ffd7d7; /* pink-300 */
 
+  /* Tag lite fills (semantic aliases — use for tag-green / tag-blue / tag-pink) */
+  --green-lite: #e6f6f3; /* green-100 */
+  --blue-lite:  #e0f1fc; /* blue-100 */
+  --pink-lite:  #ffe6e6; /* pink-200 */
+
   /* ----------------------------------------------------------
      TYPOGRAPHY — Fonts
   ---------------------------------------------------------- */
@@ -693,31 +698,31 @@ h3.type-chip-header,
 
 /* ── Tag Styles ────────────────────────────── */
 
-/* Lite Gray - navy tint background, primary text */
+/* Lite Gray - gray-200 background, primary text */
 .tag-lite-gray {
-  background: var(--background-navy);
+  background: var(--gray-200);
   color: var(--text-primary);
   border: none;
 }
 
 .tag-lite-gray .tag-counter {
-  background: var(--navy-200);
+  background: #ffffff;
   color: var(--text-primary);
 }
 
 .tag-lite-gray .tag-icon {
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
-/* Green - green background, primary text */
+/* tag-green — accent-green-light background, primary text */
 .tag-green {
-  background: var(--green-100);
+  background: var(--accent-green-light);
   color: var(--text-primary);
   border: none;
 }
 
 .tag-green .tag-counter {
-  background: var(--green-200);
+  background: #ffffff;
   color: var(--text-primary);
 }
 
@@ -733,8 +738,8 @@ h3.type-chip-header,
 }
 
 .tag-dark-gray .tag-counter {
-  background: var(--stone-600);
-  color: #ffffff;
+  background: var(--gray-100);
+  color: var(--text-primary);
 }
 
 .tag-dark-gray .tag-icon {
@@ -749,12 +754,12 @@ h3.type-chip-header,
 }
 
 .tag-stroke .tag-counter {
-  background: var(--stone-100);
+  background: var(--gray-100);
   color: var(--text-primary);
 }
 
 .tag-stroke .tag-icon {
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 /* ── Tag Variant Elements ──────────────────── */
@@ -765,7 +770,7 @@ h3.type-chip-header,
   align-items: center;
   justify-content: center;
   border-radius: 100px;
-  font-weight: 600;
+  font-weight: var(--font-bold);
 }
 
 /* Icon container - always left of text */
@@ -785,13 +790,13 @@ h3.type-chip-header,
 
 /* Blue */
 .tag-blue {
-  background: var(--blue-100);
+  background: var(--accent-blue-light);
   color: var(--text-primary);
   border: none;
 }
 
 .tag-blue .tag-counter {
-  background: var(--blue-200);
+  background: #ffffff;
   color: var(--text-primary);
 }
 
@@ -801,13 +806,13 @@ h3.type-chip-header,
 
 /* Pink */
 .tag-pink {
-  background: var(--pink-200);
+  background: var(--accent-pink-light);
   color: var(--text-primary);
   border: none;
 }
 
 .tag-pink .tag-counter {
-  background: var(--pink-300);
+  background: #ffffff;
   color: var(--text-primary);
 }
 
@@ -844,6 +849,73 @@ h3.type-chip-header,
   align-items: flex-start;
   gap: 24px;
   flex-wrap: wrap;
+}
+
+/* 3-column grid for Sizes and Styles sections */
+.ds-3col-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 0.8fr);
+  gap: 24px;
+}
+
+.ds-tag-variant-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ds-tag-variant-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ds-variant-row-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--secondary);
+}
+
+.ds-pills-tags-only {
+  align-items: center;
+}
+
+/* Chip Logic Box - horizontal spanning container */
+.ds-chip-logic-box {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--gray-50);
+  border: 1px solid var(--quaternary);
+  border-radius: 8px;
+}
+
+.ds-chip-logic-box h5 {
+  margin: 0 0 12px 0;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--secondary);
+}
+
+.ds-logic-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.ds-logic-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ds-logic-rule {
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--secondary);
 }
 
 /* ==========================================

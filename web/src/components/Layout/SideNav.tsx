@@ -43,9 +43,14 @@ interface SideNavProps {
   onNavigate?: (page: string) => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
+  userName?: string;
 }
 
-export function SideNav({ activePage = 'home', onNavigate, collapsed = false, onToggleCollapse }: SideNavProps) {
+export function SideNav({ activePage = 'home', onNavigate, collapsed = false, onToggleCollapse, userName }: SideNavProps) {
+  // Derive avatar initial and display name from userName prop
+  const displayName = userName || 'User';
+  const avatarInitial = displayName.charAt(0).toUpperCase();
+
   return (
     <nav className={`side-nav ${collapsed ? 'collapsed' : ''}`}>
       <a href="#" className="logo" aria-label="Reflex">
@@ -91,8 +96,8 @@ export function SideNav({ activePage = 'home', onNavigate, collapsed = false, on
           {!collapsed ? (
             <>
               <div className="user-row">
-                <div className="user-avatar">M</div>
-                <span className="user-name">Melissa</span>
+                <div className="user-avatar">{avatarInitial}</div>
+                <span className="user-name">{displayName}</span>
               </div>
               <div className="logout-row">
                 <button className="logout-btn">Log Out</button>
@@ -108,7 +113,7 @@ export function SideNav({ activePage = 'home', onNavigate, collapsed = false, on
             </>
           ) : (
             <>
-              <div className="user-avatar">M</div>
+              <div className="user-avatar">{avatarInitial}</div>
               <div className="expand-row">
                 <button
                   type="button"

@@ -16,8 +16,6 @@
 
 **Guardrails:** Lead with talent, not forms. Every interaction should feel like discovery.
 
-
-
 ---
 
 ## Milestone 1: User Persona
@@ -46,8 +44,6 @@ Persona selection determines location flow: single-store users get a quick confi
 | Multi-Store Manager          | Managing multiple locations in same market | Show location picker with their store list                             |
 | Field Manager / Multi-Market | Overseeing stores across markets           | Full market search with city grid                                      |
 | Recruiter                    | Centralized hiring function                | Full market search: "What city are you hiring in?"                     |
-
-
 
 
 ---
@@ -106,8 +102,6 @@ Sliding scale approach vs. binary:
 
 **Duration context:** Include tenure signals (6mo, 1yr, 2yr+) as confidence indicator
 
-
-
 ---
 
 ## Milestone 3: Meet Your Matches
@@ -138,8 +132,6 @@ Browse Shift Verified Reflexers filtered by selections. Results screen should fe
 
 
 **Avoid:** Generic success screen with no clear action. The point is to connect with Reflexers, not celebrate finding them.
-
-
 
 ---
 
@@ -264,6 +256,33 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     └───────────────┬───────────┘ └───────────────┬───────────┘ └───────────────┬───────────┘
                     │                             │                             │
                     └─────────────────────────────┼─────────────────────────────┘
+                                                  │
+                                                  ▼
+    ┌─────────────────────────────────────────────────────────────────────────────────────┐
+    │                        WORKER CARDS - CHIP DISPLAY LOGIC                            │
+    │                                                                                     │
+    │  Status Tags (conditional):                                                         │
+    │  ┌────────────────────────────┬────────────────────────────────────────────────┐    │
+    │  │ ✓ Shift Verified (green)   │ shiftVerified: true                            │    │
+    │  │ Actively Looking (blue)    │ activelyLooking: true                          │    │
+    │  └────────────────────────────┴────────────────────────────────────────────────┘    │
+    │                                                                                     │
+    │  Stats Tags (unconditional):                                                        │
+    │  ┌────────────────────────────┬────────────────────────────────────────────────┐    │
+    │  │ {N} shifts                 │ shiftsOnReflex                                 │    │
+    │  │ {N} store locations        │ uniqueStoreCount                               │    │
+    │  └────────────────────────────┴────────────────────────────────────────────────┘    │
+    │                                                                                     │
+    │  Achievement Chips (conditional):                                                   │
+    │  ┌────────────────────────────┬────────────────────────────────────────────────┐    │
+    │  │ 100% On-Time               │ tardyRatio starts with "0 /"                   │    │
+    │  │ Consistently Punctual      │ tardyPercent < 10% (but not 0)                 │    │
+    │  │ Exceptional Commitment     │ urgentCancelPercent < 5%                       │    │
+    │  │ 0 Call-Outs                │ urgentCancelRatio starts with "0 /"            │    │
+    │  │ {N}% Favorite Rating       │ storeFavoriteCount >= 89% of uniqueStoreCount  │    │
+    │  │ {N}% Invite Back Rate      │ invitedBackStores >= 94% of uniqueStoreCount   │    │
+    │  └────────────────────────────┴────────────────────────────────────────────────┘    │
+    └─────────────────────────────────────────────────────────────────────────────────────┘
                                                   │
                                                   ▼
     ┌─────────────────────────────────────────────────────────────────────────────────────┐
@@ -513,12 +532,12 @@ Wrapper component providing consistent layout, padding, animations, and navigati
 **Layout Specs:**
 
 
-| Variant       | Padding             | Behavior                                     |
-| ------------- | ------------------- | -------------------------------------------- |
-| `default`     | `32px 64px 0 64px`  | Standard step (top = 50% of left/right)      |
-| `welcome`     | `96px 64px 64px`    | Centered welcome screen                      |
-| `centered`    | `32px 64px 0 64px`  | Flex centered content                        |
-| `full-height` | `0`                 | Full height with overflow hidden (for grids) |
+| Variant       | Padding            | Behavior                                     |
+| ------------- | ------------------ | -------------------------------------------- |
+| `default`     | `32px 64px 0 64px` | Standard step (top = 50% of left/right)      |
+| `welcome`     | `96px 64px 64px`   | Centered welcome screen                      |
+| `centered`    | `32px 64px 0 64px` | Flex centered content                        |
+| `full-height` | `0`                | Full height with overflow hidden (for grids) |
 
 
 **Usage Example:**
@@ -640,27 +659,27 @@ const transitionClass = isTransitioning
 ### Width and Height Reference
 
 
-| Element                  | Width                       | Height    | Notes                          |
-| ------------------------ | --------------------------- | --------- | ------------------------------ |
-| `.v2-main`               | `flex: 1`                   | `flex: 1` | Main content area, scrollable  |
-| `.v2-sidebar`            | `380px` (collapsed: `24px`) | `100%`    | Right panel for worker cards   |
-| `.v2-step-content`       | `100%`                      | `flex: 1` | Step content wrapper           |
-| `.v2-nav-footer`         | `100%`                      | auto      | Sticky at bottom               |
-| `.v2-brand-grid`         | `100%`                      | auto      | 5-column grid (7 expanded)     |
-| `.v2-location-grid`      | `100%`                      | auto      | 4-column grid (3 with sidebar) |
+| Element             | Width                       | Height    | Notes                          |
+| ------------------- | --------------------------- | --------- | ------------------------------ |
+| `.v2-main`          | `flex: 1`                   | `flex: 1` | Main content area, scrollable  |
+| `.v2-sidebar`       | `380px` (collapsed: `24px`) | `100%`    | Right panel for worker cards   |
+| `.v2-step-content`  | `100%`                      | `flex: 1` | Step content wrapper           |
+| `.v2-nav-footer`    | `100%`                      | auto      | Sticky at bottom               |
+| `.v2-brand-grid`    | `100%`                      | auto      | 5-column grid (7 expanded)     |
+| `.v2-location-grid` | `100%`                      | auto      | 4-column grid (3 with sidebar) |
 
 
 ### Padding Reference
 
 
-| Element                        | Padding            | Notes                                    |
-| ------------------------------ | ------------------ | ---------------------------------------- |
-| `.v2-main`                     | `0 64px 48px`      | Page inset                               |
-| `.v2-step-content`             | `32px 64px 0 64px` | Content shell (top = 50% of left/right)  |
-| `.v2-welcome-step`             | `96px 64px 64px`   | Welcome hero padding                     |
-| `.v2-shell-header-section`     | `32px 64px 0`      | Fixed header section                     |
-| `.v2-nav-footer`               | `16px 0`           | Footer vertical padding (margin-top:auto)|
-| `.v2-sidebar-cards`            | `16px`             | Card list padding                        |
-| `.v2-btn-back`, `.v2-btn-next` | `12px 36px`        | Button padding                           |
+| Element                        | Padding            | Notes                                     |
+| ------------------------------ | ------------------ | ----------------------------------------- |
+| `.v2-main`                     | `0 64px 48px`      | Page inset                                |
+| `.v2-step-content`             | `32px 64px 0 64px` | Content shell (top = 50% of left/right)   |
+| `.v2-welcome-step`             | `96px 64px 64px`   | Welcome hero padding                      |
+| `.v2-shell-header-section`     | `32px 64px 0`      | Fixed header section                      |
+| `.v2-nav-footer`               | `16px 0`           | Footer vertical padding (margin-top:auto) |
+| `.v2-sidebar-cards`            | `16px`             | Card list padding                         |
+| `.v2-btn-back`, `.v2-btn-next` | `12px 36px`        | Button padding                            |
 
 

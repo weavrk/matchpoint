@@ -1,5 +1,6 @@
 import type { MatchedWorker } from '../../types';
 import { WorkerCardHeader } from './WorkerCardHeader';
+import { WorkerAchievementChips } from './WorkerAchievementChips';
 import { getBrandLogo } from '../../utils/brandLogos';
 
 interface WorkerCardTestingProps {
@@ -33,18 +34,8 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
       <WorkerCardHeader worker={worker} />
 
       <div className="worker-card-body">
-        {/* Basic Info */}
-        <div className="testing-section">
-          <span className="testing-label">Basic Info</span>
-          <div className="testing-data">
-            <div className="testing-row"><span className="testing-key">id:</span> {worker.id}</div>
-            <div className="testing-row"><span className="testing-key">name:</span> {worker.name}</div>
-            <div className="testing-row"><span className="testing-key">photo:</span> {worker.photo || 'null'}</div>
-            <div className="testing-row"><span className="testing-key">market:</span> {worker.market}</div>
-            <div className="testing-row"><span className="testing-key">shiftVerified:</span> {worker.shiftVerified ? 'true' : 'false'}</div>
-            <div className="testing-row"><span className="testing-key">activelyLooking:</span> {worker.activelyLooking ? 'true' : 'false'}</div>
-          </div>
-        </div>
+        {/* Achievement Chips */}
+        <WorkerAchievementChips worker={worker} />
 
         {/* About Me */}
         {worker.aboutMe && (
@@ -53,18 +44,6 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
             <p className="testing-about">{worker.aboutMe}</p>
           </div>
         )}
-
-        {/* Brands Worked */}
-        <div className="testing-section">
-          <span className="testing-label">Retailers on Reflex ({worker.brandsWorked.length})</span>
-          <div className="testing-pills">
-            {worker.brandsWorked.map((brand, idx) => (
-              <span key={idx} className="tag tag-dark-gray tag-sm">
-                <span className="tag-text">{toTitleCase(brand.name)}</span>
-              </span>
-            ))}
-          </div>
-        </div>
 
         {/* Shift Experience */}
         {shiftExperienceEntries.length > 0 && (
@@ -81,24 +60,9 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
           </div>
         )}
 
-        {/* Endorsements with counts */}
-        {endorsementEntries.length > 0 && (
-          <div className="testing-section">
-            <span className="testing-label">Endorsements ({endorsementEntries.length})</span>
-            <div className="testing-pills">
-              {endorsementEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-stroke tag-sm">
-                  <span className="tag-text">{name}</span>
-                  <span className="tag-counter">{count}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Previous Experience */}
         <div className="testing-section">
-          <span className="testing-label">Previous Experience ({worker.previousExperience.length})</span>
+          <span className="testing-label">Other Retail Experience ({worker.previousExperience.length})</span>
           <div className="testing-data">
             {worker.previousExperience.map((exp, idx) => (
               <div key={idx} className="testing-row">
@@ -108,40 +72,18 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
           </div>
         </div>
 
-        {/* Reflex Activity */}
-        {reflexActivity && (
+        {/* Retailer Summary */}
+        {worker.retailerSummary && (
           <div className="testing-section">
-            <span className="testing-label">Reflex Activity</span>
-            <div className="testing-data">
-              <div className="testing-row"><span className="testing-key">shiftsOnReflex:</span> {worker.shiftsOnReflex}</div>
-              <div className="testing-row"><span className="testing-key">uniqueStoreCount:</span> {worker.uniqueStoreCount || 'null'}</div>
-              {reflexActivity.longestRelationship && (
-                <div className="testing-row">
-                  <span className="testing-key">longestRelationship:</span> {reflexActivity.longestRelationship.brand} ({reflexActivity.longestRelationship.flexCount} shifts)
-                </div>
-              )}
-            </div>
+            <span className="testing-label">What stores say about {worker.name.split(' ')[0]}</span>
+            <p className="testing-about">{worker.retailerSummary}</p>
           </div>
         )}
-
-        {/* Reliability */}
-        <div className="testing-section">
-          <span className="testing-label">Reliability</span>
-          <div className="testing-data">
-            <div className="testing-row"><span className="testing-key">currentTier:</span> {worker.currentTier || 'null'}</div>
-            <div className="testing-row"><span className="testing-key">invitedBackStores:</span> {worker.invitedBackStores}</div>
-            <div className="testing-row"><span className="testing-key">storeFavoriteCount:</span> {reflexActivity?.storeFavoriteCount || 'null'}</div>
-            <div className="testing-row"><span className="testing-key">tardyRatio:</span> {worker.tardyRatio || 'null'}</div>
-            <div className="testing-row"><span className="testing-key">tardyPercent:</span> {worker.tardyPercent != null ? `${worker.tardyPercent}%` : 'null'}</div>
-            <div className="testing-row"><span className="testing-key">urgentCancelRatio:</span> {worker.urgentCancelRatio || 'null'}</div>
-            <div className="testing-row"><span className="testing-key">urgentCancelPercent:</span> {worker.urgentCancelPercent != null ? `${worker.urgentCancelPercent}%` : 'null'}</div>
-          </div>
-        </div>
 
         {/* Retailer Quotes */}
         {worker.retailerQuotes && worker.retailerQuotes.length > 0 && (
           <div className="testing-section">
-            <span className="testing-label">Retailer Quotes ({worker.retailerQuotes.length})</span>
+            <span className="testing-label">Store team reviews ({worker.retailerQuotes.length})</span>
             <div className="testing-data">
               {worker.retailerQuotes.map((quote, idx) => {
                 const brandLogo = getBrandLogo(quote.brand);
@@ -165,11 +107,30 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
           </div>
         )}
 
-        {/* Retailer Summary */}
-        {worker.retailerSummary && (
+        {/* Brands Worked */}
+        <div className="testing-section">
+          <span className="testing-label">Retailers on Reflex ({worker.brandsWorked.length})</span>
+          <div className="testing-pills">
+            {worker.brandsWorked.map((brand, idx) => (
+              <span key={idx} className="tag tag-dark-gray tag-sm">
+                <span className="tag-text">{toTitleCase(brand.name)}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Endorsements with counts */}
+        {endorsementEntries.length > 0 && (
           <div className="testing-section">
-            <span className="testing-label">Retailer Summary (AI Generated)</span>
-            <p className="testing-about">{worker.retailerSummary}</p>
+            <span className="testing-label">Endorsements ({endorsementEntries.length})</span>
+            <div className="testing-pills">
+              {endorsementEntries.map(([name, count], idx) => (
+                <span key={idx} className="tag tag-stroke tag-sm">
+                  <span className="tag-text">{name}</span>
+                  <span className="tag-counter">{count}</span>
+                </span>
+              ))}
+            </div>
           </div>
         )}
 
@@ -187,6 +148,33 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
             </div>
           </div>
         )}
+
+        {/* Basic Info & Reflex Activity (moved to end for testing reference) */}
+        <div className="testing-section">
+          <span className="testing-label">Basic Info & Reflex Activity</span>
+          <div className="testing-data">
+            <div className="testing-row"><span className="testing-key">id:</span> {worker.id}</div>
+            <div className="testing-row"><span className="testing-key">name:</span> {worker.name}</div>
+            <div className="testing-row"><span className="testing-key">photo:</span> {worker.photo || 'null'}</div>
+            <div className="testing-row"><span className="testing-key">market:</span> {worker.market}</div>
+            <div className="testing-row"><span className="testing-key">shiftVerified:</span> {worker.shiftVerified ? 'true' : 'false'}</div>
+            <div className="testing-row"><span className="testing-key">activelyLooking:</span> {worker.activelyLooking ? 'true' : 'false'}</div>
+            <div className="testing-row"><span className="testing-key">shiftsOnReflex:</span> {worker.shiftsOnReflex}</div>
+            <div className="testing-row"><span className="testing-key">uniqueStoreCount:</span> {worker.uniqueStoreCount || 'null'}</div>
+            {reflexActivity?.longestRelationship && (
+              <div className="testing-row">
+                <span className="testing-key">longestRelationship:</span> {reflexActivity.longestRelationship.brand} ({reflexActivity.longestRelationship.flexCount} shifts)
+              </div>
+            )}
+            <div className="testing-row"><span className="testing-key">currentTier:</span> {worker.currentTier || 'null'}</div>
+            <div className="testing-row"><span className="testing-key">invitedBackStores:</span> {worker.invitedBackStores}</div>
+            <div className="testing-row"><span className="testing-key">storeFavoriteCount:</span> {reflexActivity?.storeFavoriteCount || 'null'}</div>
+            <div className="testing-row"><span className="testing-key">tardyRatio:</span> {worker.tardyRatio || 'null'}</div>
+            <div className="testing-row"><span className="testing-key">tardyPercent:</span> {worker.tardyPercent != null ? `${worker.tardyPercent}%` : 'null'}</div>
+            <div className="testing-row"><span className="testing-key">urgentCancelRatio:</span> {worker.urgentCancelRatio || 'null'}</div>
+            <div className="testing-row"><span className="testing-key">urgentCancelPercent:</span> {worker.urgentCancelPercent != null ? `${worker.urgentCancelPercent}%` : 'null'}</div>
+          </div>
+        </div>
 
       </div>
     </div>
