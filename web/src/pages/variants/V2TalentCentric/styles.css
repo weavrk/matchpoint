@@ -14,19 +14,19 @@
 }
 
 .v2-main.slide-in-right-forward {
-  animation: slideInRight 200ms ease-in forwards;
+  animation: v2FadeIn 400ms ease-in-out forwards;
 }
 
 .v2-main.slide-out-left-forward {
-  animation: slideOutLeft 200ms ease-out forwards;
+  animation: v2SlideOutLeft 400ms ease-in-out forwards;
 }
 
 .v2-main.slide-in-left-backward {
-  animation: slideInLeft 200ms ease-in forwards;
+  animation: v2FadeIn 400ms ease-in-out forwards;
 }
 
 .v2-main.slide-out-right-backward {
-  animation: slideOutRight 200ms ease-out forwards;
+  animation: v2SlideOutRight 400ms ease-in-out forwards;
 }
 
 .v2-main.fade-in {
@@ -55,46 +55,42 @@
   }
 }
 
-@keyframes slideOutLeft {
-  from {
+/* V2 step animations: fade first (0-50%), then slide (50-100%) */
+@keyframes v2SlideOutLeft {
+  0% {
     transform: translateX(0);
     opacity: 1;
   }
-  to {
-    transform: translateX(-50px);
+  50% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-300px);
     opacity: 0;
   }
 }
 
-@keyframes slideOutRight {
-  from {
+@keyframes v2SlideOutRight {
+  0% {
     transform: translateX(0);
     opacity: 1;
   }
-  to {
-    transform: translateX(50px);
+  50% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(300px);
     opacity: 0;
   }
 }
 
-@keyframes slideInRight {
-  from {
-    transform: translateX(50px);
+@keyframes v2FadeIn {
+  0% {
     opacity: 0;
   }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
+  100% {
     opacity: 1;
   }
 }
@@ -236,7 +232,7 @@
 
 /* Beats .v2-container-welcome .v2-main so welcome hero keeps vertical inset */
 .v2-container-welcome .v2-main.v2-welcome-step {
-  padding: 180px 64px 180px;
+  padding: 160px 64px 160px;
 }
 
 /* Step header */
@@ -264,11 +260,22 @@
 .v2-step-header-chips > .v2-step-header {
   margin-top: 0;
   margin-bottom: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .v2-step-header-chips > .v2-focus-chips {
   margin-top: 0;
   margin-bottom: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.v2-step-header-chips > .v2-journey-cards {
+  margin-top: 0;
+  margin-bottom: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .v2-step-header-chips > .v2-step-header h1:only-child {
@@ -281,8 +288,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 240px;
+  padding-top: 120px;
   text-align: center;
+  flex: 1;
+  min-height: 0;
 }
 
 .v2-main-centered > * {
@@ -290,10 +299,10 @@
   max-width: 720px;
 }
 
-/* Shrink-wrap header + chips instead of stretching to 720px (overrides rule above) */
+/* Header + chips: one column up to 984px; inherit align-items: center from .v2-main-centered */
 .v2-main-centered > .v2-step-header-chips {
-  width: fit-content;
-  max-width: none;
+  width: 100%;
+  max-width: min(984px, 100%);
 }
 
 /* Footer should stretch full width in centered layout */
@@ -471,17 +480,22 @@
   padding: 14px 32px;
   background: var(--primary);
   color: #ffffff;
-  border: none;
-  border-radius: 100px;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
   font-size: 16px;
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.15s;
+}
+
+.v2-get-started-btn svg {
+  color: #ffffff;
 }
 
 .v2-get-started-btn:hover {
   background: var(--stone-800);
+  border-color: var(--stone-800);
 }
 
 .v2-focus-chips {
@@ -497,11 +511,11 @@
   }
 }
 
-/* Centered onboarding: chip grid wider than the 720px title column */
+/* Centered onboarding: chip grid matches step header width */
 .v2-main-centered .v2-focus-chips {
-  width: 60vw;
-  max-width: 60vw;
-  align-self: center;
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
 }
 
 /* Equal-width cells; min-width allows text to shrink inside grid items */
@@ -521,10 +535,23 @@
   line-height: 49px;
 }
 
+/* Centered steps: inset headline for readable line length inside wide max-width column */
+.v2-main-centered h1.type-tagline {
+  padding-left: 160px;
+  padding-right: 160px;
+}
+
 /* V2Main / v2-main: welcome-card titles (overrides .welcome-card-title + .type-chip-header-lg) */
 .v2-main h3.welcome-card-title {
-  font-size: 18px;
+  font-size: 24px;
   line-height: 24px;
+  font-weight: 500;
+  padding-bottom: 4px;
+}
+
+/* V2Main: persona/welcome card subtitles (overrides .welcome-card-description + .type-body-md) */
+.v2-main p.welcome-card-description {
+  font-size: 16px;
 }
 
 /* Title + subtitle stack (parent .welcome-card gap separates icon from this block) */
@@ -534,6 +561,79 @@
   gap: 2px;
   align-items: center;
   text-align: center;
+}
+
+/* ============================================================
+   PERSONA CARD STYLE
+   Horizontal layout: text left, icon right, space-between
+   ============================================================ */
+
+.welcome-card.persona-card {
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  padding: 32px;
+  gap: 16px;
+  background: var(--blue-50);
+}
+
+.welcome-card.persona-card .v2-welcome-card-text {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.welcome-card.persona-card .welcome-card-icon {
+  background: transparent;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+}
+
+.welcome-card.persona-card .welcome-card-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.welcome-card.persona-card:hover .welcome-card-icon {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.welcome-card.persona-card.active .welcome-card-icon {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+/* ============================================================
+   COMPACT PERSONA CARDS - when chat is active
+   Smaller padding, text, icons - same width
+   ============================================================ */
+.v2-focus-chips.chat-active .welcome-card.persona-card {
+  padding: 16px 20px;
+  gap: 12px;
+}
+
+.v2-focus-chips.chat-active .welcome-card.persona-card .welcome-card-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.v2-focus-chips.chat-active .welcome-card.persona-card .welcome-card-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.v2-focus-chips.chat-active .welcome-card.persona-card h3.welcome-card-title {
+  font-size: 16px;
+  line-height: 18px;
+}
+
+.v2-focus-chips.chat-active .welcome-card.persona-card p.welcome-card-description {
+  font-size: 13px;
+  line-height: 16px;
 }
 
 .v2-focus-chip {
@@ -570,6 +670,513 @@
 .v2-focus-chip-subtitle {
   font-size: 14px;
   color: var(--secondary);
+}
+
+/* ============================================================
+   JOURNEY CARD STYLE OPTIONS PREVIEW
+   ============================================================ */
+
+.v2-journey-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 20px;
+  width: 100%;
+  height: 320px;
+}
+
+/* Journey card - Origin-inspired style */
+.journey-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 28px;
+  background: var(--blue-50);
+  border: 1px solid var(--quaternary);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 200ms ease-out;
+  text-align: left;
+  position: relative;
+  height: 100%;
+  min-height: 0;
+}
+
+.journey-card:hover {
+  border-color: transparent;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: var(--gray-900);
+  transition: all 600ms ease-out;
+}
+
+.journey-card:hover .journey-card-icon,
+.journey-card:hover .journey-card-title,
+.journey-card:hover .journey-card-description {
+  color: white;
+  transition: color 600ms ease-out;
+}
+
+.journey-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.journey-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  flex-shrink: 0;
+  transition: color 200ms ease-out;
+}
+
+.journey-card-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.5;
+}
+
+.journey-card-title {
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--primary);
+  margin: 0;
+  line-height: 24px;
+  transition: color 200ms ease-out;
+}
+
+.journey-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 60px;
+  margin-top: auto;
+}
+
+.journey-card-description {
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--primary);
+  margin: 0;
+  transition: color 200ms ease-out;
+}
+
+.journey-card-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--primary);
+  border-radius: 50%;
+  color: var(--primary);
+  flex-shrink: 0;
+  transition: all 200ms ease-out;
+}
+
+.journey-card-arrow svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.5;
+}
+
+.journey-card:hover .journey-card-arrow {
+  background: white;
+  border-color: white;
+  color: var(--primary);
+  transition: all 400ms ease 140ms;
+}
+
+/* Completed state: primary background with white checkmark */
+.journey-card.completed .journey-card-arrow {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+}
+
+/* Hide old style variants */
+.journey-card-gradient,
+.journey-card-illustrated,
+.journey-card-bold,
+.journey-card-numbered {
+  /* Same as base now */
+}
+
+.journey-card-number {
+  display: none;
+}
+
+/* Chat prompt input */
+.v2-chat-prompt {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 8px;
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
+.v2-chat-prompt-input {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--primary);
+  background: var(--background-navy);
+  border: none;
+  border-radius: 12px;
+  outline: none;
+  resize: none;
+  line-height: 1.4;
+}
+
+.v2-chat-prompt-input::placeholder {
+  color: var(--secondary);
+}
+
+/* Has content state - send button */
+
+.v2-chat-prompt-send {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--tertiary);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.v2-chat-prompt-send svg {
+  color: var(--secondary);
+  transition: color 0.15s;
+}
+
+.v2-chat-prompt-send:hover {
+  background: var(--quaternary);
+}
+
+/* Has content state - send button becomes primary */
+.v2-chat-prompt.has-content .v2-chat-prompt-send,
+.v2-chat-prompt-send.active {
+  background: var(--primary);
+}
+
+.v2-chat-prompt.has-content .v2-chat-prompt-send svg,
+.v2-chat-prompt-send.active svg {
+  color: white;
+}
+
+/* Inline chat - response above input, always simple layout */
+.v2-chat-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+
+.v2-chat-response {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.v2-chat-response .v2-chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--gray-100);
+}
+
+.v2-chat-response .v2-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.v2-chat-response .v2-chat-bubble {
+  background: var(--gray-100);
+  color: var(--primary);
+  padding: 12px 16px;
+  border-radius: 16px;
+  border-bottom-left-radius: 4px;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.v2-chat-response .v2-chat-bubble p {
+  margin: 0 0 8px 0;
+}
+
+.v2-chat-response .v2-chat-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+/* Scrollable messages area */
+.v2-chat-inline .v2-chat-messages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+/* Individual message row */
+.v2-chat-inline .v2-chat-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.v2-chat-inline .v2-chat-message.user {
+  justify-content: flex-end;
+}
+
+.v2-chat-inline .v2-chat-message.assistant {
+  justify-content: flex-start;
+}
+
+/* Avatar for assistant */
+.v2-chat-inline .v2-chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--gray-100);
+}
+
+.v2-chat-inline .v2-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Chat bubbles */
+.v2-chat-inline .v2-chat-bubble {
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  max-width: 80%;
+}
+
+/* User bubble - right side, primary bg, white text */
+.v2-chat-inline .v2-chat-message.user .v2-chat-bubble {
+  background: var(--primary);
+  color: white;
+  border-bottom-right-radius: 4px;
+  text-align: left;
+}
+
+/* Assistant bubble - left side, gray bg */
+.v2-chat-inline .v2-chat-message.assistant .v2-chat-bubble {
+  background: var(--gray-100);
+  color: var(--primary);
+  border-bottom-left-radius: 4px;
+  text-align: left;
+}
+
+.v2-chat-inline .v2-chat-message.assistant .v2-chat-bubble p {
+  margin: 0 0 8px 0;
+}
+
+.v2-chat-inline .v2-chat-message.assistant .v2-chat-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+/* Follow-up chips - stacked vertically, MessageChip single-select style */
+.v2-chat-followup-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 44px; /* Align with assistant bubble (32px avatar + 12px gap) */
+}
+
+.v2-chat-followup-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--white);
+  border: 1px solid var(--quaternary);
+  border-radius: 8px;
+  font-size: 15px;
+  color: var(--primary);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+}
+
+.v2-chat-followup-chip .v2-chip-icon-left {
+  flex-shrink: 0;
+  color: var(--secondary);
+}
+
+.v2-chat-followup-chip span {
+  flex: 1;
+}
+
+.v2-chat-followup-chip .v2-chip-icon-right {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 2px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+}
+
+.v2-chat-followup-chip:hover {
+  border-color: var(--primary);
+}
+
+.v2-chat-followup-chip.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.v2-chat-followup-chip.active .v2-chip-icon-left {
+  color: white;
+}
+
+.v2-chat-followup-chip.active .v2-chip-icon-right {
+  background: white;
+  color: var(--primary);
+}
+
+/* Chat container - vertical chat mode */
+.v2-chat-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 400px;
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  border: none;
+  border-radius: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+.v2-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.v2-chat-message {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.v2-chat-message.user {
+  justify-content: flex-end;
+}
+
+.v2-chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.v2-chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.v2-chat-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.v2-chat-message.user .v2-chat-bubble {
+  background: var(--primary);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.v2-chat-message.assistant .v2-chat-bubble {
+  background: var(--gray-100);
+  color: var(--primary);
+  border-bottom-left-radius: 4px;
+  text-align: left;
+}
+
+.v2-chat-message.assistant .v2-chat-bubble p {
+  margin: 0 0 8px 0;
+}
+
+.v2-chat-message.assistant .v2-chat-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+/* Loading dots animation */
+.v2-chat-loading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 20px;
+}
+
+.v2-chat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--secondary);
+  animation: v2ChatDotPulse 1.4s ease-in-out infinite;
+}
+
+.v2-chat-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.v2-chat-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes v2ChatDotPulse {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Chat container input */
+.v2-chat-container .v2-chat-prompt {
+  border-top: 1px solid var(--quaternary);
+  margin-top: 0;
+  padding: 12px;
+  gap: 12px;
+}
+
+.v2-chat-container .v2-chat-prompt-input {
+  border-radius: 8px;
 }
 
 /* Location selection step */
@@ -758,6 +1365,105 @@
   color: #ffffff;
 }
 
+/* ============================================================
+   LOCATION CONFIRMATION CHIPS - Single/Multi-store flows
+   ============================================================ */
+
+/* Container for confirmation chips */
+.v2-location-confirm-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 500px;
+}
+
+/* Individual confirmation chip */
+.v2-location-confirm-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  background: var(--blue-50);
+  border: 1px solid var(--quaternary);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--primary);
+  font-family: inherit;
+  text-align: left;
+}
+
+.v2-location-confirm-chip:hover {
+  border-color: var(--primary);
+  background: var(--gray-50);
+}
+
+.v2-location-confirm-chip.selected {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.v2-location-confirm-chip.selected svg {
+  color: #ffffff;
+}
+
+/* "Hire in different market" link style */
+.v2-location-different {
+  background: transparent;
+  border: none;
+  padding: 12px 0;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--secondary);
+  justify-content: center;
+}
+
+.v2-location-different:hover {
+  color: var(--primary);
+  background: transparent;
+  border: none;
+}
+
+/* Multi-store location chips container */
+.v2-location-store-chips {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+/* Store chip with market subtext */
+.v2-location-store-chips .v2-location-chip {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.v2-location-store-chips .v2-location-chip::before {
+  display: none;
+}
+
+.v2-location-store-chips .v2-chip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.v2-chip-market {
+  font-size: 14px;
+  color: var(--secondary);
+  font-weight: 400;
+}
+
+.v2-location-store-chips .v2-location-chip.selected .v2-chip-market {
+  color: var(--primary);
+}
+
 /* Sticky Nav Footer - pinned to bottom of content shell */
 .v2-nav-footer {
   margin-top: auto;
@@ -805,6 +1511,13 @@
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
+}
+
+.v2-btn-back svg,
+.v2-btn-next svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .v2-btn-next svg {

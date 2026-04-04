@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import {
   Check,
   ChevronRight,
@@ -17,16 +17,25 @@ import {
   CalendarDays,
   CalendarClock,
   CalendarRange,
-  Building2,
-  MapPin,
-  UserCircle,
+  MapPinPlus,
+  MapPlus,
+  Earth,
+  ArrowRight,
+  Send,
+  CalendarFold,
+  Blend,
+  ChartNoAxesGantt,
+  CornerDownRight,
 } from "lucide-react";
 import { SAMPLE_WORKERS } from "../../../data/workers";
 import { V2Main } from "./V2Main";
 import { V2EmploymentSelector } from "./V2EmploymentSelector";
 import { V2WorkerSidebar } from "./V2WorkerSidebar";
 import type { EmploymentType } from "./V2EmploymentSelector";
-import type { MatchedWorker } from "../../../types";
+import type { MatchedWorker, ChatMessage } from "../../../types";
+import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
+import ReactMarkdown from "react-markdown";
+import chatbotAvatarUrl from "../../../../../assets/logo-and-backgrounds/chatbot.svg?url";
 import "./styles.css";
 
 // Import all brand logos
@@ -525,6 +534,14 @@ export function V2TalentCentric({
 
   // Persona and location flow
   const [persona, setPersona] = useState<PersonaType | null>(null);
+  const [chatPromptValue, setChatPromptValue] = useState("");
+
+  // Chat state for V2 (uses V2GeminiService)
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isChatMode, setIsChatMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const chatServiceRef = useRef<V2GeminiService | null>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Experience level for preference shaping
   const [experienceLevel, setExperienceLevel] =
@@ -571,6 +588,73 @@ export function V2TalentCentric({
         : [...prev, brandName],
     );
   };
+
+  // Initialize V2 chat service
+  const initChatService = useCallback(async () => {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+    const service = createFreshV2GeminiService(apiKey);
+
+    const selectedMarket = MARKETS.find((m) => m.id === selectedLocation);
+    const marketName = selectedMarket?.name || "Austin";
+
+    await service.startChat({
+      userName,
+      retailerName: "Ariat",
+      market: marketName,
+      persona: persona || undefined,
+    });
+
+    chatServiceRef.current = service;
+    return service;
+  }, [userName, selectedLocation, persona]);
+
+  // Send chat message (V2 service)
+  const sendChatMessage = useCallback(async (message: string) => {
+    if (!message.trim()) return;
+
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: message,
+      timestamp: new Date(),
+    };
+    setChatMessages((prev) => [...prev, userMessage]);
+    setChatPromptValue("");
+    setIsLoading(true);
+    setPersona(null); // Clear persona selection when chatting
+
+    try {
+      let service = chatServiceRef.current;
+      if (!service) {
+        service = await initChatService();
+      }
+
+      const responseText = await service.sendMessage(message);
+
+      const assistantMessage: ChatMessage = {
+        role: "assistant",
+        content: responseText,
+        timestamp: new Date(),
+      };
+      setChatMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("V2 Chat error:", error);
+      const errorMessage: ChatMessage = {
+        role: "assistant",
+        content: "Sorry, I encountered an error. Please try again.",
+        timestamp: new Date(),
+      };
+      setChatMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [initChatService]);
+
+  // Scroll chat to bottom when messages change
+  useEffect(() => {
+    if (chatContainerRef.current && chatMessages.length > 0) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
 
   // CYOA flow: Get next incomplete preference section
   const getNextIncompleteSection = (current: FocusArea): FocusArea | null => {
@@ -880,24 +964,23 @@ export function V2TalentCentric({
             >
               <div className="v2-step-header-chips">
                 <div className="v2-step-header">
-                  <h1 className="type-tagline">Tell us about yourself.</h1>
+                  <h1 className="type-tagline">Tell us about your role so we can focus our questions.</h1>
                 </div>
 
                 <div className="v2-focus-chips">
                   <button
-                    className={`welcome-card ${persona === "individual" ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "individual" ? "active" : ""}`}
                     onClick={() => {
                       setPersona("individual");
-                      // For single store, auto-set location and go to focus
-                      setSelectedLocation("austin-tx"); // Default market for MVP
-                      transitionToStep("focus", "forward");
+                      setSelectedLocation("austin-tx");
+                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
                       {persona === "individual" ? (
-                        <Check size={24} />
+                        <Check size={24} strokeWidth={1.5} />
                       ) : (
-                        <Store size={24} />
+                        <Store size={24} strokeWidth={1.5} />
                       )}
                     </div>
                     <div className="v2-welcome-card-text">
@@ -910,17 +993,17 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`welcome-card ${persona === "multi-store" ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "multi-store" ? "active" : ""}`}
                     onClick={() => {
                       setPersona("multi-store");
-                      transitionToStep("focus", "forward");
+                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
                       {persona === "multi-store" ? (
-                        <Check size={24} />
+                        <Check size={24} strokeWidth={1.5} />
                       ) : (
-                        <Building2 size={24} />
+                        <MapPinPlus size={24} strokeWidth={1.5} />
                       )}
                     </div>
                     <div className="v2-welcome-card-text">
@@ -933,22 +1016,22 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`welcome-card ${persona === "field" ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "field" ? "active" : ""}`}
                     onClick={() => {
                       setPersona("field");
-                      transitionToStep("focus", "forward");
+                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
                       {persona === "field" ? (
-                        <Check size={24} />
+                        <Check size={24} strokeWidth={1.5} />
                       ) : (
-                        <MapPin size={24} />
+                        <MapPlus size={24} strokeWidth={1.5} />
                       )}
                     </div>
                     <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
-                      Field / Multi-Market
+                      Regional/District Manager
                     </h3>
                     <p className="welcome-card-description type-body-md">
                       Overseeing stores across region(s)
@@ -956,17 +1039,17 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`welcome-card ${persona === "recruiter" ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "recruiter" ? "active" : ""}`}
                     onClick={() => {
                       setPersona("recruiter");
-                      transitionToStep("focus", "forward");
+                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
                       {persona === "recruiter" ? (
-                        <Check size={24} />
+                        <Check size={24} strokeWidth={1.5} />
                       ) : (
-                        <UserCircle size={24} />
+                        <Earth size={24} strokeWidth={1.5} />
                       )}
                     </div>
                     <div className="v2-welcome-card-text">
@@ -978,15 +1061,130 @@ export function V2TalentCentric({
                     </p>
                     </div>
                   </button>
+
+                  {/* Chat - full width under persona chips, scrollable */}
+                  <div className="v2-chat-inline">
+                    {/* Scrollable message area */}
+                    {chatMessages.length > 0 && (
+                      <div className="v2-chat-messages" ref={chatContainerRef}>
+                        {chatMessages.map((msg, idx) => (
+                          <div
+                            key={idx}
+                            className={`v2-chat-message ${msg.role}`}
+                          >
+                            {msg.role === "assistant" && (
+                              <div className="v2-chat-avatar">
+                                <img src={chatbotAvatarUrl} alt="Assistant" />
+                              </div>
+                            )}
+                            <div className="v2-chat-bubble">
+                              {msg.role === "assistant" ? (
+                                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                              ) : (
+                                msg.content
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {isLoading && (
+                          <div className="v2-chat-message assistant">
+                            <div className="v2-chat-avatar">
+                              <img src={chatbotAvatarUrl} alt="Assistant" />
+                            </div>
+                            <div className="v2-chat-bubble">
+                              <div className="v2-chat-loading">
+                                <span className="v2-chat-dot"></span>
+                                <span className="v2-chat-dot"></span>
+                                <span className="v2-chat-dot"></span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {/* Follow-up chips after assistant responds */}
+                    {chatMessages.filter(m => m.role === "assistant").length > 0 && !isLoading && (
+                      <div className="v2-chat-followup-chips">
+                        <button
+                          className={`v2-chat-followup-chip${persona === "individual" ? " active" : ""}`}
+                          onClick={() => {
+                            setPersona("individual");
+                            setSelectedLocation("austin-tx");
+                            transitionToStep("focus", "forward");
+                          }}
+                        >
+                          <CornerDownRight size={16} className="v2-chip-icon-left" />
+                          <span>One location</span>
+                          {persona === "individual" && <Check size={16} className="v2-chip-icon-right" />}
+                        </button>
+                        <button
+                          className={`v2-chat-followup-chip${persona === "multi-store" ? " active" : ""}`}
+                          onClick={() => {
+                            setPersona("multi-store");
+                            transitionToStep("focus", "forward");
+                          }}
+                        >
+                          <CornerDownRight size={16} className="v2-chip-icon-left" />
+                          <span>Multiple locations</span>
+                          {persona === "multi-store" && <Check size={16} className="v2-chip-icon-right" />}
+                        </button>
+                        <button
+                          className={`v2-chat-followup-chip${persona === "field" ? " active" : ""}`}
+                          onClick={() => {
+                            setPersona("field");
+                            transitionToStep("focus", "forward");
+                          }}
+                        >
+                          <CornerDownRight size={16} className="v2-chip-icon-left" />
+                          <span>District or region</span>
+                          {persona === "field" && <Check size={16} className="v2-chip-icon-right" />}
+                        </button>
+                        <button
+                          className={`v2-chat-followup-chip${persona === "recruiter" ? " active" : ""}`}
+                          onClick={() => {
+                            setPersona("recruiter");
+                            transitionToStep("focus", "forward");
+                          }}
+                        >
+                          <CornerDownRight size={16} className="v2-chip-icon-left" />
+                          <span>Nationally across the brand</span>
+                          {persona === "recruiter" && <Check size={16} className="v2-chip-icon-right" />}
+                        </button>
+                      </div>
+                    )}
+                    {/* Input - always visible */}
+                    <div className="v2-chat-prompt">
+                      <textarea
+                        placeholder="Or share more detailed information"
+                        className="v2-chat-prompt-input"
+                        rows={1}
+                        value={chatPromptValue}
+                        onChange={(e) => setChatPromptValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            sendChatMessage(chatPromptValue);
+                          }
+                        }}
+                      />
+                      <button
+                        className={`v2-chat-prompt-send${chatPromptValue.trim() ? ' active' : ''}`}
+                        onClick={() => sendChatMessage(chatPromptValue)}
+                        disabled={isLoading || !chatPromptValue.trim()}
+                      >
+                        <Send size={18} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </V2Main>
           )}
 
-          {/* Step 2: Location Selection */}
+          {/* Step 2: Location Selection - varies by persona */}
           {step === "location" && (
             <V2Main
-              stepClassName=""
+              stepClassName={persona === "individual" || persona === "multi-store" ? "v2-main-centered" : ""}
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
@@ -996,103 +1194,169 @@ export function V2TalentCentric({
                 nextDisabled: !selectedLocation,
               }}
             >
-              <div className="v2-step-header">
-                  <h1 className="type-tagline">What city are you hiring in?</h1>
-                  <p className="type-prompt-question v2-step-subtitle">
-                    {persona === "multi-store"
-                      ? "Which location are you hiring for?"
-                      : "Select a market or search for a city"}
-                  </p>
-                </div>
-
-                <div className="v2-location-controls">
-                  <div className="v2-location-dropdown">
-                    <select
-                      value={
-                        STORE_LOCATIONS.find(
-                          (s) => s.marketId === selectedLocation,
-                        )?.id || ""
-                      }
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          const store = STORE_LOCATIONS.find(
-                            (s) => s.id === e.target.value,
-                          );
-                          if (store) {
-                            setSelectedLocation(store.marketId);
-                          }
-                        } else {
-                          setSelectedLocation(null);
-                        }
-                      }}
-                      className="v2-location-select"
+              {/* Single-Store Manager: Confirmation with default market */}
+              {persona === "individual" && (
+                <div className="v2-step-header-chips">
+                  <div className="v2-step-header">
+                    <h1 className="type-tagline">
+                      Confirming that you want to search for {MARKETS.find(m => m.id === selectedLocation)?.name || "Austin"} talent
+                    </h1>
+                  </div>
+                  <div className="v2-location-confirm-chips">
+                    <button
+                      className="v2-location-confirm-chip selected"
+                      onClick={() => transitionToStep("focus", "forward")}
                     >
-                      <option value="">Select a location</option>
-                      {STORE_LOCATIONS.map((location) => (
-                        <option key={location.id} value={location.id}>
-                          {location.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <span className="v2-location-or">or</span>
-
-                  <div className="v2-search-input-wrapper v2-location-search">
-                    <Search size={18} className="v2-search-icon" />
-                    <input
-                      type="text"
-                      placeholder="Search cities..."
-                      value={locationSearch}
-                      onChange={(e) => setLocationSearch(e.target.value)}
-                      className="v2-search-input"
-                    />
-                    {locationSearch && (
-                      <button
-                        className="v2-search-clear"
-                        onClick={() => setLocationSearch("")}
-                        aria-label="Clear search"
-                      >
-                        <X size={14} />
-                      </button>
-                    )}
+                      <Check size={20} strokeWidth={1.5} />
+                      <span>Yes, search in {MARKETS.find(m => m.id === selectedLocation)?.name || "Austin"}</span>
+                    </button>
+                    <button
+                      className="v2-location-confirm-chip"
+                      onClick={() => setPersona("field")}
+                    >
+                      <span>Hire in a different market</span>
+                    </button>
                   </div>
                 </div>
+              )}
 
-              <div
-                className={`v2-location-grid ${selectedLocation && sidebarOpen ? "sidebar-open" : ""}`}
-              >
-                  {[...MARKETS]
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .filter((m) => {
-                      if (!locationSearch.trim()) return true;
-                      const search = locationSearch.toLowerCase();
+              {/* Multi-Store Manager: Confirmation + dropdown of their locations */}
+              {persona === "multi-store" && (
+                <div className="v2-step-header-chips">
+                  <div className="v2-step-header">
+                    <h1 className="type-tagline">
+                      Which location are you hiring for?
+                    </h1>
+                  </div>
+                  <div className="v2-location-store-chips">
+                    {STORE_LOCATIONS.map((store) => {
+                      const market = MARKETS.find(m => m.id === store.marketId);
                       return (
-                        m.name.toLowerCase().includes(search) ||
-                        m.state.toLowerCase().includes(search)
+                        <button
+                          key={store.id}
+                          className={`v2-location-chip ${selectedLocation === store.marketId ? "selected" : ""}`}
+                          onClick={() => setSelectedLocation(store.marketId)}
+                        >
+                          <span className="v2-chip-text">
+                            {store.name}
+                            {market && <span className="v2-chip-market">{market.name}, {market.state}</span>}
+                          </span>
+                          <span className="v2-chip-icon">
+                            {selectedLocation === store.marketId && <Check size={14} />}
+                          </span>
+                        </button>
                       );
-                    })
-                    .map((market) => (
-                      <button
-                        key={market.id}
-                        className={`v2-location-chip ${selectedLocation === market.id ? "selected" : ""}`}
-                        onClick={() =>
-                          setSelectedLocation(
-                            selectedLocation === market.id ? null : market.id,
-                          )
+                    })}
+                  </div>
+                  <button
+                    className="v2-location-confirm-chip v2-location-different"
+                    onClick={() => setPersona("field")}
+                  >
+                    <span>Hire in a different market</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Regional/District Manager or Recruiter: Full location picker */}
+              {(persona === "field" || persona === "recruiter") && (
+                <>
+                  <div className="v2-step-header">
+                    <h1 className="type-tagline">What city are you hiring in?</h1>
+                    <p className="type-prompt-question v2-step-subtitle">
+                      Select a market or search for a city
+                    </p>
+                  </div>
+
+                  <div className="v2-location-controls">
+                    <div className="v2-location-dropdown">
+                      <select
+                        value={
+                          STORE_LOCATIONS.find(
+                            (s) => s.marketId === selectedLocation,
+                          )?.id || ""
                         }
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            const store = STORE_LOCATIONS.find(
+                              (s) => s.id === e.target.value,
+                            );
+                            if (store) {
+                              setSelectedLocation(store.marketId);
+                            }
+                          } else {
+                            setSelectedLocation(null);
+                          }
+                        }}
+                        className="v2-location-select"
                       >
-                        <span className="v2-chip-text">
-                          {market.name}, <strong>{market.state}</strong>
-                        </span>
-                        <span className="v2-chip-icon">
-                          {selectedLocation === market.id && (
-                            <Check size={14} />
-                          )}
-                        </span>
-                      </button>
-                    ))}
-              </div>
+                        <option value="">Select a location</option>
+                        {STORE_LOCATIONS.map((location) => (
+                          <option key={location.id} value={location.id}>
+                            {location.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <span className="v2-location-or">or</span>
+
+                    <div className="v2-search-input-wrapper v2-location-search">
+                      <Search size={18} className="v2-search-icon" />
+                      <input
+                        type="text"
+                        placeholder="Search cities..."
+                        value={locationSearch}
+                        onChange={(e) => setLocationSearch(e.target.value)}
+                        className="v2-search-input"
+                      />
+                      {locationSearch && (
+                        <button
+                          className="v2-search-clear"
+                          onClick={() => setLocationSearch("")}
+                          aria-label="Clear search"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    className={`v2-location-grid ${selectedLocation && sidebarOpen ? "sidebar-open" : ""}`}
+                  >
+                    {[...MARKETS]
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .filter((m) => {
+                        if (!locationSearch.trim()) return true;
+                        const search = locationSearch.toLowerCase();
+                        return (
+                          m.name.toLowerCase().includes(search) ||
+                          m.state.toLowerCase().includes(search)
+                        );
+                      })
+                      .map((market) => (
+                        <button
+                          key={market.id}
+                          className={`v2-location-chip ${selectedLocation === market.id ? "selected" : ""}`}
+                          onClick={() =>
+                            setSelectedLocation(
+                              selectedLocation === market.id ? null : market.id,
+                            )
+                          }
+                        >
+                          <span className="v2-chip-text">
+                            {market.name}, <strong>{market.state}</strong>
+                          </span>
+                          <span className="v2-chip-icon">
+                            {selectedLocation === market.id && (
+                              <Check size={14} />
+                            )}
+                          </span>
+                        </button>
+                      ))}
+                  </div>
+                </>
+              )}
             </V2Main>
           )}
 
@@ -1113,13 +1377,13 @@ export function V2TalentCentric({
               <div className="v2-step-header-chips">
                 <div className="v2-step-header">
                   <h1 className="type-tagline">
-                    Where would you like to start?
+                    Where would you like to start, {userName}?
                   </h1>
                 </div>
 
-                <div className="v2-focus-chips v2-focus-chips-3col">
+                <div className="v2-journey-cards">
                   <button
-                    className={`welcome-card ${completedSections.has("employment") ? "completed" : focusArea === "employment" ? "active" : ""}`}
+                    className={`journey-card journey-card-1 ${completedSections.has("employment") ? "completed" : ""}`}
                     onClick={() => {
                       if (!completedSections.has("employment")) {
                         setFocusArea("employment");
@@ -1128,24 +1392,25 @@ export function V2TalentCentric({
                     }}
                     disabled={completedSections.has("employment")}
                   >
-                    <div className="welcome-card-icon">
-                      {completedSections.has("employment") ? (
-                        <Check size={24} />
-                      ) : (
-                        <Clock size={24} />
-                      )}
+                    <div className="journey-card-header">
+                      <div className="journey-card-icon">
+                        <CalendarFold size={24} strokeWidth={1.5} />
+                      </div>
+                      <h3 className="journey-card-title">Type of employment</h3>
                     </div>
-                    <div className="v2-welcome-card-text">
-                    <h3 className="welcome-card-title type-chip-header-lg">
-                      Type of employment
-                    </h3>
-                    <p className="welcome-card-description type-body-md">
-                      Full-time, part-time, or open to both
-                    </p>
+                    <div className="journey-card-footer">
+                      <p className="journey-card-description">Full-time, part-time, or open to both?</p>
+                      <div className="journey-card-arrow">
+                        {completedSections.has("employment") ? (
+                          <Check size={20} strokeWidth={2} />
+                        ) : (
+                          <ArrowRight size={20} />
+                        )}
+                      </div>
                     </div>
                   </button>
                   <button
-                    className={`welcome-card ${completedSections.has("brands") ? "completed" : focusArea === "brands" ? "active" : ""}`}
+                    className={`journey-card journey-card-2 ${completedSections.has("brands") ? "completed" : ""}`}
                     onClick={() => {
                       if (!completedSections.has("brands")) {
                         setFocusArea("brands");
@@ -1154,24 +1419,25 @@ export function V2TalentCentric({
                     }}
                     disabled={completedSections.has("brands")}
                   >
-                    <div className="welcome-card-icon">
-                      {completedSections.has("brands") ? (
-                        <Check size={24} />
-                      ) : (
-                        <Store size={24} />
-                      )}
+                    <div className="journey-card-header">
+                      <div className="journey-card-icon">
+                        <Blend size={24} strokeWidth={1.5} />
+                      </div>
+                      <h3 className="journey-card-title">Brand affinity</h3>
                     </div>
-                    <div className="v2-welcome-card-text">
-                    <h3 className="welcome-card-title type-chip-header-lg">
-                      Brand affinity
-                    </h3>
-                    <p className="welcome-card-description type-body-md">
-                      Whose talent would you trust?
-                    </p>
+                    <div className="journey-card-footer">
+                      <p className="journey-card-description">Whose talent do you trust?</p>
+                      <div className="journey-card-arrow">
+                        {completedSections.has("brands") ? (
+                          <Check size={20} strokeWidth={2} />
+                        ) : (
+                          <ArrowRight size={20} />
+                        )}
+                      </div>
                     </div>
                   </button>
                   <button
-                    className={`welcome-card ${completedSections.has("roles") ? "completed" : focusArea === "roles" ? "active" : ""}`}
+                    className={`journey-card journey-card-3 ${completedSections.has("roles") ? "completed" : ""}`}
                     onClick={() => {
                       if (!completedSections.has("roles")) {
                         setFocusArea("roles");
@@ -1180,23 +1446,25 @@ export function V2TalentCentric({
                     }}
                     disabled={completedSections.has("roles")}
                   >
-                    <div className="welcome-card-icon">
-                      {completedSections.has("roles") ? (
-                        <Check size={24} />
-                      ) : (
-                        <Briefcase size={24} />
-                      )}
+                    <div className="journey-card-header">
+                      <div className="journey-card-icon">
+                        <ChartNoAxesGantt size={24} strokeWidth={1.5} />
+                      </div>
+                      <h3 className="journey-card-title">Experience level</h3>
                     </div>
-                    <div className="v2-welcome-card-text">
-                    <h3 className="welcome-card-title type-chip-header-lg">
-                      Experience level
-                    </h3>
-                    <p className="welcome-card-description type-body-md">
-                      Where are they in their career?
-                    </p>
+                    <div className="journey-card-footer">
+                      <p className="journey-card-description">Where are they in their career?</p>
+                      <div className="journey-card-arrow">
+                        {completedSections.has("roles") ? (
+                          <Check size={20} strokeWidth={2} />
+                        ) : (
+                          <ArrowRight size={20} />
+                        )}
+                      </div>
                     </div>
                   </button>
                 </div>
+
               </div>
             </V2Main>
           )}
@@ -1204,7 +1472,7 @@ export function V2TalentCentric({
           {/* Employment Type Selection */}
           {step === "employment" && (
             <V2Main
-              stepClassName=""
+              stepClassName="v2-main-centered"
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{

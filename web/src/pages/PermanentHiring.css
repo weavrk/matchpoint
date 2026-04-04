@@ -2561,9 +2561,53 @@
   text-align: center;
 }
 
+/* Persona card style: horizontal, text left, icon right, space-between */
+.ds-chip-demo.welcome-card.persona-card {
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+  padding: 32px;
+  gap: 16px;
+}
+
+.ds-chip-demo.welcome-card.persona-card .v2-welcome-card-text {
+  align-items: flex-start;
+  text-align: left;
+}
+
+.ds-chip-demo.welcome-card.persona-card .welcome-card-icon {
+  background: var(--blue-100);
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+}
+
+.ds-chip-demo.welcome-card.persona-card .welcome-card-icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.ds-chip-demo.welcome-card.persona-card:hover .welcome-card-icon {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.ds-chip-demo.welcome-card.persona-card.active .welcome-card-icon {
+  background: var(--primary);
+  color: #ffffff;
+}
+
 .ds-chip-demo.welcome-card::after,
 .ds-chip-demo.welcome-card::before {
   display: none;
+}
+
+/* Journey card DSL preview */
+.ds-example-journey-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
 }
 
 .ds-chip-demo.chat-nav-chip {

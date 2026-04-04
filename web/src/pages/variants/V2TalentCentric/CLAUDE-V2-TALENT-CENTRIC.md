@@ -474,7 +474,8 @@ Worker-specific shift booking flow:
 | Component                 | Usage                                                |
 | ------------------------- | ---------------------------------------------------- |
 | **Page Components**       |                                                      |
-| `V2ContentShell`          | Step wrapper with animations, padding, footer        |
+| `V2Main`                  | Step wrapper (`.v2-main`) with transitions and footer; `stepClassName="v2-main-centered"` → `padding-top: 120px` (see Padding Reference) |
+| `V2ContentShell`          | Legacy/alternate step shell (animations, padding, footer) |
 | `V2NavFooter`             | Sticky back/next navigation buttons                  |
 | **User Persona / Focus**  |                                                      |
 | `.v2-focus-chips`         | 2-column grid of focus/persona cards (`gap: 16px`; stacks to 1 column at max-width 500px) |
@@ -532,6 +533,14 @@ Worker-specific shift booking flow:
 ## Page Components (DSL)
 
 Reusable layout components for V2 flow steps.
+
+### V2Main
+
+Primary step container for the live V2 flow: renders a `div` with class `v2-main`, transition classes, optional `stepClassName`, and `V2NavFooter` when `footer` is set.
+
+**File:** `V2Main.tsx`
+
+**Layout:** Base padding and scroll behavior come from `.v2-main` in `styles.css`. For centered persona/focus-style steps, pass `stepClassName="v2-main-centered"` — that modifier sets **`padding-top: 120px`** and centers content (children capped at `720px` wide unless overridden). See **Padding Reference** below.
 
 ### V2ContentShell
 
@@ -700,7 +709,8 @@ const transitionClass = isTransitioning
 
 | Element                        | Padding            | Notes                                     |
 | ------------------------------ | ------------------ | ----------------------------------------- |
-| `.v2-main`                     | `0 64px 48px`      | Page inset                                |
+| `.v2-main`                     | `32px 64px 64px`   | Page inset (top = 50% of horizontal)      |
+| `.v2-main-centered`            | `padding-top: 120px` | With `.v2-main`; overrides top inset for centered steps (`V2Main` `stepClassName`) |
 | `.v2-step-content`             | `32px 64px 0 64px` | Content shell (top = 50% of left/right)   |
 | `.v2-welcome-step`             | `96px 64px 64px`   | Welcome hero padding                      |
 | `.v2-shell-header-section`     | `32px 64px 0`      | Fixed header section                      |

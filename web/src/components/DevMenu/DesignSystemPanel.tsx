@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store } from 'lucide-react';
+import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase } from 'lucide-react';
+import '../../pages/variants/V2TalentCentric/styles.css';
 import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
 import { WorkerCardChip } from '../Workers/WorkerCardChip';
 import { WorkerCardCompact } from '../Workers/WorkerCardCompact';
@@ -393,15 +394,14 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
           </div>
 
           <div className="ds-subsection">
-            <h4>2. V2 focus welcome-card (variant description)</h4>
+            <h4>2. Persona Card="persona-card"</h4>
             <p className="ds-description">
-              Used inside <code>.v2-main</code> + <code>.v2-focus-chips</code> for persona, focus, and experience steps. Structure: icon, then{' '}
-              <code>.v2-welcome-card-text</code> wrapping title + description (<code>gap: 2px</code> between lines; <code>.welcome-card</code> flex{' '}
-              <code>gap: 12px</code> separates icon from the text block). Title: <code>h3.welcome-card-title.type-chip-header-lg</code> (18px / 24px in V2). Subtitle:{' '}
-              <code>p.welcome-card-description.type-body-md</code>.
+              Used for persona selection step. Horizontal layout with text left, icon right, space-between.
+              Add <code>.persona-card</code> to <code>.welcome-card</code>. Uses <code>flex-direction: row-reverse</code>,
+              <code>justify-content: space-between</code>, <code>padding: 32px</code>.
             </p>
             <div className="ds-example ds-example-chips ds-example-v2-focus-welcome">
-              <div className="ds-chip-demo welcome-card">
+              <div className="ds-chip-demo welcome-card persona-card">
                 <div className="welcome-card-icon">
                   <Store size={18} />
                 </div>
@@ -410,7 +410,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                   <p className="welcome-card-description type-body-md">Managing a team at one location</p>
                 </div>
               </div>
-              <div className="ds-chip-demo welcome-card" style={{ borderColor: 'var(--app-primary)', background: 'var(--gray-50)' }}>
+              <div className="ds-chip-demo welcome-card persona-card" style={{ borderColor: 'var(--app-primary)', background: 'var(--gray-50)' }}>
                 <div className="welcome-card-icon" style={{ background: 'var(--app-primary)', color: '#ffffff' }}>
                   <Store size={18} />
                 </div>
@@ -419,7 +419,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                   <p className="welcome-card-description type-body-md">Description text here</p>
                 </div>
               </div>
-              <div className="ds-chip-demo welcome-card active">
+              <div className="ds-chip-demo welcome-card persona-card active">
                 <div className="welcome-card-icon" style={{ background: 'var(--app-primary)', color: '#ffffff' }}>
                   <Check size={18} />
                 </div>
@@ -432,7 +432,47 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
           </div>
 
           <div className="ds-subsection">
-            <h4>3. MessageChip variant="single"</h4>
+            <h4>3. Journey Card="journey-card"</h4>
+            <p className="ds-description">
+              Large selection cards for focus step. Text upper-left, icon upper-right, arrow button lower-right.
+              Background <code>background-pink</code>, hover <code>accent-pink-light</code>. Arrow fills primary on hover with 140ms delay.
+              Title <code>.journey-card-title</code>: <code>font-size: 24px</code>, <code>line-height: 36px</code>, <code>font-weight: 500</code>.
+              Description <code>.journey-card-description</code>: <code>font-size: 20px</code>, <code>line-height: 26px</code>.
+            </p>
+            <div className="ds-example ds-example-journey-cards">
+              <button className="journey-card">
+                <div className="journey-card-content">
+                  <div className="journey-card-text">
+                    <h3 className="journey-card-title">Type of employment</h3>
+                    <p className="journey-card-description">Full-time, part-time, or open to both</p>
+                  </div>
+                  <div className="journey-card-icon">
+                    <Clock size={24} />
+                  </div>
+                </div>
+                <div className="journey-card-arrow">
+                  <ArrowRight size={20} />
+                </div>
+              </button>
+              <button className="journey-card" style={{ background: 'var(--accent-pink-light)' }}>
+                <div className="journey-card-content">
+                  <div className="journey-card-text">
+                    <h3 className="journey-card-title">Hover State</h3>
+                    <p className="journey-card-description">Description text here</p>
+                  </div>
+                  <div className="journey-card-icon">
+                    <Store size={24} />
+                  </div>
+                </div>
+                <div className="journey-card-arrow" style={{ background: 'var(--primary)', borderColor: 'var(--primary)', color: 'white' }}>
+                  <ArrowRight size={20} />
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>4. MessageChip variant="single"</h4>
             <p className="ds-description">Single-select options with check icon on right</p>
             <div className="ds-example ds-example-list">
               <button className="ds-chip-demo message-chip-single type-chip-label" type="button">
@@ -842,24 +882,36 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
               <li><span className="ds-style-prop">flex-direction:</span> <code>column</code></li>
               <li><span className="ds-style-prop">align-items:</span> <code>center</code></li>
-              <li><span className="ds-style-prop">padding-top:</span> <code>240px</code></li>
+              <li><span className="ds-style-prop">padding-top:</span> <code>120px</code></li>
               <li><span className="ds-style-prop">text-align:</span> <code>center</code></li>
               <li><span className="ds-style-prop">children max-width:</span> <code>720px</code></li>
             </ul>
           </div>
 
           <div className="ds-subsection">
-            <h4>.v2-focus-chips and .v2-welcome-card-text</h4>
+            <h4>.v2-focus-chips, .persona-card, and .v2-welcome-card-text</h4>
             <p className="ds-description">
-              Focus rows use <code>.v2-focus-chips</code> (2-column grid, <code>gap: 16px</code>; single column below 500px). Each item is <code>button.welcome-card</code> with shared Chat styles, then a{' '}
-              <code>.v2-welcome-card-text</code> wrapper around <code>h3.welcome-card-title.type-chip-header-lg</code> and{' '}
-              <code>p.welcome-card-description.type-body-md</code>. Inside <code>.v2-main</code>, titles use 18px / 24px line-height. The text wrapper is flex column with{' '}
-              <code>gap: 2px</code> between title and subtitle; the card’s 12px gap applies only between icon and the text block.
+              Focus rows use <code>.v2-focus-chips</code> (2-column grid, <code>gap: 16px</code>; single column below 500px).
+              Persona cards add <code>.persona-card</code> for horizontal layout (text left, icon right, space-between).
+              Text wrapper <code>.v2-welcome-card-text</code> contains title + description.
             </p>
             <ul className="ds-style-list">
               <li><span className="ds-style-prop">.v2-focus-chips:</span> <code>display: grid</code>, <code>grid-template-columns: repeat(2, 1fr)</code>, <code>gap: 16px</code></li>
-              <li><span className="ds-style-prop">.v2-welcome-card-text:</span> <code>display: flex</code>, <code>flex-direction: column</code>, <code>gap: 2px</code>, centered</li>
-              <li><span className="ds-style-prop">.v2-main h3.welcome-card-title:</span> <code>font-size: 18px</code>, <code>line-height: 24px</code></li>
+              <li><span className="ds-style-prop">.persona-card:</span> <code>flex-direction: row-reverse</code>, <code>justify-content: space-between</code>, <code>padding: 32px</code></li>
+              <li><span className="ds-style-prop">.v2-welcome-card-text:</span> <code>display: flex</code>, <code>flex-direction: column</code>, <code>gap: 2px</code>, left-aligned for persona</li>
+              <li><span className="ds-style-prop">.v2-main h3.welcome-card-title:</span> <code>font-size: 24px</code>, <code>line-height: 24px</code>, <code>padding-bottom: 4px</code></li>
+              <li><span className="ds-style-prop">.v2-main p.welcome-card-description:</span> <code>font-size: 16px</code></li>
+            </ul>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>.journey-card, .journey-card-title, .journey-card-description</h4>
+            <p className="ds-description">
+              Focus-step journey tiles (three-up grid). Styles live in <code>V2TalentCentric/styles.css</code>; this panel imports that sheet so the Chips tab preview matches any variant.
+            </p>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">.journey-card-title:</span> <code>font-size: 24px</code>, <code>line-height: 36px</code>, <code>font-weight: 500</code></li>
+              <li><span className="ds-style-prop">.journey-card-description:</span> <code>font-size: 20px</code>, <code>line-height: 26px</code></li>
             </ul>
           </div>
 
