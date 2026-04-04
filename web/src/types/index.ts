@@ -52,6 +52,7 @@ export interface WorkerProfile {
   id: string;
   name: string;
   photo?: string;
+  gender?: 'male' | 'female';
   shiftVerified: boolean;
   shiftsOnReflex: number;
   brandsWorked: { name: string; tier: BrandTier }[];

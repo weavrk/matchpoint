@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import {
   BadgeCheck,
   MapPin,
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { MatchedWorker, RetailerQuote } from '../../types';
 import { getBrandLogo } from '../../utils/brandLogos';
+import { getWorkerPhoto } from '../../hooks/useWorkerPhoto';
 import './WorkerCard.css';
 
 // Generate a unique AI-style summary from retailer quotes (3-5 sentences)
@@ -135,6 +137,19 @@ const toTitleCase = (str: string) => {
 };
 
 export function WorkerCard({ worker }: WorkerCardProps) {
+  const [imgError, setImgError] = useState(false);
+
+  // Get photo from final photos pool based on gender
+  const assignedPhoto = useMemo(() => {
+    if (worker.gender) {
+      return getWorkerPhoto(worker.gender);
+    }
+    return null;
+  }, [worker.gender]);
+
+  // Use assigned photo, fall back to worker.photo, then initials
+  const photoUrl = assignedPhoto || worker.photo;
+
   const initials = worker.name
     .split(' ')
     .map((n) => n[0])
@@ -179,7 +194,11 @@ export function WorkerCard({ worker }: WorkerCardProps) {
       {/* ── Header ────────────────────────────────── */}
       <div className="worker-card-header">
         <div className="worker-avatar">
-          {worker.photo ? <img src={worker.photo} alt={worker.name} /> : <span>{initials}</span>}
+          {photoUrl && !imgError ? (
+            <img src={photoUrl} alt={worker.name} onError={() => setImgError(true)} />
+          ) : (
+            <span>{initials}</span>
+          )}
         </div>
 
         <div className="worker-header-info">

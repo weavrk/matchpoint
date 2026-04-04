@@ -1,5 +1,7 @@
+import { useState, useMemo } from 'react';
 import { BadgeCheck, Search, MapPin } from 'lucide-react';
 import type { MatchedWorker } from '../../types';
+import { getWorkerPhoto } from '../../hooks/useWorkerPhoto';
 import './WorkerCard.css';
 
 interface WorkerCardHeaderProps {
@@ -9,6 +11,19 @@ interface WorkerCardHeaderProps {
 }
 
 export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking = true }: WorkerCardHeaderProps) {
+  const [imgError, setImgError] = useState(false);
+
+  // Get photo from final photos pool based on gender
+  const assignedPhoto = useMemo(() => {
+    if (worker.gender) {
+      return getWorkerPhoto(worker.gender);
+    }
+    return null;
+  }, [worker.gender]);
+
+  // Use assigned photo, fall back to worker.photo, then initials
+  const photoUrl = assignedPhoto || worker.photo;
+
   const initials = worker.name
     .split(' ')
     .map((n) => n[0])
@@ -34,7 +49,15 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
     <div className="worker-card-header">
       <div className="worker-header-content">
         <div className="worker-avatar" style={{ width: avatarSize, height: avatarSize }}>
-          {worker.photo ? <img src={worker.photo} alt={worker.name} /> : <span>{initials}</span>}
+          {photoUrl && !imgError ? (
+            <img
+              src={photoUrl}
+              alt={worker.name}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <span>{initials}</span>
+          )}
         </div>
 
         <div className="worker-name-section">

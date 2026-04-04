@@ -1,10 +1,80 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Worker Photos Review - Cloudinary Processed</title>
+  <title>Worker Photos Review - Curate Final Set</title>
   <style>
-    body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui; padding: 20px; background: #f5f5f5; margin: 0; }
+    h1 { margin-top: 0; }
     h2 { margin-top: 40px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #333;
+    }
+    .tab {
+      padding: 12px 24px;
+      background: #e0e0e0;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px 8px 0 0;
+      margin-right: 4px;
+    }
+    .tab:hover { background: #d0d0d0; }
+    .tab.active { background: #333; color: white; }
+    .tab .count {
+      background: rgba(255,255,255,0.3);
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 8px;
+      font-size: 12px;
+    }
+    .tab.active .count { background: rgba(255,255,255,0.2); }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .action-bar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      background: #333;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 0 0 0 8px;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .action-bar .count { font-size: 14px; }
+    .action-bar button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .action-bar button:hover { background: #45a049; }
+    .action-bar button:disabled { background: #666; cursor: not-allowed; }
+    .action-bar .clear-btn { background: #666; padding: 8px 12px; }
+    .action-bar .clear-btn:hover { background: #555; }
+    .action-bar .remove-btn { background: #f44336; }
+    .action-bar .remove-btn:hover { background: #d32f2f; }
+    .action-bar .export-btn { background: #2196F3; }
+    .action-bar .export-btn:hover { background: #1976D2; }
+    .action-bar .replace-btn { background: #FF9800; }
+    .action-bar .replace-btn:hover { background: #F57C00; }
+    .action-bar .select-all-btn { background: #3F3F46; }
+    .action-bar .select-all-btn:hover { background: #27272A; }
+
     .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; }
     .portrait {
       display: flex;
@@ -13,6 +83,38 @@
       background: white;
       padding: 8px;
       border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s;
+      border: 3px solid transparent;
+    }
+    .portrait:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .portrait.selected {
+      border-color: #4CAF50;
+      background: #e8f5e9;
+    }
+    .portrait.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: #4CAF50;
+      color: white;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    .portrait .avatar-container {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      overflow: hidden;
+      position: relative;
     }
     .portrait img {
       width: 80px;
@@ -20,68 +122,496 @@
       border-radius: 50%;
       object-fit: cover;
     }
+    .portrait .initials-fallback {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #E4E4E7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 600;
+      color: #3F3F46;
+    }
+    .portrait .initials-fallback.missing {
+      background: #ffebee;
+      color: #f44336;
+      border: 2px dashed #f44336;
+    }
     .portrait span { font-size: 10px; color: #666; margin-top: 4px; text-align: center; }
     .section { margin-bottom: 40px; }
     .stats { background: #333; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .stats.final-stats { background: #2196F3; }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+      text-align: center;
+    }
+    .modal h3 { margin-top: 0; }
+    .modal .progress { margin: 20px 0; font-size: 18px; }
+    .modal .checkmark {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #4CAF50;
+      margin: 0 auto 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pop 0.3s ease-out;
+    }
+    .modal .checkmark::after {
+      content: '✓';
+      color: white;
+      font-size: 32px;
+      font-weight: bold;
+    }
+    @keyframes pop {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    .modal button {
+      background: #333;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px;
+      color: #666;
+    }
+    .empty-state h3 { color: #333; }
   </style>
 </head>
 <body>
-  <h1>Worker Photos - Cloudinary Processed (Local Files)</h1>
-  <div class="stats" id="stats">Loading...</div>
-
-  <div class="section">
-    <h2>Male Workers (93 photos)</h2>
-    <div class="grid" id="males"></div>
+  <div class="action-bar" id="actionBar">
+    <!-- Content changes based on active tab -->
   </div>
 
-  <div class="section">
-    <h2>Female Workers (516 photos)</h2>
-    <div class="grid" id="females"></div>
+  <h1>Worker Photos - Curate Final Set</h1>
+  <p>Select good photos and move them to Final. Then repopulate worker avatars from the final set.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('source')" id="sourceTab">
+      Source Photos <span class="count" id="sourceCount">0</span>
+    </button>
+    <button class="tab" onclick="switchTab('final')" id="finalTab">
+      Final <span class="count" id="finalCount">0</span>
+    </button>
+  </div>
+
+  <div class="tab-content active" id="sourceContent">
+    <div class="stats" id="sourceStats">Loading...</div>
+
+    <div class="section">
+      <h2>Male Workers (<span id="sourceMaleCount">0</span> photos)</h2>
+      <div class="grid" id="sourceMales"></div>
+    </div>
+
+    <div class="section">
+      <h2>Female Workers (<span id="sourceFemaleCount">0</span> photos)</h2>
+      <div class="grid" id="sourceFemales"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="finalContent">
+    <div class="stats final-stats" id="finalStats">No photos in final set yet</div>
+
+    <div class="section">
+      <h2>Male Workers (<span id="finalMaleCount">0</span> photos)</h2>
+      <div class="grid" id="finalMales"></div>
+      <div class="empty-state" id="finalMalesEmpty">
+        <h3>No male photos yet</h3>
+        <p>Select photos from Source tab and click "Move to Final"</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Female Workers (<span id="finalFemaleCount">0</span> photos)</h2>
+      <div class="grid" id="finalFemales"></div>
+      <div class="empty-state" id="finalFemalesEmpty">
+        <h3>No female photos yet</h3>
+        <p>Select photos from Source tab and click "Move to Final"</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h3 id="modalTitle">Processing...</h3>
+      <div class="progress" id="modalProgress"></div>
+      <button onclick="closeModal()" style="display:none" id="modalClose">Close</button>
+    </div>
   </div>
 
   <script>
-    const MALE_COUNT = 93;
-    const FEMALE_COUNT = 516;
     const BASE_PATH = '../web/public/images/avatars';
 
-    function render() {
-      document.getElementById('stats').innerHTML = `
-        <strong>Total Photos:</strong> ${MALE_COUNT + FEMALE_COUNT} |
-        <strong>Male:</strong> ${MALE_COUNT} |
-        <strong>Female:</strong> ${FEMALE_COUNT} |
-        <strong>Source:</strong> Cloudinary face-detected, 400x400
-      `;
+    // State
+    let currentTab = 'source';
+    const selected = { male: new Set(), female: new Set() };
+    const finalPhotos = {
+      male: JSON.parse(localStorage.getItem('finalPhotos_male') || '[]'),
+      female: JSON.parse(localStorage.getItem('finalPhotos_female') || '[]')
+    };
 
-      // Render males
-      const malesGrid = document.getElementById('males');
-      let malesHtml = '';
-      for (let i = 1; i <= MALE_COUNT; i++) {
-        const filename = String(i).padStart(3, '0') + '.jpg';
-        malesHtml += `
-          <div class="portrait">
-            <img src="${BASE_PATH}/male/${filename}" alt="Male ${i}" onerror="this.src='https://via.placeholder.com/80?text=Error'">
-            <span>${filename}</span>
-          </div>
-        `;
-      }
-      malesGrid.innerHTML = malesHtml;
+    // Source files
+    let sourceMaleFiles = [];
+    let sourceFemaleFiles = [];
 
-      // Render females
-      const femalesGrid = document.getElementById('females');
-      let femalesHtml = '';
-      for (let i = 1; i <= FEMALE_COUNT; i++) {
-        const filename = String(i).padStart(3, '0') + '.jpg';
-        femalesHtml += `
-          <div class="portrait">
-            <img src="${BASE_PATH}/female/${filename}" alt="Female ${i}" onerror="this.src='https://via.placeholder.com/80?text=Error'">
-            <span>${filename}</span>
-          </div>
-        `;
-      }
-      femalesGrid.innerHTML = femalesHtml;
+    function saveFinalPhotos() {
+      localStorage.setItem('finalPhotos_male', JSON.stringify(finalPhotos.male));
+      localStorage.setItem('finalPhotos_female', JSON.stringify(finalPhotos.female));
     }
 
-    render();
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+      document.getElementById(tab + 'Tab').classList.add('active');
+      document.getElementById(tab + 'Content').classList.add('active');
+
+      selected.male.clear();
+      selected.female.clear();
+      document.querySelectorAll('.portrait.selected').forEach(el => el.classList.remove('selected'));
+
+      updateActionBar();
+      updateCounts();
+    }
+
+    function updateActionBar() {
+      const bar = document.getElementById('actionBar');
+      const totalSelected = selected.male.size + selected.female.size;
+
+      if (currentTab === 'source') {
+        bar.innerHTML = `
+          <button class="select-all-btn" onclick="selectAllGender('male')">Select All Male</button>
+          <button class="select-all-btn" onclick="selectAllGender('female')">Select All Female</button>
+          <span class="count"><span id="selectedCount">${totalSelected}</span> selected</span>
+          <button class="clear-btn" onclick="clearSelection()">Clear</button>
+          <button class="replace-btn" onclick="replaceSelected()" ${totalSelected === 0 ? 'disabled' : ''}>Replace Selected</button>
+          <button onclick="moveToFinal()" ${totalSelected === 0 ? 'disabled' : ''}>Move to Final</button>
+        `;
+      } else {
+        bar.innerHTML = `
+          <span class="count"><span id="selectedCount">${totalSelected}</span> selected</span>
+          <button class="clear-btn" onclick="clearSelection()">Clear</button>
+          <button class="remove-btn" onclick="removeFromFinal()" ${totalSelected === 0 ? 'disabled' : ''}>Remove Selected</button>
+          <button class="export-btn" onclick="exportFinalPhotos()">Export to App</button>
+        `;
+      }
+    }
+
+    function updateCounts() {
+      // Source counts
+      const sourceMaleActual = sourceMaleFiles.filter(f => !finalPhotos.male.includes(f)).length;
+      const sourceFemaleActual = sourceFemaleFiles.filter(f => !finalPhotos.female.includes(f)).length;
+      document.getElementById('sourceCount').textContent = sourceMaleActual + sourceFemaleActual;
+      document.getElementById('sourceMaleCount').textContent = sourceMaleActual;
+      document.getElementById('sourceFemaleCount').textContent = sourceFemaleActual;
+
+      // Final counts
+      document.getElementById('finalCount').textContent = finalPhotos.male.length + finalPhotos.female.length;
+      document.getElementById('finalMaleCount').textContent = finalPhotos.male.length;
+      document.getElementById('finalFemaleCount').textContent = finalPhotos.female.length;
+
+      // Empty states
+      document.getElementById('finalMalesEmpty').style.display = finalPhotos.male.length === 0 ? 'block' : 'none';
+      document.getElementById('finalFemalesEmpty').style.display = finalPhotos.female.length === 0 ? 'block' : 'none';
+      document.getElementById('finalMales').style.display = finalPhotos.male.length > 0 ? 'grid' : 'none';
+      document.getElementById('finalFemales').style.display = finalPhotos.female.length > 0 ? 'grid' : 'none';
+
+      // Stats
+      document.getElementById('sourceStats').innerHTML = `
+        <strong>Source Photos:</strong> ${sourceMaleActual + sourceFemaleActual} |
+        <strong>Male:</strong> ${sourceMaleActual} |
+        <strong>Female:</strong> ${sourceFemaleActual} |
+        <strong>Select good photos to add to Final set</strong>
+      `;
+
+      document.getElementById('finalStats').innerHTML = `
+        <strong>Final Set:</strong> ${finalPhotos.male.length + finalPhotos.female.length} photos |
+        <strong>Male:</strong> ${finalPhotos.male.length} |
+        <strong>Female:</strong> ${finalPhotos.female.length} |
+        <strong>Click "Repopulate Workers" to assign these photos</strong>
+      `;
+    }
+
+    function toggleSelect(gender, filename, el) {
+      if (selected[gender].has(filename)) {
+        selected[gender].delete(filename);
+        el.classList.remove('selected');
+      } else {
+        selected[gender].add(filename);
+        el.classList.add('selected');
+      }
+      updateActionBar();
+    }
+
+    function clearSelection() {
+      selected.male.clear();
+      selected.female.clear();
+      document.querySelectorAll('.portrait.selected').forEach(el => el.classList.remove('selected'));
+      updateActionBar();
+    }
+
+    function selectAllGender(gender) {
+      const gridId = currentTab === 'source' ? 'source' + gender.charAt(0).toUpperCase() + gender.slice(1) + 's' : 'final' + gender.charAt(0).toUpperCase() + gender.slice(1) + 's';
+      const grid = document.getElementById(gridId);
+      const portraits = grid.querySelectorAll('.portrait');
+
+      portraits.forEach(el => {
+        const file = el.dataset.file;
+        if (!selected[gender].has(file)) {
+          selected[gender].add(file);
+          el.classList.add('selected');
+        }
+      });
+      updateActionBar();
+    }
+
+    function moveToFinal() {
+      // Add selected to final
+      selected.male.forEach(f => {
+        if (!finalPhotos.male.includes(f)) finalPhotos.male.push(f);
+      });
+      selected.female.forEach(f => {
+        if (!finalPhotos.female.includes(f)) finalPhotos.female.push(f);
+      });
+
+      saveFinalPhotos();
+      clearSelection();
+      renderSource();
+      renderFinal();
+      updateCounts();
+
+      showSuccess(`Moved ${selected.male.size + selected.female.size} photos to Final`);
+    }
+
+    function removeFromFinal() {
+      // Remove selected from final
+      finalPhotos.male = finalPhotos.male.filter(f => !selected.male.has(f));
+      finalPhotos.female = finalPhotos.female.filter(f => !selected.female.has(f));
+
+      saveFinalPhotos();
+      clearSelection();
+      renderSource();
+      renderFinal();
+      updateCounts();
+    }
+
+    async function replaceSelected() {
+      const maleToReplace = Array.from(selected.male);
+      const femaleToReplace = Array.from(selected.female);
+      const total = maleToReplace.length + femaleToReplace.length;
+
+      if (total === 0) return;
+
+      showModal('Replacing photos...', `0 / ${total}`);
+
+      try {
+        const response = await fetch('http://localhost:3456/replace-photos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            male: maleToReplace,
+            female: femaleToReplace
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          showSuccess(`Replaced ${result.replaced} photos`);
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          document.getElementById('modalProgress').textContent = 'Error: ' + (await response.text());
+          document.getElementById('modalClose').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('modalProgress').textContent = 'Error: Make sure the server is running.\n\nRun: node scripts/replacement-server.mjs';
+        document.getElementById('modalClose').style.display = 'block';
+      }
+    }
+
+    async function exportFinalPhotos() {
+      const totalFinal = finalPhotos.male.length + finalPhotos.female.length;
+
+      if (totalFinal === 0) {
+        alert('No photos in Final set. Select photos from Source first.');
+        return;
+      }
+
+      showModal('Exporting to app...', 'Saving JSON...');
+
+      try {
+        const response = await fetch('http://localhost:3456/export-final', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            male: finalPhotos.male,
+            female: finalPhotos.female
+          })
+        });
+
+        if (response.ok) {
+          showSuccess(`Exported ${totalFinal} photos to app`);
+        } else {
+          document.getElementById('modalProgress').textContent = 'Error: ' + (await response.text());
+          document.getElementById('modalClose').style.display = 'block';
+        }
+      } catch (err) {
+        document.getElementById('modalProgress').textContent = 'Error: Make sure the server is running.\n\nRun: node scripts/replacement-server.mjs';
+        document.getElementById('modalClose').style.display = 'block';
+      }
+    }
+
+    function showModal(title, progress) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalProgress').textContent = progress;
+      document.getElementById('modalClose').style.display = 'none';
+      document.getElementById('modal').classList.add('active');
+    }
+
+    function showSuccess(message) {
+      document.getElementById('modalTitle').innerHTML = `<div class="checkmark"></div>${message}`;
+      document.getElementById('modalProgress').textContent = '';
+      document.getElementById('modalClose').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('modal').classList.remove('active');
+      }, 1000);
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('active');
+    }
+
+    function handleImageError(imgEl, id) {
+      imgEl.style.display = 'none';
+      const fallback = imgEl.nextElementSibling;
+      fallback.style.display = 'flex';
+      fallback.classList.add('missing');
+      const parts = id.split('_');
+      const prefix = parts[0][0].toUpperCase();
+      const num = parseInt(parts[1], 10);
+      fallback.textContent = prefix + num;
+    }
+
+    function scanFiles() {
+      // Generate expected files
+      sourceMaleFiles = [];
+      for (let i = 1; i <= 100; i++) {
+        sourceMaleFiles.push(`randomuser_${String(i).padStart(3, '0')}_cleaned.jpg`);
+      }
+      for (let i = 1; i <= 25; i++) {
+        sourceMaleFiles.push(`pexels_${String(i).padStart(3, '0')}_cleaned.jpg`);
+      }
+
+      sourceFemaleFiles = [];
+      for (let i = 1; i <= 100; i++) {
+        sourceFemaleFiles.push(`randomuser_${String(i).padStart(3, '0')}_cleaned.jpg`);
+      }
+      for (let i = 1; i <= 480; i++) {
+        sourceFemaleFiles.push(`pexels_${String(i).padStart(3, '0')}_cleaned.jpg`);
+      }
+    }
+
+    function renderSource() {
+      // Filter out files already in final
+      const availableMale = sourceMaleFiles.filter(f => !finalPhotos.male.includes(f));
+      const availableFemale = sourceFemaleFiles.filter(f => !finalPhotos.female.includes(f));
+
+      const malesGrid = document.getElementById('sourceMales');
+      malesGrid.innerHTML = availableMale.map(file => {
+        const id = file.replace('_cleaned.jpg', '');
+        return `
+          <div class="portrait" onclick="toggleSelect('male', '${file}', this)" data-file="${file}">
+            <div class="avatar-container">
+              <img src="${BASE_PATH}/male/${file}" alt="${file}" onload="this.style.display='block'" onerror="handleImageError(this, '${id}')">
+              <div class="initials-fallback" style="display:none"></div>
+            </div>
+            <span>${id}</span>
+          </div>
+        `;
+      }).join('');
+
+      const femalesGrid = document.getElementById('sourceFemales');
+      femalesGrid.innerHTML = availableFemale.map(file => {
+        const id = file.replace('_cleaned.jpg', '');
+        return `
+          <div class="portrait" onclick="toggleSelect('female', '${file}', this)" data-file="${file}">
+            <div class="avatar-container">
+              <img src="${BASE_PATH}/female/${file}" alt="${file}" onload="this.style.display='block'" onerror="handleImageError(this, '${id}')">
+              <div class="initials-fallback" style="display:none"></div>
+            </div>
+            <span>${id}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderFinal() {
+      const malesGrid = document.getElementById('finalMales');
+      malesGrid.innerHTML = finalPhotos.male.map(file => {
+        const id = file.replace('_cleaned.jpg', '');
+        return `
+          <div class="portrait" onclick="toggleSelect('male', '${file}', this)" data-file="${file}">
+            <div class="avatar-container">
+              <img src="${BASE_PATH}/male/${file}" alt="${file}" onload="this.style.display='block'" onerror="handleImageError(this, '${id}')">
+              <div class="initials-fallback" style="display:none"></div>
+            </div>
+            <span>${id}</span>
+          </div>
+        `;
+      }).join('');
+
+      const femalesGrid = document.getElementById('finalFemales');
+      femalesGrid.innerHTML = finalPhotos.female.map(file => {
+        const id = file.replace('_cleaned.jpg', '');
+        return `
+          <div class="portrait" onclick="toggleSelect('female', '${file}', this)" data-file="${file}">
+            <div class="avatar-container">
+              <img src="${BASE_PATH}/female/${file}" alt="${file}" onload="this.style.display='block'" onerror="handleImageError(this, '${id}')">
+              <div class="initials-fallback" style="display:none"></div>
+            </div>
+            <span>${id}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function init() {
+      scanFiles();
+      renderSource();
+      renderFinal();
+      updateCounts();
+      updateActionBar();
+    }
+
+    init();
   </script>
 </body>
 </html>

@@ -1,17 +1,15 @@
 # Matchpoint
 
-The dominant acquisition channels for retail hiring weren't built for retail talent and preference volume over fit. Reflex already has the workers, the relationships, and the performance data.
-
-++**How might we build permanent hiring into Reflex and become the only platform retailers need for retail talent?**++
+### How might we build Reflex into the only platform brands need for retail talent?
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## Users / Personas
+# Users / Personas
 
 ### Retailer
 
 - Existing Reflex customers already booking flex/part-time workers
-- everythign else TBD pending discovery, could be store managers (single store or multi-store), hiring manager, district managers, hr, recruiter,
+- Everythign else TBD pending discovery, could be store managers (single store or multi-store), hiring manager, district managers, hr, recruiter,
 
 ### Worker
 
@@ -20,7 +18,7 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 
 ---
 
-### Worker Quality Segmentation
+## Worker Quality Segmentation
 
 Filtering workers table by  
 
@@ -49,20 +47,21 @@ Here's the breakdown if we want to choose other methods
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## Tech Stack
+# Tech Stack
 
 ### Overview
 
 
-| Component   | Technology                                                                           |
-| ----------- | ------------------------------------------------------------------------------------ |
-| Frontend    | React + TypeScript (Vite), located in `web/`                                         |
-| Backend     | Node.js + Express + TypeScript, located in `src/`                                    |
-| AI Provider | Google AI Studio (Gemini)                                                            |
-| Styling     | CSS (no framework), see design system section                                        |
-| Icons       | Lucide React                                                                         |
-| Hosting     | Vercel                                                                               |
-| Github      | [https://github.com/weavrk/matchpoint.git](https://github.com/weavrk/matchpoint.git) |
+| Component     | Technology                                                                           |
+| ------------- | ------------------------------------------------------------------------------------ |
+| Frontend      | React + TypeScript (Vite), located in `web/`                                         |
+| Backend       | Node.js + Express + TypeScript, located in `src/`                                    |
+| AI Provider   | Google AI Studio (Gemini)                                                            |
+| Styling       | CSS (no framework), see design system section                                        |
+| Icons         | Lucide React                                                                         |
+| Hosting       | Vercel                                                                               |
+| Github        | [https://github.com/weavrk/matchpoint.git](https://github.com/weavrk/matchpoint.git) |
+| Worker Photos | [Cloudinary](https://console.cloudinary.com), [Pexels](https://www.pexels.com/api/), [RandomUser](https://randomuser.me/). Review: [review-portraits.html](file:///Users/katherine_1/Dropbox/x.wip/x.Tools/matchpoint/scripts/review-portraits.html). Replace: `node scripts/replacement-server.mjs` |
 
 
 ### Supabase
@@ -169,7 +168,7 @@ Scrapers live in `src/scrapers/`. Common behavior:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## Variants
+# Variants
 
 Three UX variants exist under `web/src/pages/variants/`. Variant-specific logic (system prompts, flow trees, data structures) lives in each variant's MD file.
 
@@ -185,7 +184,7 @@ Three UX variants exist under `web/src/pages/variants/`. Variant-specific logic 
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## Project Structure
+# Project Structure
 
 ```
 matchpoint/
@@ -199,17 +198,50 @@ matchpoint/
 │   │   │   ├── DevMenu/
 │   │   │   │   ├── index.tsx            # Global dev menu (Bot, Oz, DSL)
 │   │   │   │   └── DesignSystemPanel.tsx
+│   │   │   ├── Jobs/
+│   │   │   │   ├── PublishedJobCard.tsx
+│   │   │   │   ├── PublishedJobCard.css
+│   │   │   │   └── index.ts
 │   │   │   ├── Layout/
 │   │   │   │   ├── AppLayout.tsx        # Main layout wrapper
 │   │   │   │   ├── AppLayout.css
 │   │   │   │   ├── SideNav.tsx          # Left navigation
 │   │   │   │   ├── SideNav.css
 │   │   │   │   └── index.ts
+│   │   │   ├── NavChips/
+│   │   │   │   ├── NavChips.tsx         # Welcome/compact nav chips
+│   │   │   │   ├── NavChips.css
+│   │   │   │   └── index.ts
+│   │   │   ├── OzPanel/
+│   │   │   │   ├── OzPanel.tsx          # Oz admin panel
+│   │   │   │   ├── styles.css
+│   │   │   │   └── index.ts
+│   │   │   ├── ScrapeModal/
+│   │   │   │   ├── ScrapeModal.tsx
+│   │   │   │   ├── ScrapeModal.css
+│   │   │   │   └── index.ts
+│   │   │   ├── ScrapeProgressModal/
+│   │   │   │   ├── ScrapeProgressModal.tsx
+│   │   │   │   ├── ScrapeProgressModal.css
+│   │   │   │   └── index.ts
+│   │   │   ├── UnmatchedRolesModal/
+│   │   │   │   ├── UnmatchedRolesModal.tsx
+│   │   │   │   ├── UnmatchedRolesModal.css
+│   │   │   │   └── index.ts
+│   │   │   ├── WorkerDataDrawer/
+│   │   │   │   ├── WorkerDataDrawer.tsx # Raw worker data viewer
+│   │   │   │   ├── WorkerDataDrawer.css
+│   │   │   │   └── index.ts
 │   │   │   └── Workers/
-│   │   │       ├── WorkerCard.tsx
+│   │   │       ├── WorkerCard.tsx       # Main card component
 │   │   │       ├── WorkerCard.css
+│   │   │       ├── WorkerCardCompact.tsx
+│   │   │       ├── WorkerCardFull.tsx   # Detail overlay panel
+│   │   │       ├── WorkerCardHeader.tsx # Shared header component
+│   │   │       ├── WorkerCardTesting.tsx # Testing/debug card
 │   │   │       ├── WorkerGrid.tsx
 │   │   │       ├── WorkerGrid.css
+│   │   │       ├── utils.ts
 │   │   │       └── index.ts
 │   │   ├── pages/
 │   │   │   ├── PermanentHiring.tsx      # Variant router
@@ -217,29 +249,37 @@ matchpoint/
 │   │   │   └── variants/
 │   │   │       ├── V1JobFocus/
 │   │   │       │   ├── index.tsx        # Full implementation
-│   │   │       │   └── VARIANT.md       # V1-specific docs
+│   │   │       │   ├── styles.css
+│   │   │       │   └── CLAUDE-V1-JOB-FOCUS.md
 │   │   │       ├── V2TalentCentric/
-│   │   │       │   ├── index.tsx        # Placeholder
-│   │   │       │   └── VARIANT.md       # V2-specific docs
+│   │   │       │   ├── index.tsx
+│   │   │       │   ├── V2NavFooter.tsx
+│   │   │       │   ├── styles.css
+│   │   │       │   └── CLAUDE-V2-TALENT-CENTRIC.md
 │   │   │       └── V3Wildcard/
-│   │   │           ├── index.tsx        # Placeholder
-│   │   │           └── VARIANT.md       # V3-specific docs
+│   │   │           ├── index.tsx
+│   │   │           ├── styles.css
+│   │   │           └── CLAUDE-V3-WILDCARD.md
 │   │   ├── services/
 │   │   │   ├── gemini.ts                # Gemini API + data summaries + quick prompts
 │   │   │   ├── workerMatching.ts        # Worker matching algorithm
 │   │   │   └── supabase.ts              # Supabase client
 │   │   ├── data/
 │   │   │   ├── workers.ts               # Sample worker profiles
-│   │   │   └── retailer.ts              # Sample retailer data
+│   │   │   ├── retailer.ts              # Sample retailer data
+│   │   │   └── ariatStores.ts           # Ariat store locations
+│   │   ├── utils/
+│   │   │   └── brandLogos.ts            # Brand logo utilities
 │   │   ├── styles/
-│   │   │   └── variables.css            # Design tokens (uses design-library/)
+│   │   │   └── variables.css            # Design tokens
 │   │   ├── types/
 │   │   │   └── index.ts                 # TypeScript interfaces
+│   │   ├── scripts/                     # Frontend data scripts
 │   │   ├── App.tsx
 │   │   └── main.tsx
 │   ├── public/
 │   │   └── images/
-│   │       ├── wordmark.svg             # Reflex logo (from assets/)
+│   │       ├── wordmark.svg             # Reflex logo
 │   │       ├── logomark.svg             # Collapsed logo
 │   │       └── nav-background.svg       # Sidebar background
 │   └── package.json
@@ -249,23 +289,22 @@ matchpoint/
 │   ├── index.ts                       # Entry point
 │   ├── matching.ts                    # Server-side matching
 │   ├── types.ts                       # Shared types
-│   └── data.ts                        # Data utilities
+│   ├── data.ts                        # Data utilities
+│   └── scrapers/
+│       ├── indeed.ts                  # Indeed job scraper
+│       └── glassdoor.ts               # Glassdoor scraper (deprecated)
+│
+├── scripts/                           # Data cleanup & utility scripts
+│   ├── clean-worker-data.ts           # Unified cleanup (see Useful Scripts)
+│   ├── update-worker-photos-all.mjs   # Photo updates
+│   └── ...                            # Various data scripts
 │
 ├── assets/                            # Design library & brand assets
 │   ├── design-library/
-│   │   ├── primitive-variables.json   # Color primitives (gray, pink, etc.)
-│   │   └── semantic-variables.json    # Semantic tokens (primary, accent, etc.)
-│   ├── logo-and-backgrounds/
-│   │   ├── wordmark.svg               # Reflex wordmark
-│   │   ├── logo.svg                   # Reflex logo
-│   │   └── background.svg             # Nav background pattern
-│   ├── retailers/
-│   │   └── r001.json                  # Sample retailer data
-│   └── workers/
-│       └── w001-w040.json             # 40 synthetic worker profiles
-│
-├── tests/
-│   └── test-workers.html              # Worker card rendering test
+│   │   ├── primitive-variables.json   # Color primitives
+│   │   └── semantic-variables.json    # Semantic tokens
+│   └── retailers/
+│       └── r001.json                  # Sample retailer data
 │
 ├── x.reference/                       # Reference materials (don't modify)
 ├── .env                               # Environment variables (gitignored)
@@ -274,7 +313,7 @@ matchpoint/
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## Design System
+# Design System
 
 Live reference: Palette icon button (bottom-right dev menu)
 Definitions: `web/src/styles/variables.css`
@@ -375,19 +414,22 @@ All chat text inputs share these styles. Classes: `.welcome-input`, `.inline-inp
 Three variants with shared header component. All headers have avatar, name, and badges vertically centered (align-items: center).
 
 
-| Variant | Class | Specs |
-|---------|-------|-------|
-| `WorkerCardTeaser` | `.worker-card-teaser` | Minimal to entice. Header + "What retailers are saying about [Name]" AI summary. Label: `.type-section-header-sm`, Summary: 14px/400 primary, line-height 20px, Gap: 4px, No Actively Looking badge (`showActivelyLooking={false}`) |
-| `WorkerCardCompact` | `.worker-card-compact` | Chat view. Quote, work history, endorsements with +counts, store quotes |
-| `WorkerCardFull` | `.worker-card-full-overlay` | Detail panel. 35vw width, fixed right, close button (36px circle, primary bg, white X), Header: avatar + name stacked with location/shift verified, Section titles: 18px/700 primary (`.type-section-header`), Sections: 20px padding, 1px dividers, About: 16px primary (no italics), Stats: 28px bold + 12px labels. Clicking WorkerCardTeaser opens this panel |
+| Variant             | Class                       | Specs                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `WorkerCardTeaser`  | `.worker-card-teaser`       | Minimal to entice. Header + "What retailers are saying about [Name]" AI summary. Label: `.type-section-header-sm`, Summary: 14px/400 primary, line-height 20px, Gap: 4px, No Actively Looking badge (`showActivelyLooking={false}`)                                                                                                                               |
+| `WorkerCardCompact` | `.worker-card-compact`      | Chat view. Quote, work history, endorsements with +counts, store quotes                                                                                                                                                                                                                                                                                           |
+| `WorkerCardFull`    | `.worker-card-full-overlay` | Detail panel. 35vw width, fixed right, close button (36px circle, primary bg, white X), Header: avatar + name stacked with location/shift verified, Section titles: 18px/700 primary (`.type-section-header`), Sections: 20px padding, 1px dividers, About: 16px primary (no italics), Stats: 28px bold + 12px labels. Clicking WorkerCardTeaser opens this panel |
+
 
 **Shared Header:** `WorkerCardHeader` component
 
-| Property | Value |
-|----------|-------|
-| Avatar | 40px (default) or 64px (large via `size="large"`) |
-| Name | `.type-section-header-lg` |
-| Layout | flex row, vertically centered; Shift Verified badge pushed to right via `margin-left: auto` |
-| Badges | Shift Verified (green, right-aligned) - Actively Looking hidden on Teaser, visible on Compact/Full |
-| Props | `showActivelyLooking` (default `true`) - pass `false` on WorkerCardTeaser |
+
+| Property | Value                                                                                              |
+| -------- | -------------------------------------------------------------------------------------------------- |
+| Avatar   | 40px (default) or 64px (large via `size="large"`)                                                  |
+| Name     | `.type-section-header-lg`                                                                          |
+| Layout   | flex row, vertically centered; Shift Verified badge pushed to right via `margin-left: auto`        |
+| Badges   | Shift Verified (green, right-aligned) - Actively Looking hidden on Teaser, visible on Compact/Full |
+| Props    | `showActivelyLooking` (default `true`) - pass `false` on WorkerCardTeaser                          |
+
 
