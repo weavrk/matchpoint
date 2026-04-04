@@ -40,8 +40,6 @@ export function getWorkerPhoto(gender: 'male' | 'female'): string | null {
  * Reset all photo assignments (useful for testing or page refresh)
  */
 export function resetPhotoAssignments(): void {
-  assignedPhotos.male.clear();
-  assignedPhotos.female.clear();
   usedIndices.male.clear();
   usedIndices.female.clear();
 }
