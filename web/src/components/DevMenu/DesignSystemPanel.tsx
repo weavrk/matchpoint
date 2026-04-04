@@ -1,18 +1,16 @@
-import { useState, useEffect } from 'react';
 import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
 import { WorkerCardCompact } from '../Workers/WorkerCardCompact';
 import { WorkerCardTesting } from '../Workers/WorkerCardTesting';
 import { WorkerCardFull } from '../Workers/WorkerCardFull';
-import { fetchSampleWorkersForDSL, workerRowToProfile } from '../../services/supabase';
 import type { MatchedWorker } from '../../types';
 
 interface DesignSystemPanelProps {
   onClose: () => void;
 }
 
-// Real worker data from Supabase (Jayzon Trinidad - top actively looking worker)
-const FALLBACK_SAMPLE_WORKER: MatchedWorker = {
+// Hardcoded snapshot from Supabase (Jayzon Trinidad) — no live fetch in the DSL panel
+const sampleWorker: MatchedWorker = {
   id: '4659d2fd-a7e0-47c5-86ae-432cf0156671',
   name: 'Jayzon Trinidad',
   photo: '/images/avatars/female/pexels_380_cleaned.jpg',
@@ -77,27 +75,6 @@ const FALLBACK_SAMPLE_WORKER: MatchedWorker = {
 };
 
 export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
-  // Start with fallback, then try to load from Supabase
-  const [sampleWorker, setSampleWorker] = useState<MatchedWorker>(FALLBACK_SAMPLE_WORKER);
-
-  useEffect(() => {
-    async function loadWorkers() {
-      try {
-        const { worker1 } = await fetchSampleWorkersForDSL();
-        if (worker1) {
-          setSampleWorker({
-            ...workerRowToProfile(worker1),
-            matchScore: 94,
-            matchReasons: ['Actively looking', 'High reliability'],
-          });
-        }
-      } catch (error) {
-        console.error('DSL: Failed to load from Supabase, using fallback:', error);
-      }
-    }
-    loadWorkers();
-  }, []);
-
   return (
     <div className="design-system-panel">
       <div className="design-system-header">
