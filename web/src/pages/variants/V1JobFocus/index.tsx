@@ -1193,12 +1193,15 @@ export function V1JobFocus({ agentActive, showOz: _showOz }: VariantProps) {
             ? options.branchBaseMessages
             : messages;
         const existingHistory = chatMessagesToGeminiHistory(historySource);
+        // Pass worker IDs so Gemini can reference actual workers
+        const workerIdsForChat = allTalentWorkers.slice(0, 10).map(w => w.id);
         await geminiService.startChat(
           userName,
           SAMPLE_RETAILER.name,
           classificationMap[SAMPLE_RETAILER.brandTier] || 'Specialty',
           'Austin', // market
-          existingHistory.length > 0 ? existingHistory : undefined
+          existingHistory.length > 0 ? existingHistory : undefined,
+          workerIdsForChat
         );
         chatStartedRef.current = true;
       }

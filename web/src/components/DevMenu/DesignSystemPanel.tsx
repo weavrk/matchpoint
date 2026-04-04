@@ -19,7 +19,7 @@ const DEFAULT_SAMPLE_WORKER: MatchedWorker = {
   shiftsOnReflex: 47,
   invitedBackStores: 6,
   currentTier: 'R3',
-  aboutMe: null,
+  aboutMe: 'I genuinely enjoy being the first friendly face customers see and helping them discover pieces they will love. My experience with a range of brands has also made me a pro at keeping the floor organized and jumping in wherever shipment help is needed.',
   brandsWorked: [
     { name: 'Beehive', tier: 'mid' },
     { name: 'Everlane', tier: 'elevated' },
@@ -32,16 +32,18 @@ const DEFAULT_SAMPLE_WORKER: MatchedWorker = {
     { name: 'PARTY & CO.', tier: 'mid' },
   ],
   endorsementCounts: {
-    'Shipment Help': 12,
-    'Greeter': 16,
     'Sales': 9,
     'All Around': 4,
     'Back of House': 4,
+    'Management': 1,
+  },
+  shiftExperience: {
+    'Greeter': 16,
+    'Shipment Help': 12,
     'Fitting Rooms': 10,
     'Floor Organization': 10,
-    'Cashier': 4,
-    'Management': 1,
     'Omni Help': 4,
+    'Cashier': 4,
     'Inventory Management': 3,
   },
   previousExperience: [
@@ -572,18 +574,18 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
           </div>
 
           <div className="ds-subsection">
-            <h4>WorkerCardTesting</h4>
-            <p className="ds-description">Testing card that shows ALL available worker data fields. Use for prototyping to see what data is available.</p>
-            <div className="ds-worker-card-example">
-              <WorkerCardTesting worker={sampleWorker} />
-            </div>
-          </div>
-
-          <div className="ds-subsection">
             <h4>WorkerCardFull</h4>
             <p className="ds-description">Full detail overlay card. Opens to the right of chat interface (60% width). Includes close button and comprehensive worker details. Triggered by clicking on a worker card.</p>
             <div className="ds-worker-card-full-example">
               <WorkerCardFull worker={sampleWorker} onClose={() => {}} />
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>WorkerCardTesting</h4>
+            <p className="ds-description">Testing card that shows ALL available worker data fields. Use for prototyping to see what data is available.</p>
+            <div className="ds-worker-card-example">
+              <WorkerCardTesting worker={sampleWorker} />
             </div>
           </div>
         </section>

@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import type { MatchedWorker } from '../../types';
 import { WorkerCardHeader } from './WorkerCardHeader';
+import { getBrandLogo } from '../../utils/brandLogos';
 
 interface WorkerCardFullProps {
   worker: MatchedWorker;
@@ -20,7 +21,12 @@ const toTitleCase = (str: string) => {
 export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
   const { reflexActivity } = worker;
 
-  // Get endorsements sorted by count
+  // Use dedicated shift_experience field if available
+  const shiftExperienceEntries = worker.shiftExperience
+    ? Object.entries(worker.shiftExperience).sort((a, b) => b[1] - a[1])
+    : [];
+
+  // Endorsements (behavioral traits) - use endorsement_counts directly
   const endorsementEntries = worker.endorsementCounts
     ? Object.entries(worker.endorsementCounts).sort((a, b) => b[1] - a[1])
     : [];
@@ -44,6 +50,14 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
             </div>
           )}
 
+          {/* Retailer Summary */}
+          {worker.retailerSummary && (
+            <div className="testing-section">
+              <span className="testing-label">Retailer Summary</span>
+              <p className="testing-about">{worker.retailerSummary}</p>
+            </div>
+          )}
+
           {/* Work History */}
           {worker.previousExperience.length > 0 && (
             <div className="testing-section">
@@ -64,16 +78,38 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
               <span className="testing-label">On Reflex</span>
               <div className="testing-data">
                 <div className="testing-row"><span className="testing-key">Total Shifts:</span> {worker.shiftsOnReflex}</div>
+                {worker.uniqueStoreCount != null && worker.uniqueStoreCount > 0 && (
+                  <div className="testing-row"><span className="testing-key">Store Locations:</span> {worker.uniqueStoreCount}</div>
+                )}
                 <div className="testing-row"><span className="testing-key">Stores Invited Back:</span> {worker.invitedBackStores}</div>
                 {reflexActivity.storeFavoriteCount && (
                   <div className="testing-row"><span className="testing-key">Store Favorite:</span> {reflexActivity.storeFavoriteCount}</div>
                 )}
-                <div className="testing-row"><span className="testing-key">Luxury Shifts:</span> {reflexActivity.shiftsByTier.luxury}</div>
-                <div className="testing-row"><span className="testing-key">Elevated Shifts:</span> {reflexActivity.shiftsByTier.elevated}</div>
-                <div className="testing-row"><span className="testing-key">Mid Shifts:</span> {reflexActivity.shiftsByTier.mid}</div>
               </div>
             </div>
           )}
+
+          {/* Reliability */}
+          <div className="testing-section">
+            <span className="testing-label">Reliability</span>
+            <div className="testing-data">
+              {worker.currentTier && (
+                <div className="testing-row"><span className="testing-key">Current Tier:</span> {worker.currentTier}</div>
+              )}
+              {worker.tardyRatio && (
+                <div className="testing-row"><span className="testing-key">Tardy Ratio:</span> {worker.tardyRatio}</div>
+              )}
+              {worker.tardyPercent != null && (
+                <div className="testing-row"><span className="testing-key">Tardy Percent:</span> {worker.tardyPercent}%</div>
+              )}
+              {worker.urgentCancelRatio && (
+                <div className="testing-row"><span className="testing-key">Urgent Cancel Ratio:</span> {worker.urgentCancelRatio}</div>
+              )}
+              {worker.urgentCancelPercent != null && (
+                <div className="testing-row"><span className="testing-key">Urgent Cancel Percent:</span> {worker.urgentCancelPercent}%</div>
+              )}
+            </div>
+          </div>
 
           {/* Brands Worked */}
           {worker.brandsWorked.length > 0 && (
@@ -89,6 +125,21 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
             </div>
           )}
 
+          {/* Shift Experience */}
+          {shiftExperienceEntries.length > 0 && (
+            <div className="testing-section">
+              <span className="testing-label">Shift Experience ({shiftExperienceEntries.length})</span>
+              <div className="testing-pills">
+                {shiftExperienceEntries.map(([name, count], idx) => (
+                  <span key={idx} className="tag tag-stroke tag-sm">
+                    <span className="tag-text">{name}</span>
+                    <span className="tag-counter">{count}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Endorsements */}
           {endorsementEntries.length > 0 && (
             <div className="testing-section">
@@ -96,8 +147,8 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
               <div className="testing-pills">
                 {endorsementEntries.map(([name, count], idx) => (
                   <span key={idx} className="tag tag-stroke tag-sm">
-                    <span className="tag-counter">{count}</span>
                     <span className="tag-text">{name}</span>
+                    <span className="tag-counter">{count}</span>
                   </span>
                 ))}
               </div>
@@ -109,14 +160,24 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
             <div className="testing-section">
               <span className="testing-label">What Stores Say ({worker.retailerQuotes.length})</span>
               <div className="testing-data">
-                {worker.retailerQuotes.map((quote, idx) => (
-                  <div key={idx} className="testing-quote">
-                    <div className="testing-row">"{quote.quote}"</div>
-                    {(quote.role || quote.brand) && (
-                      <div className="testing-row"><span className="testing-key">from:</span> {quote.role}{quote.role && quote.brand ? ', ' : ''}{quote.brand}</div>
-                    )}
-                  </div>
-                ))}
+                {worker.retailerQuotes.map((quote, idx) => {
+                  const brandLogo = getBrandLogo(quote.brand);
+                  return (
+                    <div key={idx} className="testing-quote">
+                      <div className="quote-mark-container">
+                        <span className="quote-open-mark">{'\u201C'}</span>
+                      </div>
+                      <div className="quote-content">
+                        <p className="quote-text">{quote.quote}</p>
+                        {quote.role && <span className="quote-role">{quote.reviewerName ? `${quote.reviewerName}, ` : ''}{quote.role}</span>}
+                      </div>
+                      <div className="quote-logo-container">
+                        {brandLogo && <img src={brandLogo} alt={quote.brand} className="quote-brand-logo" />}
+                        {!brandLogo && quote.brand && <span className="quote-brand-text">{quote.brand}</span>}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

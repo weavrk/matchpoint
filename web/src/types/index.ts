@@ -35,6 +35,7 @@ export interface RetailerQuote {
   quote: string;
   role: string;
   brand: string;
+  reviewerName?: string;
 }
 
 export interface RetailerFeedback {
@@ -80,6 +81,10 @@ export interface WorkerProfile {
   workerId?: number | null;
   // Interview data
   interviewTranscript?: InterviewTranscriptEntry[] | Record<string, unknown> | null;
+  // Shift experience (separate from endorsements - task/skill based tags)
+  shiftExperience?: Record<string, number> | null;
+  // Unique store locations worked
+  uniqueStoreCount?: number | null;
   // Legacy fields from sample workers (for compatibility)
   preference?: 'FT' | 'PT' | 'Both';
   endorsements?: Endorsement[];

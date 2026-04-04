@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Layers, Database } from 'lucide-react';
+import { Layers, Database, Users } from 'lucide-react';
 import { V1JobFocus } from './variants/V1JobFocus';
 import { V2TalentCentric } from './variants/V2TalentCentric';
 import { V3Wildcard } from './variants/V3Wildcard';
 import { DevMenu } from '../components/DevMenu';
 import { OzPanel } from '../components/OzPanel';
+import { WorkerDataDrawer } from '../components/WorkerDataDrawer';
 import './PermanentHiring.css';
 
 type VariantId = 'v1-job-focus' | 'v2-talent-centric' | 'v3-wildcard';
@@ -41,6 +42,7 @@ export function PermanentHiring() {
   // Global state for dev tools
   const [agentActive, setAgentActive] = useState(true);
   const [showOz, setShowOz] = useState(false);
+  const [showWorkerData, setShowWorkerData] = useState(false);
   const [userName, setUserName] = useState(() => getRandomUserName());
   const [customUserName, setCustomUserName] = useState<string | null>(() => {
     const saved = localStorage.getItem('matchpoint-custom-name');
@@ -118,6 +120,16 @@ export function PermanentHiring() {
                 <Database size={16} />
                 <span>Oz</span>
               </button>
+              <button
+                className={`variant-menu-item variant-menu-item-oz ${showWorkerData ? 'active' : ''}`}
+                onClick={() => {
+                  setShowWorkerData(!showWorkerData);
+                  setShowVariantMenu(false);
+                }}
+              >
+                <Users size={16} />
+                <span>Worker Data</span>
+              </button>
             </div>
             <div
               className="variant-menu-backdrop"
@@ -140,6 +152,9 @@ export function PermanentHiring() {
 
       {/* Global Oz Panel Overlay */}
       <OzPanel isOpen={showOz} onClose={() => setShowOz(false)} />
+
+      {/* Worker Data Drawer */}
+      <WorkerDataDrawer isOpen={showWorkerData} onClose={() => setShowWorkerData(false)} />
     </>
   );
 }

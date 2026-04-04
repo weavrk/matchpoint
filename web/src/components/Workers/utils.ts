@@ -3,6 +3,7 @@ import type { RetailerQuote } from '../../types';
 /**
  * Generate a unique AI-style summary from retailer quotes
  * Uses worker name as a seed to ensure variety across workers
+ * Alternates between named and generic sentences to avoid repetition
  * @param firstName - Worker's first name
  * @param quotes - Array of retailer quotes
  * @param maxSentences - Maximum number of sentences (default 2 for teaser, use 5 for full)
@@ -15,58 +16,65 @@ export function generateQuoteSummary(firstName: string, quotes: RetailerQuote[],
   const nameHash = firstName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
   const variant = nameHash % 6;
 
-  // Define all possible opening sentences with their triggers
-  const openings: { trigger: (text: string) => boolean; sentence: string }[] = [
-    { trigger: (t) => t.includes('five steps ahead') || t.includes('initiative') || t.includes('before i can ask'),
-      sentence: `${firstName} is the type of worker who anticipates what needs to be done before being asked.` },
-    { trigger: (t) => t.includes('energy') || t.includes('spirit') || t.includes('contagious'),
-      sentence: `${firstName} brings an energy to the floor that elevates the entire team.` },
-    { trigger: (t) => t.includes('professional') || t.includes('polite') || t.includes('brand ambassador'),
-      sentence: `${firstName} represents the brand with professionalism that stands out to retailers.` },
-    { trigger: (t) => t.includes('hustle') || t.includes('never stops') || t.includes('circles around'),
-      sentence: `${firstName} is known for relentless work ethic that keeps the floor running smoothly.` },
-    { trigger: (t) => t.includes('customer') || t.includes('client') || t.includes('greet'),
-      sentence: `${firstName} has a natural ability to connect with customers that retailers notice immediately.` },
-    { trigger: (t) => t.includes('quick to learn') || t.includes('eager'),
-      sentence: `${firstName} picks things up quickly and is always eager to contribute.` },
-  ];
+  // Sentences WITH the name (used for first sentence)
+  const namedSentences: string[] = [];
+  // Sentences WITHOUT the name (used for follow-up to avoid repetition)
+  const genericSentences: string[] = [];
 
-  // Define all possible middle sentences with their triggers
-  const middles: { trigger: (text: string) => boolean; sentence: string }[] = [
-    { trigger: (t) => t.includes('greet') || t.includes('welcome') || t.includes('comfortable'),
-      sentence: `Managers highlight how ${firstName} makes customers feel welcomed from the moment they walk in.` },
-    { trigger: (t) => t.includes('busy') || t.includes('finding') || t.includes('restocking') || t.includes('displays'),
-      sentence: `When things slow down, ${firstName} finds productive work without needing direction.` },
-    { trigger: (t) => t.includes('direction') || t.includes('coaching') || t.includes('feedback'),
-      sentence: `${firstName} takes feedback professionally and applies it immediately.` },
-    { trigger: (t) => t.includes('team') || t.includes('collaborate') || t.includes('tone'),
-      sentence: `Multiple managers note that ${firstName} elevates the performance of the whole team.` },
-    { trigger: (t) => t.includes('sale') || t.includes('conversion') || t.includes('close'),
-      sentence: `${firstName} has strong sales instincts and consistently delivers results.` },
-    { trigger: (t) => t.includes('bilingual') || t.includes('international'),
-      sentence: `Language skills make ${firstName} especially valuable with diverse clientele.` },
-    { trigger: (t) => t.includes('visual') || t.includes('floor') || t.includes('organization'),
-      sentence: `${firstName} has a sharp eye for floor presentation and visual details.` },
-    { trigger: (t) => t.includes('jump') || t.includes('right in') || t.includes('no problem'),
-      sentence: `${firstName} hits the ground running and integrates seamlessly into any team.` },
-    { trigger: (t) => t.includes('fast') || t.includes('quick') || t.includes('efficient'),
-      sentence: `Speed and efficiency are standout qualities that managers appreciate.` },
-    { trigger: (t) => t.includes('trust') || t.includes('recommend') || t.includes('knowledge'),
-      sentence: `Customers trust ${firstName}'s product recommendations and expertise.` },
-    { trigger: (t) => t.includes('management') || t.includes('lead') || t.includes('example'),
-      sentence: `Several retailers see leadership potential and management readiness.` },
-    { trigger: (t) => t.includes('pleasure') || t.includes('joy') || t.includes('love having'),
-      sentence: `Store teams genuinely enjoy working alongside ${firstName}.` },
-    { trigger: (t) => t.includes('hardest') || t.includes('working') || t.includes('improve'),
-      sentence: `${firstName} consistently goes above and beyond what's expected.` },
-    { trigger: (t) => t.includes('connection') || t.includes('rapport') || t.includes('fit right in'),
-      sentence: `${firstName} builds genuine rapport with both customers and team members.` },
-    { trigger: (t) => t.includes('positive') || t.includes('solution') || t.includes('attitude'),
-      sentence: `A positive attitude and solution-oriented mindset make ${firstName} a standout.` },
-  ];
+  // Named opening sentences (triggers)
+  if (quoteText.includes('five steps ahead') || quoteText.includes('initiative') || quoteText.includes('before i can ask')) {
+    namedSentences.push(`${firstName} is the type of worker who anticipates what needs to be done before being asked.`);
+  }
+  if (quoteText.includes('energy') || quoteText.includes('spirit') || quoteText.includes('contagious')) {
+    namedSentences.push(`${firstName} brings an energy to the floor that elevates the entire team.`);
+  }
+  if (quoteText.includes('professional') || quoteText.includes('polite') || quoteText.includes('brand ambassador')) {
+    namedSentences.push(`${firstName} represents the brand with professionalism that stands out to retailers.`);
+  }
+  if (quoteText.includes('hustle') || quoteText.includes('never stops') || quoteText.includes('circles around')) {
+    namedSentences.push(`${firstName} is known for a relentless work ethic that keeps the floor running smoothly.`);
+  }
+  if (quoteText.includes('customer') || quoteText.includes('client')) {
+    namedSentences.push(`${firstName} has a natural ability to connect with customers that retailers notice immediately.`);
+  }
+  if (quoteText.includes('quick to learn') || quoteText.includes('eager')) {
+    namedSentences.push(`${firstName} picks things up quickly and is always eager to contribute.`);
+  }
 
-  // Alternate sentence templates that don't rely on keyword matching
-  const alternateOpenings = [
+  // Generic follow-up sentences (no name)
+  if (quoteText.includes('greet') || quoteText.includes('welcome') || quoteText.includes('comfortable')) {
+    genericSentences.push('Managers highlight how customers feel welcomed from the moment they walk in.');
+  }
+  if (quoteText.includes('busy') || quoteText.includes('finding') || quoteText.includes('restocking') || quoteText.includes('displays')) {
+    genericSentences.push('When things slow down, productive work gets done without needing direction.');
+  }
+  if (quoteText.includes('direction') || quoteText.includes('coaching') || quoteText.includes('feedback')) {
+    genericSentences.push('Feedback is taken professionally and applied immediately.');
+  }
+  if (quoteText.includes('team') || quoteText.includes('collaborate') || quoteText.includes('tone')) {
+    genericSentences.push('Multiple managers note the positive impact on the whole team.');
+  }
+  if (quoteText.includes('sale') || quoteText.includes('conversion') || quoteText.includes('close')) {
+    genericSentences.push('Strong sales instincts consistently deliver results.');
+  }
+  if (quoteText.includes('visual') || quoteText.includes('floor') || quoteText.includes('organization')) {
+    genericSentences.push('A sharp eye for floor presentation and visual details stands out.');
+  }
+  if (quoteText.includes('fast') || quoteText.includes('quick') || quoteText.includes('efficient')) {
+    genericSentences.push('Speed and efficiency are standout qualities that managers appreciate.');
+  }
+  if (quoteText.includes('management') || quoteText.includes('lead') || quoteText.includes('example')) {
+    genericSentences.push('Several retailers see leadership potential and management readiness.');
+  }
+  if (quoteText.includes('pleasure') || quoteText.includes('joy') || quoteText.includes('love having')) {
+    genericSentences.push('Store teams genuinely enjoy having this kind of energy on the floor.');
+  }
+  if (quoteText.includes('positive') || quoteText.includes('solution') || quoteText.includes('attitude')) {
+    genericSentences.push('A positive attitude and solution-oriented mindset make for a standout worker.');
+  }
+
+  // Alternate named sentences (fallbacks)
+  const alternateNamed = [
     `${firstName} consistently receives standout feedback from store managers.`,
     `Retailers describe ${firstName} as exactly the type of worker they want on their team.`,
     `${firstName}'s track record speaks for itself across ${brandCount} different brands.`,
@@ -75,66 +83,52 @@ export function generateQuoteSummary(firstName: string, quotes: RetailerQuote[],
     `Across ${brandCount} brands, ${firstName} has made a lasting impression on retailers.`,
   ];
 
-  const alternateMiddles = [
-    `Managers appreciate how ${firstName} approaches each shift with dedication.`,
-    `${firstName} demonstrates the kind of work ethic that retailers actively seek out.`,
-    `Feedback consistently mentions ${firstName}'s positive impact on store operations.`,
-    `${firstName} adapts quickly to different store environments and expectations.`,
-    `Retailers value ${firstName}'s consistency and professionalism on the floor.`,
-    `${firstName} brings a level of engagement that customers and managers notice.`,
+  // Alternate generic sentences (fallbacks)
+  const alternateGeneric = [
+    'Dedication and work ethic are consistently mentioned in feedback.',
+    'The kind of reliability that retailers actively seek out.',
+    'Feedback consistently mentions a positive impact on store operations.',
+    'Quick adaptation to different store environments and expectations.',
+    'Consistency and professionalism on the floor are highly valued.',
+    'A level of engagement that customers and managers notice.',
   ];
 
-  const sentences: string[] = [];
+  // Build result: first sentence with name, second without
+  const result: string[] = [];
 
-  // Find matching opening, or use alternate based on name hash
-  const matchingOpening = openings.find(o => o.trigger(quoteText));
-  if (matchingOpening && variant < 3) {
-    sentences.push(matchingOpening.sentence);
+  // First sentence (with name)
+  if (namedSentences.length > 0) {
+    result.push(namedSentences[variant % namedSentences.length]);
   } else {
-    // Use alternate opening based on name hash for variety
-    sentences.push(alternateOpenings[variant]);
+    result.push(alternateNamed[variant]);
   }
 
-  // Find matching middles
-  const matchingMiddles = middles.filter(m => m.trigger(quoteText)).map(m => m.sentence);
-
-  // Shuffle matching middles based on name hash for variety
-  const shuffledMiddles = [...matchingMiddles].sort((a, b) => {
-    const aHash = a.charCodeAt(0) + nameHash;
-    const bHash = b.charCodeAt(0) + nameHash;
-    return (aHash % 7) - (bHash % 7);
-  });
-
-  // Add middle sentences (prefer shuffled matches, fall back to alternates)
-  if (shuffledMiddles.length > 0) {
-    sentences.push(shuffledMiddles[0]);
+  // Second sentence (without name to avoid repetition)
+  if (genericSentences.length > 0) {
+    result.push(genericSentences[variant % genericSentences.length]);
   } else {
-    sentences.push(alternateMiddles[variant]);
+    result.push(alternateGeneric[variant]);
   }
 
-  // Add more middles if needed for longer summaries
+  // Additional sentences if maxSentences > 2
   if (maxSentences > 2) {
-    for (let i = 1; i < shuffledMiddles.length && sentences.length < maxSentences - 1; i++) {
-      sentences.push(shuffledMiddles[i]);
-    }
-    // Fill with alternates if needed
-    for (let i = 0; sentences.length < maxSentences - 1 && i < alternateMiddles.length; i++) {
-      const alt = alternateMiddles[(variant + i + 1) % alternateMiddles.length];
-      if (!sentences.includes(alt)) {
-        sentences.push(alt);
+    // Alternate: named, generic, named, generic...
+    let useNamed = false; // Start with generic since we just did named
+    for (let i = 2; i < maxSentences; i++) {
+      if (useNamed && namedSentences.length > (i / 2)) {
+        const idx = Math.floor(i / 2) % namedSentences.length;
+        if (!result.includes(namedSentences[idx])) {
+          result.push(namedSentences[idx]);
+        }
+      } else if (!useNamed && genericSentences.length > (i / 2)) {
+        const idx = Math.floor(i / 2) % genericSentences.length;
+        if (!result.includes(genericSentences[idx])) {
+          result.push(genericSentences[idx]);
+        }
       }
+      useNamed = !useNamed;
     }
   }
 
-  // Closing sentence based on sentiment or brand count
-  if (quoteText.includes('would love') || quoteText.includes('back anytime') || quoteText.includes('would not mind having')) {
-    sentences.push(`The consistent feedback: retailers want ${firstName} back.`);
-  } else if (quoteText.includes('outstanding') || quoteText.includes('exceptional') || quoteText.includes('best')) {
-    sentences.push(`${firstName} is regularly described as one of the strongest workers retailers have seen.`);
-  } else if (brandCount >= 4 && maxSentences > 2) {
-    sentences.push(`With positive feedback from ${brandCount} different retailers, ${firstName} has proven adaptable across brands.`);
-  }
-
-  // Limit to maxSentences
-  return sentences.slice(0, maxSentences).join(' ');
+  return result.slice(0, maxSentences).join(' ');
 }

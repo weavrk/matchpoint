@@ -590,17 +590,17 @@ export async function deletePublishedJob(jobId: string): Promise<void> {
 // Column sets for optimized queries
 const WORKER_COLUMNS_CARD = `
   id, name, photo, market, actively_looking, shift_verified,
-  shifts_on_reflex, brands_worked, endorsement_counts, invited_back_stores,
+  shifts_on_reflex, brands_worked, endorsement_counts, shift_experience, invited_back_stores,
   about_me, previous_experience, reflex_activity, retailer_quotes, retailer_summary,
-  current_tier
+  current_tier, unique_store_count, tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent
 `.replace(/\s+/g, ' ').trim();
 
 const WORKER_COLUMNS_FULL = `
   id, name, photo, market, actively_looking, about_me, previous_experience,
   shift_verified, reflex_activity, shifts_on_reflex, brands_worked,
-  retailer_quotes, retailer_summary, endorsement_counts, invited_back_stores,
-  on_time_rating, commitment_score, tardy_ratio, tardy_percent,
-  urgent_cancel_ratio, urgent_cancel_percent, current_tier,
+  retailer_quotes, retailer_summary, endorsement_counts, shift_experience, invited_back_stores,
+  commitment_score, tardy_ratio, tardy_percent,
+  urgent_cancel_ratio, urgent_cancel_percent, current_tier, unique_store_count,
   interview_transcript, worker_uuid, worker_id
 `.replace(/\s+/g, ' ').trim();
 
@@ -627,9 +627,10 @@ export interface WorkerRow {
   retailer_quotes: { quote: string; brand: string; role: string }[] | null;
   retailer_summary: string | null;
   endorsement_counts: Record<string, number> | null;
+  shift_experience: Record<string, number> | null;
   invited_back_stores: number;
+  unique_store_count: number | null;
   // Reliability metrics
-  on_time_rating: string | null;
   commitment_score: string | null;
   tardy_ratio: string | null;
   tardy_percent: number | null;
@@ -807,7 +808,6 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     retailerQuotes: row.retailer_quotes || undefined,
     retailerSummary: row.retailer_summary || undefined,
     // Reliability metrics
-    onTimeRating: row.on_time_rating,
     commitmentScore: row.commitment_score,
     tardyRatio: row.tardy_ratio,
     tardyPercent: row.tardy_percent,
@@ -819,6 +819,10 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     workerId: row.worker_id,
     // Interview data
     interviewTranscript: row.interview_transcript,
+    // Shift experience (separate from endorsements)
+    shiftExperience: row.shift_experience,
+    // Unique store count
+    uniqueStoreCount: row.unique_store_count,
   };
 }
 

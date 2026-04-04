@@ -19,7 +19,12 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
   const quoteSummary = worker.retailerSummary || (hasQuotes ? generateQuoteSummary(firstName, worker.retailerQuotes!) : null);
   const topExperience = worker.previousExperience.slice(0, 3);
 
-  // Get top 3 endorsements sorted by count
+  // Use dedicated shift_experience field if available, otherwise filter from endorsement_counts
+  const shiftExperienceEntries = worker.shiftExperience
+    ? Object.entries(worker.shiftExperience).sort((a, b) => b[1] - a[1]).slice(0, 3)
+    : [];
+
+  // Endorsements (behavioral traits) - use endorsement_counts directly
   const endorsementEntries = worker.endorsementCounts
     ? Object.entries(worker.endorsementCounts).sort((a, b) => b[1] - a[1]).slice(0, 3)
     : [];
@@ -29,6 +34,13 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
       <WorkerCardHeader worker={worker} showActivelyLooking={false} />
 
       <div className="worker-card-body">
+        {/* About Me - show for all workers if available */}
+        {worker.aboutMe && (
+          <div className="compact-section">
+            <p className="compact-about">{worker.aboutMe}</p>
+          </div>
+        )}
+
         {/* Shift verified: show reflex stats + retailer summary */}
         {worker.shiftVerified && (
           <>
@@ -68,6 +80,21 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
           </div>
         )}
 
+        {/* Shift Experience - show for all workers */}
+        {shiftExperienceEntries.length > 0 && (
+          <div className="compact-section">
+            <span className="section-label">Shift Experience</span>
+            <div className="compact-endorsements">
+              {shiftExperienceEntries.map(([name, count], idx) => (
+                <span key={idx} className="tag tag-stroke tag-sm">
+                  <span className="tag-text">{name}</span>
+                  <span className="tag-counter">{count}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Endorsements with counts - show for all workers */}
         {endorsementEntries.length > 0 && (
           <div className="compact-section">
@@ -75,8 +102,8 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
             <div className="compact-endorsements">
               {endorsementEntries.map(([name, count], idx) => (
                 <span key={idx} className="tag tag-stroke tag-sm">
-                  <span className="tag-counter">{count}</span>
                   <span className="tag-text">{name}</span>
+                  <span className="tag-counter">{count}</span>
                 </span>
               ))}
             </div>

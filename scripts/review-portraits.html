@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pexels Worker Photos Review</title>
+  <style>
+    body { font-family: system-ui; padding: 20px; background: #f5f5f5; }
+    h2 { margin-top: 40px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; }
+    .portrait {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: white;
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .portrait img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .portrait span { font-size: 10px; color: #666; margin-top: 4px; text-align: center; }
+    .section { margin-bottom: 40px; }
+    .stats { background: #333; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .loading { text-align: center; padding: 40px; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>Worker Photos from Pexels</h1>
+  <div class="stats" id="stats">Loading from Supabase...</div>
+
+  <div class="section">
+    <h2>Male Workers</h2>
+    <div class="grid" id="males"><div class="loading">Loading...</div></div>
+  </div>
+
+  <div class="section">
+    <h2>Female Workers</h2>
+    <div class="grid" id="females"><div class="loading">Loading...</div></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = supabase;
+    const db = createClient(
+      'https://kxfbismfpmjwvemfznvm.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4ZmJpc21mcG1qd3ZlbWZ6bnZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4NzIzODIsImV4cCI6MjA4OTQ0ODM4Mn0.DB_d_RvlhKNOPDrnEySJPWHvLn3_HacXY3O5xoSS6bI'
+    );
+
+    async function loadWorkers() {
+      const workers = [];
+      let offset = 0;
+
+      while (true) {
+        const { data, error } = await db
+          .from('workers')
+          .select('id, name, gender, photo')
+          .order('id', { ascending: true })
+          .range(offset, offset + 999);
+
+        if (error || !data || data.length === 0) break;
+        workers.push(...data);
+        offset += 1000;
+        if (data.length < 1000) break;
+      }
+
+      return workers;
+    }
+
+    async function render() {
+      const workers = await loadWorkers();
+      const males = workers.filter(w => w.gender === 'male');
+      const females = workers.filter(w => w.gender === 'female');
+
+      const uniquePhotos = new Set(workers.map(w => w.photo));
+
+      document.getElementById('stats').innerHTML = `
+        <strong>Total Workers:</strong> ${workers.length} |
+        <strong>Males:</strong> ${males.length} |
+        <strong>Females:</strong> ${females.length} |
+        <strong>Unique Photos:</strong> ${uniquePhotos.size}
+      `;
+
+      const malesGrid = document.getElementById('males');
+      malesGrid.innerHTML = males.map(w => `
+        <div class="portrait">
+          <img src="${w.photo}" alt="${w.name}" onerror="this.src='https://via.placeholder.com/80?text=Error'">
+          <span>${w.name.split(' ')[0]}</span>
+        </div>
+      `).join('');
+
+      const femalesGrid = document.getElementById('females');
+      femalesGrid.innerHTML = females.map(w => `
+        <div class="portrait">
+          <img src="${w.photo}" alt="${w.name}" onerror="this.src='https://via.placeholder.com/80?text=Error'">
+          <span>${w.name.split(' ')[0]}</span>
+        </div>
+      `).join('');
+    }
+
+    render();
+  </script>
+</body>
+</html>

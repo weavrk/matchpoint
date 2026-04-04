@@ -1,5 +1,6 @@
 import type { MatchedWorker } from '../../types';
 import { WorkerCardHeader } from './WorkerCardHeader';
+import { getBrandLogo } from '../../utils/brandLogos';
 
 interface WorkerCardTestingProps {
   worker: MatchedWorker;
@@ -17,7 +18,12 @@ const toTitleCase = (str: string) => {
 export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
   const { reflexActivity } = worker;
 
-  // Get endorsements sorted by count
+  // Use dedicated shift_experience field if available
+  const shiftExperienceEntries = worker.shiftExperience
+    ? Object.entries(worker.shiftExperience).sort((a, b) => b[1] - a[1])
+    : [];
+
+  // Endorsements (behavioral traits) - use endorsement_counts directly
   const endorsementEntries = worker.endorsementCounts
     ? Object.entries(worker.endorsementCounts).sort((a, b) => b[1] - a[1])
     : [];
@@ -37,9 +43,6 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
             <div className="testing-row"><span className="testing-key">market:</span> {worker.market}</div>
             <div className="testing-row"><span className="testing-key">shiftVerified:</span> {worker.shiftVerified ? 'true' : 'false'}</div>
             <div className="testing-row"><span className="testing-key">activelyLooking:</span> {worker.activelyLooking ? 'true' : 'false'}</div>
-            <div className="testing-row"><span className="testing-key">shiftsOnReflex:</span> {worker.shiftsOnReflex}</div>
-            <div className="testing-row"><span className="testing-key">invitedBackStores:</span> {worker.invitedBackStores}</div>
-            <div className="testing-row"><span className="testing-key">currentTier:</span> {worker.currentTier || 'null'}</div>
           </div>
         </div>
 
@@ -63,18 +66,35 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
           </div>
         </div>
 
-        {/* Endorsements with counts */}
-        <div className="testing-section">
-          <span className="testing-label">Endorsements ({endorsementEntries.length})</span>
-          <div className="testing-pills">
-            {endorsementEntries.map(([name, count], idx) => (
-              <span key={idx} className="tag tag-stroke tag-sm">
-                <span className="tag-counter">{count}</span>
-                <span className="tag-text">{name}</span>
-              </span>
-            ))}
+        {/* Shift Experience */}
+        {shiftExperienceEntries.length > 0 && (
+          <div className="testing-section">
+            <span className="testing-label">Shift Experience ({shiftExperienceEntries.length})</span>
+            <div className="testing-pills">
+              {shiftExperienceEntries.map(([name, count], idx) => (
+                <span key={idx} className="tag tag-stroke tag-sm">
+                  <span className="tag-text">{name}</span>
+                  <span className="tag-counter">{count}</span>
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Endorsements with counts */}
+        {endorsementEntries.length > 0 && (
+          <div className="testing-section">
+            <span className="testing-label">Endorsements ({endorsementEntries.length})</span>
+            <div className="testing-pills">
+              {endorsementEntries.map(([name, count], idx) => (
+                <span key={idx} className="tag tag-stroke tag-sm">
+                  <span className="tag-text">{name}</span>
+                  <span className="tag-counter">{count}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Previous Experience */}
         <div className="testing-section">
@@ -93,10 +113,9 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
           <div className="testing-section">
             <span className="testing-label">Reflex Activity</span>
             <div className="testing-data">
-              <div className="testing-row"><span className="testing-key">shiftsByTier.luxury:</span> {reflexActivity.shiftsByTier.luxury}</div>
-              <div className="testing-row"><span className="testing-key">shiftsByTier.elevated:</span> {reflexActivity.shiftsByTier.elevated}</div>
-              <div className="testing-row"><span className="testing-key">shiftsByTier.mid:</span> {reflexActivity.shiftsByTier.mid}</div>
-              <div className="testing-row"><span className="testing-key">tierProgression:</span> {reflexActivity.tierProgression}</div>
+              <div className="testing-row"><span className="testing-key">shiftsOnReflex:</span> {worker.shiftsOnReflex}</div>
+              <div className="testing-row"><span className="testing-key">uniqueStoreCount:</span> {worker.uniqueStoreCount || 'null'}</div>
+              <div className="testing-row"><span className="testing-key">invitedBackStores:</span> {worker.invitedBackStores}</div>
               <div className="testing-row"><span className="testing-key">storeFavoriteCount:</span> {reflexActivity.storeFavoriteCount || 'null'}</div>
               {reflexActivity.longestRelationship && (
                 <div className="testing-row">
@@ -107,17 +126,41 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
           </div>
         )}
 
+        {/* Reliability */}
+        <div className="testing-section">
+          <span className="testing-label">Reliability</span>
+          <div className="testing-data">
+            <div className="testing-row"><span className="testing-key">currentTier:</span> {worker.currentTier || 'null'}</div>
+            <div className="testing-row"><span className="testing-key">tardyRatio:</span> {worker.tardyRatio || 'null'}</div>
+            <div className="testing-row"><span className="testing-key">tardyPercent:</span> {worker.tardyPercent != null ? `${worker.tardyPercent}%` : 'null'}</div>
+            <div className="testing-row"><span className="testing-key">urgentCancelRatio:</span> {worker.urgentCancelRatio || 'null'}</div>
+            <div className="testing-row"><span className="testing-key">urgentCancelPercent:</span> {worker.urgentCancelPercent != null ? `${worker.urgentCancelPercent}%` : 'null'}</div>
+          </div>
+        </div>
+
         {/* Retailer Quotes */}
         {worker.retailerQuotes && worker.retailerQuotes.length > 0 && (
           <div className="testing-section">
             <span className="testing-label">Retailer Quotes ({worker.retailerQuotes.length})</span>
             <div className="testing-data">
-              {worker.retailerQuotes.map((quote, idx) => (
-                <div key={idx} className="testing-quote">
-                  <div className="testing-row">"{quote.quote}"</div>
-                  <div className="testing-row"><span className="testing-key">from:</span> {quote.role}, {quote.brand}</div>
-                </div>
-              ))}
+              {worker.retailerQuotes.map((quote, idx) => {
+                const brandLogo = getBrandLogo(quote.brand);
+                return (
+                  <div key={idx} className="testing-quote">
+                    <div className="quote-mark-container">
+                      <span className="quote-open-mark">{'\u201C'}</span>
+                    </div>
+                    <div className="quote-content">
+                      <p className="quote-text">{quote.quote}</p>
+                      {quote.role && <span className="quote-role">{quote.reviewerName ? `${quote.reviewerName}, ` : ''}{quote.role}</span>}
+                    </div>
+                    <div className="quote-logo-container">
+                      {brandLogo && <img src={brandLogo} alt={quote.brand} className="quote-brand-logo" />}
+                      {!brandLogo && quote.brand && <span className="quote-brand-text">{quote.brand}</span>}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -145,14 +188,6 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
           </div>
         )}
 
-        {/* IDs */}
-        <div className="testing-section">
-          <span className="testing-label">System IDs</span>
-          <div className="testing-data">
-            <div className="testing-row"><span className="testing-key">workerUuid:</span> {worker.workerUuid || 'null'}</div>
-            <div className="testing-row"><span className="testing-key">workerId:</span> {worker.workerId ?? 'null'}</div>
-          </div>
-        </div>
       </div>
     </div>
   );

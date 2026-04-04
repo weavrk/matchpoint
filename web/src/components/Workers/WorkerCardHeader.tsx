@@ -1,5 +1,6 @@
 import { BadgeCheck, Search, MapPin } from 'lucide-react';
 import type { MatchedWorker } from '../../types';
+import './WorkerCard.css';
 
 interface WorkerCardHeaderProps {
   worker: MatchedWorker;

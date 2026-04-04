@@ -96,7 +96,11 @@
   overflow: hidden;
 }
 
-.worker-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.worker-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 .worker-avatar span {
   font-size: 14px;
@@ -463,10 +467,11 @@
 }
 
 .retailer-quote-text {
-  font-size: 12px;
-  color: var(--text-primary);
-  line-height: 1.4;
+  font-size: 16px;
+  color: var(--primary);
+  line-height: 1.5;
   margin: 0;
+  display: inline;
 }
 
 .retailer-quote-text::before {
@@ -528,6 +533,18 @@
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.compact-about {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--primary);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -991,7 +1008,7 @@
 }
 
 .testing-quote {
-  padding: 8px;
+  padding: 0 8px;
   background: var(--gray-50);
   border-radius: 6px;
   margin-bottom: 8px;
@@ -999,5 +1016,98 @@
 
 .testing-quote:last-child {
   margin-bottom: 0;
+}
+
+/* ── Quote styling with open quote mark and brand logo ── */
+
+/* Quote mark container - hangs to the left */
+.quote-mark-container {
+  flex-shrink: 0;
+  width: 24px;
+  margin-right: -16px;
+}
+
+.quote-open-mark {
+  font-family: Georgia, serif !important;
+  font-size: 48px;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--tertiary);
+}
+
+/* Quote text container */
+.quote-text,
+.retailer-quote-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--primary);
+  line-height: 1.2;
+  margin: 0;
+}
+
+/* Quote layout - container with content left, logo right */
+.retailer-quote,
+.testing-quote {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.quote-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.testing-quote .quote-content {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.quote-logo-container {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Brand logo - compact chat cards */
+.quote-brand-logo {
+  height: 40px;
+  width: auto;
+  max-width: 80px;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
+/* Brand logo - testing drawer / full overlay (worker-card-testing) */
+.worker-card-testing .quote-brand-logo {
+  width: 100px;
+  height: 88px;
+  max-width: none;
+  object-fit: contain;
+  opacity: 1;
+}
+
+.quote-brand-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-hint);
+}
+
+/* Role styling - bold, left-aligned with dash */
+.retailer-quote-role,
+.quote-role {
+  font-weight: 600;
+  color: var(--primary);
+  font-size: 13px;
+  margin-top: 8px;
+  display: block;
+}
+
+/* Update retailer quote styling to remove auto-quotes since we have manual quote mark */
+.retailer-quote-text::before,
+.retailer-quote-text::after {
+  content: none;
 }
 

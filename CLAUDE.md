@@ -11,14 +11,33 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 ### Retailer
 
 - Existing Reflex customers already booking flex/part-time workers
-- Wants to hire permanent/full-time retail staff
-- Browses matched worker profiles to build interest then publish
-  > TBD: Pricing model (subscription, per-hire fee, tiered?)
+- everythign else TBD pending discovery, could be store managers (single store or multi-store), hiring manager, district managers, hr, recruiter,
 
 ### Worker
 
 - **Shift Verified**: Existing Reflex workers with completed shifts. Carries a trust badge.
-- **Waitlist / New**: Signed up but no shifts yet. Visible to retailers, no badge.
+- **Waitlist / New**: Excluded them for now, this could be an extension the results are null
+
+### Worker Quality Segmentation
+
+Filtering workers table (n=1,701) by #any s  
+
+
+
+
+Here's the breakdown if we want to choose other methods
+
+
+| Filter               | Count   | %         |
+| -------------------- | ------- | --------- |
+| Total workers        | 1,701   | 100%      |
+| 1. Invite back ≥75%  | 1,110   | 65.3%     |
+| 2. Favorite ≥50%     | 1,116   | 65.6%     |
+| 3. Tardy <20%        | 1,242   | 73.0%     |
+| 4. Urgent cancel <5% | 1,399   | 82.2%     |
+| **Cumulative (2-4)** | **715** | **42.0%** |
+| **Cumulative (1-4)** | **584** | **34.3%** |
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -26,16 +45,15 @@ The dominant acquisition channels for retail hiring weren't built for retail tal
 
 Three UX variants exist under `web/src/pages/variants/`. Variant-specific logic (system prompts, flow trees, data structures) lives in each variant's MD file.
 
-| Variant | Docs | Focus |
-|---------|------|-------|
-| V1: Job Focus | [CLAUDE-V1-JOB-FOCUS.md](web/src/pages/variants/V1JobFocus/CLAUDE-V1-JOB-FOCUS.md) | Linear chat flow to create job posting |
+
+| Variant            | Docs                                                                                              | Focus                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| V1: Job Focus      | [CLAUDE-V1-JOB-FOCUS.md](web/src/pages/variants/V1JobFocus/CLAUDE-V1-JOB-FOCUS.md)                | Linear chat flow to create job posting         |
 | V2: Talent Centric | [CLAUDE-V2-TALENT-CENTRIC.md](web/src/pages/variants/V2TalentCentric/CLAUDE-V2-TALENT-CENTRIC.md) | Browse Reflexers first, connect or book shifts |
-| V3: Wildcard | [CLAUDE-V3-WILDCARD.md](web/src/pages/variants/V3Wildcard/CLAUDE-V3-WILDCARD.md) | Experimental canvas |
+| V3: Wildcard       | [CLAUDE-V3-WILDCARD.md](web/src/pages/variants/V3Wildcard/CLAUDE-V3-WILDCARD.md)                  | Experimental canvas                            |
+
 
 **Switching variants:** Use the Layers icon button (bottom-right, next to dev menu)
-
-
-
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -57,7 +75,21 @@ Three UX variants exist under `web/src/pages/variants/`. Variant-specific logic 
     - `roles` - Job role types (title, category, description). Categories: Entry Level, Specialized, Management, Seasonal.
     - `retailers` - Retailer brands (name, classification). Classifications: Luxury, Mid, Big Box.
     - `job_postings` - Scraped job listings with retailer_id, market_id, role_id, source, salary info, benefits
-    - `workers` - Worker profiles with JSONB columns for nested data (brands_worked, endorsements, previous_experience, etc.)
+    - `workers` - Worker profiles (13K+ rows). Columns:
+      - `id` (PK), `worker_id`, `worker_uuid` - identifiers
+      - `name`, `photo`, `market` - basic info
+      - `shift_verified`, `actively_looking` - status flags
+      - `shifts_on_reflex`, `invited_back_stores`, `current_tier` - Reflex metrics
+      - `brands_worked` (JSONB) - array of {name, tier}
+      - `endorsement_counts` (JSONB) - behavioral traits only (Team Player, Punctual, etc.)
+      - `shift_experience` (JSONB) - role counts from shifts (Sales Associate, Greeter, Inventory Management, etc.)
+      - `previous_experience` (JSONB) - work history array
+      - `reflex_activity` (JSONB) - shiftsByTier, longestRelationship, storeFavoriteCount
+      - `retailer_quotes` (JSONB) - array of {quote, role, brand}
+      - `retailer_summary` - AI-generated summary
+      - `about_me` - worker bio
+      - `on_time_rating`, `commitment_score`, `tardy_percent`, `urgent_cancel_percent` - reliability
+    - `workers_full` - Backup copy of workers table with all data
     - `jobs_published` - Published job postings (job_id, job_title, job_type, store_location, job_market, pay_type, pay_range, benefits, created_at, unpublished_at)
     - `jobs_applications` - Junction table for worker interactions with jobs (status: viewed/liked/applied/not_interested, invited: boolean)
 
@@ -67,13 +99,17 @@ Stored in `.env` (gitignored). Do NOT hardcode keys in source files.
 
 ```
 GEMINI_API_KEY=your_key_here
+VITE_GEMINI_API_KEY=your_key_here
 SCRAPERAPI_KEY=your_key_here
 TWOCAPTCHA_API_KEY=your_key_here
+PEXELS_API_KEY=your_key_here
 ```
 
-- **GEMINI_API_KEY** - Google AI Studio API key for Gemini chat
+- **GEMINI_API_KEY** - Google AI Studio API key for Gemini chat (backend)
+- **VITE_GEMINI_API_KEY** - Same key exposed to Vite frontend (must have VITE_ prefix)
 - **SCRAPERAPI_KEY** - ScraperAPI key for Indeed scraping (proxy/anti-bot bypass)
 - **TWOCAPTCHA_API_KEY** - 2Captcha API key for Glassdoor Cloudflare Turnstile solving
+- **PEXELS_API_KEY** - Pexels API key for worker headshot photos (free tier: 200 req/hour)
 
 ## Job Site Scrapers
 

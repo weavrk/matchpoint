@@ -611,17 +611,28 @@ Offer chips: [Show me talent] [Explore market data] [Start a job posting]
 - Never use italics in responses`;
 
 // Build system prompt with context
-function buildSystemPrompt(userName: string, retailerName: string, retailerClass: string, market: string): string {
+function buildSystemPrompt(userName: string, retailerName: string, retailerClass: string, market: string, workerIds?: string[]): string {
+  // Create worker ID placeholders from actual IDs
+  const ids = workerIds || [];
+  const worker3Ids = JSON.stringify(ids.slice(0, 3));
+  const worker6Ids = JSON.stringify(ids.slice(0, 6));
+
   return SYSTEM_PROMPT
     .replace(/\{\{USER_NAME\}\}/g, userName)
     .replace(/\{\{RETAILER_NAME\}\}/g, retailerName)
     .replace(/\{\{RETAILER_CLASS\}\}/g, retailerClass)
-    .replace(/\{\{MARKET\}\}/g, market);
+    .replace(/\{\{MARKET\}\}/g, market)
+    // Replace hardcoded sample worker IDs with actual ones
+    .replace(/\["w001",\s*"w002",\s*"w003"\]/g, worker3Ids)
+    .replace(/\["w001",\s*"w002",\s*"w004"\]/g, worker3Ids)
+    .replace(/\["w005",\s*"w006",\s*"w007",\s*"w008",\s*"w009",\s*"w010"\]/g, worker6Ids);
 }
 
 export class GeminiService {
   private genAI: GoogleGenerativeAI | null = null;
   private chat: ChatSession | null = null;
+  private workerIds: string[] = [];
+
   constructor(apiKey: string) {
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
@@ -633,13 +644,16 @@ export class GeminiService {
     retailerName: string,
     retailerClass: 'Luxury' | 'Specialty' | 'Big Box' = 'Luxury',
     market: string = 'Austin',
-    existingHistory?: { role: 'user' | 'model'; content: string }[]
+    existingHistory?: { role: 'user' | 'model'; content: string }[],
+    workerIds?: string[]
   ): Promise<string> {
+    // Store worker IDs for use in responses
+    this.workerIds = workerIds || [];
     if (!this.genAI) {
       throw new Error('API key not configured');
     }
 
-    const prompt = buildSystemPrompt(userName, retailerName, retailerClass, market);
+    const prompt = buildSystemPrompt(userName, retailerName, retailerClass, market, this.workerIds);
 
     const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
@@ -730,6 +744,7 @@ export class MockGeminiService {
     skills?: string[];
     title?: string;
   } = {};
+  private workerIds: string[] = [];
 
   /** Aligns mock with Fill a role: Step 0 location first, then situation, then role. */
   private mockFillRoleStep: 'off' | 'need_location' | 'past_location' | 'need_situation' | 'past_situation' | 'past_role' = 'off';
@@ -739,10 +754,12 @@ export class MockGeminiService {
     retailerName: string,
     _retailerClass: 'Luxury' | 'Specialty' | 'Big Box' = 'Luxury',
     market: string = 'Austin',
-    existingHistory?: { role: 'user' | 'model'; content: string }[]
+    existingHistory?: { role: 'user' | 'model'; content: string }[],
+    workerIds?: string[]
   ): Promise<string> {
     this.gathered = {};
     this.mockFillRoleStep = 'off';
+    this.workerIds = workerIds || [];
     if (existingHistory?.length) {
       const assistantBlob = existingHistory
         .filter((m) => m.role === 'model')
@@ -753,6 +770,11 @@ export class MockGeminiService {
       }
     }
     return `Hi ${userName}! I can help you with salary insights and job postings for ${retailerName} in ${market}. What role are you looking to hire for, or would you like to see current market rates?`;
+  }
+
+  // Helper to get worker IDs for responses
+  private getWorkerIds(count: number): string {
+    return JSON.stringify(this.workerIds.slice(0, count));
   }
 
   async sendMessage(message: string): Promise<{ text: string; jobSpec?: JobSpec; followUp?: string; chips?: { label: string }[]; chipsType?: string }> {
@@ -820,7 +842,7 @@ Based on 466 recent job postings. Austin pays above national average across all 
         text: `Austin has Reflexers with previous ${trimmed} experience.
 
 ---WORKER_CARDS_START---
-["w001", "w002", "w004"]
+${this.getWorkerIds(3)}
 ---WORKER_CARDS_END---`,
         followUp: '__auto_location__',
       };
