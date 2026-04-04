@@ -75,15 +75,14 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
           {/* Reflex Activity */}
           {reflexActivity && (
             <div className="testing-section">
-              <span className="testing-label">On Reflex</span>
+              <span className="testing-label">Reflex Activity</span>
               <div className="testing-data">
-                <div className="testing-row"><span className="testing-key">Total Shifts:</span> {worker.shiftsOnReflex}</div>
-                {worker.uniqueStoreCount != null && worker.uniqueStoreCount > 0 && (
-                  <div className="testing-row"><span className="testing-key">Store Locations:</span> {worker.uniqueStoreCount}</div>
-                )}
-                <div className="testing-row"><span className="testing-key">Stores Invited Back:</span> {worker.invitedBackStores}</div>
-                {reflexActivity.storeFavoriteCount && (
-                  <div className="testing-row"><span className="testing-key">Store Favorite:</span> {reflexActivity.storeFavoriteCount}</div>
+                <div className="testing-row"><span className="testing-key">shiftsOnReflex:</span> {worker.shiftsOnReflex}</div>
+                <div className="testing-row"><span className="testing-key">uniqueStoreCount:</span> {worker.uniqueStoreCount || 'null'}</div>
+                {reflexActivity.longestRelationship && (
+                  <div className="testing-row">
+                    <span className="testing-key">longestRelationship:</span> {reflexActivity.longestRelationship.brand} ({reflexActivity.longestRelationship.flexCount} shifts)
+                  </div>
                 )}
               </div>
             </div>
@@ -93,21 +92,13 @@ export function WorkerCardFull({ worker, onClose }: WorkerCardFullProps) {
           <div className="testing-section">
             <span className="testing-label">Reliability</span>
             <div className="testing-data">
-              {worker.currentTier && (
-                <div className="testing-row"><span className="testing-key">Current Tier:</span> {worker.currentTier}</div>
-              )}
-              {worker.tardyRatio && (
-                <div className="testing-row"><span className="testing-key">Tardy Ratio:</span> {worker.tardyRatio}</div>
-              )}
-              {worker.tardyPercent != null && (
-                <div className="testing-row"><span className="testing-key">Tardy Percent:</span> {worker.tardyPercent}%</div>
-              )}
-              {worker.urgentCancelRatio && (
-                <div className="testing-row"><span className="testing-key">Urgent Cancel Ratio:</span> {worker.urgentCancelRatio}</div>
-              )}
-              {worker.urgentCancelPercent != null && (
-                <div className="testing-row"><span className="testing-key">Urgent Cancel Percent:</span> {worker.urgentCancelPercent}%</div>
-              )}
+              <div className="testing-row"><span className="testing-key">currentTier:</span> {worker.currentTier || 'null'}</div>
+              <div className="testing-row"><span className="testing-key">invitedBackStores:</span> {worker.invitedBackStores}</div>
+              <div className="testing-row"><span className="testing-key">storeFavoriteCount:</span> {reflexActivity?.storeFavoriteCount || 'null'}</div>
+              <div className="testing-row"><span className="testing-key">tardyRatio:</span> {worker.tardyRatio || 'null'}</div>
+              <div className="testing-row"><span className="testing-key">tardyPercent:</span> {worker.tardyPercent != null ? `${worker.tardyPercent}%` : 'null'}</div>
+              <div className="testing-row"><span className="testing-key">urgentCancelRatio:</span> {worker.urgentCancelRatio || 'null'}</div>
+              <div className="testing-row"><span className="testing-key">urgentCancelPercent:</span> {worker.urgentCancelPercent != null ? `${worker.urgentCancelPercent}%` : 'null'}</div>
             </div>
           </div>
 

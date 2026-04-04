@@ -193,6 +193,11 @@
   padding: 0;
 }
 
+/* Beats .v2-container-welcome .v2-main so welcome hero keeps vertical inset */
+.v2-container-welcome .v2-main.v2-welcome-step {
+  padding: 140px 64px 140px;
+}
+
 /* Step header */
 .v2-step-header {
   margin-bottom: 8px;
@@ -224,7 +229,6 @@
   align-items: center;
   justify-content: flex-start;
   text-align: center;
-  padding: 96px 64px 64px;
 }
 
 .v2-welcome-illustration {
@@ -355,14 +359,15 @@
 
 
 .v2-welcome-step .type-tagline {
+  margin-top: 24px;
   margin-bottom: 0px;
-  max-width: 45vw;
+  max-width: 55vw;
   font-size: 48px;
   line-height: 1.1;
 }
 
 .v2-welcome-step .v2-welcome-subtitle {
-  margin-bottom: 48px;
+  margin-bottom: 32px;
   max-width: 70vw;
   font-size: 24px;
   line-height: 1.2;

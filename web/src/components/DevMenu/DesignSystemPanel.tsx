@@ -1,5 +1,6 @@
 import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
+import { WorkerCardChip } from '../Workers/WorkerCardChip';
 import { WorkerCardCompact } from '../Workers/WorkerCardCompact';
 import { WorkerCardTesting } from '../Workers/WorkerCardTesting';
 import { WorkerCardFull } from '../Workers/WorkerCardFull';
@@ -543,6 +544,14 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <div className="worker-card" style={{ background: '#fff' }}>
                 <WorkerCardHeader worker={sampleWorker} />
               </div>
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>WorkerCardChip</h4>
+            <p className="ds-description">Minimal horizontal chip for inline mentions and compact selection lists. Shows avatar, name, location, and verified badge.</p>
+            <div className="ds-worker-card-example">
+              <WorkerCardChip worker={sampleWorker} />
             </div>
           </div>
 
