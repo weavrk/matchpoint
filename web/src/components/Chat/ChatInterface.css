@@ -1089,9 +1089,9 @@
 .worker-card-section-label {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-hint);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--text-primary);
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 /* Work History section */

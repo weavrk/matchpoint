@@ -235,7 +235,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
           <>
             <div className="card-divider" />
             <div className="card-section">
-              <span className="section-label">Work history</span>
+              <span className="section-label">Work History</span>
               <div className="experience-list">
                 {worker.previousExperience.map((exp, idx) => (
                   <div key={idx} className="experience-item">
@@ -356,7 +356,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                 <>
                   <div className="reflex-inner-divider" />
                   <div className="retailer-quotes-section">
-                    <span className="section-label">What retailers are saying about {worker.name.split(' ')[0]}</span>
+                    <span className="section-label">What Retailers Are Saying About {worker.name.split(' ')[0]}</span>
                     <p className="retailer-quotes-summary">
                       {worker.retailerSummary || generateQuoteSummary(worker.name.split(' ')[0], worker.retailerQuotes)}
                     </p>

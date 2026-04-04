@@ -37,9 +37,9 @@
 .worker-section-title {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-hint);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: var(--primary);
+  text-transform: none;
+  letter-spacing: normal;
   margin: 0 0 16px;
 }
 

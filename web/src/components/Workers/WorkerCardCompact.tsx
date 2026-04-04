@@ -58,7 +58,7 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
             </div>
             {quoteSummary && (
               <div className="compact-section">
-                <span className="section-label">What retailers say about {firstName}</span>
+                <span className="section-label">What Retailers Say About {firstName}</span>
                 <p className="compact-summary">{quoteSummary}</p>
               </div>
             )}

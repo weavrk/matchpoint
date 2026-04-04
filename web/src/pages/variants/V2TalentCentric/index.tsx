@@ -456,7 +456,7 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
       // Go to next incomplete section
       const next = getNextIncompleteSection(section);
       if (next) {
-        transitionToStep(next === 'employment' ? 'employment' : next === 'brands' ? 'brands' : 'roles', 'forward');
+        transitionToStep(next === 'employment' ? 'employment' : next === 'brands' ? 'brands' : 'experience', 'forward');
       } else {
         transitionToStep('results', 'forward');
       }
@@ -533,7 +533,7 @@ export function V2TalentCentric({ userName: propUserName }: V2TalentCentricProps
         workers = workers.filter(w => {
           const mgmtTitles = ['manager', 'supervisor', 'lead', 'coordinator', 'director', 'assistant manager'];
           return w.previousExperience?.some(exp =>
-            mgmtTitles.some(title => exp.role?.toLowerCase().includes(title))
+            exp.roles?.some(role => mgmtTitles.some(title => role.toLowerCase().includes(title)))
           );
         });
       }
