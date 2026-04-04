@@ -150,7 +150,7 @@ export class V2GeminiService {
     return this.getMockGreeting(context);
   }
 
-  private getMockGreeting(context: V2ChatContext): string {
+  private getMockGreeting(_context: V2ChatContext): string {
     return `Tell me a bit about your role - are you hiring for a single store, managing multiple locations, or recruiting across the region? This helps me find the right talent for your needs.`;
   }
 

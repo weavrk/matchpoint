@@ -613,6 +613,7 @@ export function V2TalentCentric({
     if (!message.trim()) return;
 
     const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
       role: "user",
       content: message,
       timestamp: new Date(),
@@ -631,6 +632,7 @@ export function V2TalentCentric({
       const responseText = await service.sendMessage(message);
 
       const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
         role: "assistant",
         content: responseText,
         timestamp: new Date(),
@@ -639,6 +641,7 @@ export function V2TalentCentric({
     } catch (error) {
       console.error("V2 Chat error:", error);
       const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
         role: "assistant",
         content: "Sorry, I encountered an error. Please try again.",
         timestamp: new Date(),
