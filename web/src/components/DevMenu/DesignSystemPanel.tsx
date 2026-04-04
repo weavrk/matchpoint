@@ -796,7 +796,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <li><span className="ds-style-prop">margin-top:</span> <code>auto</code></li>
               <li><span className="ds-style-prop">background:</span> <code>#ffffff</code></li>
               <li><span className="ds-style-prop">border-top:</span> <code>1px solid var(--quaternary)</code></li>
-              <li><span className="ds-style-prop">padding:</span> <code>16px 64px</code></li>
+              <li><span className="ds-style-prop">padding:</span> <code>16px 0 0</code></li>
               <li><span className="ds-style-prop">flex-shrink:</span> <code>0</code></li>
             </ul>
           </div>

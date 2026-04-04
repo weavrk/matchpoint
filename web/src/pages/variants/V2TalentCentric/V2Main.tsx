@@ -51,11 +51,9 @@ function getTransitionClass(
   direction: TransitionDirection
 ): string {
   if (isTransitioning) {
-    // Exit animation: forward slides left, back slides right
-    return direction === 'forward' ? 'slide-out-left' : 'slide-out-right';
+    return direction === 'forward' ? 'slide-out-left-forward' : 'slide-out-right-backward';
   }
-  // Enter animation: forward slides in from right, back slides in from left
-  return direction === 'forward' ? 'slide-in-right' : 'slide-in-left';
+  return direction === 'forward' ? 'slide-in-right-forward' : 'slide-in-left-backward';
 }
 
 export function V2Main({

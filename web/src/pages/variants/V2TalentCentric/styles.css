@@ -13,19 +13,19 @@
   opacity: 1;
 }
 
-.v2-main.slide-in-right {
+.v2-main.slide-in-right-forward {
   animation: slideInRight 200ms ease-in forwards;
 }
 
-.v2-main.slide-in-left {
-  animation: slideInLeft 200ms ease-in forwards;
-}
-
-.v2-main.slide-out-left {
+.v2-main.slide-out-left-forward {
   animation: slideOutLeft 200ms ease-out forwards;
 }
 
-.v2-main.slide-out-right {
+.v2-main.slide-in-left-backward {
+  animation: slideInLeft 200ms ease-in forwards;
+}
+
+.v2-main.slide-out-right-backward {
   animation: slideOutRight 200ms ease-out forwards;
 }
 
@@ -522,13 +522,8 @@
  * - Duration: 200ms
  * - Transform: 50px horizontal slide + opacity fade
  *
- * Forward (Continue button):
- * - Exit: slide-out-left (translateX(-50px), opacity 0, ease-out)
- * - Enter: slide-in-right (translateX(50px) → 0, opacity 0 → 1, ease-in)
- *
- * Back button:
- * - Exit: slide-out-right (translateX(50px), opacity 0, ease-out)
- * - Enter: slide-in-left (translateX(-50px) → 0, opacity 0 → 1, ease-in)
+ * Forward: .slide-in-right-forward, .slide-out-left-forward
+ * Backward: .slide-in-left-backward, .slide-out-right-backward
  *
  * Width/Height:
  * - Shell fills available space in .v2-main
@@ -701,7 +696,7 @@
   margin-top: auto;
   background: #ffffff;
   border-top: 1px solid var(--quaternary);
-  padding: 16px 64px;
+  padding: 16px 0 0;
   z-index: 10;
   flex-shrink: 0;
 }
