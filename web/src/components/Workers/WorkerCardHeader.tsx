@@ -41,7 +41,7 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
     ? worker.market.join(', ')
     : worker.market;
 
-  const avatarSize = size === 'large' ? 56 : 40;
+  const avatarSize = size === 'large' ? 64 : 54;
 
   const hasTags = worker.shiftVerified || (showActivelyLooking && worker.activelyLooking);
 
