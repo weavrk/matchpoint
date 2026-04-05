@@ -527,6 +527,96 @@ const JOB_ROLES = {
   },
 };
 
+// Chat conversations data for the Chat tab
+interface ChatConversation {
+  id: string;
+  name: string;
+  initials: string;
+  lastMessage: string;
+  time: string;
+  isOnline: boolean;
+  hasUnread: boolean;
+  status: string;
+  messages: Array<{
+    type: "incoming" | "outgoing";
+    text: string;
+    time: string;
+  }>;
+}
+
+const CHAT_CONVERSATIONS: ChatConversation[] = [
+  {
+    id: "maria",
+    name: "Maria Johnson",
+    initials: "MJ",
+    lastMessage: "Yes! I'd love to book a shift this weekend.",
+    time: "2m ago",
+    isOnline: true,
+    hasUnread: true,
+    status: "Online",
+    messages: [
+      { type: "outgoing", text: "Hi Maria! We loved your profile and wanted to see if you'd be interested in a permanent position at our Domain Northside location.", time: "10:30 AM" },
+      { type: "incoming", text: "Hi! Thank you so much for reaching out. I've really enjoyed my shifts at your store. What does the role entail?", time: "10:45 AM" },
+      { type: "outgoing", text: "It's a full-time Sales Associate position. You'd be working 35-40 hours per week, mostly evenings and weekends. The pay starts at $18/hr with benefits.", time: "11:00 AM" },
+      { type: "incoming", text: "That sounds great! I'm definitely interested. When would be a good time to discuss further?", time: "11:15 AM" },
+      { type: "outgoing", text: "Would you like to come in for a trial shift this weekend? It would give you a chance to see if it's a good fit.", time: "11:30 AM" },
+      { type: "incoming", text: "Yes! I'd love to book a shift this weekend. Saturday works best for me if you have availability.", time: "11:32 AM" },
+    ],
+  },
+  {
+    id: "james",
+    name: "James Davis",
+    initials: "JD",
+    lastMessage: "What's the hourly rate for the position?",
+    time: "1h ago",
+    isOnline: false,
+    hasUnread: true,
+    status: "Last seen 1h ago",
+    messages: [
+      { type: "outgoing", text: "Hi James! Your experience at Nike and Foot Locker really stood out to us. We have an opening for a Key Holder position.", time: "9:15 AM" },
+      { type: "incoming", text: "Thanks for reaching out! I've been looking for more responsibility. Can you tell me more about the role?", time: "9:30 AM" },
+      { type: "outgoing", text: "As a Key Holder, you'd be responsible for opening/closing shifts, cash handling, and supervising the floor when managers are off.", time: "9:45 AM" },
+      { type: "incoming", text: "That sounds like a good step up for me. What's the hourly rate for the position?", time: "10:00 AM" },
+    ],
+  },
+  {
+    id: "sarah",
+    name: "Sarah Kim",
+    initials: "SK",
+    lastMessage: "I'm available for an interview next Tuesday",
+    time: "3h ago",
+    isOnline: false,
+    hasUnread: true,
+    status: "Last seen 3h ago",
+    messages: [
+      { type: "outgoing", text: "Hi Sarah! I saw you have extensive experience in visual merchandising. We're looking for someone to lead our displays team.", time: "Yesterday 2:30 PM" },
+      { type: "incoming", text: "Hi! That's exciting - I've always wanted to focus more on the creative side. What would the schedule look like?", time: "Yesterday 3:00 PM" },
+      { type: "outgoing", text: "It's a full-time role, Monday through Friday with occasional weekends for seasonal changeovers. We'd love to bring you in for an interview.", time: "Yesterday 4:15 PM" },
+      { type: "incoming", text: "I'm available for an interview next Tuesday or Wednesday afternoon if that works?", time: "Yesterday 5:00 PM" },
+      { type: "outgoing", text: "Tuesday at 2pm works perfectly. I'll send you a calendar invite with the details.", time: "Today 8:00 AM" },
+      { type: "incoming", text: "I'm available for an interview next Tuesday", time: "Today 8:15 AM" },
+    ],
+  },
+  {
+    id: "tyler",
+    name: "Tyler Rodriguez",
+    initials: "TR",
+    lastMessage: "Thanks for reaching out! I'll think about it.",
+    time: "Yesterday",
+    isOnline: false,
+    hasUnread: false,
+    status: "Last seen yesterday",
+    messages: [
+      { type: "outgoing", text: "Hi Tyler! We noticed you've completed 24 shifts with us and your performance has been outstanding. Would you be interested in a permanent role?", time: "Yesterday 10:00 AM" },
+      { type: "incoming", text: "Hey! I appreciate the offer. I'm actually pretty happy with the flexibility of the current arrangement though.", time: "Yesterday 11:30 AM" },
+      { type: "outgoing", text: "Totally understand! We could potentially offer a part-time permanent position that maintains some of that flexibility. Benefits would include health insurance and PTO.", time: "Yesterday 12:00 PM" },
+      { type: "incoming", text: "Hmm, that's interesting. What would the minimum hours commitment be?", time: "Yesterday 1:15 PM" },
+      { type: "outgoing", text: "We could work with 20-25 hours per week, with you choosing your preferred shifts in advance.", time: "Yesterday 2:00 PM" },
+      { type: "incoming", text: "Thanks for reaching out! I'll think about it. Can I get back to you next week?", time: "Yesterday 3:30 PM" },
+    ],
+  },
+];
+
 interface V2TalentCentricProps {
   userName?: string;
 }
@@ -601,6 +691,10 @@ export function V2TalentCentric({
 
   // Selected worker for showing full card in sidebar
   const [selectedWorker, setSelectedWorker] = useState<MatchedWorker | null>(null);
+
+  // Active chat conversation state
+  const [activeChatId, setActiveChatId] = useState<string>("maria");
+  const [chatInputValue, setChatInputValue] = useState("");
 
   // Search matching brands - only match from start of name
   const searchResults = useMemo(() => {
@@ -2528,178 +2622,119 @@ export function V2TalentCentric({
       )}
 
       {/* Chat Tab - SMS-style messaging interface */}
-      {activeTab === "chat" && (
-        <div className="v2-chat-container">
-          {/* Chat Sidebar - Conversation List */}
-          <div className="v2-chat-sidebar">
-            <div className="v2-chat-sidebar-header">
-              <h3>Messages</h3>
-              <span className="v2-chat-unread-badge">3</span>
+      {activeTab === "chat" && (() => {
+        const activeConversation = CHAT_CONVERSATIONS.find(c => c.id === activeChatId) || CHAT_CONVERSATIONS[0];
+        const unreadCount = CHAT_CONVERSATIONS.filter(c => c.hasUnread).length;
+
+        return (
+          <div className="v2-chat-container">
+            {/* Chat Sidebar - Conversation List */}
+            <div className="v2-chat-sidebar">
+              <div className="v2-chat-sidebar-header">
+                <h3>Messages</h3>
+                {unreadCount > 0 && (
+                  <span className="v2-chat-unread-badge">{unreadCount}</span>
+                )}
+              </div>
+              <div className="v2-chat-list">
+                {CHAT_CONVERSATIONS.map((conversation) => (
+                  <div
+                    key={conversation.id}
+                    className={`v2-chat-item ${activeChatId === conversation.id ? 'active' : ''}`}
+                    onClick={() => setActiveChatId(conversation.id)}
+                  >
+                    <div className="v2-chat-item-avatar">
+                      <span>{conversation.initials}</span>
+                      {conversation.isOnline && <div className="v2-chat-online-dot" />}
+                    </div>
+                    <div className="v2-chat-item-info">
+                      <div className="v2-chat-item-header">
+                        <span className="v2-chat-item-name">{conversation.name}</span>
+                        <span className="v2-chat-item-time">{conversation.time}</span>
+                      </div>
+                      <p className="v2-chat-item-preview">
+                        {conversation.lastMessage}
+                      </p>
+                    </div>
+                    {conversation.hasUnread && <div className="v2-chat-unread-dot" />}
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="v2-chat-list">
-              {/* Active conversation */}
-              <div className="v2-chat-item active">
-                <div className="v2-chat-item-avatar">
-                  <span>MJ</span>
-                  <div className="v2-chat-online-dot" />
-                </div>
-                <div className="v2-chat-item-info">
-                  <div className="v2-chat-item-header">
-                    <span className="v2-chat-item-name">Maria Johnson</span>
-                    <span className="v2-chat-item-time">2m ago</span>
+
+            {/* Chat Main Area */}
+            <div className="v2-chat-main">
+              {/* Chat Header */}
+              <div className="v2-chat-header">
+                <div className="v2-chat-header-info">
+                  <div className="v2-chat-header-avatar">
+                    <span>{activeConversation.initials}</span>
+                    {activeConversation.isOnline && <div className="v2-chat-online-dot" />}
                   </div>
-                  <p className="v2-chat-item-preview">
-                    Yes! I'd love to book a shift this weekend.
-                  </p>
+                  <div className="v2-chat-header-details">
+                    <span className="v2-chat-header-name">{activeConversation.name}</span>
+                    <span className="v2-chat-header-status">{activeConversation.status}</span>
+                  </div>
                 </div>
-                <div className="v2-chat-unread-dot" />
+                <div className="v2-chat-header-actions">
+                  <button className="v2-chat-header-btn">
+                    <CalendarDays size={18} />
+                    Schedule Shift
+                  </button>
+                  <button className="v2-chat-header-btn">
+                    <Briefcase size={18} />
+                    View Profile
+                  </button>
+                </div>
               </div>
 
-              <div className="v2-chat-item">
-                <div className="v2-chat-item-avatar">
-                  <span>JD</span>
+              {/* Chat Messages */}
+              <div className="v2-chat-messages">
+                {/* Date divider */}
+                <div className="v2-chat-date-divider">
+                  <span>Today</span>
                 </div>
-                <div className="v2-chat-item-info">
-                  <div className="v2-chat-item-header">
-                    <span className="v2-chat-item-name">James Davis</span>
-                    <span className="v2-chat-item-time">1h ago</span>
+
+                {activeConversation.messages.map((message, index) => (
+                  <div key={index} className={`v2-chat-message ${message.type}`}>
+                    <div className="v2-chat-bubble">
+                      <p>{message.text}</p>
+                      <span className="v2-chat-time">{message.time}</span>
+                    </div>
                   </div>
-                  <p className="v2-chat-item-preview">
-                    What's the hourly rate for the position?
-                  </p>
-                </div>
-                <div className="v2-chat-unread-dot" />
+                ))}
               </div>
 
-              <div className="v2-chat-item">
-                <div className="v2-chat-item-avatar">
-                  <span>SK</span>
-                </div>
-                <div className="v2-chat-item-info">
-                  <div className="v2-chat-item-header">
-                    <span className="v2-chat-item-name">Sarah Kim</span>
-                    <span className="v2-chat-item-time">3h ago</span>
-                  </div>
-                  <p className="v2-chat-item-preview">
-                    I'm available for an interview next Tuesday
-                  </p>
-                </div>
-                <div className="v2-chat-unread-dot" />
-              </div>
-
-              <div className="v2-chat-item">
-                <div className="v2-chat-item-avatar">
-                  <span>TR</span>
-                </div>
-                <div className="v2-chat-item-info">
-                  <div className="v2-chat-item-header">
-                    <span className="v2-chat-item-name">Tyler Rodriguez</span>
-                    <span className="v2-chat-item-time">Yesterday</span>
-                  </div>
-                  <p className="v2-chat-item-preview">
-                    Thanks for reaching out! I'll think about it.
-                  </p>
-                </div>
+              {/* Chat Input */}
+              <div className="v2-chat-input-area">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  className="v2-chat-input"
+                  value={chatInputValue}
+                  onChange={(e) => setChatInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && chatInputValue.trim()) {
+                      // For demo, just clear the input
+                      setChatInputValue("");
+                    }
+                  }}
+                />
+                <button
+                  className="v2-chat-send"
+                  onClick={() => {
+                    if (chatInputValue.trim()) {
+                      setChatInputValue("");
+                    }
+                  }}
+                >
+                  <Send size={18} />
+                </button>
               </div>
             </div>
           </div>
-
-          {/* Chat Main Area */}
-          <div className="v2-chat-main">
-            {/* Chat Header */}
-            <div className="v2-chat-header">
-              <div className="v2-chat-header-info">
-                <div className="v2-chat-header-avatar">
-                  <span>MJ</span>
-                  <div className="v2-chat-online-dot" />
-                </div>
-                <div className="v2-chat-header-details">
-                  <span className="v2-chat-header-name">Maria Johnson</span>
-                  <span className="v2-chat-header-status">Online</span>
-                </div>
-              </div>
-              <div className="v2-chat-header-actions">
-                <button className="v2-chat-header-btn">
-                  <CalendarDays size={18} />
-                  Schedule Shift
-                </button>
-                <button className="v2-chat-header-btn">
-                  <Briefcase size={18} />
-                  View Profile
-                </button>
-              </div>
-            </div>
-
-            {/* Chat Messages */}
-            <div className="v2-chat-messages">
-              {/* Date divider */}
-              <div className="v2-chat-date-divider">
-                <span>Today</span>
-              </div>
-
-              {/* Outgoing message */}
-              <div className="v2-chat-message outgoing">
-                <div className="v2-chat-bubble">
-                  <p>Hi Maria! We loved your profile and wanted to see if you'd be interested in a permanent position at our Domain Northside location.</p>
-                  <span className="v2-chat-time">10:30 AM</span>
-                </div>
-              </div>
-
-              {/* Incoming message */}
-              <div className="v2-chat-message incoming">
-                <div className="v2-chat-bubble">
-                  <p>Hi! Thank you so much for reaching out. I've really enjoyed my shifts at your store. What does the role entail?</p>
-                  <span className="v2-chat-time">10:45 AM</span>
-                </div>
-              </div>
-
-              {/* Outgoing message */}
-              <div className="v2-chat-message outgoing">
-                <div className="v2-chat-bubble">
-                  <p>It's a full-time Sales Associate position. You'd be working 35-40 hours per week, mostly evenings and weekends. The pay starts at $18/hr with benefits.</p>
-                  <span className="v2-chat-time">11:00 AM</span>
-                </div>
-              </div>
-
-              {/* Incoming message */}
-              <div className="v2-chat-message incoming">
-                <div className="v2-chat-bubble">
-                  <p>That sounds great! I'm definitely interested. When would be a good time to discuss further?</p>
-                  <span className="v2-chat-time">11:15 AM</span>
-                </div>
-              </div>
-
-              {/* Outgoing message */}
-              <div className="v2-chat-message outgoing">
-                <div className="v2-chat-bubble">
-                  <p>Would you like to come in for a trial shift this weekend? It would give you a chance to see if it's a good fit.</p>
-                  <span className="v2-chat-time">11:30 AM</span>
-                </div>
-              </div>
-
-              {/* Incoming message with enthusiasm */}
-              <div className="v2-chat-message incoming">
-                <div className="v2-chat-bubble">
-                  <p>Yes! I'd love to book a shift this weekend. Saturday works best for me if you have availability.</p>
-                  <span className="v2-chat-time">11:32 AM</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Chat Input */}
-            <div className="v2-chat-input-area">
-              <input
-                type="text"
-                placeholder="Type a message..."
-                className="v2-chat-input"
-              />
-              <button className="v2-chat-send">
-                <Send size={18} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
