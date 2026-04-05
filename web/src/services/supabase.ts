@@ -589,7 +589,7 @@ export async function deletePublishedJob(jobId: string): Promise<void> {
 
 // Column sets for optimized queries
 const WORKER_COLUMNS_CARD = `
-  id, name, photo, gender, market, actively_looking, shift_verified,
+  id, name, photo, gender, market, actively_looking, shift_verified, market_favorite,
   shifts_on_reflex, brands_worked, endorsement_counts, shift_experience, invited_back_stores,
   about_me, previous_experience, reflex_activity, retailer_quotes, retailer_summary,
   current_tier, unique_store_count, tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent
@@ -597,7 +597,7 @@ const WORKER_COLUMNS_CARD = `
 
 const WORKER_COLUMNS_FULL = `
   id, name, photo, gender, market, actively_looking, about_me, previous_experience,
-  shift_verified, reflex_activity, shifts_on_reflex, brands_worked,
+  shift_verified, market_favorite, reflex_activity, shifts_on_reflex, brands_worked,
   retailer_quotes, retailer_summary, endorsement_counts, shift_experience, invited_back_stores,
   commitment_score, tardy_ratio, tardy_percent,
   urgent_cancel_ratio, urgent_cancel_percent, current_tier, unique_store_count,
@@ -644,6 +644,8 @@ export interface WorkerRow {
   // Interview data
   interview_transcript: { question: string; answer: string }[] | Record<string, unknown> | null;
   photo: string | null;
+  // Market favorite
+  market_favorite: boolean;
 }
 
 export interface WorkerApplicationRow {
@@ -861,6 +863,8 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     shiftExperience: row.shift_experience,
     // Unique store count
     uniqueStoreCount: row.unique_store_count,
+    // Market favorite
+    marketFavorite: row.market_favorite,
   };
 }
 
@@ -874,4 +878,95 @@ export async function fetchWorkersAsProfiles(): Promise<WorkerProfile[]> {
 export async function fetchWorkersByMarketAsProfiles(market: string): Promise<WorkerProfile[]> {
   const rows = await fetchWorkersByMarket(market);
   return rows.map(workerRowToProfile);
+}
+
+// ============================================================
+// WORKER CONNECTIONS API
+// ============================================================
+
+export interface WorkerConnectionRow {
+  id: string;
+  worker_id: string;
+  market: string;
+  chat_id: string | null;
+  status: 'liked' | 'invited' | 'accepted' | 'not_interested' | 'removed';
+  invited: boolean;
+  connected: boolean;
+  chat_open: boolean;
+  shift_booked: boolean;
+  shift_scheduled: boolean;
+  saved_for_later: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkerConnectionWithWorker extends WorkerConnectionRow {
+  worker: WorkerRow | null;
+}
+
+// Fetch all worker connections with joined worker data
+export async function fetchWorkerConnections(): Promise<WorkerConnectionWithWorker[]> {
+  // First get all connections
+  const { data: connections, error: connError } = await supabase
+    .from('worker_connections')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (connError) {
+    console.error('Error fetching worker connections:', connError);
+    throw connError;
+  }
+
+  if (!connections || connections.length === 0) {
+    return [];
+  }
+
+  // Get unique worker IDs
+  const workerIds = [...new Set(connections.map(c => c.worker_id))];
+
+  // Fetch workers for these IDs
+  const { data: workers, error: workersError } = await supabase
+    .from('workers')
+    .select(WORKER_COLUMNS_CARD)
+    .in('id', workerIds);
+
+  if (workersError) {
+    console.error('Error fetching workers for connections:', workersError);
+    throw workersError;
+  }
+
+  // Create a map of worker ID to worker data
+  const workerList = (workers || []) as unknown as WorkerRow[];
+  const workerMap = new Map(workerList.map(w => [w.id, w]));
+
+  // Join the data
+  return connections.map(conn => ({
+    ...conn,
+    worker: workerMap.get(conn.worker_id) || null,
+  }));
+}
+
+// Fetch connections by status
+export async function fetchWorkerConnectionsByStatus(status: WorkerConnectionRow['status']): Promise<WorkerConnectionWithWorker[]> {
+  const all = await fetchWorkerConnections();
+  return all.filter(c => c.status === status);
+}
+
+// Update a worker connection status
+export async function updateWorkerConnectionStatus(
+  connectionId: string,
+  updates: Partial<Pick<WorkerConnectionRow, 'status' | 'connected' | 'chat_open' | 'shift_booked' | 'shift_scheduled' | 'saved_for_later'>>
+): Promise<WorkerConnectionRow> {
+  const { data, error } = await supabase
+    .from('worker_connections')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', connectionId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating worker connection:', error);
+    throw error;
+  }
+  return data;
 }

@@ -48,13 +48,13 @@ export function WorkerCardChip({ worker, onClick }: WorkerCardChipProps) {
         <span className="chip-name">{displayName}</span>
       </div>
       <div className="chip-stats">
-        <span className="tag tag-lite-gray tag-sm">
+        <span className="tag tag-stroke tag-md">
           <span className="tag-counter">{worker.shiftsOnReflex}</span>
-          <span className="tag-text">shifts</span>
+          <span className="tag-text">Shifts</span>
         </span>
-        <span className="tag tag-lite-gray tag-sm">
+        <span className="tag tag-stroke tag-md">
           <span className="tag-counter">{storeLocations}</span>
-          <span className="tag-text">store locations</span>
+          <span className="tag-text">Store Locations</span>
         </span>
       </div>
       <WorkerAchievementChips worker={worker} />

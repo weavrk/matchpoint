@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase, CornerDownRight, CalendarFold, Blend, ChartNoAxesGantt } from 'lucide-react';
+import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase, CornerDownRight, CalendarFold, Blend, ChartNoAxesGantt, Search, Award, Trophy, Sparkles, Heart, HeartPlus, ClockCheck } from 'lucide-react';
 import '../../pages/variants/V2TalentCentric/styles.css';
 import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
 import { WorkerCardChip } from '../Workers/WorkerCardChip';
@@ -29,6 +29,7 @@ const DS_TAG_VARIANT_STYLES = [
   ['tag-lite-gray', 'Lite gray'],
   ['tag-dark-gray', 'Dark gray'],
   ['tag-green', 'Green'],
+  ['tag-green-light', 'Green Light'],
   ['tag-blue', 'Blue'],
   ['tag-pink', 'Pink'],
   ['tag-coral', 'Coral'],
@@ -591,35 +592,35 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             <h4>Sizes</h4>
             <div className="ds-3col-grid">
               <div className="ds-pill-with-spec">
-                <span className="tag tag-lite-gray tag-sm"><span className="tag-icon"><BadgeCheck size={12} /></span><span className="tag-text">Small</span></span>
+                <span className="tag tag-lite-gray tag-sm"><span className="tag-icon"><BadgeCheck size={14} /></span><span className="tag-text">Small</span></span>
                 <div className="ds-spec-column">
                   <span className="ds-spec-text">class: tag-sm</span>
                   <span className="ds-spec-text">font: 12px / 16px</span>
                   <span className="ds-spec-text">weight: 500</span>
-                  <span className="ds-spec-text">padding: 4px 12px</span>
-                  <span className="ds-spec-text">icon: 12px</span>
+                  <span className="ds-spec-text">padding: 4px 8px</span>
+                  <span className="ds-spec-text">icon: 14px</span>
                   <span className="ds-spec-text">gap: 4px</span>
                 </div>
               </div>
               <div className="ds-pill-with-spec">
-                <span className="tag tag-lite-gray tag-md"><span className="tag-icon"><BadgeCheck size={14} /></span><span className="tag-text">Medium</span></span>
+                <span className="tag tag-lite-gray tag-md"><span className="tag-icon"><BadgeCheck size={16} /></span><span className="tag-text">Medium</span></span>
                 <div className="ds-spec-column">
                   <span className="ds-spec-text">class: tag-md</span>
                   <span className="ds-spec-text">font: 14px / 20px</span>
                   <span className="ds-spec-text">weight: 500</span>
                   <span className="ds-spec-text">padding: 4px 12px</span>
-                  <span className="ds-spec-text">icon: 14px</span>
-                  <span className="ds-spec-text">gap: 6px</span>
+                  <span className="ds-spec-text">icon: 16px</span>
+                  <span className="ds-spec-text">gap: 4px</span>
                 </div>
               </div>
               <div className="ds-pill-with-spec">
-                <span className="tag tag-lite-gray tag-lg"><span className="tag-icon"><BadgeCheck size={16} /></span><span className="tag-text">Large</span></span>
+                <span className="tag tag-lite-gray tag-lg"><span className="tag-icon"><BadgeCheck size={18} /></span><span className="tag-text">Large</span></span>
                 <div className="ds-spec-column">
                   <span className="ds-spec-text">class: tag-lg</span>
                   <span className="ds-spec-text">font: 16px / 22px</span>
                   <span className="ds-spec-text">weight: 500</span>
-                  <span className="ds-spec-text">padding: 6px 14px</span>
-                  <span className="ds-spec-text">icon: 16px</span>
+                  <span className="ds-spec-text">padding: 6px 12px</span>
+                  <span className="ds-spec-text">icon: 18px</span>
                   <span className="ds-spec-text">gap: 6px</span>
                 </div>
               </div>
@@ -637,7 +638,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                   <span className="ds-spec-text">border: quaternary</span>
                   <span className="ds-spec-text">text: primary</span>
                   <span className="ds-spec-text">icon: text-primary</span>
-                  <span className="ds-spec-text">counter bg: gray-100</span>
+                  <span className="ds-spec-text">counter bg: blue-100</span>
                   <span className="ds-spec-text">counter text: primary</span>
                 </div>
               </div>
@@ -667,7 +668,18 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 <span className="tag tag-green tag-md"><span className="tag-text">Green</span></span>
                 <div className="ds-spec-column">
                   <span className="ds-spec-text">tag-green</span>
-                  <span className="ds-spec-text">bg: green-lite</span>
+                  <span className="ds-spec-text">bg: accent-green-light</span>
+                  <span className="ds-spec-text">text: primary</span>
+                  <span className="ds-spec-text">icon: text-primary</span>
+                  <span className="ds-spec-text">counter bg: #ffffff</span>
+                  <span className="ds-spec-text">counter text: primary</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-green-light tag-md"><span className="tag-text">Green Light</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-green-light</span>
+                  <span className="ds-spec-text">bg: background-green</span>
                   <span className="ds-spec-text">text: primary</span>
                   <span className="ds-spec-text">icon: text-primary</span>
                   <span className="ds-spec-text">counter bg: #ffffff</span>
@@ -736,115 +748,103 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
 
           <div className="ds-subsection">
             <h4>Applications</h4>
-            <div className="ds-3col-grid">
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-green tag-sm"><span className="tag-icon"><BadgeCheck size={12} /></span><span className="tag-text">Shift Verified</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">shiftVerified: true</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-blue tag-sm"><span className="tag-text">Actively Looking</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">activelyLooking: true</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-lite-gray tag-sm"><span className="tag-counter">361</span><span className="tag-text">shifts</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">shiftsOnReflex</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-lite-gray tag-sm"><span className="tag-counter">39</span><span className="tag-text">store locations</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">uniqueStoreCount</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-stroke tag-sm"><span className="tag-text">Sales Associate</span><span className="tag-counter">274</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">shiftExperience[role]</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-stroke tag-sm"><span className="tag-text">Team Player</span><span className="tag-counter">68</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">endorsementCounts[trait]</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-stroke tag-sm"><span className="tag-text">Moncler</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">brandsWorked[].name</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-green tag-sm"><span className="tag-text">100% On-Time</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">tardyRatio = "0/x"</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-green tag-sm"><span className="tag-text">Consistently Punctual</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">tardyPercent &lt;10% (not 0)</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-green tag-sm"><span className="tag-text">Exceptional Commitment</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">urgentCancelPercent &lt;5%</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-green tag-sm"><span className="tag-text">0 Call-Outs</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">urgentCancelRatio = 0/x</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-green tag-sm"><span className="tag-text">90% Favorite Rating</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">storeFavoriteCount &gt;=89% of uniqueStoreCount</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-green tag-sm"><span className="tag-text">95% Invite Back Rate</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">invitedBackStores &gt;=94% of uniqueStoreCount</span>
-                </div>
-              </div>
+
+            <h5>Status Tags (conditional, tag-md)</h5>
+            <div className="ds-chip-logic-box">
+              <table className="ds-logic-table">
+                <thead>
+                  <tr>
+                    <th>Chip</th>
+                    <th>Condition</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span className="tag tag-blue-light tag-md"><span className="tag-icon"><BadgeCheck size={16} /></span><span className="tag-text">Shift Verified</span></span></td>
+                    <td><code>shiftVerified: true</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-blue tag-md"><span className="tag-icon"><Search size={16} /></span><span className="tag-text">Actively Looking</span></span></td>
+                    <td><code>activelyLooking: true</code></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
+            <h5>Stats Tags (unconditional - shown for all, tag-md)</h5>
             <div className="ds-chip-logic-box">
-              <h5>Worker Results - Chip Display Logic</h5>
-              <div className="ds-logic-grid">
-                <div className="ds-logic-item">
-                  <span className="tag tag-green tag-sm"><span className="tag-text">100% On-Time</span></span>
-                  <span className="ds-logic-rule">tardyRatio = "0/x" (never late)</span>
-                </div>
-                <div className="ds-logic-item">
-                  <span className="tag tag-green tag-sm"><span className="tag-text">Consistently Punctual</span></span>
-                  <span className="ds-logic-rule">tardyPercent &lt; 10% (but not 0)</span>
-                </div>
-                <div className="ds-logic-item">
-                  <span className="tag tag-green tag-sm"><span className="tag-text">Exceptional Commitment</span></span>
-                  <span className="ds-logic-rule">urgentCancelPercent &lt; 5%</span>
-                </div>
-                <div className="ds-logic-item">
-                  <span className="tag tag-green tag-sm"><span className="tag-text">0 Call-Outs</span></span>
-                  <span className="ds-logic-rule">urgentCancelRatio = "0/x"</span>
-                </div>
-                <div className="ds-logic-item">
-                  <span className="tag tag-green tag-sm"><span className="tag-text">90% Favorite Rating</span></span>
-                  <span className="ds-logic-rule">storeFavoriteCount &gt;= 89% of uniqueStoreCount</span>
-                </div>
-                <div className="ds-logic-item">
-                  <span className="tag tag-green tag-sm"><span className="tag-text">95% Invite Back Rate</span></span>
-                  <span className="ds-logic-rule">invitedBackStores &gt;= 94% of uniqueStoreCount</span>
-                </div>
-              </div>
+              <table className="ds-logic-table">
+                <thead>
+                  <tr>
+                    <th>Chip</th>
+                    <th>Data Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span className="tag tag-stroke tag-md"><span className="tag-counter">361</span><span className="tag-text">Shifts</span></span></td>
+                    <td><code>shiftsOnReflex</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-stroke tag-md"><span className="tag-counter">39</span><span className="tag-text">Store Locations</span></span></td>
+                    <td><code>uniqueStoreCount</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-dark-gray tag-md"><span className="tag-text">Sales Associate</span><span className="tag-counter">274</span></span></td>
+                    <td><code>shiftExperience[role]</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-stroke tag-md"><span className="tag-text">Team Player</span><span className="tag-counter">68</span></span></td>
+                    <td><code>endorsementCounts[trait]</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-dark-gray tag-md"><span className="tag-text">Moncler</span></span></td>
+                    <td><code>brandsWorked[].name</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h5>Achievement Tags (conditional - shown only if met, tag-md)</h5>
+            <div className="ds-chip-logic-box">
+              <table className="ds-logic-table">
+                <thead>
+                  <tr>
+                    <th>Chip</th>
+                    <th>Condition</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><Heart size={16} /></span><span className="tag-text">Market Favorite</span></span></td>
+                    <td><code>marketFavorite: true</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><Award size={16} /></span><span className="tag-text">100% On-Time</span></span></td>
+                    <td><code>tardyRatio = "0/x"</code> (never late)</td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-green-light tag-md"><span className="tag-icon"><ClockCheck size={16} /></span><span className="tag-text">X% On-Time</span></span></td>
+                    <td><code>100 - tardyPercent</code> (if tardyPercent &lt; 10%)</td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-green-light tag-md"><span className="tag-icon"><Sparkles size={16} /></span><span className="tag-text">Exceptional Commitment</span></span></td>
+                    <td><code>urgentCancelPercent &lt; 5%</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><Trophy size={16} /></span><span className="tag-text">0 Call-Outs</span></span></td>
+                    <td><code>urgentCancelRatio = "0/x"</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><HeartPlus size={16} /></span><span className="tag-text">X% Favorite Rating</span></span></td>
+                    <td><code>storeFavoriteCount &gt;= 89%</code> of uniqueStoreCount</td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-green-light tag-md"><span className="tag-icon"><UserStar size={16} /></span><span className="tag-text">X% Invite Back Rate</span></span></td>
+                    <td><code>invitedBackStores &gt;= 94%</code> of uniqueStoreCount</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </section>

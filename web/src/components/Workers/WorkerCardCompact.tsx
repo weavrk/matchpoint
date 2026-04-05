@@ -45,14 +45,14 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
         {worker.shiftVerified && (
           <>
             <div className="compact-stats">
-              <span className="tag tag-lite-gray tag-sm">
+              <span className="tag tag-stroke tag-md">
                 <span className="tag-counter">{worker.shiftsOnReflex}</span>
-                <span className="tag-text">shifts</span>
+                <span className="tag-text">Shifts</span>
               </span>
-              {worker.reflexActivity?.storeFavoriteCount && worker.reflexActivity.storeFavoriteCount > 0 && (
-                <span className="tag tag-lite-gray tag-sm">
-                  <span className="tag-counter">{worker.reflexActivity.storeFavoriteCount}</span>
-                  <span className="tag-text">stores favorited</span>
+              {worker.uniqueStoreCount && worker.uniqueStoreCount > 0 && (
+                <span className="tag tag-stroke tag-md">
+                  <span className="tag-counter">{worker.uniqueStoreCount}</span>
+                  <span className="tag-text">Store Locations</span>
                 </span>
               )}
             </div>
@@ -86,7 +86,7 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
             <span className="section-label">Shift Experience</span>
             <div className="compact-endorsements">
               {shiftExperienceEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-stroke tag-sm">
+                <span key={idx} className="tag tag-dark-gray tag-md">
                   <span className="tag-text">{name}</span>
                   <span className="tag-counter">{count}</span>
                 </span>
@@ -101,7 +101,7 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
             <span className="section-label">Endorsements</span>
             <div className="compact-endorsements">
               {endorsementEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-stroke tag-sm">
+                <span key={idx} className="tag tag-stroke tag-md">
                   <span className="tag-text">{name}</span>
                   <span className="tag-counter">{count}</span>
                 </span>

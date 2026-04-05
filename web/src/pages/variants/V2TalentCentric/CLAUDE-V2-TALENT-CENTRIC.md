@@ -165,35 +165,117 @@ Express interest for permanent role OR schedule a Reflex shift to try them out.
 Tracks retailer interactions with worker profiles. Table: `worker_connections`
 
 
-| Column        | Type         | Description                                         |
-| ------------- | ------------ | --------------------------------------------------- |
-| `id`          | UUID         | Primary key (auto-generated)                        |
-| `worker_id`   | UUID         | Foreign key to `workers.id` (CASCADE delete)        |
-| `worker_uuid` | UUID         | Worker's external UUID (for cross-system reference) |
-| `market`      | VARCHAR(100) | Market where connection occurred                    |
-| `status`      | VARCHAR(50)  | Connection status (see below)                       |
-| `invited`     | BOOLEAN      | Whether retailer sent connection invite (default: false) |
-| `created_at`  | TIMESTAMPTZ  | When connection was first created                   |
-| `updated_at`  | TIMESTAMPTZ  | When connection was last updated (auto-trigger)     |
+| Column           | Type         | Description                                         |
+| ---------------- | ------------ | --------------------------------------------------- |
+| `id`             | UUID         | Primary key (auto-generated)                        |
+| `worker_id`      | UUID         | Reference to `workers.id`                           |
+| `market`         | VARCHAR      | Market where connection occurred (Austin, Dallas, Houston, Phoenix) |
+| `chat_id`        | TEXT         | Unique chat thread identifier (e.g., "chat-maria")  |
+| `status`         | VARCHAR      | Connection status (see Status Flow below)           |
+| `invited`        | BOOLEAN      | Whether retailer sent connection invite (default: false) |
+| `connected`      | BOOLEAN      | Whether worker accepted connection (default: false) |
+| `chat_open`      | BOOLEAN      | Whether chat thread is active (default: false)      |
+| `shift_booked`   | BOOLEAN      | Whether a shift has been booked (default: false)    |
+| `shift_scheduled`| BOOLEAN      | Whether a shift is scheduled (default: false)       |
+| `saved_for_later`| BOOLEAN      | Whether retailer saved worker for later (default: false) |
+| `created_at`     | TIMESTAMPTZ  | When connection was first created                   |
+| `updated_at`     | TIMESTAMPTZ  | When connection was last updated (auto-trigger)     |
 
 
 **Status Values:**
 
 
-| Status           | Description                         |
-| ---------------- | ----------------------------------- |
-| `viewed`         | Retailer saw the worker profile     |
-| `liked`          | Retailer liked/favorited the worker |
-| `invited`        | Retailer sent connection invite     |
-| `connected`      | Worker accepted the connection      |
-| `not_interested` | Retailer marked as not interested   |
+| Status           | Description                                    |
+| ---------------- | ---------------------------------------------- |
+| `liked`          | Retailer liked/favorited the worker            |
+| `invited`        | Retailer sent connection invite, awaiting response |
+| `accepted`       | Worker accepted the connection                 |
+| `not_interested` | Retailer marked as not interested              |
+| `removed`        | Retailer removed the connection                |
 
+
+**Status Flow Diagram:**
+
+```
+                    ┌─────────────────────────────────────────────────────────────┐
+                    │                    STATUS FLOW                               │
+                    └─────────────────────────────────────────────────────────────┘
+
+                                         ┌─────────┐
+                                         │  LIKED  │ ← Initial state (retailer likes profile)
+                                         └────┬────┘
+                                              │
+                         ┌────────────────────┼────────────────────┐
+                         │                    │                    │
+                         ▼                    ▼                    ▼
+                ┌────────────────┐    ┌────────────────┐    ┌────────────────┐
+                │ saved_for_later│    │    INVITED     │    │ not_interested │
+                │    = true      │    │ (invite sent)  │    │   or removed   │
+                └────────────────┘    └───────┬────────┘    └────────────────┘
+                                              │
+                         ┌────────────────────┼────────────────────┐
+                         │                    │                    │
+                         ▼                    ▼                    ▼
+                ┌────────────────┐    ┌────────────────┐    ┌────────────────┐
+                │  No connection │    │    ACCEPTED    │    │ not_interested │
+                │   (declined)   │    │ connected=true │    │   (declined)   │
+                └────────────────┘    └───────┬────────┘    └────────────────┘
+                                              │
+                         ┌────────────────────┼────────────────────┐
+                         │                    │                    │
+                         ▼                    ▼                    ▼
+                ┌────────────────┐    ┌────────────────┐    ┌────────────────┐
+                │   chat_open    │    │  Chat closed   │    │ saved_for_later│
+                │    = false     │    │ (not engaging) │    │    = true      │
+                └────────────────┘    └────────────────┘    └───────┬────────┘
+                                                                    │
+                                              ┌─────────────────────┘
+                                              │
+                                              ▼
+                                      ┌────────────────┐
+                                      │   chat_open    │
+                                      │    = true      │
+                                      └───────┬────────┘
+                                              │
+                         ┌────────────────────┼────────────────────┐
+                         │                    │                    │
+                         ▼                    ▼                    ▼
+                ┌────────────────┐    ┌────────────────┐    ┌────────────────┐
+                │  Conversation  │    │  shift_booked  │    │ Chat stalled   │
+                │   ongoing      │    │    = true      │    │ (no booking)   │
+                └────────────────┘    └───────┬────────┘    └────────────────┘
+                                              │
+                                              ▼
+                                      ┌────────────────┐
+                                      │shift_scheduled │
+                                      │    = true      │
+                                      └────────────────┘
+```
+
+**Boolean Flag Combinations (Demo Data):**
+
+| Worker Range | status | connected | chat_open | shift_booked | shift_scheduled | saved_for_later |
+| ------------ | ------ | --------- | --------- | ------------ | --------------- | --------------- |
+| Workers 0-2  | accepted | true | true | true | true | false |
+| Workers 3-4  | accepted | true | true | true | false | false |
+| Workers 5-16 | accepted | true | true | false | false | false |
+| Workers 17-33| accepted | true | false | false | false | varies |
+| Workers 34-42| liked | false | false | false | false | true |
+
+**Demo Data Distribution (43 workers across 4 Southwest markets):**
+
+- 100% invited (43)
+- 79% connected (34)
+- 40% chat_open (17)
+- 12% shift_booked (5)
+- 7% shift_scheduled (3)
+- 42% saved_for_later (18)
 
 **Constraints:**
 
-- Unique constraint on `worker_id` (one connection record per worker)
-- RLS enabled with full anon access (select/insert/update/delete)
-- Indexes on `worker_id`, `market`, `status`, `created_at`
+- No foreign key constraint (worker_id is reference only)
+- RLS disabled with full anon/authenticated access
+- Indexes on `worker_id`, `market`, `status`, `chat_open`
 
 ### Milestone 4a: In-Platform Chat
 
@@ -206,6 +288,15 @@ Retailer and worker communicate directly within Reflex. AI may synthesize or fac
 | **Considerations** | Need conversation prompts/templates; AI synthesis of brand-worker comms TBD; moderation/safety guardrails                         |
 | **Risks**          | Off-platform leakage still possible (phone, email exchange); chat fatigue if too many messages; privacy concerns                  |
 | **AI**             | N/A                                                                                                                               |
+
+
+**Chat Tab Implementation:**
+
+- 19 hardcoded conversations with unique scenarios (not Supabase-driven)
+- iMessage-style UI: blue outgoing (#007AFF), gray incoming (#E9E9EB), gray background (#f5f5f5)
+- Name format in messages list: "First L." (e.g., "Olivia L.")
+- Conversation badges: "Shift Scheduled", "Shift Booked"
+- Scenarios: intro only, job details + shift booked, not interested in FT, negotiating rate, plus varied lengths
 
 
 ### Milestone 4b: Book a Shift (Cahootz)
@@ -410,15 +501,18 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     │  │ {N} store locations        │ uniqueStoreCount                               │    │
     │  └────────────────────────────┴────────────────────────────────────────────────┘    │
     │                                                                                     │
-    │  Achievement Chips (conditional):                                                   │
-    │  ┌────────────────────────────┬────────────────────────────────────────────────┐    │
-    │  │ 100% On-Time               │ tardyRatio starts with "0 /"                   │    │
-    │  │ Consistently Punctual      │ tardyPercent < 10% (but not 0)                 │    │
-    │  │ Exceptional Commitment     │ urgentCancelPercent < 5%                       │    │
-    │  │ 0 Call-Outs                │ urgentCancelRatio starts with "0 /"            │    │
-    │  │ 90% Favorite Rating       │ storeFavoriteCount >= 89% of uniqueStoreCount  │    │
-    │  │ 95% Invite Back Rate      │ invitedBackStores >= 94% of uniqueStoreCount   │    │
-    │  └────────────────────────────┴────────────────────────────────────────────────┘    │
+    │  Achievement Tags (conditional, tag-sm with left icon):                             │
+    │  ┌────────────────────────────┬──────────────────────┬─────────────────────────┐    │
+    │  │ Chip                       │ Variant              │ Condition               │    │
+    │  ├────────────────────────────┼──────────────────────┼─────────────────────────┤    │
+    │  │ ❤️ Market Favorite         │ tag-green            │ marketFavorite: true    │    │
+    │  │ 🕐 100% On-Time            │ tag-green            │ tardyRatio = "0 /..."   │    │
+    │  │ 🕐 X% On-Time              │ tag-green-light      │ tardyPercent < 10%      │    │
+    │  │ ✨ Exceptional Commitment  │ tag-green-light      │ urgentCancelPercent < 5%│    │
+    │  │ ✓ 0 Call-Outs             │ tag-green            │ urgentCancelRatio="0/." │    │
+    │  │ ❤️ X% Favorite Rating      │ tag-green            │ storeFavorite >= 89%    │    │
+    │  │ 👤 X% Invite Back Rate     │ tag-green-light      │ invitedBack >= 94%      │    │
+    │  └────────────────────────────┴──────────────────────┴─────────────────────────┘    │
     └─────────────────────────────────────────────────────────────────────────────────────┘
                                                   │
                                                   ▼
@@ -447,25 +541,25 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     ┌─────────────────────────────────────────────────────────────────────────────────────┐
     │                   WORKER_CONNECTIONS TABLE (Supabase)                               │
     │                                                                                     │
-    │   Tracks retailer interactions with worker profiles                                 │
+    │   Tracks retailer interactions. Data loaded in Connections tab via Supabase.        │
     │                                                                                     │
     │   ┌─────────────────────────────────────────────────────────────────────────┐       │
     │   │  Status Flow:                                                           │       │
     │   │                                                                         │       │
-    │   │  viewed → liked → invited → connected                                   │       │
-    │   │     │                                                                   │       │
-    │   │     └──→ not_interested                                                 │       │
+    │   │  liked → invited → accepted / not_interested / removed                  │       │
+    │   │                                                                         │       │
+    │   │  Boolean Flags: invited → connected → chat_open → shift_booked → shift_scheduled
     │   └─────────────────────────────────────────────────────────────────────────┘       │
     │                                                                                     │
-    │   On worker card view:    INSERT { status: 'viewed' }                               │
-    │   On heart/like click:    UPDATE { status: 'liked' }                                │
-    │   On "Connect" click:     UPDATE { status: 'invited' }                              │
-    │   On worker acceptance:   UPDATE { status: 'connected' }                            │
-    │   On "Not interested":    UPDATE { status: 'not_interested' }                       │
+    │   Connections Tab: Shows workers with filters by market & status                    │
+    │   Chat Tab: Shows workers where chat_open=true, linked via chat_id                  │
+    │   Chat button on Connections tab navigates to Chat tab with chat_id preselected     │
+    │                                                                                     │
+    │   chat_id: Unique thread ID (e.g., "chat-maria") links Connections to Chat          │
     │                                                                                     │
     └─────────────────────────────────────────┬───────────────────────────────────────────┘
                                               │
-                                          │  (future milestones - NOT YET IMPLEMENTED)
+                                          │  (Chat tab implemented - loads from worker_connections where chat_open=true)
                                           │
                     ┌─────────────────────┴─────────────────────┐
                     │                                           │
@@ -692,7 +786,9 @@ Worker-specific shift booking flow:
 | **Results**                         |                                                                                                                                          |
 | `WorkerCardTeaser`                  | Worker cards in results/sidebar                                                                                                          |
 | `WorkerCardHeader`                  | Shared header with avatar, name, badges                                                                                                  |
-| `.tag.tag-green.tag-sm`             | Shift Verified badge                                                                                                                     |
+| `WorkerAchievementChips`            | Achievement tags with icons (green/green-light variants)                                                                                 |
+| `.tag.tag-blue-light.tag-md`        | Shift Verified badge (with BadgeCheck icon, blue-100 bg)                                                                                 |
+| `.tag.tag-blue.tag-md`              | Actively Looking badge (with Search icon)                                                                                                |
 | `.type-section-header-lg`           | "We found N Reflexers" heading                                                                                                           |
 | `.type-section-header-sm`           | "What retailers are saying..." label                                                                                                     |
 | `.type-body-md`                     | Worker summary text                                                                                                                      |

@@ -48,41 +48,43 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
   return (
     <div className="worker-card-header">
       <div className="worker-header-content">
-        <div className="worker-avatar" style={{ width: avatarSize, height: avatarSize }}>
-          {photoUrl && !imgError ? (
-            <img
-              src={photoUrl}
-              alt={worker.name}
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <span>{initials}</span>
-          )}
-        </div>
+        <div className="worker-header-left">
+          <div className="worker-avatar" style={{ width: avatarSize, height: avatarSize }}>
+            {photoUrl && !imgError ? (
+              <img
+                src={photoUrl}
+                alt={worker.name}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <span>{initials}</span>
+            )}
+          </div>
 
-        <div className="worker-name-section">
-          <h3 className="worker-header-name">{displayName}</h3>
-          {marketDisplay && (
-            <div className="worker-header-location">
-              <MapPin size={14} />
-              <span>{marketDisplay}</span>
-            </div>
-          )}
+          <div className="worker-name-section">
+            <h3 className="worker-header-name">{displayName}</h3>
+            {marketDisplay && (
+              <div className="worker-header-location">
+                <MapPin size={14} />
+                <span>{marketDisplay}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {hasTags && (
           <div className="worker-header-tags">
             {worker.shiftVerified && (
-              <span className="tag tag-green tag-sm">
+              <span className="tag tag-blue-light tag-sm">
                 <span className="tag-icon"><BadgeCheck size={12} /></span>
                 <span className="tag-text">Shift Verified</span>
               </span>
             )}
 
             {showActivelyLooking && worker.activelyLooking && (
-              <span className="tag tag-lite-gray tag-sm">
+              <span className="tag tag-blue tag-sm">
                 <span className="tag-icon"><Search size={12} /></span>
-                <span className="tag-text">Actively looking</span>
+                <span className="tag-text">Actively Looking</span>
               </span>
             )}
           </div>

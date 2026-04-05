@@ -34,6 +34,11 @@ import {
   UserPlus,
   ThumbsUp,
   XCircle,
+  Award,
+  Trophy,
+  HeartPlus,
+  UserStar,
+  ClockCheck,
 } from "lucide-react";
 import { SAMPLE_WORKERS } from "../../../data/workers";
 import { V2Main } from "./V2Main";
@@ -44,7 +49,8 @@ import { WorkerAchievementChips } from "../../../components/Workers/WorkerAchiev
 import type { EmploymentType, AvailabilityHours } from "./V2EmploymentSelector";
 import type { MatchedWorker, ChatMessage, WorkerProfile } from "../../../types";
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
-import { fetchWorkersByMarketAsProfiles, fetchRetailers } from "../../../services/supabase";
+import { fetchWorkersByMarketAsProfiles, fetchRetailers, fetchWorkerConnections } from "../../../services/supabase";
+import type { WorkerConnectionWithWorker } from "../../../services/supabase";
 import type { Retailer } from "../../../services/supabase";
 import ReactMarkdown from "react-markdown";
 import chatbotAvatarUrl from "../../../../../assets/logo-and-backgrounds/chatbot.svg?url";
@@ -696,6 +702,12 @@ export function V2TalentCentric({
   const [activeChatId, setActiveChatId] = useState<string>("maria");
   const [chatInputValue, setChatInputValue] = useState("");
 
+  // Worker connections from Supabase
+  const [workerConnections, setWorkerConnections] = useState<WorkerConnectionWithWorker[]>([]);
+  const [isLoadingConnections, setIsLoadingConnections] = useState(false);
+  const [connectionsMarketFilter, setConnectionsMarketFilter] = useState<string | null>(null);
+  const [connectionsStatusFilter, setConnectionsStatusFilter] = useState<string | null>(null);
+
   // Search matching brands - only match from start of name
   const searchResults = useMemo(() => {
     if (!brandSearch.trim()) return null;
@@ -909,6 +921,23 @@ export function V2TalentCentric({
         console.error("Error fetching retailers:", error);
       });
   }, []);
+
+  // Fetch worker connections when connections tab is opened
+  useEffect(() => {
+    if (activeTab === "connections" && workerConnections.length === 0) {
+      setIsLoadingConnections(true);
+      fetchWorkerConnections()
+        .then((data) => {
+          setWorkerConnections(data);
+        })
+        .catch((error) => {
+          console.error("Error fetching worker connections:", error);
+        })
+        .finally(() => {
+          setIsLoadingConnections(false);
+        });
+    }
+  }, [activeTab, workerConnections.length]);
 
   // CYOA flow: Get next incomplete preference section based on starting point
   // employment → brands → roles (experience)
@@ -2405,133 +2434,635 @@ export function V2TalentCentric({
 
       {/* Connections Tab - Shows workers from worker_connections table */}
       {activeTab === "connections" && (() => {
-        // Connection data with chat IDs matching CHAT_CONVERSATIONS
-        const connections = [
-          { id: "maria", initials: "MJ", name: "Maria Johnson", market: "Austin, TX", shifts: 47, stores: 12, verified: true, status: "connected" as const, chatId: "maria" },
-          { id: "james", initials: "JD", name: "James Davis", market: "Austin, TX", shifts: 32, stores: 8, verified: true, status: "invited" as const, chatId: "james" },
-          { id: "sarah", initials: "SK", name: "Sarah Kim", market: "Austin, TX", shifts: 18, stores: 5, verified: false, status: "invited" as const, chatId: "sarah" },
-          { id: "tyler", initials: "TR", name: "Tyler Rodriguez", market: "Austin, TX", shifts: 56, stores: 15, verified: true, status: "liked" as const, chatId: "tyler" },
-          { id: "ashley", initials: "AM", name: "Ashley Miller", market: "Denver, CO", shifts: 24, stores: 7, verified: false, status: "liked" as const, chatId: null },
-          { id: "chris", initials: "CW", name: "Chris Wilson", market: "Houston, TX", shifts: 41, stores: 11, verified: true, status: "viewed" as const, chatId: null },
-          { id: "emma", initials: "EB", name: "Emma Brown", market: "Dallas, TX", shifts: 12, stores: 4, verified: false, status: "viewed" as const, chatId: null },
-          { id: "david", initials: "DL", name: "David Lee", market: "Austin, TX", shifts: 8, stores: 3, verified: false, status: "not-interested" as const, chatId: null },
-        ];
-
-        const statusIcons = {
-          connected: <Link size={14} />,
-          invited: <UserPlus size={14} />,
+        // Status icons and labels based on new schema
+        const statusIcons: Record<string, React.ReactNode> = {
           liked: <ThumbsUp size={14} />,
-          viewed: <Eye size={14} />,
-          "not-interested": <XCircle size={14} />,
+          invited: <UserPlus size={14} />,
+          accepted: <Link size={14} />,
+          not_interested: <XCircle size={14} />,
+          removed: <XCircle size={14} />,
         };
 
-        const statusLabels = {
-          connected: "Connected",
+        const statusLabels: Record<string, string> = {
+          liked: "Saved",
           invited: "Invited",
-          liked: "Liked",
-          viewed: "Viewed",
-          "not-interested": "Not Interested",
+          accepted: "Connected",
+          not_interested: "Not Interested",
+          removed: "Removed",
         };
 
         // Unique markets for filter
-        const markets = [...new Set(connections.map(c => c.market))];
+        const markets = [...new Set(workerConnections.map(c => c.market))].sort();
+
+        // Filter connections based on selected filters
+        const filteredConnections = workerConnections.filter(c => {
+          const marketMatch = !connectionsMarketFilter || c.market === connectionsMarketFilter;
+          const statusMatch = !connectionsStatusFilter || c.status === connectionsStatusFilter ||
+            (connectionsStatusFilter === "chat_open" && c.chat_open) ||
+            (connectionsStatusFilter === "shift_scheduled" && c.shift_scheduled) ||
+            (connectionsStatusFilter === "shift_booked" && c.shift_booked) ||
+            (connectionsStatusFilter === "saved_for_later" && c.saved_for_later);
+          return marketMatch && statusMatch;
+        });
+
+        // Status counts
+        const statusCounts = {
+          all: workerConnections.length,
+          chat_open: workerConnections.filter(c => c.chat_open).length,
+          accepted: workerConnections.filter(c => c.status === "accepted").length,
+          invited: workerConnections.filter(c => c.status === "invited").length,
+          liked: workerConnections.filter(c => c.status === "liked").length,
+          shift_scheduled: workerConnections.filter(c => c.shift_scheduled).length,
+          shift_booked: workerConnections.filter(c => c.shift_booked).length,
+          saved_for_later: workerConnections.filter(c => c.saved_for_later).length,
+          not_interested: workerConnections.filter(c => c.status === "not_interested").length,
+        };
+
+        // Helper to get initials
+        const getInitials = (name: string) => {
+          const parts = name.split(" ");
+          return parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : parts[0].slice(0, 2);
+        };
 
         return (
           <div className="v2-connections-container">
             <div className="v2-connections-header">
               <h2 className="type-section-header-lg">Your Connections</h2>
               <p className="v2-connections-subtitle">
-                Track workers you've viewed, liked, invited, or connected with
+                Track workers you've saved, invited, or connected with
               </p>
             </div>
 
-            {/* Market Filter Pills */}
-            <div className="v2-connection-filters v2-market-filters">
-              <span className="v2-filter-label">Markets:</span>
-              <button className="v2-filter-pill active">
-                All Markets
-              </button>
-              {markets.map(market => (
-                <button key={market} className="v2-filter-pill">
-                  {market}
-                </button>
-              ))}
-            </div>
-
-            {/* Connection Status Filter Pills */}
-            <div className="v2-connection-filters">
-              <span className="v2-filter-label">Status:</span>
-              <button className="v2-filter-pill active">
-                All <span className="v2-filter-count">{connections.length}</span>
-              </button>
-              <button className="v2-filter-pill">
-                <Eye size={14} /> Viewed <span className="v2-filter-count">{connections.filter(c => c.status === "viewed").length}</span>
-              </button>
-              <button className="v2-filter-pill">
-                <ThumbsUp size={14} /> Liked <span className="v2-filter-count">{connections.filter(c => c.status === "liked").length}</span>
-              </button>
-              <button className="v2-filter-pill">
-                <UserPlus size={14} /> Invited <span className="v2-filter-count">{connections.filter(c => c.status === "invited").length}</span>
-              </button>
-              <button className="v2-filter-pill">
-                <Link size={14} /> Connected <span className="v2-filter-count">{connections.filter(c => c.status === "connected").length}</span>
-              </button>
-              <button className="v2-filter-pill">
-                <XCircle size={14} /> Not Interested <span className="v2-filter-count">{connections.filter(c => c.status === "not-interested").length}</span>
-              </button>
-            </div>
-
-            {/* Connections List */}
-            <div className="v2-connections-list">
-              {connections.map((connection) => (
-                <div
-                  key={connection.id}
-                  className={`v2-connection-card ${connection.status === "not-interested" ? "not-interested" : ""}`}
-                >
-                  <div className="v2-connection-avatar">
-                    <span>{connection.initials}</span>
-                  </div>
-                  <div className="v2-connection-info">
-                    <div className="v2-connection-name-row">
-                      <span className="v2-connection-name">{connection.name}</span>
-                      {connection.verified && <BadgeCheck size={16} className="v2-teaser-verified" />}
-                    </div>
-                    <span className="v2-connection-market">{connection.market}</span>
-                    <div className="v2-connection-stats">
-                      <span>{connection.shifts} shifts</span>
-                      <span>{connection.stores} stores</span>
-                    </div>
-                  </div>
-                  <div className={`v2-connection-status ${connection.status}`}>
-                    {statusIcons[connection.status]} {statusLabels[connection.status]}
-                  </div>
-                  {connection.status === "not-interested" ? (
-                    <button className="v2-connection-action secondary">
-                      Undo
-                    </button>
-                  ) : (
+            {isLoadingConnections ? (
+              <div className="v2-connections-loading">Loading connections...</div>
+            ) : (
+              <>
+                {/* Market Filter Pills */}
+                <div className="v2-connection-filters v2-market-filters">
+                  <span className="v2-filter-label">Markets:</span>
+                  <button
+                    className={`v2-filter-pill ${!connectionsMarketFilter ? 'active' : ''}`}
+                    onClick={() => setConnectionsMarketFilter(null)}
+                  >
+                    All Markets
+                  </button>
+                  {markets.map(market => (
                     <button
-                      className="v2-connection-action"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (connection.chatId) {
-                          setActiveChatId(connection.chatId);
-                        }
-                        setActiveTab("chat");
-                      }}
+                      key={market}
+                      className={`v2-filter-pill ${connectionsMarketFilter === market ? 'active' : ''}`}
+                      onClick={() => setConnectionsMarketFilter(market)}
                     >
-                      <MessageCircle size={16} /> Chat
+                      {market}
                     </button>
+                  ))}
+                </div>
+
+                {/* Connection Status Filter Pills */}
+                <div className="v2-connection-filters">
+                  <span className="v2-filter-label">Status:</span>
+                  <button
+                    className={`v2-filter-pill ${!connectionsStatusFilter ? 'active' : ''}`}
+                    onClick={() => setConnectionsStatusFilter(null)}
+                  >
+                    All <span className="v2-filter-count">{statusCounts.all}</span>
+                  </button>
+                  <button
+                    className={`v2-filter-pill ${connectionsStatusFilter === 'chat_open' ? 'active' : ''}`}
+                    onClick={() => setConnectionsStatusFilter('chat_open')}
+                  >
+                    <MessageCircle size={14} /> Chat Open <span className="v2-filter-count">{statusCounts.chat_open}</span>
+                  </button>
+                  <button
+                    className={`v2-filter-pill ${connectionsStatusFilter === 'shift_scheduled' ? 'active' : ''}`}
+                    onClick={() => setConnectionsStatusFilter('shift_scheduled')}
+                  >
+                    <CalendarDays size={14} /> Scheduled <span className="v2-filter-count">{statusCounts.shift_scheduled}</span>
+                  </button>
+                  <button
+                    className={`v2-filter-pill ${connectionsStatusFilter === 'shift_booked' ? 'active' : ''}`}
+                    onClick={() => setConnectionsStatusFilter('shift_booked')}
+                  >
+                    <CalendarClock size={14} /> Booked <span className="v2-filter-count">{statusCounts.shift_booked}</span>
+                  </button>
+                  <button
+                    className={`v2-filter-pill ${connectionsStatusFilter === 'saved_for_later' ? 'active' : ''}`}
+                    onClick={() => setConnectionsStatusFilter('saved_for_later')}
+                  >
+                    <Heart size={14} /> Saved <span className="v2-filter-count">{statusCounts.saved_for_later}</span>
+                  </button>
+                  <button
+                    className={`v2-filter-pill ${connectionsStatusFilter === 'not_interested' ? 'active' : ''}`}
+                    onClick={() => setConnectionsStatusFilter('not_interested')}
+                  >
+                    <XCircle size={14} /> Not Interested <span className="v2-filter-count">{statusCounts.not_interested}</span>
+                  </button>
+                </div>
+
+                {/* Connections List */}
+                <div className="v2-connections-list">
+                  {filteredConnections.length === 0 ? (
+                    <div className="v2-connections-empty">No connections found matching your filters.</div>
+                  ) : (
+                    filteredConnections.map((connection) => {
+                      const worker = connection.worker;
+                      const name = worker?.name || "Unknown Worker";
+                      const initials = getInitials(name);
+                      const isNotInterested = connection.status === "not_interested" || connection.status === "removed";
+
+                      // Get brands worked (limit to 3)
+                      const brandsWorked = worker?.brands_worked || [];
+                      const displayBrands = brandsWorked.slice(0, 3);
+                      const moreBrandsCount = brandsWorked.length - 3;
+
+                      // Get role counts from shift_experience
+                      const shiftExperience = worker?.shift_experience || {};
+                      const roleEntries = Object.entries(shiftExperience).sort((a, b) => (b[1] as number) - (a[1] as number));
+                      const displayRoles = roleEntries.slice(0, 3);
+                      const moreRolesCount = roleEntries.length - 3;
+
+                      // Calculate achievement chips (green only for connection list)
+                      type AchievementChip = { text: string; icon: React.ReactNode };
+                      const achievementChips: AchievementChip[] = [];
+
+                      // Market Favorite
+                      if (worker?.market_favorite) {
+                        achievementChips.push({ text: 'Market Favorite', icon: <Heart size={14} /> });
+                      }
+
+                      // 100% On-Time (tardy_percent === 0)
+                      if (worker?.tardy_percent === 0) {
+                        achievementChips.push({ text: '100% On-Time', icon: <Award size={14} /> });
+                      }
+
+                      // 0 Call-Outs (urgent_cancel_percent === 0)
+                      if (worker?.urgent_cancel_percent === 0) {
+                        achievementChips.push({ text: '0 Call-Outs', icon: <Trophy size={14} /> });
+                      }
+
+                      // Favorite Rating (store_favorite_count / unique_store_count >= 89%)
+                      const storeFavCount = worker?.store_favorite_count || 0;
+                      const uniqueStores = worker?.unique_store_count || 0;
+                      if (uniqueStores > 0) {
+                        const favoritePercent = Math.min((storeFavCount / uniqueStores) * 100, 100);
+                        if (favoritePercent >= 89) {
+                          achievementChips.push({ text: `${Math.round(favoritePercent)}% Favorite`, icon: <HeartPlus size={14} /> });
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={connection.id}
+                          className={`v2-connection-card ${isNotInterested ? "not-interested" : ""}`}
+                        >
+                          <div className="v2-connection-avatar">
+                            {worker?.photo ? (
+                              <img src={worker.photo} alt={name} />
+                            ) : (
+                              <span>{initials}</span>
+                            )}
+                          </div>
+                          <div className="v2-connection-info">
+                            <div className="v2-connection-name-row">
+                              <span className="v2-connection-name">{name}</span>
+                              {worker?.shift_verified && <BadgeCheck size={16} className="v2-teaser-verified" />}
+                            </div>
+                            <span className="v2-connection-market">{connection.market}</span>
+                            <div className="v2-connection-stats">
+                              <span>{worker?.shifts_on_reflex || 0} shifts</span>
+                              <span>{worker?.unique_store_count || 0} stores</span>
+                            </div>
+
+                            {/* Brands worked */}
+                            {displayBrands.length > 0 && (
+                              <div className="v2-connection-brands">
+                                {displayBrands.map((brand: { name: string; tier?: string }, idx: number) => (
+                                  <span key={idx} className="tag tag-dark-gray tag-sm">
+                                    <span className="tag-text">{brand.name}</span>
+                                  </span>
+                                ))}
+                                {moreBrandsCount > 0 && (
+                                  <span className="tag tag-dark-gray tag-sm">
+                                    <span className="tag-text">+{moreBrandsCount}</span>
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Roles with counts */}
+                            {displayRoles.length > 0 && (
+                              <div className="v2-connection-roles">
+                                {displayRoles.map(([role, count], idx) => (
+                                  <span key={idx} className="tag tag-stroke tag-sm">
+                                    <span className="tag-text">{role}</span>
+                                    <span className="tag-counter">{count as number}</span>
+                                  </span>
+                                ))}
+                                {moreRolesCount > 0 && (
+                                  <span className="tag tag-stroke tag-sm">
+                                    <span className="tag-text">+{moreRolesCount}</span>
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Achievement tags (green only) */}
+                            {achievementChips.length > 0 && (
+                              <div className="v2-connection-achievements">
+                                {achievementChips.map((chip, idx) => (
+                                  <span key={idx} className="tag tag-green tag-sm">
+                                    <span className="tag-icon">{chip.icon}</span>
+                                    <span className="tag-text">{chip.text}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Status indicators */}
+                            <div className="v2-connection-indicators">
+                              {connection.shift_scheduled && <span className="v2-indicator scheduled">Shift Scheduled</span>}
+                              {connection.shift_booked && !connection.shift_scheduled && <span className="v2-indicator booked">Shift Booked</span>}
+                              {connection.chat_open && <span className="v2-indicator chat">Chat Open</span>}
+                              {connection.saved_for_later && <span className="v2-indicator saved">Saved</span>}
+                            </div>
+                          </div>
+                          <div className={`v2-connection-status ${connection.status}`}>
+                            {statusIcons[connection.status]} {statusLabels[connection.status]}
+                          </div>
+                          {isNotInterested ? (
+                            <button className="v2-connection-action secondary">
+                              Undo
+                            </button>
+                          ) : (
+                            <button
+                              className="v2-connection-action"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (connection.chat_id) {
+                                  setActiveChatId(connection.chat_id);
+                                }
+                                setActiveTab("chat");
+                              }}
+                            >
+                              <MessageCircle size={16} /> Chat
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })
                   )}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </div>
         );
       })()}
 
       {/* Chat Tab - SMS-style messaging interface */}
       {activeTab === "chat" && (() => {
+        // Get worker photos from workerConnections for chat avatars
+        const getWorkerPhoto = (chatId: string) => {
+          const connection = workerConnections.find(c => c.chat_id === chatId);
+          return connection?.worker?.photo || null;
+        };
+
+        // Format name as "First L."
+        const formatName = (fullName: string) => {
+          const parts = fullName.split(" ");
+          if (parts.length > 1) {
+            return `${parts[0]} ${parts[parts.length - 1][0]}.`;
+          }
+          return parts[0];
+        };
+
+        // Get initials from name
+        const getInitials = (name: string) => {
+          const parts = name.split(" ");
+          return parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : parts[0].slice(0, 2);
+        };
+
+        // 19 unique conversations with varying scenarios
+        const CHAT_CONVERSATIONS = [
+          // 1. Shift booked - coordinated a shift
+          {
+            id: "chat-jasmin",
+            fullName: "Jasmin Zamora",
+            time: "2m ago",
+            isOnline: true,
+            hasUnread: true,
+            badge: "booked" as const,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Jasmin! We loved having you on your last shift. We're looking for someone permanent for our weekend team.", time: "10:15 AM" },
+              { type: "incoming" as const, text: "Hi! That's so nice to hear. I really enjoyed working there too. What kind of hours are you thinking?", time: "10:22 AM" },
+              { type: "outgoing" as const, text: "We're looking at Saturdays and Sundays, 10am-6pm. $19/hr to start with room to grow. Would that work for you?", time: "10:25 AM" },
+              { type: "incoming" as const, text: "That actually sounds perfect! Weekends work great for my school schedule.", time: "10:31 AM" },
+              { type: "outgoing" as const, text: "Amazing! Want to come in this Saturday for a trial shift? We can see how it goes and talk more about the permanent role.", time: "10:33 AM" },
+              { type: "incoming" as const, text: "Yes! I just booked it through the app. See you Saturday at 10!", time: "10:35 AM" },
+            ],
+          },
+          // 2. Just introducing themselves
+          {
+            id: "chat-marcus",
+            fullName: "Marcus Thompson",
+            time: "15m ago",
+            isOnline: true,
+            hasUnread: true,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Marcus! Your profile caught our eye - love seeing someone with experience at both Nike and Foot Locker. We're hiring for a sales associate role.", time: "11:42 AM" },
+              { type: "incoming" as const, text: "Hey! Thanks for reaching out. I've been looking for something more stable than gig work.", time: "11:45 AM" },
+            ],
+          },
+          // 3. Not interested in full-time right now
+          {
+            id: "chat-sofia",
+            fullName: "Sofia Rodriguez",
+            time: "1h ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Sofia! We've been really impressed with your work on Reflex shifts. Would you be interested in a permanent position with us?", time: "9:00 AM" },
+              { type: "incoming" as const, text: "Thank you! I appreciate the offer. Can I ask what the schedule would look like?", time: "9:15 AM" },
+              { type: "outgoing" as const, text: "We're pretty flexible! Could be anywhere from 25-40 hours depending on what works for you. Mix of weekdays and weekends.", time: "9:18 AM" },
+              { type: "incoming" as const, text: "I really appreciate you thinking of me, but I'm actually in nursing school right now and the flex schedule is what makes Reflex work for me.", time: "9:25 AM" },
+              { type: "outgoing" as const, text: "Totally understand! School comes first. We'd love to have you back for shifts whenever you're available.", time: "9:28 AM" },
+              { type: "incoming" as const, text: "For sure! I'll definitely keep booking shifts when I can. Thanks for being so understanding!", time: "9:30 AM" },
+            ],
+          },
+          // 4. Negotiating higher hourly rate
+          {
+            id: "chat-devon",
+            fullName: "Devon Williams",
+            time: "2h ago",
+            isOnline: false,
+            hasUnread: true,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Devon! Your track record on Reflex is exceptional - 47 shifts with a 100% on-time rating. We'd love to bring you on full-time.", time: "Yesterday 4:30 PM" },
+              { type: "incoming" as const, text: "I'm definitely interested! What's the compensation looking like?", time: "Yesterday 4:45 PM" },
+              { type: "outgoing" as const, text: "We're offering $17/hr for the Sales Associate role, with benefits after 90 days including health insurance and 401k.", time: "Yesterday 4:48 PM" },
+              { type: "incoming" as const, text: "I appreciate the offer. With my experience level - I've been doing retail for 4 years and have keyholder experience - I was hoping for something closer to $20/hr.", time: "Yesterday 5:02 PM" },
+              { type: "outgoing" as const, text: "That's fair feedback. Let me talk to my district manager and see what we can do. Your experience definitely warrants a conversation about that.", time: "Yesterday 5:10 PM" },
+              { type: "incoming" as const, text: "I appreciate you going to bat for me. I'm really interested in the role - the team seems great and the location is perfect for me.", time: "Yesterday 5:15 PM" },
+              { type: "outgoing" as const, text: "Good news! We can do $19/hr given your experience, and there's a clear path to $21 after 6 months with a performance review.", time: "Today 9:00 AM" },
+              { type: "incoming" as const, text: "That works for me! When can we make it official?", time: "Today 9:15 AM" },
+            ],
+          },
+          // 5. Shift scheduled - all set
+          {
+            id: "chat-jade",
+            fullName: "Jade Bishop",
+            time: "3h ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: "scheduled" as const,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Jade! Following up on our chat last week - we're excited to have you join the team!", time: "Mon 2:00 PM" },
+              { type: "incoming" as const, text: "So excited! Can't wait to get started.", time: "Mon 2:15 PM" },
+              { type: "outgoing" as const, text: "Your first official shift is scheduled for this Thursday at 9am. Come to the back entrance and ask for Mike - he'll get you set up with your uniform and do orientation.", time: "Mon 2:20 PM" },
+              { type: "incoming" as const, text: "Perfect! Should I bring anything specific?", time: "Mon 2:25 PM" },
+              { type: "outgoing" as const, text: "Just your ID for paperwork and comfortable shoes. We'll provide everything else!", time: "Mon 2:28 PM" },
+              { type: "incoming" as const, text: "Got it. See you Thursday!", time: "Mon 2:30 PM" },
+            ],
+          },
+          // 6. Discussing schedule flexibility
+          {
+            id: "chat-karina",
+            fullName: "Karina Gamboa",
+            time: "4h ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Karina! We noticed you've been picking up a lot of shifts with us. Interested in making it permanent?", time: "Yesterday 11:00 AM" },
+              { type: "incoming" as const, text: "Maybe! My main concern is flexibility. I have a 4-year-old and daycare pickup is at 5:30.", time: "Yesterday 11:30 AM" },
+              { type: "outgoing" as const, text: "We can definitely work with that! We could schedule you for morning shifts - 8am to 4:30pm would get you out in plenty of time.", time: "Yesterday 11:35 AM" },
+              { type: "incoming" as const, text: "That would be amazing actually. What about when she's sick or has doctor appointments?", time: "Yesterday 11:42 AM" },
+              { type: "outgoing" as const, text: "We have a pretty understanding team. As long as you give us notice, we can usually find coverage. Life happens!", time: "Yesterday 11:45 AM" },
+              { type: "incoming" as const, text: "This sounds really promising. Can I think about it and let you know by Friday?", time: "Yesterday 11:50 AM" },
+              { type: "outgoing" as const, text: "Absolutely! Take your time. Feel free to message me if you have any other questions.", time: "Yesterday 11:52 AM" },
+            ],
+          },
+          // 7. Asking about benefits
+          {
+            id: "chat-amira",
+            fullName: "Amira Talib",
+            time: "5h ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: "booked" as const,
+            messages: [
+              { type: "outgoing" as const, text: "Amira! We'd love to have you join us permanently. You've been one of our most requested workers on Reflex.", time: "Yesterday 2:00 PM" },
+              { type: "incoming" as const, text: "That means a lot! I do have some questions about benefits though.", time: "Yesterday 2:30 PM" },
+              { type: "outgoing" as const, text: "Of course! What would you like to know?", time: "Yesterday 2:32 PM" },
+              { type: "incoming" as const, text: "Mainly health insurance - is it available for part-time or only full-time? And how long until it kicks in?", time: "Yesterday 2:40 PM" },
+              { type: "outgoing" as const, text: "Great questions. Health insurance is available at 30+ hours/week and kicks in after 60 days. We also offer dental and vision.", time: "Yesterday 2:45 PM" },
+              { type: "incoming" as const, text: "What about PTO?", time: "Yesterday 2:48 PM" },
+              { type: "outgoing" as const, text: "You'd start accruing PTO immediately - works out to about 2 weeks per year for full-time. Plus you get your birthday off!", time: "Yesterday 2:52 PM" },
+              { type: "incoming" as const, text: "Birthday off is a nice touch! I'm interested. Let me book a shift so we can talk more in person.", time: "Yesterday 3:00 PM" },
+            ],
+          },
+          // 8. Short intro - just started chatting
+          {
+            id: "chat-teresa",
+            fullName: "Teresa Nguyen",
+            time: "Yesterday",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Teresa! Love your experience at Nordstrom. We're looking for someone with that elevated customer service background.", time: "Yesterday 10:00 AM" },
+            ],
+          },
+          // 9. Enthusiastic candidate asking lots of questions
+          {
+            id: "chat-alex",
+            fullName: "Alexandria Calzada",
+            time: "Yesterday",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Alexandria! We're building out our team and your profile really stood out.", time: "Mon 9:00 AM" },
+              { type: "incoming" as const, text: "Oh wow, thank you! I've been hoping to find something permanent. Tell me everything!", time: "Mon 9:30 AM" },
+              { type: "outgoing" as const, text: "Haha I love the enthusiasm! It's a Sales Associate role, $18/hr, mix of floor and cash register duties.", time: "Mon 9:35 AM" },
+              { type: "incoming" as const, text: "What's the team like? How many people work a typical shift?", time: "Mon 9:40 AM" },
+              { type: "outgoing" as const, text: "Usually 3-4 people on the floor plus a manager. Really collaborative team - we do a lot of cross-training.", time: "Mon 9:45 AM" },
+              { type: "incoming" as const, text: "And growth opportunities? I eventually want to move into management.", time: "Mon 9:48 AM" },
+              { type: "outgoing" as const, text: "Definitely! We promote from within. Our current assistant manager started as a seasonal hire 2 years ago.", time: "Mon 9:52 AM" },
+              { type: "incoming" as const, text: "This sounds perfect. What's the next step?", time: "Mon 9:55 AM" },
+              { type: "outgoing" as const, text: "Let's get you in for a shift so you can meet the team and see if it's a good fit. Can you book one this week?", time: "Mon 10:00 AM" },
+              { type: "incoming" as const, text: "On it!", time: "Mon 10:02 AM" },
+            ],
+          },
+          // 10. Discussing commute concerns
+          {
+            id: "chat-olivia",
+            fullName: "Olivia Little",
+            time: "Yesterday",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Olivia! We have an opening at our Domain location - thought you might be interested!", time: "Sun 3:00 PM" },
+              { type: "incoming" as const, text: "Hi! I might be, but I live down south. How far is the Domain from downtown?", time: "Sun 4:15 PM" },
+              { type: "outgoing" as const, text: "It's about 20-25 minutes from downtown, less if you're coming from the Mueller area. We do have a South Lamar location too if that's closer?", time: "Sun 4:20 PM" },
+              { type: "incoming" as const, text: "Oh I didn't know you had one there! That would be way better for me. Is that store hiring too?", time: "Sun 4:30 PM" },
+              { type: "outgoing" as const, text: "Let me check... yes! They need weekend help. Want me to connect you with that store manager?", time: "Sun 4:35 PM" },
+              { type: "incoming" as const, text: "That would be great, thank you!", time: "Sun 4:40 PM" },
+            ],
+          },
+          // 11. Former employee returning
+          {
+            id: "chat-paige",
+            fullName: "Paige Lemon",
+            time: "Yesterday",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Paige! Didn't you used to work for us a couple years ago?", time: "Sat 11:00 AM" },
+              { type: "incoming" as const, text: "Yes! At the old Barton Creek location before it closed. I loved working there.", time: "Sat 11:30 AM" },
+              { type: "outgoing" as const, text: "Well we'd love to have you back! We're at Domain now. Any interest in rejoining?", time: "Sat 11:35 AM" },
+              { type: "incoming" as const, text: "Honestly yes. I tried a desk job and missed retail. What's changed since I left?", time: "Sat 11:45 AM" },
+              { type: "outgoing" as const, text: "We revamped the scheduling system - it's way more flexible now. Pay went up too. And we finally got that inventory system you always complained about replaced!", time: "Sat 11:50 AM" },
+              { type: "incoming" as const, text: "Haha that inventory system was the WORST. Good to know! Let me think about it.", time: "Sat 12:00 PM" },
+            ],
+          },
+          // 12. Management candidate
+          {
+            id: "chat-katie",
+            fullName: "Katie Angell",
+            time: "Yesterday",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Katie, your keyholder experience caught my attention. We're actually looking for an assistant manager.", time: "Fri 2:00 PM" },
+              { type: "incoming" as const, text: "Really? I've been hoping to move up. What does the role involve?", time: "Fri 2:45 PM" },
+              { type: "outgoing" as const, text: "Opening/closing, managing the schedule, handling escalations, and you'd be backup for the store manager. Salary position.", time: "Fri 2:50 PM" },
+              { type: "incoming" as const, text: "What's the salary range?", time: "Fri 2:55 PM" },
+              { type: "outgoing" as const, text: "Starting at $52k with quarterly bonuses based on store performance. Plus full benefits package.", time: "Fri 3:00 PM" },
+              { type: "incoming" as const, text: "That's competitive. I'd like to learn more. Do you have time for a call?", time: "Fri 3:10 PM" },
+            ],
+          },
+          // 13. Quick yes
+          {
+            id: "chat-maya",
+            fullName: "Maya Brooks",
+            time: "2 days ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: "scheduled" as const,
+            messages: [
+              { type: "outgoing" as const, text: "Maya! We're hiring and you'd be perfect. Interested?", time: "Wed 4:00 PM" },
+              { type: "incoming" as const, text: "YES! When do I start?", time: "Wed 4:05 PM" },
+              { type: "outgoing" as const, text: "Haha love the energy! Let's get you scheduled for orientation next Monday. Can you do 9am?", time: "Wed 4:10 PM" },
+              { type: "incoming" as const, text: "I'll be there!", time: "Wed 4:12 PM" },
+            ],
+          },
+          // 14. Comparing to another offer
+          {
+            id: "chat-jordan",
+            fullName: "Jordan Park",
+            time: "2 days ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Jordan! Following up on our conversation about the full-time role. Any thoughts?", time: "Tue 10:00 AM" },
+              { type: "incoming" as const, text: "I'm actually weighing a couple options right now. Can you tell me more about what sets you apart?", time: "Tue 11:30 AM" },
+              { type: "outgoing" as const, text: "Fair question! We're known for our culture - very team-oriented, lots of cross-training opportunities. Our employee retention rate is one of the highest in the district.", time: "Tue 11:35 AM" },
+              { type: "incoming" as const, text: "What about schedule flexibility? The other place is offering set hours.", time: "Tue 11:40 AM" },
+              { type: "outgoing" as const, text: "We do rotating schedules, but you can set preferences. Many people like the variety, but I understand if you prefer consistency.", time: "Tue 11:45 AM" },
+              { type: "incoming" as const, text: "I'll factor that in. Appreciate the transparency!", time: "Tue 11:50 AM" },
+            ],
+          },
+          // 15. Seasonal to permanent conversion
+          {
+            id: "chat-riley",
+            fullName: "Riley Kim",
+            time: "2 days ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Riley! Holiday season is ending but we'd love to keep you on permanently. You've been amazing.", time: "Mon 1:00 PM" },
+              { type: "incoming" as const, text: "Aw thank you! I wasn't sure if that was an option.", time: "Mon 1:30 PM" },
+              { type: "outgoing" as const, text: "Definitely an option - we only convert about 20% of seasonal hires to permanent, and you made the cut!", time: "Mon 1:35 PM" },
+              { type: "incoming" as const, text: "That's so nice to hear. What would the hours look like after the holidays?", time: "Mon 1:40 PM" },
+              { type: "outgoing" as const, text: "It does slow down in January, so probably 25-30 hours initially, picking back up to 35+ by March.", time: "Mon 1:45 PM" },
+              { type: "incoming" as const, text: "That works for me. I'm in!", time: "Mon 1:50 PM" },
+            ],
+          },
+          // 16. Asking about dress code
+          {
+            id: "chat-sam",
+            fullName: "Sam Martinez",
+            time: "3 days ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Sam! Thanks for your interest in the role. Any questions I can answer?", time: "Sun 2:00 PM" },
+              { type: "incoming" as const, text: "Yes actually - what's the dress code like?", time: "Sun 3:00 PM" },
+              { type: "outgoing" as const, text: "Business casual. We provide branded polos, you just need khakis or dark jeans. Closed-toe shoes required.", time: "Sun 3:05 PM" },
+              { type: "incoming" as const, text: "Are visible tattoos okay?", time: "Sun 3:10 PM" },
+              { type: "outgoing" as const, text: "Totally fine! We're pretty relaxed about that. Hair color too - express yourself.", time: "Sun 3:12 PM" },
+              { type: "incoming" as const, text: "Great to know. Thanks!", time: "Sun 3:15 PM" },
+            ],
+          },
+          // 17. Part-time student
+          {
+            id: "chat-taylor",
+            fullName: "Taylor Okonkwo",
+            time: "3 days ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Taylor, noticed you're at UT. We have a few student employees - would you be interested in part-time?", time: "Sat 10:00 AM" },
+              { type: "incoming" as const, text: "That could work! My classes are all morning M/W/F.", time: "Sat 12:00 PM" },
+              { type: "outgoing" as const, text: "We could schedule you afternoons and weekends then. Usually 15-20 hours work for students.", time: "Sat 12:05 PM" },
+              { type: "incoming" as const, text: "And during finals weeks?", time: "Sat 12:10 PM" },
+              { type: "outgoing" as const, text: "We're flexible! Just give us a heads up and we can reduce your hours. Education first.", time: "Sat 12:15 PM" },
+              { type: "incoming" as const, text: "That's really understanding. I'd like to try a shift.", time: "Sat 12:20 PM" },
+            ],
+          },
+          // 18. Already working elsewhere, exploring options
+          {
+            id: "chat-chris",
+            fullName: "Chris Anderson",
+            time: "4 days ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Hi Chris! Your Reflex profile is impressive. Ever thought about going permanent somewhere?", time: "Fri 4:00 PM" },
+              { type: "incoming" as const, text: "I actually have a job, but honestly I'm not super happy there. What are you offering?", time: "Fri 5:30 PM" },
+              { type: "outgoing" as const, text: "Full-time Sales Associate, $18.50/hr, benefits after 60 days, and a team that actually supports each other.", time: "Fri 5:35 PM" },
+              { type: "incoming" as const, text: "What makes you different from where I am now?", time: "Fri 5:45 PM" },
+              { type: "outgoing" as const, text: "Hard to say without knowing your current situation, but our turnover is really low. People stay because they like it here.", time: "Fri 5:50 PM" },
+              { type: "incoming" as const, text: "That's actually my problem - constant new people, no consistency. Let me think about it.", time: "Fri 6:00 PM" },
+            ],
+          },
+          // 19. Short follow-up
+          {
+            id: "chat-morgan",
+            fullName: "Morgan Ellis",
+            time: "1 week ago",
+            isOnline: false,
+            hasUnread: false,
+            badge: null,
+            messages: [
+              { type: "outgoing" as const, text: "Morgan, circling back - still thinking about the role?", time: "Last Mon" },
+              { type: "incoming" as const, text: "Yes! Sorry for the delay. Can we chat next week?", time: "Last Mon" },
+              { type: "outgoing" as const, text: "Of course! Just message me when you're ready.", time: "Last Mon" },
+            ],
+          },
+        ];
+
+        // Find active conversation or default to first
         const activeConversation = CHAT_CONVERSATIONS.find(c => c.id === activeChatId) || CHAT_CONVERSATIONS[0];
         const unreadCount = CHAT_CONVERSATIONS.filter(c => c.hasUnread).length;
 
@@ -2546,28 +3077,45 @@ export function V2TalentCentric({
                 )}
               </div>
               <div className="v2-chat-list">
-                {CHAT_CONVERSATIONS.map((conversation) => (
-                  <div
-                    key={conversation.id}
-                    className={`v2-chat-item ${activeChatId === conversation.id ? 'active' : ''}`}
-                    onClick={() => setActiveChatId(conversation.id)}
-                  >
-                    <div className="v2-chat-item-avatar">
-                      <span>{conversation.initials}</span>
-                      {conversation.isOnline && <div className="v2-chat-online-dot" />}
-                    </div>
-                    <div className="v2-chat-item-info">
-                      <div className="v2-chat-item-header">
-                        <span className="v2-chat-item-name">{conversation.name}</span>
-                        <span className="v2-chat-item-time">{conversation.time}</span>
+                {CHAT_CONVERSATIONS.map((conversation) => {
+                  const photo = getWorkerPhoto(conversation.id);
+                  const displayName = formatName(conversation.fullName);
+                  const lastMessage = conversation.messages[conversation.messages.length - 1];
+
+                  return (
+                    <div
+                      key={conversation.id}
+                      className={`v2-chat-item ${activeChatId === conversation.id ? 'active' : ''}`}
+                      onClick={() => setActiveChatId(conversation.id)}
+                    >
+                      <div className="v2-chat-item-avatar">
+                        {photo ? (
+                          <img src={photo} alt={conversation.fullName} />
+                        ) : (
+                          <span>{getInitials(conversation.fullName)}</span>
+                        )}
+                        {conversation.isOnline && <div className="v2-chat-online-dot" />}
                       </div>
-                      <p className="v2-chat-item-preview">
-                        {conversation.lastMessage}
-                      </p>
+                      <div className="v2-chat-item-info">
+                        <div className="v2-chat-item-header">
+                          <span className="v2-chat-item-name">{displayName}</span>
+                          <span className="v2-chat-item-time">{conversation.time}</span>
+                        </div>
+                        <p className="v2-chat-item-preview">
+                          {lastMessage.text.length > 50 ? lastMessage.text.slice(0, 50) + "..." : lastMessage.text}
+                        </p>
+                        {/* Status badges */}
+                        {conversation.badge === "scheduled" && (
+                          <span className="v2-chat-status-badge scheduled">Shift Scheduled</span>
+                        )}
+                        {conversation.badge === "booked" && (
+                          <span className="v2-chat-status-badge booked">Shift Booked</span>
+                        )}
+                      </div>
+                      {conversation.hasUnread && <div className="v2-chat-unread-dot" />}
                     </div>
-                    {conversation.hasUnread && <div className="v2-chat-unread-dot" />}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
@@ -2577,12 +3125,16 @@ export function V2TalentCentric({
               <div className="v2-chat-header">
                 <div className="v2-chat-header-info">
                   <div className="v2-chat-header-avatar">
-                    <span>{activeConversation.initials}</span>
+                    {getWorkerPhoto(activeConversation.id) ? (
+                      <img src={getWorkerPhoto(activeConversation.id)!} alt={activeConversation.fullName} />
+                    ) : (
+                      <span>{getInitials(activeConversation.fullName)}</span>
+                    )}
                     {activeConversation.isOnline && <div className="v2-chat-online-dot" />}
                   </div>
                   <div className="v2-chat-header-details">
-                    <span className="v2-chat-header-name">{activeConversation.name}</span>
-                    <span className="v2-chat-header-status">{activeConversation.status}</span>
+                    <span className="v2-chat-header-name">{formatName(activeConversation.fullName)}</span>
+                    <span className="v2-chat-header-status">{activeConversation.isOnline ? "Online" : `Last active ${activeConversation.time}`}</span>
                   </div>
                 </div>
                 <div className="v2-chat-header-actions">
@@ -2597,19 +3149,14 @@ export function V2TalentCentric({
                 </div>
               </div>
 
-              {/* Chat Messages */}
+              {/* Chat Messages - iMessage style */}
               <div className="v2-chat-messages">
-                {/* Date divider */}
-                <div className="v2-chat-date-divider">
-                  <span>Today</span>
-                </div>
-
                 {activeConversation.messages.map((message, index) => (
                   <div key={index} className={`v2-chat-message ${message.type}`}>
                     <div className="v2-chat-bubble">
                       <p>{message.text}</p>
-                      <span className="v2-chat-time">{message.time}</span>
                     </div>
+                    <span className="v2-chat-message-time">{message.time}</span>
                   </div>
                 ))}
               </div>
@@ -2618,13 +3165,12 @@ export function V2TalentCentric({
               <div className="v2-chat-input-area">
                 <input
                   type="text"
-                  placeholder="Type a message..."
+                  placeholder="iMessage"
                   className="v2-chat-input"
                   value={chatInputValue}
                   onChange={(e) => setChatInputValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && chatInputValue.trim()) {
-                      // For demo, just clear the input
                       setChatInputValue("");
                     }
                   }}

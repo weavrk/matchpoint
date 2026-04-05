@@ -3380,6 +3380,30 @@
   color: var(--primary);
 }
 
+/* Brands worked */
+.v2-connection-brands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* Roles with counts */
+.v2-connection-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* Achievement tags */
+.v2-connection-achievements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .v2-connection-status {
   display: flex;
   align-items: center;
@@ -3411,9 +3435,72 @@
   color: var(--secondary);
 }
 
-.v2-connection-status.not-interested {
+.v2-connection-status.not-interested,
+.v2-connection-status.not_interested,
+.v2-connection-status.removed {
   background: var(--gray-100);
   color: var(--tertiary);
+}
+
+.v2-connection-status.accepted {
+  background: var(--background-green);
+  color: var(--accent-green-dark);
+}
+
+/* Connection indicators (shift scheduled, chat open, etc.) */
+.v2-connection-indicators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.v2-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.v2-indicator.scheduled {
+  background: var(--background-green);
+  color: var(--accent-green-dark);
+}
+
+.v2-indicator.booked {
+  background: #E8F4FD;
+  color: #0D6EFD;
+}
+
+.v2-indicator.chat {
+  background: var(--background-navy);
+  color: var(--primary);
+}
+
+.v2-indicator.saved {
+  background: #FFF0F5;
+  color: #D63384;
+}
+
+/* Loading and empty states */
+.v2-connections-loading,
+.v2-connections-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: var(--secondary);
+  font-size: 14px;
+}
+
+/* Connection avatar with photo */
+.v2-connection-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .v2-connection-action {
@@ -3669,114 +3756,213 @@
   border-color: var(--tertiary);
 }
 
-/* Chat Messages */
+/* Chat Messages - iMessage style */
 .v2-chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 4px;
+  background: #f5f5f5;
 }
 
 .v2-chat-date-divider {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 8px 0;
+  margin: 12px 0;
 }
 
 .v2-chat-date-divider span {
-  font-size: 12px;
-  color: var(--tertiary);
-  background: var(--gray-50);
+  font-size: 11px;
+  color: #8e8e93;
+  background: transparent;
   padding: 4px 12px;
-  border-radius: 12px;
 }
 
 .v2-chat-message {
   display: flex;
-  max-width: 70%;
+  flex-direction: column;
+  max-width: 75%;
 }
 
 .v2-chat-message.outgoing {
-  margin-left: auto;
+  align-self: flex-end;
+  align-items: flex-end;
 }
 
 .v2-chat-message.incoming {
-  margin-right: auto;
+  align-self: flex-start;
+  align-items: flex-start;
 }
 
 .v2-chat-bubble {
-  padding: 12px 16px;
-  border-radius: 16px;
+  padding: 10px 14px;
+  border-radius: 18px;
   position: relative;
 }
 
 .v2-chat-message.outgoing .v2-chat-bubble {
-  background: var(--primary);
+  background: #007AFF;
   color: white;
   border-bottom-right-radius: 4px;
 }
 
 .v2-chat-message.incoming .v2-chat-bubble {
-  background: var(--white);
-  color: var(--primary);
+  background: #E9E9EB;
+  color: #000;
   border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 .v2-chat-bubble p {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 15px;
+  line-height: 1.4;
 }
 
-.v2-chat-time {
+/* Time stamp below bubble */
+.v2-chat-message-time {
   display: block;
-  font-size: 11px;
-  margin-top: 6px;
-  opacity: 0.7;
+  font-size: 10px;
+  color: #8e8e93;
+  margin-top: 2px;
+  padding: 0 4px;
 }
 
-/* Chat Input */
+/* Old time inside bubble - hidden */
+.v2-chat-time {
+  display: none;
+}
+
+/* Chat Input - iMessage style */
 .v2-chat-input-area {
   display: flex;
-  gap: 12px;
-  padding: 16px 24px;
-  background: var(--white);
-  border-top: 1px solid var(--quaternary);
+  gap: 8px;
+  padding: 12px 16px;
+  background: #f5f5f5;
+  border-top: 1px solid #e0e0e0;
+  align-items: center;
 }
 
 .v2-chat-input {
   flex: 1;
-  padding: 12px 16px;
-  border: 1px solid var(--quaternary);
-  border-radius: 24px;
-  font-size: 14px;
+  padding: 10px 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 15px;
   outline: none;
+  background: white;
   transition: border-color 0.15s;
 }
 
+.v2-chat-input::placeholder {
+  color: #c7c7cc;
+}
+
 .v2-chat-input:focus {
-  border-color: var(--primary);
+  border-color: #007AFF;
 }
 
 .v2-chat-send {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--primary);
+  background: #007AFF;
   border: none;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.1s;
   flex-shrink: 0;
 }
 
 .v2-chat-send:hover {
+  background: #0066d6;
+}
+
+.v2-chat-send:active {
+  transform: scale(0.95);
+}
+
+/* Chat Empty State */
+.v2-chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--foreground-tertiary);
+}
+
+.v2-chat-empty-icon {
+  color: var(--border);
+  margin-bottom: 16px;
+}
+
+.v2-chat-empty h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--foreground-primary);
+  margin: 0 0 8px;
+}
+
+.v2-chat-empty p {
+  font-size: 14px;
+  color: var(--foreground-secondary);
+  margin: 0 0 24px;
+  max-width: 300px;
+}
+
+.v2-chat-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.v2-chat-empty-btn:hover {
   background: var(--accent-navy-dark);
+}
+
+/* Chat Status Badges */
+.v2-chat-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.v2-chat-status-badge.scheduled {
+  background: var(--background-green);
+  color: var(--accent-green-dark);
+}
+
+.v2-chat-status-badge.booked {
+  background: #E8F4FD;
+  color: #0D6EFD;
+}
+
+/* Chat avatar images */
+.v2-chat-item-avatar img,
+.v2-chat-header-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }

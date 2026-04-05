@@ -86,6 +86,8 @@ export interface WorkerProfile {
   shiftExperience?: Record<string, number> | null;
   // Unique store locations worked
   uniqueStoreCount?: number | null;
+  // Market favorite - worker is favorited/approved by retailer stores in market
+  marketFavorite?: boolean;
   // Legacy fields from sample workers (for compatibility)
   preference?: 'FT' | 'PT' | 'Both';
   endorsements?: Endorsement[];

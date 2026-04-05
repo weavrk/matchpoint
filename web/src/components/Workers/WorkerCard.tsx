@@ -205,15 +205,15 @@ export function WorkerCard({ worker }: WorkerCardProps) {
           <div className="worker-name-row">
             <h3 className="worker-name">{worker.name}</h3>
             {worker.shiftVerified && (
-              <span className="tag tag-green tag-sm">
-                <span className="tag-icon"><BadgeCheck size={12} /></span>
+              <span className="tag tag-blue-light tag-md">
+                <span className="tag-icon"><BadgeCheck size={16} /></span>
                 <span className="tag-text">Shift Verified</span>
               </span>
             )}
             {worker.activelyLooking && (
-              <span className="tag tag-lite-gray tag-sm">
-                <span className="tag-icon"><Search size={12} /></span>
-                <span className="tag-text">Actively looking</span>
+              <span className="tag tag-blue tag-md">
+                <span className="tag-icon"><Search size={16} /></span>
+                <span className="tag-text">Actively Looking</span>
               </span>
             )}
           </div>
@@ -313,7 +313,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <span className="section-label">Retailers on Reflex</span>
                   <div className="brands-list">
                     {worker.brandsWorked.map((brand, idx) => (
-                      <span key={idx} className="tag tag-lite-gray tag-sm">
+                      <span key={idx} className="tag tag-dark-gray tag-md">
                         <span className="tag-text">{toTitleCase(brand.name)}</span>
                       </span>
                     ))}
@@ -327,7 +327,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <span className="section-label">Shift Experience</span>
                   <div className="endorsements-list">
                     {shiftExperienceEntries.map(([name, count], idx) => (
-                      <span key={idx} className="tag tag-stroke tag-sm">
+                      <span key={idx} className="tag tag-dark-gray tag-md">
                         <span className="tag-text">{name}</span>
                         <span className="tag-counter">{count}</span>
                       </span>
@@ -342,7 +342,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <span className="section-label">Retailer Endorsements</span>
                   <div className="endorsements-list">
                     {endorsementEntries.map(([name, count], idx) => (
-                      <span key={idx} className="tag tag-stroke tag-sm">
+                      <span key={idx} className="tag tag-stroke tag-md">
                         <span className="tag-text">{name}</span>
                         <span className="tag-counter">{count}</span>
                       </span>

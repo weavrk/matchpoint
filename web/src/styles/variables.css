@@ -626,18 +626,18 @@ h3.type-chip-header,
 .tag-sm {
   font-size: 12px;
   line-height: 16px;
-  padding: 4px 12px;
+  padding: 4px 8px;
   gap: 4px;
 }
 
 .tag-sm .tag-icon {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 
 .tag-sm .tag-icon svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
 }
 
 .tag-sm .tag-counter {
@@ -652,17 +652,17 @@ h3.type-chip-header,
   font-size: 14px;
   line-height: 20px;
   padding: 4px 12px;
-  gap: 6px;
+  gap: 4px;
 }
 
 .tag-md .tag-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .tag-md .tag-icon svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 
 .tag-md .tag-counter {
@@ -676,18 +676,18 @@ h3.type-chip-header,
 .tag-lg {
   font-size: 16px;
   line-height: 22px;
-  padding: 6px 14px;
+  padding: 6px 12px;
   gap: 6px;
 }
 
 .tag-lg .tag-icon {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 .tag-lg .tag-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 .tag-lg .tag-counter {
@@ -731,6 +731,22 @@ h3.type-chip-header,
   color: var(--text-primary);
 }
 
+/* Green Light - lighter green background for secondary achievement chips */
+.tag-green-light {
+  background: var(--background-green);
+  color: var(--text-primary);
+  border: none;
+}
+
+.tag-green-light .tag-counter {
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+.tag-green-light .tag-icon {
+  color: var(--text-primary);
+}
+
 /* Dark Gray - dark background, light text */
 .tag-dark-gray {
   background: var(--stone-700);
@@ -755,7 +771,7 @@ h3.type-chip-header,
 }
 
 .tag-stroke .tag-counter {
-  background: var(--gray-100);
+  background: var(--blue-100);
   color: var(--text-primary);
 }
 
@@ -802,6 +818,22 @@ h3.type-chip-header,
 }
 
 .tag-blue .tag-icon {
+  color: var(--text-primary);
+}
+
+/* Blue Light - lighter blue background (blue-100) */
+.tag-blue-light {
+  background: var(--blue-100);
+  color: var(--text-primary);
+  border: none;
+}
+
+.tag-blue-light .tag-counter {
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+.tag-blue-light .tag-icon {
   color: var(--text-primary);
 }
 
@@ -917,6 +949,45 @@ h3.type-chip-header,
   font-size: 11px;
   font-family: monospace;
   color: var(--secondary);
+}
+
+/* Logic Table - for chip display logic */
+.ds-logic-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ds-logic-table th,
+.ds-logic-table td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--quaternary);
+}
+
+.ds-logic-table th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--secondary);
+  background: var(--gray-100);
+}
+
+.ds-logic-table td {
+  vertical-align: middle;
+}
+
+.ds-logic-table td code {
+  font-size: 11px;
+  background: var(--gray-100);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--primary);
+}
+
+.ds-logic-table tbody tr:hover {
+  background: var(--gray-50);
 }
 
 /* ==========================================

@@ -53,31 +53,7 @@ export function DevMenu({ agentActive, onToggleAgent, showOz, onToggleOz, showWo
         />
         {showMenu && (
           <div className="dev-menu-dropdown">
-            <button
-              className={`dev-menu-item dev-menu-item-bot${agentActive ? ' bot-on' : ''}`}
-              onClick={() => {
-                onToggleAgent();
-                setShowMenu(false);
-              }}
-            >
-              <span className="dev-menu-icon">
-                {agentActive ? <BotMessageSquare size={16} /> : <BotOff size={16} />}
-              </span>
-              <span className="dev-menu-label">Good Bot {agentActive ? 'On' : 'Off'}</span>
-            </button>
-            <button
-              className="dev-menu-item"
-              onClick={() => {
-                setShowDesignSystem(true);
-                setShowMenu(false);
-              }}
-            >
-              <span className="dev-menu-icon">
-                <Palette size={16} />
-              </span>
-              <span className="dev-menu-label">Design System</span>
-            </button>
-            <div className="dev-menu-divider" />
+            {/* Name input at top */}
             <div className="dev-menu-name-input">
               <input
                 type="text"
@@ -115,24 +91,20 @@ export function DevMenu({ agentActive, onToggleAgent, showOz, onToggleOz, showWo
                 </button>
               )}
             </div>
+            <button
+              className="dev-menu-item"
+              onClick={() => {
+                setShowDesignSystem(true);
+                setShowMenu(false);
+              }}
+            >
+              <span className="dev-menu-icon">
+                <Palette size={16} />
+              </span>
+              <span className="dev-menu-label">Design System</span>
+            </button>
             <div className="dev-menu-divider" />
-            <div className="dev-menu-section-header">Variants</div>
-            {VARIANTS.map((v) => (
-              <button
-                key={v.id}
-                className={`dev-menu-item${v.id === currentVariant ? ' active' : ''}`}
-                onClick={() => {
-                  onChangeVariant(v.id);
-                  setShowMenu(false);
-                }}
-              >
-                <span className="dev-menu-icon">
-                  <Layers size={16} />
-                </span>
-                <span className="dev-menu-label">{v.label}</span>
-              </button>
-            ))}
-            <div className="dev-menu-divider" />
+            {/* Source Data */}
             <div className="dev-menu-section-header">Source Data</div>
             <button
               className={`dev-menu-item${showOz ? ' active' : ''}`}
@@ -157,6 +129,38 @@ export function DevMenu({ agentActive, onToggleAgent, showOz, onToggleOz, showWo
                 <Users size={16} />
               </span>
               <span className="dev-menu-label">Worker Data</span>
+            </button>
+            <div className="dev-menu-divider" />
+            {/* Variants */}
+            <div className="dev-menu-section-header">Variants</div>
+            {VARIANTS.map((v) => (
+              <button
+                key={v.id}
+                className={`dev-menu-item${v.id === currentVariant ? ' active' : ''}`}
+                onClick={() => {
+                  onChangeVariant(v.id);
+                  setShowMenu(false);
+                }}
+              >
+                <span className="dev-menu-icon">
+                  <Layers size={16} />
+                </span>
+                <span className="dev-menu-label">{v.label}</span>
+              </button>
+            ))}
+            <div className="dev-menu-divider" />
+            {/* Good Bot at bottom */}
+            <button
+              className={`dev-menu-item dev-menu-item-bot${agentActive ? ' bot-on' : ''}`}
+              onClick={() => {
+                onToggleAgent();
+                setShowMenu(false);
+              }}
+            >
+              <span className="dev-menu-icon">
+                {agentActive ? <BotMessageSquare size={16} /> : <BotOff size={16} />}
+              </span>
+              <span className="dev-menu-label">Good Bot {agentActive ? 'On' : 'Off'}</span>
             </button>
           </div>
         )}
