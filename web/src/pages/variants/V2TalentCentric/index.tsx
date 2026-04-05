@@ -521,6 +521,7 @@ export function V2TalentCentric({
   >("forward");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null); // Separate from market chip selection
   const [locationSearch, setLocationSearch] = useState("");
   const [brandSearch, setBrandSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -652,12 +653,15 @@ export function V2TalentCentric({
     }
   }, [initChatService]);
 
-  // Scroll chat to bottom when messages change
+  // Scroll chat to bottom when messages change or loading state changes
   useEffect(() => {
-    if (chatContainerRef.current && chatMessages.length > 0) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    if (chatContainerRef.current && (chatMessages.length > 0 || isLoading)) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth"
+      });
     }
-  }, [chatMessages]);
+  }, [chatMessages, isLoading]);
 
   // CYOA flow: Get next incomplete preference section
   const getNextIncompleteSection = (current: FocusArea): FocusArea | null => {
@@ -958,19 +962,19 @@ export function V2TalentCentric({
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
-                onBack: () => transitionToStep("welcome", "back"),
-                onNext: () => {},
-                showBack: true,
-                nextDisabled: true,
+                onNext: () => transitionToStep("location", "forward"),
+                showBack: false,
+                nextDisabled: !persona,
                 nextLabel: "Continue",
               }}
             >
-              <div className="v2-step-header-chips">
-                <div className="v2-step-header">
-                  <h1 className="type-tagline">Tell us about your role so we can focus our questions.</h1>
-                </div>
+              <div className="v2-step-content-scroll">
+                <div className="v2-step-header-chips">
+                  <div className="v2-step-header">
+                    <h1 className="type-tagline">Tell us about your role so we can focus our questions.</h1>
+                  </div>
 
-                <div className="v2-focus-chips">
+                  <div className="v2-focus-chips">
                   <button
                     className={`welcome-card persona-card ${persona === "individual" ? "active" : ""}`}
                     onClick={() => {
@@ -1022,6 +1026,7 @@ export function V2TalentCentric({
                     className={`welcome-card persona-card ${persona === "field" ? "active" : ""}`}
                     onClick={() => {
                       setPersona("field");
+                      setSelectedLocation(null);
                       transitionToStep("location", "forward");
                     }}
                   >
@@ -1045,6 +1050,7 @@ export function V2TalentCentric({
                     className={`welcome-card persona-card ${persona === "recruiter" ? "active" : ""}`}
                     onClick={() => {
                       setPersona("recruiter");
+                      setSelectedLocation(null);
                       transitionToStep("location", "forward");
                     }}
                   >
@@ -1113,7 +1119,7 @@ export function V2TalentCentric({
                           onClick={() => {
                             setPersona("individual");
                             setSelectedLocation("austin-tx");
-                            transitionToStep("focus", "forward");
+                            transitionToStep("location", "forward");
                           }}
                         >
                           <CornerDownRight size={16} className="v2-chip-icon-left" />
@@ -1124,7 +1130,7 @@ export function V2TalentCentric({
                           className={`v2-chat-followup-chip${persona === "multi-store" ? " active" : ""}`}
                           onClick={() => {
                             setPersona("multi-store");
-                            transitionToStep("focus", "forward");
+                            transitionToStep("location", "forward");
                           }}
                         >
                           <CornerDownRight size={16} className="v2-chip-icon-left" />
@@ -1135,7 +1141,8 @@ export function V2TalentCentric({
                           className={`v2-chat-followup-chip${persona === "field" ? " active" : ""}`}
                           onClick={() => {
                             setPersona("field");
-                            transitionToStep("focus", "forward");
+                            setSelectedLocation(null);
+                            transitionToStep("location", "forward");
                           }}
                         >
                           <CornerDownRight size={16} className="v2-chip-icon-left" />
@@ -1146,7 +1153,8 @@ export function V2TalentCentric({
                           className={`v2-chat-followup-chip${persona === "recruiter" ? " active" : ""}`}
                           onClick={() => {
                             setPersona("recruiter");
-                            transitionToStep("focus", "forward");
+                            setSelectedLocation(null);
+                            transitionToStep("location", "forward");
                           }}
                         >
                           <CornerDownRight size={16} className="v2-chip-icon-left" />
@@ -1181,13 +1189,14 @@ export function V2TalentCentric({
                   </div>
                 </div>
               </div>
+              </div>
             </V2Main>
           )}
 
           {/* Step 2: Location Selection - varies by persona */}
           {step === "location" && (
             <V2Main
-              stepClassName={persona === "individual" || persona === "multi-store" ? "v2-main-centered" : ""}
+              stepClassName="v2-main-centered"
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
@@ -1202,7 +1211,7 @@ export function V2TalentCentric({
                 <div className="v2-step-header-chips">
                   <div className="v2-step-header">
                     <h1 className="type-tagline">
-                      Confirming that you want to search for {MARKETS.find(m => m.id === selectedLocation)?.name || "Austin"} talent
+                      Search the {MARKETS.find(m => m.id === selectedLocation)?.name || "Austin"} market?
                     </h1>
                   </div>
                   <div className="v2-location-confirm-chips">
@@ -1210,12 +1219,14 @@ export function V2TalentCentric({
                       className="v2-location-confirm-chip selected"
                       onClick={() => transitionToStep("focus", "forward")}
                     >
-                      <Check size={20} strokeWidth={1.5} />
                       <span>Yes, search in {MARKETS.find(m => m.id === selectedLocation)?.name || "Austin"}</span>
+                      <div className="v2-confirm-chip-icon">
+                        <Check size={18} strokeWidth={2} />
+                      </div>
                     </button>
                     <button
                       className="v2-location-confirm-chip"
-                      onClick={() => setPersona("field")}
+                      onClick={() => { setPersona("field"); setSelectedLocation(null); }}
                     >
                       <span>Hire in a different market</span>
                     </button>
@@ -1253,7 +1264,10 @@ export function V2TalentCentric({
                   </div>
                   <button
                     className="v2-location-confirm-chip v2-location-different"
-                    onClick={() => setPersona("field")}
+                    onClick={() => {
+                      setPersona("field");
+                      setSelectedLocation(null);
+                    }}
                   >
                     <span>Hire in a different market</span>
                   </button>
@@ -1264,29 +1278,27 @@ export function V2TalentCentric({
               {(persona === "field" || persona === "recruiter") && (
                 <>
                   <div className="v2-step-header">
-                    <h1 className="type-tagline">What city are you hiring in?</h1>
+                    <h1 className="type-tagline">Where are you hiring?</h1>
                     <p className="type-prompt-question v2-step-subtitle">
-                      Select a market or search for a city
+                      Select a location in the dropdown or search for one of our available markets.
                     </p>
                   </div>
 
                   <div className="v2-location-controls">
                     <div className="v2-location-dropdown">
                       <select
-                        value={
-                          STORE_LOCATIONS.find(
-                            (s) => s.marketId === selectedLocation,
-                          )?.id || ""
-                        }
+                        value={selectedStoreId || ""}
                         onChange={(e) => {
                           if (e.target.value) {
                             const store = STORE_LOCATIONS.find(
                               (s) => s.id === e.target.value,
                             );
                             if (store) {
+                              setSelectedStoreId(store.id);
                               setSelectedLocation(store.marketId);
                             }
                           } else {
+                            setSelectedStoreId(null);
                             setSelectedLocation(null);
                           }
                         }}
@@ -1307,7 +1319,7 @@ export function V2TalentCentric({
                       <Search size={18} className="v2-search-icon" />
                       <input
                         type="text"
-                        placeholder="Search cities..."
+                        placeholder="Search markets..."
                         value={locationSearch}
                         onChange={(e) => setLocationSearch(e.target.value)}
                         className="v2-search-input"
@@ -1325,7 +1337,7 @@ export function V2TalentCentric({
                   </div>
 
                   <div
-                    className={`v2-location-grid ${selectedLocation && sidebarOpen ? "sidebar-open" : ""}`}
+                    className={`v2-location-grid v2-step-content-scroll ${selectedLocation && sidebarOpen ? "sidebar-open" : ""}`}
                   >
                     {[...MARKETS]
                       .sort((a, b) => a.name.localeCompare(b.name))
@@ -1341,11 +1353,12 @@ export function V2TalentCentric({
                         <button
                           key={market.id}
                           className={`v2-location-chip ${selectedLocation === market.id ? "selected" : ""}`}
-                          onClick={() =>
+                          onClick={() => {
+                            setSelectedStoreId(null); // Clear dropdown when chip selected
                             setSelectedLocation(
                               selectedLocation === market.id ? null : market.id,
-                            )
-                          }
+                            );
+                          }}
                         >
                           <span className="v2-chip-text">
                             {market.name}, <strong>{market.state}</strong>

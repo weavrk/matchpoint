@@ -102,9 +102,12 @@
 }
 
 .v2-header-welcome {
+  /* Hidden for now - may bring back later
   background:
     radial-gradient(ellipse 60% 200% at 65% 150%, #ffffff 0%, #ffffff 20%, transparent 50%),
     #EBF2F6;
+  */
+  background: #ffffff;
   transition: background 200ms ease-out;
 }
 
@@ -194,9 +197,11 @@
 .v2-container-welcome {
   position: relative;
   overflow: visible;
-  background: #EBF2F6;
+  /* Hidden for now - may bring back later: background: #EBF2F6; */
+  background: #ffffff;
 }
 
+/* Hidden for now - may bring back later */
 .v2-container-welcome::before {
   content: '';
   position: absolute;
@@ -204,10 +209,11 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(ellipse 56.25% 68.75% at calc(52% + 50px) calc(42% - 165px), #ffffff 0%, #ffffff 25%, transparent 50%),
-    radial-gradient(ellipse 63% 72% at calc(15% + 300px) calc(85% - 450px), #ffffff 0%, #ffffff 20%, transparent 40%),
+    radial-gradient(ellipse 56.25% 68.75% at calc(52% + 100px) calc(42% - 115px), #ffffff 0%, #ffffff 25%, transparent 50%),
+    radial-gradient(ellipse 63% 72% at calc(15% + 200px) calc(85% - 300px), #ffffff 0%, #ffffff 20%, transparent 40%),
     linear-gradient(155deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 95%, rgba(255,255,255,0.4) 100%);
   transition: opacity 200ms ease-out;
+  display: none;
 }
 
 .v2-container-welcome > * {
@@ -220,7 +226,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 32px 64px 64px 64px; /* Top 50% of horizontal inset; bottom clears fixed footer */
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 48px 64px 32px 64px; /* Vertical inset; bottom clears fixed footer */
   overflow-y: auto;
   transition: transform 200ms ease-out, opacity 200ms ease-out;
 }
@@ -232,7 +240,7 @@
 
 /* Beats .v2-container-welcome .v2-main so welcome hero keeps vertical inset */
 .v2-container-welcome .v2-main.v2-welcome-step {
-  padding: 160px 64px 160px;
+  padding: 120px 64px 120px;
 }
 
 /* Step header */
@@ -241,7 +249,7 @@
 }
 
 .v2-step-header h1 {
-  margin: 0 0 12px 0;
+  margin: 0 0 4px 0;
 }
 
 .v2-step-header p {
@@ -272,6 +280,13 @@
 }
 
 .v2-step-header-chips > .v2-journey-cards {
+  margin-top: 0;
+  margin-bottom: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.v2-step-header-chips > .v2-location-confirm-chips {
   margin-top: 0;
   margin-bottom: 0;
   width: 100%;
@@ -587,9 +602,14 @@
   background: transparent;
   width: 54px;
   height: 54px;
+  min-width: 54px;
+  min-height: 54px;
   border-radius: 50%;
   border: 1px solid var(--primary);
   color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .welcome-card.persona-card .welcome-card-icon svg {
@@ -605,6 +625,16 @@
 .welcome-card.persona-card.active .welcome-card-icon {
   background: var(--primary);
   color: #ffffff;
+}
+
+/* When any persona card is active, non-active cards go to white background */
+.v2-focus-chips:has(.persona-card.active) .persona-card:not(.active) {
+  background: var(--white);
+}
+
+/* When hovering any persona card, non-hovered cards go to white background */
+.v2-focus-chips:has(.persona-card:hover) .persona-card:not(:hover) {
+  background: var(--white);
 }
 
 /* ============================================================
@@ -1294,6 +1324,20 @@
   color: var(--primary);
 }
 
+/* Scrollable content area - fills remaining space between header and footer */
+.v2-step-content-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
+}
+
+/* Full-bleed scroll region in centered steps (overrides .v2-main-centered > * max-width: 720px) */
+.v2-main-centered > .v2-step-content-scroll {
+  max-width: none;
+  align-self: stretch;
+}
+
 .v2-location-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -1312,6 +1356,7 @@
   justify-content: space-between;
   gap: 8px;
   padding: 12px 16px;
+  padding-right: 12px;
   background: var(--white);
   border: 1px solid var(--quaternary);
   border-radius: 8px;
@@ -1373,17 +1418,22 @@
 .v2-location-confirm-chips {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 16px;
   width: 100%;
-  max-width: 500px;
+  padding-left: 160px;
+  padding-right: 160px;
 }
 
 /* Individual confirmation chip */
 .v2-location-confirm-chip {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  padding: 20px 24px;
+  padding: 18px 24px;
+  height: 100%;
+  width: 100%;
   background: var(--blue-50);
   border: 1px solid var(--quaternary);
   border-radius: 12px;
@@ -1394,6 +1444,23 @@
   color: var(--primary);
   font-family: inherit;
   text-align: left;
+}
+
+/* Checkmark circle icon */
+.v2-confirm-chip-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.v2-location-confirm-chip.selected .v2-confirm-chip-icon {
+  background: rgba(255, 255, 255, 1);
+  color: var(--primary);
 }
 
 .v2-location-confirm-chip:hover {
@@ -1411,8 +1478,13 @@
   color: #ffffff;
 }
 
+.v2-location-confirm-chip.selected .v2-confirm-chip-icon svg {
+  color: var(--primary);
+}
+
 /* "Hire in different market" link style */
 .v2-location-different {
+  height: auto;
   background: transparent;
   border: none;
   padding: 12px 0;
@@ -1468,7 +1540,7 @@
 .v2-nav-footer {
   margin-top: auto;
   background: #ffffff;
-  border-top: 1px solid var(--quaternary);
+  border-top: none;
   padding: 16px 0 0;
   z-index: 10;
   flex-shrink: 0;
@@ -1478,6 +1550,8 @@
   display: flex;
   justify-content: center;
   gap: 16px;
+  border-top: 1px solid var(--quaternary);
+  padding-top: 16px;
 }
 
 .v2-btn-back,
@@ -2191,7 +2265,7 @@
   }
 
   .v2-main {
-    padding: 32px 48px 64px;
+    padding: 48px 48px 32px;
   }
 }
 
