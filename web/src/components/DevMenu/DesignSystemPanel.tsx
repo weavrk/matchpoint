@@ -948,7 +948,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
               <li><span className="ds-style-prop">flex-direction:</span> <code>column</code></li>
               <li><span className="ds-style-prop">align-items:</span> <code>center</code></li>
-              <li><span className="ds-style-prop">padding-top:</span> <code>120px</code></li>
+              <li><span className="ds-style-prop">padding-top:</span> <code>96px</code></li>
               <li><span className="ds-style-prop">text-align:</span> <code>center</code></li>
               <li><span className="ds-style-prop">children max-width:</span> <code>720px</code></li>
             </ul>

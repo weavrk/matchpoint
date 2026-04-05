@@ -313,7 +313,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 120px;
+  padding-top: 96px;
   text-align: center;
   flex: 1;
   min-height: 0;
@@ -1757,6 +1757,10 @@
   margin-top: 32px;
 }
 
+.v2-location-store-chips.sidebar-open {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 @media (max-width: 768px) {
   .v2-location-store-chips {
     grid-template-columns: repeat(2, 1fr);
@@ -1767,6 +1771,37 @@
   .v2-location-store-chips {
     grid-template-columns: 1fr;
   }
+}
+
+/* Store chip with stacked name and location */
+.v2-store-chip {
+  align-items: flex-start;
+}
+
+.v2-store-chip .v2-chip-icon-left {
+  margin-top: 2px;
+}
+
+.v2-store-chip-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.v2-store-chip-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.v2-store-chip-location {
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.v2-store-chip:hover .v2-store-chip-location,
+.v2-store-chip.active .v2-store-chip-location {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* Sticky Nav Footer - pinned to bottom of content shell */
@@ -2986,7 +3021,7 @@
 
 /* Centered steps: .v2-main padding shorthand in max-width: 1200px would reset top to 48px */
 .v2-main.v2-main-centered {
-  padding-top: 120px;
+  padding-top: 96px;
 }
 
 /* ============================================================

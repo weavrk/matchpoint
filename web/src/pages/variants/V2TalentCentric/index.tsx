@@ -1678,20 +1678,28 @@ export function V2TalentCentric({
                       Which location are you hiring for?
                     </h1>
                   </div>
-                  <div className="v2-location-store-chips">
+                  <div className={`v2-location-store-chips${selectedLocation ? " sidebar-open" : ""}`}>
                     {STORE_LOCATIONS.map((store) => {
                       const market = MARKETS.find(m => m.id === store.marketId);
-                      const isSelected = selectedLocation === store.marketId;
+                      const isSelected = selectedStoreId === store.id;
                       return (
                         <button
                           key={store.id}
-                          className={`v2-chat-followup-chip${isSelected ? " active" : ""}`}
-                          onClick={() => setSelectedLocation(isSelected ? null : store.marketId)}
+                          className={`v2-chat-followup-chip v2-store-chip${isSelected ? " active" : ""}`}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedStoreId(null);
+                              setSelectedLocation(null);
+                            } else {
+                              setSelectedStoreId(store.id);
+                              setSelectedLocation(store.marketId);
+                            }
+                          }}
                         >
                           <CornerDownRight size={16} className="v2-chip-icon-left" />
-                          <span>
-                            {store.name}
-                            {market && ` · ${market.name}, ${market.state}`}
+                          <span className="v2-store-chip-content">
+                            <span className="v2-store-chip-name">{store.name}</span>
+                            {market && <span className="v2-store-chip-location">{market.name}, {market.state}</span>}
                           </span>
                           {isSelected && <Check size={16} className="v2-chip-icon-right" />}
                         </button>
@@ -2395,12 +2403,12 @@ export function V2TalentCentric({
             </div>
           )}
 
-          {/* Sidebar with worker cards - shown on location (when selected), employment, brands, experience steps. On results, only show if no worker selected */}
-          {((["employment", "brands", "experience"].includes(step) ||
+          {/* Sidebar with worker cards - shown on location (when selected), brands, experience steps. On results, only show if no worker selected */}
+          {((["brands", "experience"].includes(step) ||
             (step === "results" && !selectedWorker) ||
-            (step === "location" && selectedLocation && (persona === "field" || persona === "recruiter" || (persona === "individual" && pickingDifferentMarket))))) && (
+            (step === "location" && selectedLocation))) && (
             <V2WorkerSidebar
-              workers={["employment", "brands", "experience", "results"].includes(step) ? filteredWorkers : marketWorkers}
+              workers={["brands", "experience", "results"].includes(step) ? filteredWorkers : marketWorkers}
               isOpen={sidebarOpen}
               onToggle={() => setSidebarOpen(!sidebarOpen)}
               title={`${MARKETS.find(m => m.id === selectedLocation)?.name || "Market"} Talent`}
