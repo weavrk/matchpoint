@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase } from 'lucide-react';
+import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase, CornerDownRight, CalendarFold, Blend, ChartNoAxesGantt } from 'lucide-react';
 import '../../pages/variants/V2TalentCentric/styles.css';
 import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
 import { WorkerCardChip } from '../Workers/WorkerCardChip';
@@ -156,6 +156,11 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 <div className="ds-swatch" style={{ background: 'var(--quaternary)' }} />
                 <span className="ds-color-name">--quaternary</span>
                 <span className="ds-color-value">stone-200 #E4E4E7</span>
+              </div>
+              <div className="ds-color-swatch">
+                <div className="ds-swatch" style={{ background: 'var(--hover)' }} />
+                <span className="ds-color-name">--hover</span>
+                <span className="ds-color-value">stone-900 #18181B</span>
               </div>
             </div>
           </div>
@@ -434,45 +439,108 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
           <div className="ds-subsection">
             <h4>3. Journey Card="journey-card"</h4>
             <p className="ds-description">
-              Large selection cards for focus step. Text upper-left, icon upper-right, arrow button lower-right.
-              Background <code>background-pink</code>, hover <code>accent-pink-light</code>. Arrow fills primary on hover with 140ms delay.
-              Title <code>.journey-card-title</code>: <code>font-size: 24px</code>, <code>line-height: 36px</code>, <code>font-weight: 500</code>.
-              Description <code>.journey-card-description</code>: <code>font-size: 20px</code>, <code>line-height: 26px</code>.
+              Selection cards for focus step. Background <code>blue-50</code>, hover/selected <code>gray-900</code> with white text.
+              Title <code>.journey-card-title</code>: <code>font-size: 24px</code>, <code>line-height: 24px</code>, <code>font-weight: 500</code>.
+              Description <code>.journey-card-description</code>: <code>font-size: 16px</code>, <code>line-height: 20px</code>.
+              Arrow shows <code>ArrowRight</code> by default, <code>Check</code> when completed or selected.
             </p>
             <div className="ds-example ds-example-journey-cards">
+              {/* Default state */}
               <button className="journey-card">
-                <div className="journey-card-content">
-                  <div className="journey-card-text">
-                    <h3 className="journey-card-title">Type of employment</h3>
-                    <p className="journey-card-description">Full-time, part-time, or open to both</p>
-                  </div>
+                <div className="journey-card-header">
                   <div className="journey-card-icon">
-                    <Clock size={24} />
+                    <CalendarFold size={24} />
                   </div>
+                  <h3 className="journey-card-title">Type of employment</h3>
                 </div>
-                <div className="journey-card-arrow">
-                  <ArrowRight size={20} />
+                <div className="journey-card-footer">
+                  <p className="journey-card-description">Full-time, part-time, or flex</p>
+                  <div className="journey-card-arrow">
+                    <ArrowRight size={20} />
+                  </div>
                 </div>
               </button>
-              <button className="journey-card" style={{ background: 'var(--accent-pink-light)' }}>
-                <div className="journey-card-content">
-                  <div className="journey-card-text">
-                    <h3 className="journey-card-title">Hover State</h3>
-                    <p className="journey-card-description">Description text here</p>
+              {/* Hover state (simulated with inline styles) */}
+              <button className="journey-card" style={{ background: 'var(--gray-900)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+                <div className="journey-card-header">
+                  <div className="journey-card-icon" style={{ color: 'white' }}>
+                    <Blend size={24} />
                   </div>
-                  <div className="journey-card-icon">
-                    <Store size={24} />
+                  <h3 className="journey-card-title" style={{ color: 'white' }}>Hover State</h3>
+                </div>
+                <div className="journey-card-footer">
+                  <p className="journey-card-description" style={{ color: 'white' }}>Description text here</p>
+                  <div className="journey-card-arrow" style={{ background: 'white', borderColor: 'white', color: 'var(--primary)' }}>
+                    <ArrowRight size={20} />
                   </div>
                 </div>
-                <div className="journey-card-arrow" style={{ background: 'var(--primary)', borderColor: 'var(--primary)', color: 'white' }}>
-                  <ArrowRight size={20} />
+              </button>
+              {/* Selected/Completed state */}
+              <button className="journey-card selected">
+                <div className="journey-card-header">
+                  <div className="journey-card-icon">
+                    <ChartNoAxesGantt size={24} />
+                  </div>
+                  <h3 className="journey-card-title">Selected/Completed</h3>
+                </div>
+                <div className="journey-card-footer">
+                  <p className="journey-card-description">Shows checkmark icon</p>
+                  <div className="journey-card-arrow">
+                    <Check size={20} />
+                  </div>
                 </div>
               </button>
             </div>
           </div>
 
           <div className="ds-subsection">
-            <h4>4. MessageChip variant="single"</h4>
+            <h4>4. Location Confirm Chip="v2-location-confirm-chip"</h4>
+            <p className="ds-description">
+              Full-width chips for location confirmation (Single-Store flow). Background <code>blue-50</code>,
+              hover/selected fills <code>--hover</code> (stone-900) with white text and drop shadow. Checkmark icon on right.
+            </p>
+            <div className="ds-example ds-example-list" style={{ maxWidth: '400px' }}>
+              {/* Default state */}
+              <button className="v2-location-confirm-chip" type="button">
+                <span>Yes, search in Austin</span>
+                <span className="v2-confirm-chip-icon"><Check size={16} /></span>
+              </button>
+              {/* Hover/Selected state (simulated) */}
+              <button className="v2-location-confirm-chip selected" type="button">
+                <span>Hire in a different market</span>
+                <span className="v2-confirm-chip-icon"><Check size={16} /></span>
+              </button>
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>5. Chat Follow-up Chip="v2-chat-followup-chip"</h4>
+            <p className="ds-description">
+              Stacked vertical chips for chat follow-up options. Shows icon left, text center, check icon right (when active).
+              Default has white background; hover and active states use <code>gray-900</code> dark background with white text.
+            </p>
+            <div className="ds-example ds-example-list" style={{ maxWidth: '400px' }}>
+              {/* Default state */}
+              <button className="v2-chat-followup-chip" type="button">
+                <CornerDownRight size={18} className="v2-chip-icon-left" />
+                <span>Default</span>
+              </button>
+              {/* Hover state (simulated) */}
+              <button className="v2-chat-followup-chip" type="button" style={{ borderColor: 'var(--gray-900)', background: 'var(--gray-900)', color: 'white' }}>
+                <CornerDownRight size={18} className="v2-chip-icon-left" style={{ color: 'white' }} />
+                <span>Hover</span>
+              </button>
+              {/* Active state */}
+              <button className="v2-chat-followup-chip active" type="button">
+                <CornerDownRight size={18} className="v2-chip-icon-left" />
+                <span>Active / Selected</span>
+                <Check size={16} className="v2-chip-icon-right" />
+              </button>
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>6. MessageChip variant="single"</h4>
             <p className="ds-description">Single-select options with check icon on right</p>
             <div className="ds-example ds-example-list">
               <button className="ds-chip-demo message-chip-single type-chip-label" type="button">
@@ -491,7 +559,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
           </div>
 
           <div className="ds-subsection">
-            <h4>4. MessageChip variant="multi"</h4>
+            <h4>7. MessageChip variant="multi"</h4>
             <p className="ds-description">Multi-select options with plus/check icon on right</p>
             <div className="ds-example ds-example-list">
               <button className="ds-chip-demo message-chip-multi type-chip-label" type="button">
@@ -851,14 +919,12 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <li><span className="ds-style-prop">flex:</span> <code>1</code></li>
               <li><span className="ds-style-prop">padding:</span> <code>32px 64px 64px 64px</code></li>
               <li><span className="ds-style-prop">overflow-y:</span> <code>auto</code></li>
-              <li><span className="ds-style-prop">transition:</span> <code>200ms ease-out</code>
+              <li><span className="ds-style-prop">transition:</span> <code>250ms ease-out</code> (JS timeout 250ms)
                 <ul className="ds-style-list-nested">
-                  <li><code>.slide-in-right-forward</code> translateX(50px) to 0, opacity 0 to 1</li>
-                  <li><code>.slide-out-left-forward</code> translateX(0) to -50px, opacity 1 to 0</li>
-                  <li><code>.slide-in-left-backward</code> translateX(-50px) to 0, opacity 0 to 1</li>
-                  <li><code>.slide-out-right-backward</code> translateX(0) to 50px, opacity 1 to 0</li>
-                  <li><code>.fade-in</code> opacity 0 to 1</li>
-                  <li><code>.fade-out</code> opacity 1 to 0</li>
+                  <li><code>.slide-in-right-forward</code> translateX(30px) to 0, opacity 0 to 1 (300ms)</li>
+                  <li><code>.slide-out-left-forward</code> translateX(0) to -30px, opacity 1 to 0 (250ms)</li>
+                  <li><code>.slide-in-left-backward</code> translateX(-30px) to 0, opacity 0 to 1 (300ms)</li>
+                  <li><code>.slide-out-right-backward</code> translateX(0) to 30px, opacity 1 to 0 (250ms)</li>
                 </ul>
               </li>
             </ul>
@@ -910,8 +976,27 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               Focus-step journey tiles (three-up grid). Styles live in <code>V2TalentCentric/styles.css</code>; this panel imports that sheet so the Chips tab preview matches any variant.
             </p>
             <ul className="ds-style-list">
-              <li><span className="ds-style-prop">.journey-card-title:</span> <code>font-size: 24px</code>, <code>line-height: 36px</code>, <code>font-weight: 500</code></li>
-              <li><span className="ds-style-prop">.journey-card-description:</span> <code>font-size: 20px</code>, <code>line-height: 26px</code></li>
+              <li><span className="ds-style-prop">.journey-card:</span> <code>background: blue-50</code>, <code>border: 1px solid quaternary</code>, <code>border-radius: 12px</code>, <code>padding: 28px</code></li>
+              <li><span className="ds-style-prop">.journey-card:hover:</span> <code>background: gray-900</code>, <code>box-shadow: 0 8px 32px rgba(0,0,0,0.2)</code>, text turns white</li>
+              <li><span className="ds-style-prop">.journey-card.selected:</span> same as hover state</li>
+              <li><span className="ds-style-prop">.journey-card.completed:</span> arrow shows checkmark, background fills primary</li>
+              <li><span className="ds-style-prop">.journey-card-title:</span> <code>font-size: 24px</code>, <code>line-height: 24px</code>, <code>font-weight: 500</code></li>
+              <li><span className="ds-style-prop">.journey-card-description:</span> <code>font-size: 16px</code>, <code>line-height: 20px</code></li>
+              <li><span className="ds-style-prop">.journey-card-arrow:</span> <code>40px</code> circle, border quaternary; hover fills white, completed fills primary with white check</li>
+            </ul>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>.v2-location-confirm-chip</h4>
+            <p className="ds-description">
+              Full-width confirmation chips for Single-Store location flow.
+            </p>
+            <ul className="ds-style-list">
+              <li><span className="ds-style-prop">background:</span> <code>blue-50</code></li>
+              <li><span className="ds-style-prop">border:</span> <code>1px solid quaternary</code>, <code>border-radius: 12px</code></li>
+              <li><span className="ds-style-prop">padding:</span> <code>18px 24px</code></li>
+              <li><span className="ds-style-prop">:hover / .selected:</span> <code>background: primary</code>, <code>color: white</code></li>
+              <li><span className="ds-style-prop">.v2-confirm-chip-icon:</span> <code>28px</code> circle, shows checkmark</li>
             </ul>
           </div>
 

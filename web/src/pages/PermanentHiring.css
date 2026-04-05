@@ -2684,11 +2684,13 @@
 .ds-chip-demo.message-chip-single.hover {
   border-color: var(--app-primary);
   background: var(--gray-50);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .ds-chip-demo.message-chip-single.selected {
   border-color: var(--app-primary);
   background: var(--gray-50);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .ds-chip-demo.message-chip-single.selected .chip-icon {

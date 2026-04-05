@@ -552,6 +552,28 @@
   grid-template-columns: repeat(3, 1fr);
 }
 
+/* Experience level horizontal slider */
+.v2-experience-slider {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 4px 0;
+  margin-top: 32px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.v2-experience-slider::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.v2-experience-slider > .welcome-card {
+  flex: 0 0 auto;
+  min-width: 180px;
+  max-width: 220px;
+}
+
 /* V2Main / v2-main: step headlines (global .type-tagline is 36px) */
 .v2-main h1.type-tagline {
   font-size: 42px;
@@ -903,6 +925,52 @@
   color: var(--primary);
 }
 
+/* ============================================================
+   JOURNEY CARDS - COMPACT MODE (chat-active)
+   When chat is focused, cards shrink to 120px height
+   ============================================================ */
+.v2-journey-cards.chat-active {
+  height: 120px;
+  transition: height 300ms ease-out;
+}
+
+.v2-journey-cards.chat-active .journey-card {
+  padding: 16px 20px;
+}
+
+.v2-journey-cards.chat-active .journey-card-header {
+  gap: 8px;
+}
+
+.v2-journey-cards.chat-active .journey-card-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.v2-journey-cards.chat-active .journey-card-title {
+  font-size: 16px;
+  line-height: 20px;
+}
+
+.v2-journey-cards.chat-active .journey-card-footer {
+  gap: 12px;
+}
+
+.v2-journey-cards.chat-active .journey-card-description {
+  font-size: 13px;
+  line-height: 16px;
+}
+
+.v2-journey-cards.chat-active .journey-card-arrow {
+  width: 32px;
+  height: 32px;
+}
+
+.v2-journey-cards.chat-active .journey-card-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* Hide old style variants */
 .journey-card-gradient,
 .journey-card-illustrated,
@@ -1128,6 +1196,8 @@
 
 .v2-chat-followup-chip .v2-chip-icon-left {
   flex-shrink: 0;
+  width: 18px;
+  height: 18px;
   color: var(--secondary);
 }
 
@@ -1139,19 +1209,30 @@
   flex-shrink: 0;
   width: 20px;
   height: 20px;
-  padding: 2px;
+  min-width: 20px;
+  min-height: 20px;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--primary);
   color: white;
   border-radius: 50%;
 }
 
 .v2-chat-followup-chip:hover {
-  border-color: var(--primary);
+  border-color: var(--gray-900);
+  background: var(--gray-900);
+  color: white;
+}
+
+.v2-chat-followup-chip:hover .v2-chip-icon-left {
+  color: white;
 }
 
 .v2-chat-followup-chip.active {
-  border-color: var(--primary);
-  background: var(--primary);
+  border-color: var(--gray-900);
+  background: var(--gray-900);
   color: white;
 }
 
@@ -1554,15 +1635,17 @@
 }
 
 .v2-location-confirm-chip:hover {
-  border-color: var(--primary);
-  background: var(--primary);
+  border-color: var(--hover);
+  background: var(--hover);
   color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .v2-location-confirm-chip.selected {
-  border-color: var(--primary);
-  background: var(--primary);
+  border-color: var(--hover);
+  background: var(--hover);
   color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* When hovering one confirm chip, the other goes white */
@@ -1573,12 +1656,6 @@
 /* When one confirm chip is active, the other goes white */
 .v2-location-confirm-chips:has(.v2-location-confirm-chip:active) .v2-location-confirm-chip:not(:active) {
   background: var(--white);
-}
-
-.v2-location-confirm-chip.selected {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: #ffffff;
 }
 
 .v2-location-confirm-chip.selected svg {
@@ -1607,40 +1684,25 @@
   border: none;
 }
 
-/* Multi-store location chips container */
+/* Multi-store location chips container - 3 column grid */
 .v2-location-store-chips {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   width: 100%;
-  max-width: 600px;
+  margin-top: 32px;
 }
 
-/* Store chip with market subtext */
-.v2-location-store-chips .v2-location-chip {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+@media (max-width: 768px) {
+  .v2-location-store-chips {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.v2-location-store-chips .v2-location-chip::before {
-  display: none;
-}
-
-.v2-location-store-chips .v2-chip-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.v2-chip-market {
-  font-size: 14px;
-  color: var(--secondary);
-  font-weight: 400;
-}
-
-.v2-location-store-chips .v2-location-chip.selected .v2-chip-market {
-  color: var(--primary);
+@media (max-width: 500px) {
+  .v2-location-store-chips {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Sticky Nav Footer - pinned to bottom of content shell */
@@ -1738,10 +1800,298 @@
   font-weight: 700;
 }
 
+/* Override .v2-main-centered > * max-width for employment chips */
+.v2-main-centered > .v2-employment-chips {
+  max-width: none;
+  align-self: stretch;
+}
+
+/* Full width of main column (not capped at 720px like .v2-main-centered > *) */
+.v2-main-centered > .v2-availability-slider {
+  max-width: none;
+  align-self: stretch;
+  width: 100%;
+}
+
 .v2-employment-chips {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-top: 32px;
+  padding: 0 60px;
+  height: 240px;
+  width: 100%;
+}
+
+.v2-employment-chips .journey-card {
+  width: 100%;
+}
+
+/* Hide description in employment chips */
+.v2-employment-chips .journey-card-description {
+  display: none;
+}
+
+/* Availability section */
+.v2-availability-header {
+  margin-top: 64px;
+  margin-bottom: 16px;
+}
+
+.v2-availability-header h2.type-section-header-lg {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-size: 24px;
+}
+
+/* Hours slider */
+.v2-availability-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 24px;
+  width: 100%;
+  position: relative;
+}
+
+/* Container for label+tick markers - positioned above the track */
+.v2-slider-markers {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  height: 44px; /* Fixed height: 20px label + 8px gap + 12px tick + 4px padding */
+  position: relative;
+  z-index: 3;
+}
+
+/* Each marker contains label + tick, centered horizontally */
+.v2-slider-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 8px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.v2-slider-marker:hover .v2-slider-label {
+  color: var(--app-primary);
+}
+
+.v2-slider-label {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--primary);
+  transition: color 0.15s ease, font-size 0.15s ease, font-weight 0.15s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.v2-slider-label.active {
+  color: var(--app-primary);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.v2-slider-tick {
+  width: 2px;
+  height: 12px;
+  background: var(--tertiary);
+  border-radius: 1px;
+}
+
+/* Track container - overlaps with tick marks */
+.v2-slider-track-container {
+  position: relative;
+  width: 100%;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  margin-top: -6px; /* Overlap tick marks with track */
+  /* Pad by half the marker width (10%) minus half thumb width so thumb center aligns with tick */
+  padding: 0 calc(10% - 16px);
+  box-sizing: border-box;
+}
+
+/* Inner wrapper for slider and fill - same size as the input */
+.v2-slider-track-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* Background axis line */
+.v2-slider-track-wrapper::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 4px;
+  background: var(--quaternary);
+  border-radius: 2px;
+  z-index: 6;
+}
+
+/* Filled progress track - positioned relative to the track wrapper */
+.v2-slider-fill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 6px;
+  background: var(--app-primary);
+  border-radius: 3px;
+  z-index: 8;
+  pointer-events: none;
+  transition: width 0.15s ease;
+}
+
+.v2-hours-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: transparent;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  z-index: 10;
+  margin: 0;
+}
+
+.v2-hours-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  border: 3px solid var(--app-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  margin-top: -14px; /* Center thumb on 4px track: (32px - 4px) / 2 = 14px */
+}
+
+.v2-hours-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.v2-hours-slider::-moz-range-thumb {
+  width: 32px;
+  height: 32px;
+  background: #ffffff;
+  border: 3px solid var(--app-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.v2-hours-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Track styling */
+.v2-hours-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+}
+
+.v2-hours-slider::-moz-range-track {
+  height: 4px;
+  background: var(--quaternary);
+  border-radius: 2px;
+}
+
+/* Fade-in animations for staggered appearance */
+@keyframes v2FadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.v2-fade-in-first {
+  animation: v2FadeInUp 300ms ease-out forwards;
+}
+
+.v2-fade-in-second {
+  animation: v2FadeInUp 300ms ease-out 150ms forwards;
+  opacity: 0; /* Start invisible until animation begins */
+}
+
+/* Message chip single - full width single select chip */
+.message-chip-single {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 1px solid var(--quaternary);
+  border-radius: 8px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--primary);
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.15s ease;
+}
+
+.message-chip-single::before {
+  content: "↳";
+  color: var(--primary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.message-chip-single > span:first-of-type {
+  flex: 1;
+  text-align: left;
+}
+
+.message-chip-single .chip-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.message-chip-single:hover {
+  border-color: var(--primary);
+  background: var(--gray-50);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.message-chip-single.selected {
+  border-color: var(--primary);
+  background: var(--gray-50);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.message-chip-single.selected .chip-icon {
+  background: var(--primary);
+  color: #ffffff;
 }
 
 .v2-employment-chip {

@@ -22,28 +22,37 @@
 
 Understand who is searching: individual store manager, multi-store manager, field recruiter, etc. This informs location logic and UX flow.
 
-**Welcome → "Tell us about yourself"**
+**Welcome → "Tell us about your role so we can focus our questions."**
 
-Persona selection determines location flow: single-store users get a quick confirm ("Looking for talent in Austin?"), multi-store users pick from their locations, field/recruiters get full market search.
+Persona selection determines location flow: single-store users get a quick confirm ("Search the Austin market?"), multi-store users pick from their store locations, field/recruiters get full market search with no preselection.
 
+**Two input modes:**
+1. **Card selection** - Click a persona card to select and auto-advance to location
+2. **Chat input** - Type freeform response ("Or share more detailed information..."), then select from follow-up chips
 
 | Aspect             | Detail                                                                                                                                         |
 | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Business Value** | Tailors experience to user job role and motivations; single-store users skip location picker; multi-store/recruiters get full market selection |
 | **Considerations** | Keep it light and smart; infer location when possible (single store = known market); persona drives downstream flow                            |
 | **Risks**          | N/A                                                                                                                                            |
-| **AI**             | Develop user personas based on user job role and motivations                                                                                   |
+| **AI**             | V2GeminiService provides mock responses for chat; guides user to select persona via follow-up chips                                            |
 
 
 **Persona Types (Starting point MVP):**
 
 
-| Persona                      | Description                                | Location Logic                                                         |
-| ---------------------------- | ------------------------------------------ | ---------------------------------------------------------------------- |
-| Single-Store Manager         | Managing a team at one location            | Auto-detect market: "Looking for talent in {market}?" (confirm/change) |
-| Multi-Store Manager          | Managing multiple locations in same market | Show location picker with their store list                             |
-| Field Manager / Multi-Market | Overseeing stores across markets           | Full market search with city grid                                      |
-| Recruiter                    | Centralized hiring function                | Full market search: "What city are you hiring in?"                     |
+| Persona                      | Description                                     | Location Logic                                                              |
+| ---------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
+| Single-Store Manager         | Managing a team at one location                 | Auto-detect market: "Search the {market} market?" (confirm/change)          |
+| Multi-Store Manager          | Managing multiple locations in same area        | Show store dropdown + "Hire in different market" option                     |
+| Regional/District Manager    | Overseeing stores across region(s)              | Full market search with city grid, no preselection                          |
+| HR/Recruiter                 | Centralized hiring function across the country  | Full market search with city grid, no preselection                          |
+
+**Chat Follow-up Chips** (after user sends chat message):
+- "One location" → Single-Store Manager
+- "Multiple locations" → Multi-Store Manager
+- "District or region" → Regional/District Manager
+- "Nationally across the brand" → HR/Recruiter
 
 
 ---
@@ -187,8 +196,8 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
                                                 ▼
                               ┌─────────────────────────────────────┐
                               │             WELCOME                 │
-                              │   "Let's connect with retail        │
-                              │    talent in your area"             │
+                              │   "Hey {userName}, let's connect    │
+                              │    with retail talent in your area" │
                               │                                     │
                               │           [Get started]             │
                               └─────────────────┬───────────────────┘
@@ -196,31 +205,24 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
                                                 ▼
                               ┌─────────────────────────────────────┐
                               │         USER PERSONA                │
-                              │   "Tell us about yourself..."       │
+                              │   "Tell us about your role so we    │
+                              │    can focus our questions."        │
                               │                                     │
                               │   ┌─────────────────────────────┐   │
                               │   │ 🏪 Single-Store Manager      │   │
                               │   │ 🏢 Multi-Store Manager      │   │
-                              │   │ 🗺  Field / Multi-Market    │   │
-                              │   │ 👤 Recruiter                │   │
+                              │   │ 🗺  Regional/District Mgr   │   │
+                              │   │ 🌐 HR/Recruiter             │   │
                               │   └─────────────────────────────┘   │
-                              └─────────────────┬───────────────────┘
-                                                │
-                                                │  (all personas)
-                                                │
-                                                ▼
-                              ┌─────────────────────────────────────┐
-                              │           FOCUS STEP                │
-                              │   "Where would you like to start?"  │
                               │                                     │
-                              │   ┌─────────┐ ┌─────────┐ ┌───────┐ │
-                              │   │ Type of │ │ Brand   │ │ Exp   │ │
-                              │   │ employ- │ │ affinity│ │ level │ │
-                              │   │ ment    │ │         │ │       │ │
-                              │   └─────────┘ └─────────┘ └───────┘ │
+                              │   [Or share more detailed info...]  │
+                              │   (chat input for freeform entry)   │
+                              │                                     │
+                              │   *Selection auto-progresses to     │
+                              │    LOCATION step with animation     │
                               └─────────────────┬───────────────────┘
                                                 │
-                                                │  (select any focus)
+                                                │  (persona selection OR chat response)
                                                 │
                                                 ▼
                               ┌─────────────────────────────────────┐
@@ -235,21 +237,67 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     │   LOCATION CONFIRM        │ │    STORE PICKER           │ │    MARKET PICKER          │
     │   (Single Store)          │ │    (Multi-Store)          │ │    (Field/Recruiter)      │
     │                           │ │                           │ │                           │
-    │   "Looking for talent     │ │   "Which location are     │ │   "What city are you      │
-    │    in Austin?"            │ │    you hiring for?"       │ │    hiring in?"            │
+    │   "Search the Austin      │ │   "Which location are     │ │   "Where are you          │
+    │    market?"               │ │    you hiring for?"       │ │    hiring?"               │
     │                           │ │                           │ │                           │
-    │   [Yes] [Change market]   │ │   [Store list dropdown]   │ │   [City grid / search]    │
+    │   ┌─────────────────────┐ │ │   [Store location chips]  │ │   [Dropdown] or [Search]  │
+    │   │ Yes, search Austin ✓│ │ │   + "Hire in different    │ │   [City chip grid]        │
+    │   └─────────────────────┘ │ │      market" option       │ │                           │
+    │   ┌─────────────────────┐ │ │                           │ │   *Shows worker sidebar   │
+    │   │ Hire in different  ✓│ │ │   *Filter Logic:          │ │    when location selected │
+    │   │ market              │ │ │   worker.market = market  │ │                           │
+    │   └─────────────────────┘ │ │                           │ │   *Filter Logic:          │
+    │                           │ │   *"Different market"     │ │   worker.market = market  │
+    │   *"Yes" auto-progresses  │ │    → MARKET PICKER        │ │                           │
+    │    to FOCUS step (150ms)  │ │                           │ │   *No preselection        │
+    │                           │ │                           │ │    (empty state)          │
+    │   *"Different market"     │ │                           │ │                           │
+    │    → MARKET PICKER        │ │                           │ │                           │
+    │    (sub-flow via          │ │                           │ │                           │
+    │    pickingDifferentMarket │ │                           │ │                           │
+    │    state, reuses Field/   │ │                           │ │                           │
+    │    Recruiter view)        │ │                           │ │                           │
     │                           │ │                           │ │                           │
-    │   *Filter Logic:          │ │   *Filter Logic:          │ │   *Filter Logic:          │
-    │   worker.market = market  │ │   worker.market = market  │ │   worker.market = market  │
+    │   *Back from MARKET       │ │                           │ │                           │
+    │    PICKER returns to      │ │                           │ │                           │
+    │    confirmation screen    │ │                           │ │                           │
+    │    with "different"       │ │                           │ │                           │
+    │    selected               │ │                           │ │                           │
     └───────────────┬───────────┘ └───────────────┬───────────┘ └───────────────┬───────────┘
                     │                             │                             │
                     └─────────────────────────────┼─────────────────────────────┘
                                                   │
                                                   ▼
+                              ┌─────────────────────────────────────┐
+                              │           FOCUS STEP                │
+                              │   "Let's narrow down your           │
+                              │    connections. Where would you     │
+                              │    like to start, {userName}?"      │
+                              │                                     │
+                              │   ┌─────────────────────────────┐   │
+                              │   │ Type of employment    → / ✓ │   │
+                              │   ├─────────────────────────────┤   │
+                              │   │ Brand affinity        → / ✓ │   │
+                              │   ├─────────────────────────────┤   │
+                              │   │ Experience level      → / ✓ │   │
+                              │   └─────────────────────────────┘   │
+                              │                                     │
+                              │   *Journey cards: arrow (→) when    │
+                              │    available, checkmark (✓) when    │
+                              │    completed                        │
+                              │                                     │
+                              │   *Clicking card auto-progresses    │
+                              │    to that section (no Continue)    │
+                              │                                     │
+                              │   *Completed cards are disabled     │
+                              └─────────────────┬───────────────────┘
+                                                │
+                                                │  (click any card to enter)
+                                                │
+                                                ▼
                     ┌─────────────────────────────────────────────────────────────┐
                     │                   PREFERENCE SHAPING                        │
-                    │                   (3-section flow)                          │
+                    │                   (3-section CYOA flow)                     │
                     └─────────────────────────────┬───────────────────────────────┘
                                                   │
                     ┌─────────────────────────────┼─────────────────────────────┐
@@ -259,27 +307,56 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     │   SECTION 1:              │ │   SECTION 2:              │ │   SECTION 3:              │
     │   TYPE OF EMPLOYMENT      │ │   BRAND AFFINITY          │ │   EXPERIENCE IN ROLE      │
     │                           │ │                           │ │                           │
-    │   Employment Type:        │ │   "What brands resonate   │ │   Experience Level:       │
-    │   ┌─────┐ ┌─────┐ ┌─────┐│ │    with you?"             │ │   ┌───────────────────┐   │
-    │   │ PT  │ │ FT  │ │ 😉  ││ │                           │ │   │ New to retail     │   │
-    │   │     │ │     │ │Help!││ │   ┌─────┐ ┌─────┐ ┌─────┐ │ │   │ Rising talent     │   │
-    │   └─────┘ └─────┘ └─────┘│ │   │Gucci│ │Nike │ │Ariat│ │ │   │ Seasoned pro      │   │
-    │                           │ │   └─────┘ └─────┘ └─────┘ │ │   │ Management        │   │
-    │   Hours/Availability:     │ │                           │ │   └───────────────────┘   │
-    │   <10  10-20  20-30  30+  │ │   [Search brands...]      │ │                           │
-    │   Weekdays  Weekends      │ │   Multi-select grid       │ │   Duration signals:       │
-    │                           │ │   (loose matching)        │ │   6mo, 1yr, 2yr+          │
-    │                           │ │                           │ │                           │
-    │   *Filter Logic:          │ │   *Filter Logic:          │ │   *Filter Logic:          │
-    │   FT/PT: preference       │ │   brands_worked (loose)   │ │   New: 0-5 shifts         │
-    │   "Help": flex shift CTA  │ │   brand_tier for proxy    │ │   Rising: 5-30 shifts     │
-    │   Hours: hours_available  │ │   matching                │ │   Seasoned: 30+ shifts    │
-    │   Avail: weekends bool    │ │                           │ │   Mgmt: role history      │
+    │   V2EmploymentSelector    │ │   "What brand experience  │ │   "What experience level  │
+    │   component:              │ │    do you trust?"         │ │    are you looking for?"  │
+    │   ┌─────┐ ┌─────┐ ┌─────┐│ │                           │ │                           │
+    │   │ PT  │ │ FT  │ │Flex ││ │   ┌─────┐ ┌─────┐ ┌─────┐ │ │   ┌───────────────────┐   │
+    │   │     │ │     │ │     ││ │   │Gucci│ │Nike │ │Ariat│ │ │   │ New to Reflex     │   │
+    │   └─────┘ └─────┘ └─────┘│ │   └─────┘ └─────┘ └─────┘ │ │   │ Rising talent     │   │
+    │                           │ │                           │ │   │ Seasoned pro      │   │
+    │   *Selection auto-        │ │   [Search brands...]      │ │   │ Management ready  │   │
+    │    completes section and  │ │   Multi-select grid       │ │   └───────────────────┘   │
+    │    goes to next focus     │ │   (loose matching)        │ │                           │
+    │                           │ │                           │ │   *Selection auto-        │
+    │   *Filter Logic:          │ │   *Requires Continue btn  │ │    completes section      │
+    │   FT: preference FT/Both  │ │    (multi-select)         │ │                           │
+    │   PT: preference PT/Both  │ │                           │ │   *Filter Logic:          │
+    │   Flex: no filter         │ │   *Filter Logic:          │ │   New: 0-5 shifts         │
+    │                           │ │   brands_worked (loose)   │ │   Rising: 5-30 shifts     │
+    │                           │ │   brand_tier for proxy    │ │   Seasoned: 30+ shifts    │
+    │                           │ │   matching                │ │   Mgmt: role history      │
     └───────────────┬───────────┘ └───────────────┬───────────┘ └───────────────┬───────────┘
                     │                             │                             │
                     └─────────────────────────────┼─────────────────────────────┘
                                                   │
+                                                  │  (after ANY section completes)
+                                                  │
                                                   ▼
+                              ┌─────────────────────────────────────┐
+                              │         CYOA CYCLE LOGIC            │
+                              │   completeSection(section)          │
+                              │                                     │
+                              │   completedSections.size >= 3?      │
+                              │          │                          │
+                              │    ┌─────┴─────┐                    │
+                              │    │           │                    │
+                              │   NO          YES                   │
+                              │    │           │                    │
+                              │    ▼           ▼                    │
+                              │  getNext  → RESULTS STEP            │
+                              │  Incomplete                         │
+                              │  Section()                          │
+                              │                                     │
+                              │   *Order: employment, brands, roles │
+                              │   *Wraps around from current index  │
+                              │   *Maps: roles → experience step    │
+                              │           brands → brands step      │
+                              │           employment → employment   │
+                              └─────────────────┬───────────────────┘
+                                                │
+                                                │  (all 3 complete)
+                                                │
+                                                ▼
     ┌─────────────────────────────────────────────────────────────────────────────────────┐
     │                        WORKER CARDS - CHIP DISPLAY LOGIC                            │
     │                                                                                     │
@@ -308,23 +385,27 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
                                                   │
                                                   ▼
     ┌─────────────────────────────────────────────────────────────────────────────────────┐
-    │                              MEET YOUR MATCHES                                      │
+    │                              RESULTS STEP                                           │
+    │                              step="results"                                         │
     │                                                                                     │
-    │   "We found 12 Reflexers for you"                                                   │
+    │   "Meet your matches"                                                               │
+    │   "{N} Reflexers match your criteria. Connect to learn more or book a shift."       │
     │                                                                                     │
-    │   ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐        │
-    │   │  [Photo]            │  │  [Photo]            │  │  [Photo]            │        │
-    │   │  Sarah M.           │  │  Jordan F.          │  │  Alex T.            │        │
-    │   │  ✓ Shift Verified   │  │  ✓ Shift Verified   │  │  ✓ Shift Verified   │        │
-    │   │  Nike • Ariat       │  │  Gucci • Theory     │  │  Lululemon • Nike   │        │
-    │   │  "Great with..."    │  │  "Customers love..."│  │  "Strong closer..." │        │
-    │   │                     │  │                     │  │                     │        │
-    │   │  [Connect] [Invite] │  │  [Connect] [Invite] │  │  [Connect] [Invite] │        │
-    │   └─────────────────────┘  └─────────────────────┘  └─────────────────────┘        │
+    │   Common brands row: "Experience at: Nike, Ariat, ..." (top 6 common brands)        │
     │                                                                                     │
-    │   Primary CTA: "Connect with [Name]" → Opens chat                                   │
-    │   Secondary CTA: "Invite to a shift" → Cahootz booking                              │
+    │   ┌─────────────────────────────────────────────────────────────────────────┐       │
+    │   │  [Connect with all {N}]              [Start over]                       │       │
+    │   └─────────────────────────────────────────────────────────────────────────┘       │
+    │                                                                                     │
+    │   *Sidebar shows "{N} matches" title with WorkerCardChip list                       │
+    │   *"Start over" resets: step=welcome, clears all selections + completedSections     │
+    │   *No footer nav (hideFooter=true) - uses action buttons instead                    │
+    │   *Sparkles icon in header                                                          │
+    │                                                                                     │
+    │   Future: Individual worker CTAs "Connect" + "Invite to shift"                      │
     └─────────────────────────────────────┬───────────────────────────────────────────────┘
+                                          │
+                                          │  (future milestones - NOT YET IMPLEMENTED)
                                           │
                     ┌─────────────────────┴─────────────────────┐
                     │                                           │
@@ -374,19 +455,38 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
 
 ### User Persona Selection
 
-- Full-width cards with icon + title for each persona type
-- Single-select, auto-advance on selection
-- Icons: 🏪 Single-Store Manager, 🏢 Multi-Store, 🗺 Field/Multi-Market, 👤 Recruiter
-- Persona selection informs location flow logic
+- 2x2 grid of persona cards (`.v2-focus-chips` layout)
+- Cards have icon (circular, 54px) + title + description
+- **Hover state**: drop shadow (`0 8px 24px rgba(0, 0, 0, 0.12)`), icon fills primary
+- **Active state**: tighter drop shadow (`0 2px 8px rgba(0, 0, 0, 0.15)`), icon filled, border highlight
+- Single-select, auto-advance on selection (clears any chat messages)
+- Icons: Store (Single-Store), MapPinPlus (Multi-Store), MapPlus (Regional/District), Earth (HR/Recruiter)
+- Chat input below cards: "Or share more detailed information..."
+- When chat is used, persona cards shrink to compact mode (`.chat-active`)
+- Chat follow-up chips appear after assistant responds, styled as single-select chips with CornerDownRight icon
 
 ### Location Flow
 
 
-| Persona         | Location UX                                                       |
-| --------------- | ----------------------------------------------------------------- |
-| Individual      | Confirm screen: "Looking for talent in {market}?" with Yes/Change |
-| Multi-Store     | Dropdown of their store locations                                 |
-| Field/Recruiter | Full city grid with search, same as current location step         |
+| Persona         | Location UX                                                                          |
+| --------------- | ------------------------------------------------------------------------------------ |
+| Individual      | Confirm screen: "Search the {market} market?" with two chip options                  |
+|                 | - "Yes, search in {market}" → auto-advances to focus step                            |
+|                 | - "Hire in a different market" → transitions to full market picker                   |
+| Multi-Store     | Store dropdown + "Hire in different market" option                                   |
+| Field/Recruiter | Full market picker with dropdown OR search + city chip grid, no preselection         |
+
+**Location confirmation chips** (Single-Store):
+- Styled as full-width chips with checkmark icon on right
+- Hover/selected state: primary background, white text, white checkmark
+- Auto-advance after selection with brief delay (150ms for "Yes", 300ms for "Different")
+
+**Market picker** (Field/Recruiter or "Different market"):
+- Dropdown: "Select a location" (default empty state)
+- Search input with X clear button
+- City chip grid (`.v2-location-grid`)
+- Worker sidebar appears when location is selected
+- Back button returns to previous location step variant (or persona if from confirmation)
 
 
 ### Employment Type Section
@@ -478,16 +578,46 @@ Worker-specific shift booking flow:
 | `V2ContentShell`          | Legacy/alternate step shell (animations, padding, footer) |
 | `V2NavFooter`             | Sticky back/next navigation buttons                  |
 | **User Persona / Focus**  |                                                      |
-| `.v2-focus-chips`         | 2-column grid of focus/persona cards (`gap: 16px`; stacks to 1 column at max-width 500px) |
-| `.welcome-card`           | Selection card (`button`): icon + text; uses Chat base styles |
-| `.v2-welcome-card-text`   | Wraps title + description inside card; `flex` column, `gap: 0` (tight stack); card `gap: 12px` is icon ↔ block only |
-| `h3.welcome-card-title` + `.type-chip-header-lg` | Card title; inside `.v2-main`: **18px / 24px** line-height |
-| `p.welcome-card-description` + `.type-body-md` | Card subtitle                                           |
-| `.welcome-card.active`    | Selected state                                       |
-| **Location**              |                                                      |
+| `.v2-focus-chips`         | 2-column grid of persona cards (`gap: 16px`; stacks to 1 column at max-width 500px) |
+| `.v2-focus-chips.chat-active` | Compact mode when chat is engaged (shorter cards, smaller icons) |
+| `.welcome-card.persona-card` | Persona selection card with grid layout: title top-left, desc bottom-left, icon top-right |
+| `.welcome-card.persona-card:hover` | Drop shadow `0 8px 24px rgba(0, 0, 0, 0.12)`, icon fills primary |
+| `.welcome-card.persona-card.active` | Tighter shadow `0 2px 8px rgba(0, 0, 0, 0.15)`, icon filled |
+| `.v2-welcome-card-text`   | Wraps title + description; uses `display: contents` for grid positioning |
+| `h3.welcome-card-title`   | Card title (20px/24px); grid-area: title            |
+| `p.welcome-card-description` | Card subtitle (16px); grid-area: desc, aligned bottom |
+| `.welcome-card-icon`      | Circular icon (54px), border primary, hover/active fills |
+| **Persona Chat**          |                                                      |
+| `.v2-chat-inline`         | Chat container spanning full width under persona chips |
+| `.v2-chat-messages`       | Scrollable message container                         |
+| `.v2-chat-message.user`   | User message (right-aligned, primary bg, white text) |
+| `.v2-chat-message.assistant` | Assistant message (left-aligned with avatar)      |
+| `.v2-chat-avatar`         | 32px circular avatar with chatbot image              |
+| `.v2-chat-bubble`         | Message bubble with rounded corners                  |
+| `.v2-chat-followup-chips` | Vertical stack of follow-up selection chips          |
+| `.v2-chat-followup-chip`  | Single-select chip with CornerDownRight icon left, Check icon right when active |
+| `.v2-chat-prompt`         | Input container with text input and send button      |
+| **Focus Step / Journey Cards** |                                                 |
+| `.v2-journey-cards`       | Container for 3 journey cards (flex column, gap 12px) |
+| `.journey-card`           | Navigation card with header (icon + title) and footer (desc + arrow/check) |
+| `.journey-card-header`    | Flex row with icon circle (40px) and title           |
+| `.journey-card-icon`      | Circular icon container, background-navy, primary icon |
+| `.journey-card-title`     | 18px/700 title text                                   |
+| `.journey-card-footer`    | Description (left) + arrow/check icon (right)        |
+| `.journey-card-description` | 14px secondary text                                 |
+| `.journey-card-arrow`     | Arrow (→) when available, Check (✓) when completed   |
+| `.journey-card.completed` | Reduced opacity, disabled state                      |
+| `.journey-card:hover`     | Background navy-light, cursor pointer                |
+| **Location Confirm**      |                                                      |
+| `.v2-location-confirm-chips` | Vertical stack of confirmation chips (Single-Store) |
+| `.v2-location-confirm-chip` | Full-width chip with text and checkmark icon       |
+| `.v2-confirm-chip-icon`   | Circular checkmark icon (28px), shows on hover/selected |
+| **Location Picker**       |                                                      |
 | `.v2-location-grid`       | City chip grid (4 columns, 3 with sidebar)           |
 | `.v2-location-chip`       | Individual city selection chip                       |
-| `.v2-location-select`     | Store dropdown for multi-store users                 |
+| `.v2-location-select`     | Store dropdown (empty default state)                 |
+| `.v2-location-controls`   | Dropdown + "or" + search input layout                |
+| `.v2-step-content-scroll` | Scrollable container for location grid               |
 | **Employment Type**       |                                                      |
 | `.v2-employment-chips`    | Horizontal chip layout for employment options        |
 | `.v2-hours-chips`         | Hours/availability selection chips (TBD)             |
@@ -504,6 +634,13 @@ Worker-specific shift booking flow:
 | `.type-section-header-lg` | "We found N Reflexers" heading                       |
 | `.type-section-header-sm` | "What retailers are saying..." label                 |
 | `.type-body-md`           | Worker summary text                                  |
+| **Worker Sidebar**        |                                                      |
+| `V2WorkerSidebar`         | Collapsible right panel for worker cards             |
+| `.v2-sidebar`             | Container: 380px open, 24px collapsed, white bg, left drop shadow, z-index: 10 |
+| `.v2-sidebar.collapsed`   | Narrow collapsed state with toggle button            |
+| `.v2-sidebar-toggle`      | 24px circle toggle button, chevron icon              |
+| `.v2-sidebar-header`      | Title + count, sticky top                            |
+| `.v2-sidebar-cards`       | Scrollable list of worker cards                      |
 | **Chat (TBD)**            |                                                      |
 | `ChatThread`              | In-platform retailer-worker conversation             |
 | `ChatMessage`             | Individual message bubble                            |
@@ -657,36 +794,50 @@ import { V2NavFooter } from './V2NavFooter';
 
 ### Step Transition Animations
 
-CSS keyframe animations for step transitions.
+CSS keyframe animations for step transitions. Transitions use 250ms timeout in JS with CSS animations completing in 250-300ms.
 
 **Animation Specs:**
 
 
-| Animation       | Duration | Easing     | Transform                                  |
-| --------------- | -------- | ---------- | ------------------------------------------ |
-| `slideOutLeft`  | `200ms`  | `ease-out` | `translateX(0) → translateX(-50px)` + fade |
-| `slideOutRight` | `200ms`  | `ease-out` | `translateX(0) → translateX(50px)` + fade  |
-| `slideInRight`  | `200ms`  | `ease-in`  | `translateX(50px) → translateX(0)` + fade  |
-| `slide-in`      | static   | -          | `translateX(0), opacity: 1`                |
+| Animation                  | Duration | Easing     | Transform                                       |
+| -------------------------- | -------- | ---------- | ----------------------------------------------- |
+| `slide-out-left-forward`   | `250ms`  | `ease-out` | `translateX(0) → translateX(-30px)`, fade 0→1   |
+| `slide-out-right-backward` | `250ms`  | `ease-out` | `translateX(0) → translateX(30px)`, fade 0→1    |
+| `slide-in-right-forward`   | `300ms`  | `ease-out` | `translateX(30px) → translateX(0)`, fade 0→1    |
+| `slide-in-left-backward`   | `300ms`  | `ease-out` | `translateX(-30px) → translateX(0)`, fade 0→1   |
 
 
-**CSS Classes:**
+**CSS Classes on `.v2-main`:**
 
 ```css
-.v2-step-content                   /* Base transition styles */
-.v2-step-content.slide-in          /* Initial/settled state */
-.v2-step-content.slide-in-right    /* Enter from right */
-.v2-step-content.slide-out-left    /* Exit to left (forward) */
-.v2-step-content.slide-out-right   /* Exit to right (back) */
+.v2-main.slide-out-left-forward     /* Exit to left (forward navigation) */
+.v2-main.slide-out-right-backward   /* Exit to right (back navigation) */
+.v2-main.slide-in-right-forward     /* Enter from right (forward navigation) */
+.v2-main.slide-in-left-backward     /* Enter from left (back navigation) */
 ```
 
-**Transition Logic:**
+**Transition Logic (V2Main.tsx):**
 
 ```tsx
-// In component
-const transitionClass = isTransitioning
-  ? (direction === 'forward' ? 'slide-out-left' : 'slide-out-right')
-  : (isInitialStep ? 'slide-in' : 'slide-in-right');
+function getTransitionClass(isTransitioning: boolean, direction: TransitionDirection): string {
+  if (isTransitioning) {
+    return direction === 'forward' ? 'slide-out-left-forward' : 'slide-out-right-backward';
+  }
+  return direction === 'forward' ? 'slide-in-right-forward' : 'slide-in-left-backward';
+}
+```
+
+**JS Transition Timing (index.tsx):**
+
+```tsx
+const transitionToStep = (newStep: Step, direction: 'forward' | 'back' = 'forward') => {
+  setTransitionDirection(direction);
+  setIsTransitioning(true);
+  setTimeout(() => {
+    setStep(newStep);
+    setIsTransitioning(false);
+  }, 250); // 250ms matches CSS animation duration
+};
 ```
 
 ---
@@ -717,5 +868,48 @@ const transitionClass = isTransitioning
 | `.v2-nav-footer`               | `16px 0`           | Footer vertical padding (margin-top:auto) |
 | `.v2-sidebar-cards`            | `16px`             | Card list padding                         |
 | `.v2-btn-back`, `.v2-btn-next` | `12px 36px`        | Button padding                            |
+
+
+### Worker Sidebar (V2WorkerSidebar)
+
+Collapsible right panel showing filtered worker cards. Appears on location step (when market selected), brands, experience, and results steps.
+
+**File:** `V2WorkerSidebar.tsx`
+
+**Style Specs:**
+
+| Property | Value | Notes |
+| -------- | ----- | ----- |
+| Width | `380px` (open), `24px` (collapsed) | Fixed width |
+| Background | `var(--white)` | White background |
+| Border | none | No left border |
+| Box Shadow | `-4px 0 16px rgba(0, 0, 0, 0.08)` | Left drop shadow |
+| Z-Index | `10` | Above main content |
+| Toggle button | `24px` circle, centered, primary bg | Chevron icon |
+
+**Conditional Display:**
+
+```tsx
+// Sidebar shows on these steps with these conditions:
+{(["brands", "experience", "results"].includes(step) ||
+  (step === "location" && selectedLocation &&
+   (persona === "field" || persona === "recruiter" ||
+    (persona === "individual" && pickingDifferentMarket)))) && (
+  <V2WorkerSidebar ... />
+)}
+```
+
+**Props:**
+
+| Prop | Type | Description |
+| ---- | ---- | ----------- |
+| `workers` | `MatchedWorker[]` | Filtered workers to display |
+| `isOpen` | `boolean` | Whether sidebar is expanded |
+| `onToggle` | `() => void` | Toggle handler |
+| `title` | `string` | Header title (varies by step) |
+| `showCount` | `boolean` | Show worker count in header |
+| `onWorkerClick` | `(worker) => void` | Card click handler |
+| `emptyMessage` | `string` | Custom empty state message |
+| `isLoading` | `boolean` | Show loading skeleton |
 
 

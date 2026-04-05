@@ -31,7 +31,7 @@ import { SAMPLE_WORKERS } from "../../../data/workers";
 import { V2Main } from "./V2Main";
 import { V2EmploymentSelector } from "./V2EmploymentSelector";
 import { V2WorkerSidebar } from "./V2WorkerSidebar";
-import type { EmploymentType } from "./V2EmploymentSelector";
+import type { EmploymentType, AvailabilityHours } from "./V2EmploymentSelector";
 import type { MatchedWorker, ChatMessage, WorkerProfile } from "../../../types";
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
 import { fetchWorkersByMarketAsProfiles } from "../../../services/supabase";
@@ -533,6 +533,7 @@ export function V2TalentCentric({
   // New flow state
   const [focusArea, setFocusArea] = useState<FocusArea | null>(null);
   const [employmentType, setEmploymentType] = useState<EmploymentType>(null);
+  const [availabilityHours, setAvailabilityHours] = useState<AvailabilityHours>(null);
 
   // Persona and location flow
   const [persona, setPersona] = useState<PersonaType | null>(null);
@@ -557,6 +558,13 @@ export function V2TalentCentric({
   const [completedSections, setCompletedSections] = useState<Set<FocusArea>>(
     new Set(),
   );
+
+  // Focus step chat state (separate from persona chat)
+  const [focusChatActive, setFocusChatActive] = useState(false);
+  const [focusChatInput, setFocusChatInput] = useState("");
+  const [focusChatMessages, setFocusChatMessages] = useState<ChatMessage[]>([]);
+  const [isFocusChatLoading, setIsFocusChatLoading] = useState(false);
+  const focusChatServiceRef = useRef<V2GeminiService | null>(null);
 
   // Supabase workers state - fetched when location is selected
   const [supabaseWorkers, setSupabaseWorkers] = useState<WorkerProfile[]>([]);
@@ -661,6 +669,55 @@ export function V2TalentCentric({
       setIsLoading(false);
     }
   }, [initChatService]);
+
+  // Send focus chat message (for focus step)
+  const sendFocusChatMessage = useCallback(async (message: string) => {
+    if (!message.trim()) return;
+
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: message,
+      timestamp: new Date(),
+    };
+    setFocusChatMessages((prev) => [...prev, userMessage]);
+    setFocusChatInput("");
+    setIsFocusChatLoading(true);
+
+    try {
+      let service = focusChatServiceRef.current;
+      if (!service) {
+        // Initialize a focus-specific chat service
+        service = createFreshV2GeminiService({
+          userName,
+          location: selectedLocation || "austin-tx",
+          persona: "individual",
+        });
+        focusChatServiceRef.current = service;
+      }
+
+      const responseText = await service.sendMessage(message);
+
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: responseText,
+        timestamp: new Date(),
+      };
+      setFocusChatMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Focus Chat error:", error);
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: "assistant",
+        content: "Sorry, I encountered an error. Please try again.",
+        timestamp: new Date(),
+      };
+      setFocusChatMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsFocusChatLoading(false);
+    }
+  }, [userName, selectedLocation]);
 
   // Scroll chat to bottom when messages change or loading state changes
   useEffect(() => {
@@ -771,7 +828,45 @@ export function V2TalentCentric({
   const normalizeBrand = (name: string) =>
     name.toLowerCase().replace(/[\s&'.-]+/g, "");
 
-  // Filter and score workers based on selections
+  // Workers filtered only by market (for sidebar before results)
+  const marketWorkers = useMemo(() => {
+    // Use Supabase workers when location is selected, otherwise fall back to sample data
+    let workers: WorkerProfile[] = selectedLocation && supabaseWorkers.length > 0
+      ? [...supabaseWorkers]
+      : [...SAMPLE_WORKERS];
+
+    // Filter by selected location (only needed for SAMPLE_WORKERS fallback)
+    if (selectedLocation && supabaseWorkers.length === 0) {
+      const selectedMarket = MARKETS.find((m) => m.id === selectedLocation);
+      if (selectedMarket) {
+        workers = workers.filter(
+          (w) =>
+            w.market
+              .toLowerCase()
+              .includes(selectedMarket.name.toLowerCase()) ||
+            selectedMarket.name.toLowerCase().includes(w.market.toLowerCase()),
+        );
+      }
+    }
+
+    // Score workers (same scoring logic, no filtering)
+    const scored: MatchedWorker[] = workers.map((w) => {
+      let score = 50;
+      score += Math.min(w.shiftsOnReflex, 50);
+      if (w.onTimeRating === "Exceptional") score += 15;
+      if (w.commitmentScore === "Exceptional") score += 10;
+      score += Math.min(w.invitedBackStores * 2, 20);
+      return {
+        ...w,
+        matchScore: Math.min(score, 100),
+        matchReasons: [],
+      };
+    });
+
+    return scored.sort((a, b) => b.matchScore - a.matchScore);
+  }, [selectedLocation, supabaseWorkers]);
+
+  // Filter and score workers based on selections (for results step)
   const filteredWorkers = useMemo(() => {
     // Use Supabase workers when location is selected, otherwise fall back to sample data
     let workers: WorkerProfile[] = selectedLocation && supabaseWorkers.length > 0
@@ -1335,7 +1430,7 @@ export function V2TalentCentric({
 
               {/* Multi-Store Manager: Confirmation + dropdown of their locations */}
               {persona === "multi-store" && (
-                <div className="v2-step-header-chips">
+                <div className="v2-step-content-scroll">
                   <div className="v2-step-header">
                     <h1 className="type-tagline">
                       Which location are you hiring for?
@@ -1344,32 +1439,33 @@ export function V2TalentCentric({
                   <div className="v2-location-store-chips">
                     {STORE_LOCATIONS.map((store) => {
                       const market = MARKETS.find(m => m.id === store.marketId);
+                      const isSelected = selectedLocation === store.marketId;
                       return (
                         <button
                           key={store.id}
-                          className={`v2-location-chip ${selectedLocation === store.marketId ? "selected" : ""}`}
-                          onClick={() => setSelectedLocation(store.marketId)}
+                          className={`v2-chat-followup-chip${isSelected ? " active" : ""}`}
+                          onClick={() => setSelectedLocation(isSelected ? null : store.marketId)}
                         >
-                          <span className="v2-chip-text">
+                          <CornerDownRight size={16} className="v2-chip-icon-left" />
+                          <span>
                             {store.name}
-                            {market && <span className="v2-chip-market">{market.name}, {market.state}</span>}
+                            {market && ` · ${market.name}, ${market.state}`}
                           </span>
-                          <span className="v2-chip-icon">
-                            {selectedLocation === store.marketId && <Check size={14} />}
-                          </span>
+                          {isSelected && <Check size={16} className="v2-chip-icon-right" />}
                         </button>
                       );
                     })}
+                    <button
+                      className="v2-chat-followup-chip"
+                      onClick={() => {
+                        setPersona("field");
+                        setSelectedLocation(null);
+                      }}
+                    >
+                      <CornerDownRight size={16} className="v2-chip-icon-left" />
+                      <span>Hire in a different market</span>
+                    </button>
                   </div>
-                  <button
-                    className="v2-location-confirm-chip v2-location-different"
-                    onClick={() => {
-                      setPersona("field");
-                      setSelectedLocation(null);
-                    }}
-                  >
-                    <span>Hire in a different market</span>
-                  </button>
                 </div>
               )}
 
@@ -1504,12 +1600,18 @@ export function V2TalentCentric({
                   </h1>
                 </div>
 
-                <div className="v2-journey-cards">
+                <div className={`v2-journey-cards${focusChatActive ? " chat-active" : ""}`}>
                   <button
-                    className={`journey-card journey-card-1 ${completedSections.has("employment") ? "completed" : ""} ${focusArea === "employment" && !completedSections.has("employment") ? "selected" : ""}`}
+                    className={`journey-card journey-card-1${completedSections.has("employment") ? " completed" : ""}${focusArea === "employment" ? " selected" : ""}`}
                     onClick={() => {
                       if (!completedSections.has("employment")) {
+                        // If chat is active, collapse it first
+                        if (focusChatActive) {
+                          setFocusChatActive(false);
+                          setFocusChatInput("");
+                        }
                         setFocusArea("employment");
+                        transitionToStep("employment", "forward");
                       }
                     }}
                     disabled={completedSections.has("employment")}
@@ -1532,10 +1634,16 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`journey-card journey-card-2 ${completedSections.has("brands") ? "completed" : ""} ${focusArea === "brands" && !completedSections.has("brands") ? "selected" : ""}`}
+                    className={`journey-card journey-card-2${completedSections.has("brands") ? " completed" : ""}${focusArea === "brands" ? " selected" : ""}`}
                     onClick={() => {
                       if (!completedSections.has("brands")) {
+                        // If chat is active, collapse it first
+                        if (focusChatActive) {
+                          setFocusChatActive(false);
+                          setFocusChatInput("");
+                        }
                         setFocusArea("brands");
+                        transitionToStep("brands", "forward");
                       }
                     }}
                     disabled={completedSections.has("brands")}
@@ -1558,10 +1666,16 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`journey-card journey-card-3 ${completedSections.has("roles") ? "completed" : ""} ${focusArea === "roles" && !completedSections.has("roles") ? "selected" : ""}`}
+                    className={`journey-card journey-card-3${completedSections.has("roles") ? " completed" : ""}${focusArea === "roles" ? " selected" : ""}`}
                     onClick={() => {
                       if (!completedSections.has("roles")) {
+                        // If chat is active, collapse it first
+                        if (focusChatActive) {
+                          setFocusChatActive(false);
+                          setFocusChatInput("");
+                        }
                         setFocusArea("roles");
+                        transitionToStep("experience", "forward");
                       }
                     }}
                     disabled={completedSections.has("roles")}
@@ -1585,6 +1699,70 @@ export function V2TalentCentric({
                   </button>
                 </div>
 
+                {/* Chat messages for focus step */}
+                {focusChatMessages.length > 0 && (
+                  <div className="v2-chat-messages v2-focus-chat-messages">
+                    {focusChatMessages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`v2-chat-message ${msg.role}`}
+                      >
+                        {msg.role === "assistant" && (
+                          <div className="v2-chat-avatar">
+                            <img src={chatbotAvatarUrl} alt="Assistant" />
+                          </div>
+                        )}
+                        <div className="v2-chat-bubble">
+                          {msg.role === "assistant" ? (
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          ) : (
+                            msg.content
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {isFocusChatLoading && (
+                      <div className="v2-chat-message assistant">
+                        <div className="v2-chat-avatar">
+                          <img src={chatbotAvatarUrl} alt="Assistant" />
+                        </div>
+                        <div className="v2-chat-bubble">
+                          <div className="v2-chat-loading">
+                            <span className="v2-chat-dot"></span>
+                            <span className="v2-chat-dot"></span>
+                            <span className="v2-chat-dot"></span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Chat input for focus step */}
+                <div className="v2-chat-prompt">
+                  <textarea
+                    placeholder="Or share more detailed information"
+                    className="v2-chat-prompt-input"
+                    rows={1}
+                    value={focusChatInput}
+                    onFocus={() => setFocusChatActive(true)}
+                    onChange={(e) => setFocusChatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        sendFocusChatMessage(focusChatInput);
+                      }
+                    }}
+                  />
+                  <button
+                    className={`v2-chat-prompt-send${focusChatInput.trim() ? " active" : ""}`}
+                    onClick={() => sendFocusChatMessage(focusChatInput)}
+                    disabled={isFocusChatLoading || !focusChatInput.trim()}
+                  >
+                    <Send size={18} />
+                  </button>
+                </div>
+
               </div>
             </V2Main>
           )}
@@ -1598,13 +1776,18 @@ export function V2TalentCentric({
               footer={{
                 onBack: () => transitionToStep("focus", "back"),
                 showBack: true,
+                onNext: () => completeSection("employment"),
+                nextDisabled: !employmentType,
               }}
             >
               <V2EmploymentSelector
                 value={employmentType}
                 onChange={(type) => {
                   setEmploymentType(type);
-                  completeSection("employment");
+                }}
+                availabilityHours={availabilityHours}
+                onAvailabilityChange={(hours) => {
+                  setAvailabilityHours(hours);
                 }}
               />
             </V2Main>
@@ -1613,11 +1796,18 @@ export function V2TalentCentric({
           {/* Experience Level Selection */}
           {step === "experience" && (
             <V2Main
-              stepClassName=""
+              stepClassName="v2-main-centered"
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
                 onBack: () => transitionToStep("focus", "back"),
+                onNext: () => {
+                  if (experienceLevel) {
+                    completeSection("roles");
+                  }
+                },
+                nextDisabled: !experienceLevel,
+                nextLabel: "Continue",
                 showBack: true,
               }}
             >
@@ -1631,13 +1821,10 @@ export function V2TalentCentric({
                   </p>
                 </div>
 
-                <div className="v2-focus-chips">
+                <div className="v2-experience-slider">
                   <button
                     className={`welcome-card ${experienceLevel === "new" ? "active" : ""}`}
-                    onClick={() => {
-                      setExperienceLevel("new");
-                      completeSection("roles");
-                    }}
+                    onClick={() => setExperienceLevel("new")}
                   >
                     <div className="welcome-card-icon">
                       {experienceLevel === "new" ? (
@@ -1657,10 +1844,7 @@ export function V2TalentCentric({
                   </button>
                   <button
                     className={`welcome-card ${experienceLevel === "rising" ? "active" : ""}`}
-                    onClick={() => {
-                      setExperienceLevel("rising");
-                      completeSection("roles");
-                    }}
+                    onClick={() => setExperienceLevel("rising")}
                   >
                     <div className="welcome-card-icon">
                       {experienceLevel === "rising" ? (
@@ -1680,10 +1864,7 @@ export function V2TalentCentric({
                   </button>
                   <button
                     className={`welcome-card ${experienceLevel === "seasoned" ? "active" : ""}`}
-                    onClick={() => {
-                      setExperienceLevel("seasoned");
-                      completeSection("roles");
-                    }}
+                    onClick={() => setExperienceLevel("seasoned")}
                   >
                     <div className="welcome-card-icon">
                       {experienceLevel === "seasoned" ? (
@@ -1703,10 +1884,7 @@ export function V2TalentCentric({
                   </button>
                   <button
                     className={`welcome-card ${experienceLevel === "management" ? "active" : ""}`}
-                    onClick={() => {
-                      setExperienceLevel("management");
-                      completeSection("roles");
-                    }}
+                    onClick={() => setExperienceLevel("management")}
                   >
                     <div className="welcome-card-icon">
                       {experienceLevel === "management" ? (
@@ -1800,26 +1978,28 @@ export function V2TalentCentric({
                   </button>
                 </div>
 
-              <div
-                className={`v2-brand-grid ${!sidebarOpen ? "expanded" : ""}`}
-              >
-                {BRAND_LOGOS.map((brand) => (
-                  <button
-                    key={brand.id}
-                    ref={(el) => {
-                      brandRefs.current[brand.id] = el;
-                    }}
-                    className={`v2-brand-tile ${selectedBrands.includes(brand.id) ? "selected" : ""}${searchResults && searchResults.some((r) => r.id === brand.id) ? " search-match" : ""}`}
-                    onClick={() => toggleBrand(brand.id)}
-                  >
-                    <img src={brand.logo} alt="" className="v2-brand-logo" />
-                    {selectedBrands.includes(brand.id) && (
-                      <div className="v2-brand-check">
-                        <Check size={16} />
-                      </div>
-                    )}
-                  </button>
-                ))}
+              <div className="v2-step-content-scroll">
+                <div
+                  className={`v2-brand-grid ${!sidebarOpen ? "expanded" : ""}`}
+                >
+                  {BRAND_LOGOS.map((brand) => (
+                    <button
+                      key={brand.id}
+                      ref={(el) => {
+                        brandRefs.current[brand.id] = el;
+                      }}
+                      className={`v2-brand-tile ${selectedBrands.includes(brand.id) ? "selected" : ""}${searchResults && searchResults.some((r) => r.id === brand.id) ? " search-match" : ""}`}
+                      onClick={() => toggleBrand(brand.id)}
+                    >
+                      <img src={brand.logo} alt="" className="v2-brand-logo" />
+                      {selectedBrands.includes(brand.id) && (
+                        <div className="v2-brand-check">
+                          <Check size={16} />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </V2Main>
           )}
@@ -1880,20 +2060,10 @@ export function V2TalentCentric({
           {(["brands", "experience", "results"].includes(step) ||
             (step === "location" && selectedLocation && (persona === "field" || persona === "recruiter" || (persona === "individual" && pickingDifferentMarket)))) && (
             <V2WorkerSidebar
-              workers={filteredWorkers}
+              workers={step === "results" ? filteredWorkers : marketWorkers}
               isOpen={sidebarOpen}
               onToggle={() => setSidebarOpen(!sidebarOpen)}
-              title={
-                step === "location"
-                  ? `${MARKETS.find(m => m.id === selectedLocation)?.name || "Market"} Talent`
-                  : step === "brands"
-                    ? "Shift Verified Reflexers"
-                    : step === "experience"
-                      ? "Matching talent"
-                      : step === "results"
-                        ? `${filteredWorkers.length} matches`
-                        : "Reflexers"
-              }
+              title={`${MARKETS.find(m => m.id === selectedLocation)?.name || "Market"} Talent`}
               showCount={step !== "results"}
               onWorkerClick={() => {
                 /* TODO: open full card */

@@ -385,12 +385,16 @@ Definitions: `web/src/styles/variables.css`
 ### Components
 
 
-| Component                       | Location          | Usage                              |
-| ------------------------------- | ----------------- | ---------------------------------- |
-| `NavChipGrid variant="welcome"` | NavChips.tsx      | Welcome screen 3x2 card grid       |
-| `NavChipGrid variant="compact"` | NavChips.tsx      | Conversation nav bar               |
-| `MessageChip` (single)          | ChatInterface.tsx | Single-select options with check   |
-| `MessageChip` (multi)           | ChatInterface.tsx | Multi-select with plus/check icons |
+| Component                       | Location             | Usage                                                 |
+| ------------------------------- | -------------------- | ----------------------------------------------------- |
+| `NavChipGrid variant="welcome"` | NavChips.tsx         | Welcome screen 3x2 card grid                          |
+| `NavChipGrid variant="compact"` | NavChips.tsx         | Conversation nav bar                                  |
+| `.persona-card`                 | V2 styles.css        | Persona selection cards (horizontal, space-between)   |
+| `.journey-card`                 | V2 styles.css        | Focus step journey tiles (3-col grid, dark hover)     |
+| `.v2-location-confirm-chip`     | V2 styles.css        | Location confirmation chips (full-width, checkmark)   |
+| `.v2-chat-followup-chip`        | V2 styles.css        | Chat follow-up chips (icon left, arrow right)         |
+| `MessageChip` (single)          | ChatInterface.tsx    | Single-select options with check                      |
+| `MessageChip` (multi)           | ChatInterface.tsx    | Multi-select with plus/check icons                    |
 
 
 **Shared states:** Hover/Active = `--app-primary` border + `--gray-50` background
