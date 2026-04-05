@@ -2622,67 +2622,65 @@ export function V2TalentCentric({
                             )}
                           </div>
                           <div className="v2-connection-info">
-                            <div className="v2-connection-name-row">
-                              <span className="v2-connection-name">{name}</span>
-                              {worker?.shift_verified && <BadgeCheck size={16} className="v2-teaser-verified" />}
+                            {/* Row 1: Name, market, status indicators */}
+                            <div className="v2-connection-row-1">
+                              <div className="v2-connection-name-row">
+                                <span className="v2-connection-name">{name}</span>
+                                {worker?.shift_verified && <BadgeCheck size={16} className="v2-teaser-verified" />}
+                              </div>
+                              <span className="v2-connection-market">{connection.market}</span>
+                              <div className="v2-connection-indicators">
+                                {connection.shift_scheduled && <span className="v2-indicator scheduled">Shift Scheduled</span>}
+                                {connection.shift_booked && !connection.shift_scheduled && <span className="v2-indicator booked">Shift Booked</span>}
+                                {connection.chat_open && <span className="v2-indicator chat">Chat Open</span>}
+                                {connection.saved_for_later && <span className="v2-indicator saved">Saved</span>}
+                              </div>
                             </div>
-                            <span className="v2-connection-market">{connection.market}</span>
-                            <div className="v2-connection-stats">
-                              <span>{worker?.shifts_on_reflex || 0} shifts</span>
-                              <span>{worker?.unique_store_count || 0} stores</span>
-                            </div>
 
-                            {/* Brands worked */}
-                            {displayBrands.length > 0 && (
-                              <div className="v2-connection-brands">
-                                {displayBrands.map((brand: { name: string; tier?: string }, idx: number) => (
-                                  <span key={idx} className="tag tag-dark-gray tag-sm">
-                                    <span className="tag-text">{brand.name}</span>
-                                  </span>
-                                ))}
-                                {moreBrandsCount > 0 && (
-                                  <span className="tag tag-dark-gray tag-sm">
-                                    <span className="tag-text">+{moreBrandsCount}</span>
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                            {/* Row 2: All tags in one row */}
+                            <div className="v2-connection-tags-row">
+                              {/* Shifts & stores as stroke chips */}
+                              <span className="tag tag-stroke tag-sm">
+                                <span className="tag-counter">{worker?.shifts_on_reflex || 0}</span>
+                                <span className="tag-text">shifts</span>
+                              </span>
+                              <span className="tag tag-stroke tag-sm">
+                                <span className="tag-counter">{worker?.unique_store_count || 0}</span>
+                                <span className="tag-text">stores</span>
+                              </span>
 
-                            {/* Roles with counts */}
-                            {displayRoles.length > 0 && (
-                              <div className="v2-connection-roles">
-                                {displayRoles.map(([role, count], idx) => (
-                                  <span key={idx} className="tag tag-stroke tag-sm">
-                                    <span className="tag-text">{role}</span>
-                                    <span className="tag-counter">{count as number}</span>
-                                  </span>
-                                ))}
-                                {moreRolesCount > 0 && (
-                                  <span className="tag tag-stroke tag-sm">
-                                    <span className="tag-text">+{moreRolesCount}</span>
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                              {/* Brands worked */}
+                              {displayBrands.map((brand: { name: string; tier?: string }, idx: number) => (
+                                <span key={`brand-${idx}`} className="tag tag-dark-gray tag-sm">
+                                  <span className="tag-text">{brand.name}</span>
+                                </span>
+                              ))}
+                              {moreBrandsCount > 0 && (
+                                <span className="tag tag-dark-gray tag-sm">
+                                  <span className="tag-text">+{moreBrandsCount}</span>
+                                </span>
+                              )}
 
-                            {/* Achievement tags (green only) */}
-                            {achievementChips.length > 0 && (
-                              <div className="v2-connection-achievements">
-                                {achievementChips.map((chip, idx) => (
-                                  <span key={idx} className="tag tag-green tag-sm">
-                                    <span className="tag-icon">{chip.icon}</span>
-                                    <span className="tag-text">{chip.text}</span>
-                                  </span>
-                                ))}
-                              </div>
-                            )}
+                              {/* Roles with counts */}
+                              {displayRoles.map(([role, count], idx) => (
+                                <span key={`role-${idx}`} className="tag tag-stroke tag-sm">
+                                  <span className="tag-text">{role}</span>
+                                  <span className="tag-counter">{count as number}</span>
+                                </span>
+                              ))}
+                              {moreRolesCount > 0 && (
+                                <span className="tag tag-stroke tag-sm">
+                                  <span className="tag-text">+{moreRolesCount}</span>
+                                </span>
+                              )}
 
-                            {/* Status indicators */}
-                            <div className="v2-connection-indicators">
-                              {connection.shift_scheduled && <span className="v2-indicator scheduled">Shift Scheduled</span>}
-                              {connection.shift_booked && !connection.shift_scheduled && <span className="v2-indicator booked">Shift Booked</span>}
-                              {connection.chat_open && <span className="v2-indicator chat">Chat Open</span>}
-                              {connection.saved_for_later && <span className="v2-indicator saved">Saved</span>}
+                              {/* Achievement tags (green only) */}
+                              {achievementChips.map((chip, idx) => (
+                                <span key={`ach-${idx}`} className="tag tag-green tag-sm">
+                                  <span className="tag-icon">{chip.icon}</span>
+                                  <span className="tag-text">{chip.text}</span>
+                                </span>
+                              ))}
                             </div>
                           </div>
                           <div className={`v2-connection-status ${connection.status}`}>

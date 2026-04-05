@@ -3353,6 +3353,16 @@
 .v2-connection-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Row 1: name, market, indicators */
+.v2-connection-row-1 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .v2-connection-name-row {
@@ -3369,39 +3379,15 @@
 
 .v2-connection-market {
   font-size: 14px;
-  color: var(--primary);
+  color: var(--secondary);
 }
 
-.v2-connection-stats {
-  display: flex;
-  gap: 12px;
-  margin-top: 4px;
-  font-size: 14px;
-  color: var(--primary);
-}
-
-/* Brands worked */
-.v2-connection-brands {
+/* Row 2: all tags in one row */
+.v2-connection-tags-row {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
-  margin-top: 6px;
-}
-
-/* Roles with counts */
-.v2-connection-roles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-/* Achievement tags */
-.v2-connection-achievements {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
 }
 
 .v2-connection-status {
@@ -3452,7 +3438,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 6px;
+  margin-left: auto;
 }
 
 .v2-indicator {
