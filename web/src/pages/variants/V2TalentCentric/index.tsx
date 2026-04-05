@@ -2404,222 +2404,131 @@ export function V2TalentCentric({
       )}
 
       {/* Connections Tab - Shows workers from worker_connections table */}
-      {activeTab === "connections" && (
-        <div className="v2-connections-container">
-          <div className="v2-connections-header">
-            <h2 className="type-section-header-lg">Your Connections</h2>
-            <p className="v2-connections-subtitle">
-              Track workers you've viewed, liked, invited, or connected with
-            </p>
-          </div>
+      {activeTab === "connections" && (() => {
+        // Connection data with chat IDs matching CHAT_CONVERSATIONS
+        const connections = [
+          { id: "maria", initials: "MJ", name: "Maria Johnson", market: "Austin, TX", shifts: 47, stores: 12, verified: true, status: "connected" as const, chatId: "maria" },
+          { id: "james", initials: "JD", name: "James Davis", market: "Austin, TX", shifts: 32, stores: 8, verified: true, status: "invited" as const, chatId: "james" },
+          { id: "sarah", initials: "SK", name: "Sarah Kim", market: "Austin, TX", shifts: 18, stores: 5, verified: false, status: "invited" as const, chatId: "sarah" },
+          { id: "tyler", initials: "TR", name: "Tyler Rodriguez", market: "Austin, TX", shifts: 56, stores: 15, verified: true, status: "liked" as const, chatId: "tyler" },
+          { id: "ashley", initials: "AM", name: "Ashley Miller", market: "Denver, CO", shifts: 24, stores: 7, verified: false, status: "liked" as const, chatId: null },
+          { id: "chris", initials: "CW", name: "Chris Wilson", market: "Houston, TX", shifts: 41, stores: 11, verified: true, status: "viewed" as const, chatId: null },
+          { id: "emma", initials: "EB", name: "Emma Brown", market: "Dallas, TX", shifts: 12, stores: 4, verified: false, status: "viewed" as const, chatId: null },
+          { id: "david", initials: "DL", name: "David Lee", market: "Austin, TX", shifts: 8, stores: 3, verified: false, status: "not-interested" as const, chatId: null },
+        ];
 
-          {/* Connection Status Filter Pills */}
-          <div className="v2-connection-filters">
-            <button className="v2-filter-pill active">
-              All <span className="v2-filter-count">8</span>
-            </button>
-            <button className="v2-filter-pill">
-              <Eye size={14} /> Viewed <span className="v2-filter-count">2</span>
-            </button>
-            <button className="v2-filter-pill">
-              <ThumbsUp size={14} /> Liked <span className="v2-filter-count">2</span>
-            </button>
-            <button className="v2-filter-pill">
-              <UserPlus size={14} /> Invited <span className="v2-filter-count">2</span>
-            </button>
-            <button className="v2-filter-pill">
-              <Link size={14} /> Connected <span className="v2-filter-count">1</span>
-            </button>
-            <button className="v2-filter-pill">
-              <XCircle size={14} /> Not Interested <span className="v2-filter-count">1</span>
-            </button>
-          </div>
+        const statusIcons = {
+          connected: <Link size={14} />,
+          invited: <UserPlus size={14} />,
+          liked: <ThumbsUp size={14} />,
+          viewed: <Eye size={14} />,
+          "not-interested": <XCircle size={14} />,
+        };
 
-          {/* Connections List */}
-          <div className="v2-connections-list">
-            {/* Sample connection cards - hardcoded for demo */}
-            <div className="v2-connection-card">
-              <div className="v2-connection-avatar">
-                <span>MJ</span>
-              </div>
-              <div className="v2-connection-info">
-                <div className="v2-connection-name-row">
-                  <span className="v2-connection-name">Maria Johnson</span>
-                  <BadgeCheck size={16} className="v2-teaser-verified" />
-                </div>
-                <span className="v2-connection-market">Austin, TX</span>
-                <div className="v2-connection-stats">
-                  <span>47 shifts</span>
-                  <span>12 stores</span>
-                </div>
-              </div>
-              <div className="v2-connection-status connected">
-                <Link size={14} /> Connected
-              </div>
-              <button className="v2-connection-action">
-                <MessageCircle size={16} /> Chat
+        const statusLabels = {
+          connected: "Connected",
+          invited: "Invited",
+          liked: "Liked",
+          viewed: "Viewed",
+          "not-interested": "Not Interested",
+        };
+
+        // Unique markets for filter
+        const markets = [...new Set(connections.map(c => c.market))];
+
+        return (
+          <div className="v2-connections-container">
+            <div className="v2-connections-header">
+              <h2 className="type-section-header-lg">Your Connections</h2>
+              <p className="v2-connections-subtitle">
+                Track workers you've viewed, liked, invited, or connected with
+              </p>
+            </div>
+
+            {/* Market Filter Pills */}
+            <div className="v2-connection-filters v2-market-filters">
+              <span className="v2-filter-label">Markets:</span>
+              <button className="v2-filter-pill active">
+                All Markets
+              </button>
+              {markets.map(market => (
+                <button key={market} className="v2-filter-pill">
+                  {market}
+                </button>
+              ))}
+            </div>
+
+            {/* Connection Status Filter Pills */}
+            <div className="v2-connection-filters">
+              <span className="v2-filter-label">Status:</span>
+              <button className="v2-filter-pill active">
+                All <span className="v2-filter-count">{connections.length}</span>
+              </button>
+              <button className="v2-filter-pill">
+                <Eye size={14} /> Viewed <span className="v2-filter-count">{connections.filter(c => c.status === "viewed").length}</span>
+              </button>
+              <button className="v2-filter-pill">
+                <ThumbsUp size={14} /> Liked <span className="v2-filter-count">{connections.filter(c => c.status === "liked").length}</span>
+              </button>
+              <button className="v2-filter-pill">
+                <UserPlus size={14} /> Invited <span className="v2-filter-count">{connections.filter(c => c.status === "invited").length}</span>
+              </button>
+              <button className="v2-filter-pill">
+                <Link size={14} /> Connected <span className="v2-filter-count">{connections.filter(c => c.status === "connected").length}</span>
+              </button>
+              <button className="v2-filter-pill">
+                <XCircle size={14} /> Not Interested <span className="v2-filter-count">{connections.filter(c => c.status === "not-interested").length}</span>
               </button>
             </div>
 
-            <div className="v2-connection-card">
-              <div className="v2-connection-avatar">
-                <span>JD</span>
-              </div>
-              <div className="v2-connection-info">
-                <div className="v2-connection-name-row">
-                  <span className="v2-connection-name">James Davis</span>
-                  <BadgeCheck size={16} className="v2-teaser-verified" />
+            {/* Connections List */}
+            <div className="v2-connections-list">
+              {connections.map((connection) => (
+                <div
+                  key={connection.id}
+                  className={`v2-connection-card ${connection.status === "not-interested" ? "not-interested" : ""}`}
+                >
+                  <div className="v2-connection-avatar">
+                    <span>{connection.initials}</span>
+                  </div>
+                  <div className="v2-connection-info">
+                    <div className="v2-connection-name-row">
+                      <span className="v2-connection-name">{connection.name}</span>
+                      {connection.verified && <BadgeCheck size={16} className="v2-teaser-verified" />}
+                    </div>
+                    <span className="v2-connection-market">{connection.market}</span>
+                    <div className="v2-connection-stats">
+                      <span>{connection.shifts} shifts</span>
+                      <span>{connection.stores} stores</span>
+                    </div>
+                  </div>
+                  <div className={`v2-connection-status ${connection.status}`}>
+                    {statusIcons[connection.status]} {statusLabels[connection.status]}
+                  </div>
+                  {connection.status === "not-interested" ? (
+                    <button className="v2-connection-action secondary">
+                      Undo
+                    </button>
+                  ) : (
+                    <button
+                      className="v2-connection-action"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (connection.chatId) {
+                          setActiveChatId(connection.chatId);
+                        }
+                        setActiveTab("chat");
+                      }}
+                    >
+                      <MessageCircle size={16} /> Chat
+                    </button>
+                  )}
                 </div>
-                <span className="v2-connection-market">Austin, TX</span>
-                <div className="v2-connection-stats">
-                  <span>32 shifts</span>
-                  <span>8 stores</span>
-                </div>
-              </div>
-              <div className="v2-connection-status invited">
-                <UserPlus size={14} /> Invited
-              </div>
-              <button className="v2-connection-action">
-                <MessageCircle size={16} /> Message
-              </button>
-            </div>
-
-            <div className="v2-connection-card">
-              <div className="v2-connection-avatar">
-                <span>SK</span>
-              </div>
-              <div className="v2-connection-info">
-                <div className="v2-connection-name-row">
-                  <span className="v2-connection-name">Sarah Kim</span>
-                </div>
-                <span className="v2-connection-market">Austin, TX</span>
-                <div className="v2-connection-stats">
-                  <span>18 shifts</span>
-                  <span>5 stores</span>
-                </div>
-              </div>
-              <div className="v2-connection-status invited">
-                <UserPlus size={14} /> Invited
-              </div>
-              <button className="v2-connection-action">
-                <MessageCircle size={16} /> Message
-              </button>
-            </div>
-
-            <div className="v2-connection-card">
-              <div className="v2-connection-avatar">
-                <span>TR</span>
-              </div>
-              <div className="v2-connection-info">
-                <div className="v2-connection-name-row">
-                  <span className="v2-connection-name">Tyler Rodriguez</span>
-                  <BadgeCheck size={16} className="v2-teaser-verified" />
-                </div>
-                <span className="v2-connection-market">Austin, TX</span>
-                <div className="v2-connection-stats">
-                  <span>56 shifts</span>
-                  <span>15 stores</span>
-                </div>
-              </div>
-              <div className="v2-connection-status liked">
-                <ThumbsUp size={14} /> Liked
-              </div>
-              <button className="v2-connection-action">
-                <UserPlus size={16} /> Invite
-              </button>
-            </div>
-
-            <div className="v2-connection-card">
-              <div className="v2-connection-avatar">
-                <span>AM</span>
-              </div>
-              <div className="v2-connection-info">
-                <div className="v2-connection-name-row">
-                  <span className="v2-connection-name">Ashley Miller</span>
-                </div>
-                <span className="v2-connection-market">Austin, TX</span>
-                <div className="v2-connection-stats">
-                  <span>24 shifts</span>
-                  <span>7 stores</span>
-                </div>
-              </div>
-              <div className="v2-connection-status liked">
-                <ThumbsUp size={14} /> Liked
-              </div>
-              <button className="v2-connection-action">
-                <UserPlus size={16} /> Invite
-              </button>
-            </div>
-
-            <div className="v2-connection-card">
-              <div className="v2-connection-avatar">
-                <span>CW</span>
-              </div>
-              <div className="v2-connection-info">
-                <div className="v2-connection-name-row">
-                  <span className="v2-connection-name">Chris Wilson</span>
-                  <BadgeCheck size={16} className="v2-teaser-verified" />
-                </div>
-                <span className="v2-connection-market">Austin, TX</span>
-                <div className="v2-connection-stats">
-                  <span>41 shifts</span>
-                  <span>11 stores</span>
-                </div>
-              </div>
-              <div className="v2-connection-status viewed">
-                <Eye size={14} /> Viewed
-              </div>
-              <button className="v2-connection-action">
-                <ThumbsUp size={16} /> Like
-              </button>
-            </div>
-
-            <div className="v2-connection-card">
-              <div className="v2-connection-avatar">
-                <span>EB</span>
-              </div>
-              <div className="v2-connection-info">
-                <div className="v2-connection-name-row">
-                  <span className="v2-connection-name">Emma Brown</span>
-                </div>
-                <span className="v2-connection-market">Austin, TX</span>
-                <div className="v2-connection-stats">
-                  <span>12 shifts</span>
-                  <span>4 stores</span>
-                </div>
-              </div>
-              <div className="v2-connection-status viewed">
-                <Eye size={14} /> Viewed
-              </div>
-              <button className="v2-connection-action">
-                <ThumbsUp size={16} /> Like
-              </button>
-            </div>
-
-            <div className="v2-connection-card not-interested">
-              <div className="v2-connection-avatar">
-                <span>DL</span>
-              </div>
-              <div className="v2-connection-info">
-                <div className="v2-connection-name-row">
-                  <span className="v2-connection-name">David Lee</span>
-                </div>
-                <span className="v2-connection-market">Austin, TX</span>
-                <div className="v2-connection-stats">
-                  <span>8 shifts</span>
-                  <span>3 stores</span>
-                </div>
-              </div>
-              <div className="v2-connection-status not-interested">
-                <XCircle size={14} /> Not Interested
-              </div>
-              <button className="v2-connection-action secondary">
-                Undo
-              </button>
+              ))}
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Chat Tab - SMS-style messaging interface */}
       {activeTab === "chat" && (() => {
