@@ -1274,10 +1274,12 @@ export function V2TalentCentric({
                   }
                 },
                 onNext: () => {
-                  setPickingDifferentMarket(false);
+                  // Go directly to focus step, reset state after transition starts
                   setFocusArea(null);
                   setLocationConfirmChoice(null);
                   transitionToStep("focus", "forward");
+                  // Reset pickingDifferentMarket after transition to avoid flash of confirmation screen
+                  setTimeout(() => setPickingDifferentMarket(false), 300);
                 },
                 nextDisabled: persona === "individual" && !pickingDifferentMarket
                   ? true // Hide/disable Next for confirmation chips (they auto-progress)
