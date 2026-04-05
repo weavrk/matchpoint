@@ -538,6 +538,7 @@ export function V2TalentCentric({
   const [persona, setPersona] = useState<PersonaType | null>(null);
   const [chatPromptValue, setChatPromptValue] = useState("");
   const [pickingDifferentMarket, setPickingDifferentMarket] = useState(false); // For single-store "hire in different market" sub-flow
+  const [locationConfirmChoice, setLocationConfirmChoice] = useState<"yes" | "different" | null>(null); // For location confirmation selection
 
   // Chat state for V2 (uses V2GeminiService)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -1258,24 +1259,29 @@ export function V2TalentCentric({
                 onBack: () => {
                   if (persona === "individual" && pickingDifferentMarket) {
                     // Go back to market confirmation with animation
-                    // If they selected a market, keep it; otherwise restore default
-                    const currentLocation = selectedLocation;
+                    // Keep "different" selected since that's what they chose
                     setTransitionDirection("back");
                     setIsTransitioning(true);
                     setTimeout(() => {
                       setPickingDifferentMarket(false);
-                      setSelectedLocation(currentLocation || "austin-tx");
+                      setSelectedLocation("austin-tx"); // Restore default market
+                      setLocationConfirmChoice("different"); // Keep "different" selected
                       setIsTransitioning(false);
                     }, 250);
                   } else {
+                    setLocationConfirmChoice(null); // Reset confirmation choice
                     transitionToStep("persona", "back");
                   }
                 },
                 onNext: () => {
-                  setPickingDifferentMarket(false); // Reset when moving forward
+                  setPickingDifferentMarket(false);
+                  setFocusArea(null);
+                  setLocationConfirmChoice(null);
                   transitionToStep("focus", "forward");
                 },
-                nextDisabled: !selectedLocation,
+                nextDisabled: persona === "individual" && !pickingDifferentMarket
+                  ? true // Hide/disable Next for confirmation chips (they auto-progress)
+                  : !selectedLocation,
               }}
             >
               {/* Single-Store Manager: Confirmation with default market */}
@@ -1288,25 +1294,36 @@ export function V2TalentCentric({
                   </div>
                   <div className="v2-location-confirm-chips">
                     <button
-                      className="v2-location-confirm-chip"
-                      onClick={() => transitionToStep("focus", "forward")}
+                      className={`v2-location-confirm-chip ${locationConfirmChoice === "yes" ? "selected" : ""}`}
+                      onClick={() => {
+                        setLocationConfirmChoice("yes");
+                        // Auto-progress after brief delay to show selection
+                        setTimeout(() => {
+                          setFocusArea(null);
+                          transitionToStep("focus", "forward");
+                        }, 150);
+                      }}
                     >
                       <span>Yes, search in {MARKETS.find(m => m.id === selectedLocation)?.name || "Austin"}</span>
+                      <div className="v2-confirm-chip-icon">
+                        {locationConfirmChoice === "yes" && <Check size={18} />}
+                      </div>
                     </button>
                     <button
-                      className="v2-location-confirm-chip"
+                      className={`v2-location-confirm-chip ${locationConfirmChoice === "different" ? "selected" : ""}`}
                       onClick={() => {
-                        // Trigger forward animation
-                        setTransitionDirection("forward");
-                        setIsTransitioning(true);
+                        setLocationConfirmChoice("different");
+                        // Auto-progress after brief delay to show selection
                         setTimeout(() => {
                           setPickingDifferentMarket(true);
-                          setSelectedLocation(null); // Clear selection - user wants a DIFFERENT market
-                          setIsTransitioning(false);
-                        }, 250);
+                          setSelectedLocation(null);
+                        }, 300);
                       }}
                     >
                       <span>Hire in a different market</span>
+                      <div className="v2-confirm-chip-icon">
+                        {locationConfirmChoice === "different" && <Check size={18} />}
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -1464,26 +1481,33 @@ export function V2TalentCentric({
               transitionDirection={transitionDirection}
               footer={{
                 onBack: () => transitionToStep("location", "back"),
-                onNext: () => {},
+                onNext: () => {
+                  if (focusArea === "employment") {
+                    transitionToStep("employment", "forward");
+                  } else if (focusArea === "brands") {
+                    transitionToStep("brands", "forward");
+                  } else if (focusArea === "roles") {
+                    transitionToStep("experience", "forward");
+                  }
+                },
                 showBack: true,
-                nextDisabled: true,
+                nextDisabled: !focusArea || completedSections.has(focusArea),
                 nextLabel: "Continue",
               }}
             >
               <div className="v2-step-header-chips">
                 <div className="v2-step-header">
                   <h1 className="type-tagline">
-                    Where would you like to start, {userName}?
+                    Let's narrow down your connections. Where would you like to start, {userName}?
                   </h1>
                 </div>
 
                 <div className="v2-journey-cards">
                   <button
-                    className={`journey-card journey-card-1 ${completedSections.has("employment") ? "completed" : ""}`}
+                    className={`journey-card journey-card-1 ${completedSections.has("employment") ? "completed" : ""} ${focusArea === "employment" && !completedSections.has("employment") ? "selected" : ""}`}
                     onClick={() => {
                       if (!completedSections.has("employment")) {
                         setFocusArea("employment");
-                        transitionToStep("employment", "forward");
                       }
                     }}
                     disabled={completedSections.has("employment")}
@@ -1497,7 +1521,7 @@ export function V2TalentCentric({
                     <div className="journey-card-footer">
                       <p className="journey-card-description">Full-time, part-time, or open to both?</p>
                       <div className="journey-card-arrow">
-                        {completedSections.has("employment") ? (
+                        {completedSections.has("employment") || focusArea === "employment" ? (
                           <Check size={20} strokeWidth={2} />
                         ) : (
                           <ArrowRight size={20} />
@@ -1506,11 +1530,10 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`journey-card journey-card-2 ${completedSections.has("brands") ? "completed" : ""}`}
+                    className={`journey-card journey-card-2 ${completedSections.has("brands") ? "completed" : ""} ${focusArea === "brands" && !completedSections.has("brands") ? "selected" : ""}`}
                     onClick={() => {
                       if (!completedSections.has("brands")) {
                         setFocusArea("brands");
-                        transitionToStep("brands", "forward");
                       }
                     }}
                     disabled={completedSections.has("brands")}
@@ -1524,7 +1547,7 @@ export function V2TalentCentric({
                     <div className="journey-card-footer">
                       <p className="journey-card-description">Whose talent do you trust?</p>
                       <div className="journey-card-arrow">
-                        {completedSections.has("brands") ? (
+                        {completedSections.has("brands") || focusArea === "brands" ? (
                           <Check size={20} strokeWidth={2} />
                         ) : (
                           <ArrowRight size={20} />
@@ -1533,11 +1556,10 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`journey-card journey-card-3 ${completedSections.has("roles") ? "completed" : ""}`}
+                    className={`journey-card journey-card-3 ${completedSections.has("roles") ? "completed" : ""} ${focusArea === "roles" && !completedSections.has("roles") ? "selected" : ""}`}
                     onClick={() => {
                       if (!completedSections.has("roles")) {
                         setFocusArea("roles");
-                        transitionToStep("experience", "forward");
                       }
                     }}
                     disabled={completedSections.has("roles")}
@@ -1551,7 +1573,7 @@ export function V2TalentCentric({
                     <div className="journey-card-footer">
                       <p className="journey-card-description">Where are they in their career?</p>
                       <div className="journey-card-arrow">
-                        {completedSections.has("roles") ? (
+                        {completedSections.has("roles") || focusArea === "roles" ? (
                           <Check size={20} strokeWidth={2} />
                         ) : (
                           <ArrowRight size={20} />

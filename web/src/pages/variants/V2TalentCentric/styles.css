@@ -884,6 +884,25 @@
   color: #ffffff;
 }
 
+/* Selected state: similar to hover but persistent */
+.journey-card.selected {
+  border-color: transparent;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: var(--gray-900);
+}
+
+.journey-card.selected .journey-card-icon,
+.journey-card.selected .journey-card-title,
+.journey-card.selected .journey-card-description {
+  color: white;
+}
+
+.journey-card.selected .journey-card-arrow {
+  background: white;
+  border-color: white;
+  color: var(--primary);
+}
+
 /* Hide old style variants */
 .journey-card-gradient,
 .journey-card-illustrated,
@@ -1512,19 +1531,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  background: transparent;
+  border: 1px solid var(--quaternary);
+  color: transparent;
+  transition: all 0.2s ease;
+}
+
+.v2-location-confirm-chip:hover .v2-confirm-chip-icon {
+  background: rgba(255, 255, 255, 1);
+  border-color: transparent;
+  color: var(--primary);
 }
 
 .v2-location-confirm-chip.selected .v2-confirm-chip-icon {
   background: rgba(255, 255, 255, 1);
+  border-color: transparent;
   color: var(--primary);
 }
 
 .v2-location-confirm-chip:hover {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.v2-location-confirm-chip.selected {
   border-color: var(--primary);
   background: var(--primary);
   color: #ffffff;
@@ -2183,14 +2218,16 @@
 .v2-sidebar {
   position: relative;
   width: 380px;
-  background: #EBF2F6;
-  border-left: 1px solid var(--quaternary);
+  background: var(--white);
+  border-left: none;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
   min-height: 0;
   overflow: visible;
   transition: width 0.3s ease;
   flex-shrink: 0;
+  z-index: 10;
 }
 
 .v2-sidebar.collapsed {
