@@ -1393,6 +1393,7 @@ export function V2TalentCentric({
                     onClick={() => {
                       setChatMessages([]);
                       setPersona("multi-store");
+                      setSelectedLocation(null);
                       transitionToStep("location", "forward");
                     }}
                   >
@@ -1522,6 +1523,7 @@ export function V2TalentCentric({
                           className={`v2-chat-followup-chip${persona === "multi-store" ? " active" : ""}`}
                           onClick={() => {
                             setPersona("multi-store");
+                            setSelectedLocation(null);
                             transitionToStep("location", "forward");
                           }}
                         >
@@ -1675,7 +1677,7 @@ export function V2TalentCentric({
                 <div className="v2-step-content-scroll">
                   <div className="v2-step-header">
                     <h1 className="type-tagline">
-                      Which location are you hiring for?
+                      Where are you hiring?
                     </h1>
                   </div>
                   <div className={`v2-location-store-chips${selectedLocation ? " sidebar-open" : ""}`}>
@@ -1701,7 +1703,9 @@ export function V2TalentCentric({
                             <span className="v2-store-chip-name">{store.name}</span>
                             {market && <span className="v2-store-chip-location">{market.name}, {market.state}</span>}
                           </span>
-                          {isSelected && <Check size={16} className="v2-chip-icon-right" />}
+                          <span className="v2-chip-icon-right">
+                            {isSelected ? <Check size={14} /> : <ArrowRight size={14} />}
+                          </span>
                         </button>
                       );
                     })}
@@ -2403,10 +2407,10 @@ export function V2TalentCentric({
             </div>
           )}
 
-          {/* Sidebar with worker cards - shown on location (when selected), brands, experience steps. On results, only show if no worker selected */}
+          {/* Sidebar with worker cards - shown on location (when selected and NOT on market confirmation), brands, experience steps. On results, only show if no worker selected */}
           {((["brands", "experience"].includes(step) ||
             (step === "results" && !selectedWorker) ||
-            (step === "location" && selectedLocation))) && (
+            (step === "location" && selectedLocation && (persona !== "individual" || pickingDifferentMarket)))) && (
             <V2WorkerSidebar
               workers={["brands", "experience", "results"].includes(step) ? filteredWorkers : marketWorkers}
               isOpen={sidebarOpen}
