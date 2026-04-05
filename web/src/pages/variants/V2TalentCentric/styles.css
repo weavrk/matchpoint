@@ -518,6 +518,8 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   margin-top: 32px;
+  padding-left: 80px;
+  padding-right: 80px;
 }
 
 @media (max-width: 500px) {
