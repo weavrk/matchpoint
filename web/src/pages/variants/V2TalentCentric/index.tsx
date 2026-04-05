@@ -2599,8 +2599,8 @@ export function V2TalentCentric({
                         achievementChips.push({ text: '0 Call-Outs', icon: <Trophy size={14} /> });
                       }
 
-                      // Favorite Rating (store_favorite_count / unique_store_count >= 89%)
-                      const storeFavCount = worker?.store_favorite_count || 0;
+                      // Favorite Rating (reflex_activity.storeFavoriteCount / unique_store_count >= 89%)
+                      const storeFavCount = worker?.reflex_activity?.storeFavoriteCount || 0;
                       const uniqueStores = worker?.unique_store_count || 0;
                       if (uniqueStores > 0) {
                         const favoritePercent = Math.min((storeFavCount / uniqueStores) * 100, 100);
