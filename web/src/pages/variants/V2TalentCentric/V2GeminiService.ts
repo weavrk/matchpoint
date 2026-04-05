@@ -36,51 +36,35 @@ export interface V2ChatContext {
   workerSummary?: string;
 }
 
-// V2 System Prompt - focused on talent discovery and connection
-const V2_SYSTEM_PROMPT = `You are a helpful assistant for Reflex, a retail talent platform. You help retailers like {{USER_NAME}} discover and connect with Shift Verified Reflexers that fit their needs.
+// V2 System Prompt - Persona step: guide users to select their role/location scope
+const V2_SYSTEM_PROMPT = `You are a helpful assistant for Reflex, a retail talent platform. You're helping {{USER_NAME}} get started finding Shift Verified Reflexers.
 
-## Your Role
-- Help retailers discover retail talent through a discovery-first experience
-- Guide preference shaping: employment type, brand affinity, experience level
-- Facilitate introductions between retailers and workers
-- Keep interactions feeling like discovery, not interrogation
-
-## V2 Flow Context
-This is the "Talent Centric" variant where retailers browse and discover Shift Verified Reflexers first. The goal is connection, not job posting.
-
-## Persona Types
+## Your Primary Goal
+Help the user identify their role by asking: "How many locations are you overseeing?" Guide them to select one of the four persona cards above:
 - **Single-Store Manager**: Managing a team at one location
-- **Multi-Store Manager**: Managing multiple locations in same market
-- **Regional/District Manager**: Overseeing stores across regions
-- **Recruiter**: Centralized hiring function
+- **Multi-Store Manager**: Managing multiple locations
+- **Regional/District Manager**: Overseeing stores across a district or region
+- **HR/Recruiter**: Centralized hiring function across the brand
 
-## Preference Shaping Areas
-1. **Employment Type**: Full-time, Part-time, or "I just need help" (flex shift)
-2. **Brand Affinity**: Which brands' talent do they trust? (loose matching, not hard filter)
-3. **Experience Level**: New to retail, Rising talent, Seasoned pro, Management ready
+## Response Guidelines
+- Keep responses to 1-2 sentences
+- If the user's input matches a persona, acknowledge it and tell them to select the matching card above
+- If the user's input is unclear or off-topic, acknowledge it but redirect: "Got it, I've noted that. To get started, let me know how many locations you're overseeing - select one of the options above."
+- If the user's input is too short or nonsense, respond: "Sorry, I didn't catch that. First, let me know how many locations you're overseeing."
+- Do NOT mention specific markets or locations
+- Do NOT discuss employment types, brand affinity, or experience levels yet - that comes later
 
-## Context
-- User: {{USER_NAME}}
-
-## Response Style
-- Keep responses concise (2-3 sentences unless providing detailed info)
-- Use bullet points for lists
-- Bold key terms with **markdown**
-- Always offer clear next steps
-- Be helpful and professional, not overly casual
-- Lead with talent discovery, not forms
-- Do NOT mention specific markets or locations - keep responses location-agnostic
-
-## Guardrails
-- Never make up worker data - only reference real Reflexers if provided
-- Don't push job posting - this flow ends in connection, not posting
-- Keep brand matching loose - it's about trust/affinity, not strict filtering
-- If user asks about posting a job, redirect to V1 flow or explain this is discovery-focused
+## Examples
+- "I manage one store" → "Got it - you're managing a single store. Select **Single-Store Manager** above to continue."
+- "multiple locations" → "Got it - you're managing multiple locations. Select **Multi-Store Manager** above to continue."
+- "I'm a DM" → "Got it - you're overseeing a district. Select **Regional/District Manager** above to continue."
+- "I need help hiring" → "I can help with that! But first, let me know how many locations you're overseeing - select one of the options above."
+- "asdf" → "Sorry, I didn't catch that. First, let me know how many locations you're overseeing."
 
 ## Rules
 - Don't use emojis unless the user does first
-- Always offer actionable next steps
-- Keep the focus on connecting retailers with talent`;
+- Always guide the user to select a persona card
+- Do NOT make up interpretations for unclear input`;
 
 // Focus Step System Prompt - help user narrow down preferences
 const V2_FOCUS_SYSTEM_PROMPT = `You are a helpful assistant for Reflex, a retail talent platform. You're helping {{USER_NAME}} narrow down their search preferences to find Shift Verified Reflexers that fit their needs.
@@ -99,7 +83,7 @@ const V2_FOCUS_SYSTEM_PROMPT = `You are a helpful assistant for Reflex, a retail
 ## The Three Preference Areas
 1. **Employment Type**: Full-time, Part-time, or Flex (just need shift help)
 2. **Brand Affinity**: Which brands' talent do they trust? What tier/style? (luxury, contemporary, athletic, etc.)
-3. **Experience Level**: New to Reflex, Rising talent (5-30 shifts), Seasoned pro (30+), Management ready
+3. **Experience Level**: New to Reflex, Rising talent (5-30 shifts), Seasoned sales pro (30+), Management ready
 
 ## Response Guidelines
 - Keep responses to 2-3 sentences
@@ -110,7 +94,7 @@ const V2_FOCUS_SYSTEM_PROMPT = `You are a helpful assistant for Reflex, a retail
 - If they mention skills, experience, reliability → guide to Experience Level
 
 ## Examples
-- "I need someone reliable" → Ask about experience level, suggest Seasoned pros with 30+ shifts
+- "I need someone reliable" → Ask about experience level, suggest Seasoned sales pros with 30+ shifts
 - "Similar to our brand" → Ask what tier they are, suggest Brand Affinity to filter by brands they trust
 - "Just need weekend help" → Suggest Employment Type, ask about part-time vs flex shifts
 - "Looking for a leader" → Suggest Experience Level, specifically Management ready tier
@@ -282,11 +266,11 @@ export class V2GeminiService {
 
     // Skills/reliability mentions → Experience Level
     if (lower.includes('reliable') || lower.includes('dependable') || lower.includes('punctual') || lower.includes('show up')) {
-      return `Reliability noted as a priority. Select **Experience level** above - Seasoned pros have 30+ shifts and proven track records.`;
+      return `Reliability noted as a priority. Select **Experience level** above - Seasoned sales pros have 30+ shifts and proven track records.`;
     }
 
     if (lower.includes('experience') || lower.includes('skilled') || lower.includes('seasoned') || lower.includes('veteran')) {
-      return `Got it - experience matters. Select **Experience level** above to filter by Seasoned pros or Management ready tiers.`;
+      return `Got it - experience matters. Select **Experience level** above to filter by Seasoned sales pros or Management ready tiers.`;
     }
 
     if (lower.includes('train') || lower.includes('new') || lower.includes('fresh') || lower.includes('entry')) {
@@ -311,60 +295,44 @@ export class V2GeminiService {
     return `Got it, I've noted that. To continue, select one of the three cards above to refine your search - **Type of employment**, **Brand affinity**, or **Experience level**.`;
   }
 
+  // Persona mode mock responses - guide users to select their role/location scope
   private getMockResponse(message: string): string {
-    const lower = message.toLowerCase();
-    const market = this.context?.market || 'Austin';
+    const lower = message.toLowerCase().trim();
 
-    // Persona-related
-    if (lower.includes('single') || lower.includes('one store') || lower.includes('one location')) {
-      return `Got it - you're managing a single store. I'll focus on finding talent specifically for your ${market} location. What's most important to you in a team member?`;
+    // Too short or unclear input
+    if (lower.length < 3) {
+      return `Sorry, I didn't catch that. First, let me know how many locations you're overseeing - one store, multiple locations, a district/region, or hiring nationally?`;
     }
 
-    if (lower.includes('multi') || lower.includes('multiple')) {
-      return `Managing multiple locations is challenging! I can help you find talent across your stores in ${market}. Would you like to focus on one location first, or find candidates who could work across multiple sites?`;
+    // Persona-related - acknowledge and confirm
+    if (lower.includes('single') || lower.includes('one store') || lower.includes('one location') || lower.includes('1 store') || lower.includes('1 location')) {
+      return `Got it - you're managing a single store. Select **Single-Store Manager** above to continue.`;
     }
 
-    if (lower.includes('regional') || lower.includes('district') || lower.includes('field')) {
-      return `As a regional manager, you have a broader view of talent needs. I can show you Reflexers across different markets. Which areas are you most focused on right now?`;
+    if (lower.includes('multi') || lower.includes('multiple') || lower.includes('few') || lower.includes('several') || lower.includes('2') || lower.includes('3')) {
+      return `Got it - you're managing multiple locations. Select **Multi-Store Manager** above to continue.`;
     }
 
-    if (lower.includes('recruit')) {
-      return `Great - as a recruiter, you're probably looking to build a pipeline of qualified candidates. I can help you discover Shift Verified Reflexers who've proven themselves on the floor. What roles are you prioritizing?`;
+    if (lower.includes('regional') || lower.includes('district') || lower.includes('field') || lower.includes('area') || lower.includes('territory')) {
+      return `Got it - you're overseeing a district or region. Select **Regional/District Manager** above to continue.`;
     }
 
-    // Employment type
-    if (lower.includes('full-time') || lower.includes('full time')) {
-      return `Looking for full-time talent! I'll prioritize Reflexers who've indicated they're seeking full-time roles. Many of our Shift Verified workers are actively looking for permanent positions.`;
+    if (lower.includes('recruit') || lower.includes('hr') || lower.includes('hiring') || lower.includes('national') || lower.includes('company') || lower.includes('brand')) {
+      return `Got it - you're handling recruiting across the brand. Select **HR/Recruiter** above to continue.`;
     }
 
-    if (lower.includes('part-time') || lower.includes('part time')) {
-      return `Part-time can be a great way to start. I'll show you Reflexers who are open to part-time work - many of them have proven reliability across multiple shifts.`;
+    // If they mention something else, acknowledge but redirect to the persona question
+    if (lower.includes('help') || lower.includes('looking') || lower.includes('need') || lower.includes('want')) {
+      return `I can help with that! But first, let me know how many locations you're overseeing - select one of the options above.`;
     }
 
-    if (lower.includes('help') || lower.includes('flex') || lower.includes('shift')) {
-      return `Sounds like you could use some immediate support! You can book a Reflex shift to try out workers before committing to a permanent hire. Want me to show you available Reflexers for a shift?`;
+    // Questions
+    if (lower.includes('?') || lower.startsWith('what') || lower.startsWith('how') || lower.startsWith('can') || lower.startsWith('why')) {
+      return `Good question! I'll be able to help more once I know your role. Are you managing one store, multiple locations, a district/region, or recruiting nationally? Select an option above.`;
     }
 
-    // Experience level
-    if (lower.includes('new') || lower.includes('entry') || lower.includes('beginner')) {
-      return `New talent can bring fresh energy! I'll look for Reflexers who are early in their retail journey but have shown great potential through their shifts.`;
-    }
-
-    if (lower.includes('experience') || lower.includes('seasoned') || lower.includes('senior')) {
-      return `Experienced retail pros are valuable. I'll prioritize Reflexers with 30+ shifts and strong track records - these are the workers who've proven themselves repeatedly.`;
-    }
-
-    if (lower.includes('management') || lower.includes('manager') || lower.includes('lead')) {
-      return `Looking for leadership potential! I'll show you Reflexers who have management experience or have demonstrated leadership qualities across their shifts.`;
-    }
-
-    // Brand-related
-    if (lower.includes('brand') || lower.includes('similar') || lower.includes('like us')) {
-      return `Brand experience matters. What brands' talent do you trust? I can find Reflexers who've worked at similar retailers - it's a good proxy for culture fit and skills.`;
-    }
-
-    // Default response - ask about their role scope
-    return `Sounds good! Do you manage one location, multiple, a district or region, or are you hiring across the brand nationally?`;
+    // Default response - acknowledge but redirect to persona selection
+    return `Got it, I've noted that. To get started, let me know how many locations you're overseeing - select one of the options above.`;
   }
 
   // Update context (e.g., when persona is selected)

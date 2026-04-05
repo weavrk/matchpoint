@@ -1886,7 +1886,7 @@ export function V2TalentCentric({
                     </div>
                     <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
-                      Seasoned pro
+                      Seasoned sales pro
                     </h3>
                     <p className="welcome-card-description type-body-md">
                       30+ shifts, proven reliability
