@@ -32,8 +32,9 @@ import { V2Main } from "./V2Main";
 import { V2EmploymentSelector } from "./V2EmploymentSelector";
 import { V2WorkerSidebar } from "./V2WorkerSidebar";
 import type { EmploymentType } from "./V2EmploymentSelector";
-import type { MatchedWorker, ChatMessage } from "../../../types";
+import type { MatchedWorker, ChatMessage, WorkerProfile } from "../../../types";
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
+import { fetchWorkersByMarketAsProfiles } from "../../../services/supabase";
 import ReactMarkdown from "react-markdown";
 import chatbotAvatarUrl from "../../../../../assets/logo-and-backgrounds/chatbot.svg?url";
 import "./styles.css";
@@ -536,6 +537,7 @@ export function V2TalentCentric({
   // Persona and location flow
   const [persona, setPersona] = useState<PersonaType | null>(null);
   const [chatPromptValue, setChatPromptValue] = useState("");
+  const [pickingDifferentMarket, setPickingDifferentMarket] = useState(false); // For single-store "hire in different market" sub-flow
 
   // Chat state for V2 (uses V2GeminiService)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -554,6 +556,10 @@ export function V2TalentCentric({
   const [completedSections, setCompletedSections] = useState<Set<FocusArea>>(
     new Set(),
   );
+
+  // Supabase workers state - fetched when location is selected
+  const [supabaseWorkers, setSupabaseWorkers] = useState<WorkerProfile[]>([]);
+  const [isLoadingWorkers, setIsLoadingWorkers] = useState(false);
 
   // Search matching brands - only match from start of name
   const searchResults = useMemo(() => {
@@ -675,6 +681,33 @@ export function V2TalentCentric({
     }
   }, [chatMessages, isLoading]);
 
+  // Fetch workers from Supabase when location changes
+  useEffect(() => {
+    if (!selectedLocation) {
+      setSupabaseWorkers([]);
+      return;
+    }
+
+    const selectedMarket = MARKETS.find((m) => m.id === selectedLocation);
+    if (!selectedMarket) {
+      setSupabaseWorkers([]);
+      return;
+    }
+
+    setIsLoadingWorkers(true);
+    fetchWorkersByMarketAsProfiles(selectedMarket.name)
+      .then((workers) => {
+        setSupabaseWorkers(workers);
+      })
+      .catch((error) => {
+        console.error("Error fetching workers:", error);
+        setSupabaseWorkers([]);
+      })
+      .finally(() => {
+        setIsLoadingWorkers(false);
+      });
+  }, [selectedLocation]);
+
   // CYOA flow: Get next incomplete preference section
   const getNextIncompleteSection = (current: FocusArea): FocusArea | null => {
     const sections: FocusArea[] = ["employment", "brands", "roles"];
@@ -719,16 +752,18 @@ export function V2TalentCentric({
   };
 
   // Transition to a new step with animation
+  // Animation timing: fade out (0-200ms), slide continues (200-400ms), then switch + fade in
   const transitionToStep = (
     newStep: Step,
     direction: "forward" | "back" = "forward",
   ) => {
     setTransitionDirection(direction);
     setIsTransitioning(true);
+    // Wait for fade-out portion of animation (50% of 400ms = 200ms)
     setTimeout(() => {
       setStep(newStep);
       setIsTransitioning(false);
-    }, 200);
+    }, 250);
   };
 
   // Helper to normalize brand names for comparison (kebab-case to lowercase, spaces removed)
@@ -737,10 +772,13 @@ export function V2TalentCentric({
 
   // Filter and score workers based on selections
   const filteredWorkers = useMemo(() => {
-    let workers = [...SAMPLE_WORKERS]; // Start with all 40 workers
+    // Use Supabase workers when location is selected, otherwise fall back to sample data
+    let workers: WorkerProfile[] = selectedLocation && supabaseWorkers.length > 0
+      ? [...supabaseWorkers]
+      : [...SAMPLE_WORKERS];
 
-    // Filter by selected location
-    if (selectedLocation) {
+    // Filter by selected location (only needed for SAMPLE_WORKERS fallback)
+    if (selectedLocation && supabaseWorkers.length === 0) {
       const selectedMarket = MARKETS.find((m) => m.id === selectedLocation);
       if (selectedMarket) {
         workers = workers.filter(
@@ -855,7 +893,7 @@ export function V2TalentCentric({
 
     // Sort by score
     return scored.sort((a, b) => b.matchScore - a.matchScore);
-  }, [selectedBrands, selectedLocation, employmentType, experienceLevel]);
+  }, [selectedBrands, selectedLocation, employmentType, experienceLevel, supabaseWorkers]);
 
   // Get brands the filtered workers have in common
   const commonBrands = useMemo(() => {
@@ -993,6 +1031,7 @@ export function V2TalentCentric({
                       setChatMessages([]);
                       setPersona("individual");
                       setSelectedLocation("austin-tx");
+                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -1016,6 +1055,7 @@ export function V2TalentCentric({
                     onClick={() => {
                       setChatMessages([]);
                       setPersona("multi-store");
+                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -1040,6 +1080,7 @@ export function V2TalentCentric({
                       setChatMessages([]);
                       setPersona("field");
                       setSelectedLocation(null);
+                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -1064,6 +1105,7 @@ export function V2TalentCentric({
                       setChatMessages([]);
                       setPersona("recruiter");
                       setSelectedLocation(null);
+                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -1208,18 +1250,36 @@ export function V2TalentCentric({
           {/* Step 2: Location Selection - varies by persona */}
           {step === "location" && (
             <V2Main
-              stepClassName={persona === "individual" || persona === "multi-store" ? "v2-main-centered" : ""}
+              stepClassName={(persona === "individual" && !pickingDifferentMarket) || persona === "multi-store" ? "v2-main-centered" : ""}
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
                 showBack: true,
-                onBack: () => transitionToStep("persona", "back"),
-                onNext: () => transitionToStep("focus", "forward"),
+                onBack: () => {
+                  if (persona === "individual" && pickingDifferentMarket) {
+                    // Go back to market confirmation with animation
+                    // If they selected a market, keep it; otherwise restore default
+                    const currentLocation = selectedLocation;
+                    setTransitionDirection("back");
+                    setIsTransitioning(true);
+                    setTimeout(() => {
+                      setPickingDifferentMarket(false);
+                      setSelectedLocation(currentLocation || "austin-tx");
+                      setIsTransitioning(false);
+                    }, 250);
+                  } else {
+                    transitionToStep("persona", "back");
+                  }
+                },
+                onNext: () => {
+                  setPickingDifferentMarket(false); // Reset when moving forward
+                  transitionToStep("focus", "forward");
+                },
                 nextDisabled: !selectedLocation,
               }}
             >
               {/* Single-Store Manager: Confirmation with default market */}
-              {persona === "individual" && (
+              {persona === "individual" && !pickingDifferentMarket && (
                 <div className="v2-step-header-chips">
                   <div className="v2-step-header">
                     <h1 className="type-tagline">
@@ -1235,13 +1295,24 @@ export function V2TalentCentric({
                     </button>
                     <button
                       className="v2-location-confirm-chip"
-                      onClick={() => { setPersona("field"); setSelectedLocation(null); }}
+                      onClick={() => {
+                        // Trigger forward animation
+                        setTransitionDirection("forward");
+                        setIsTransitioning(true);
+                        setTimeout(() => {
+                          setPickingDifferentMarket(true);
+                          setSelectedLocation(null); // Clear selection - user wants a DIFFERENT market
+                          setIsTransitioning(false);
+                        }, 250);
+                      }}
                     >
                       <span>Hire in a different market</span>
                     </button>
                   </div>
                 </div>
               )}
+
+              {/* Single-Store Manager picked "different market" - reuse field/recruiter picker below */}
 
               {/* Multi-Store Manager: Confirmation + dropdown of their locations */}
               {persona === "multi-store" && (
@@ -1283,8 +1354,8 @@ export function V2TalentCentric({
                 </div>
               )}
 
-              {/* Regional/District Manager or Recruiter: Full location picker */}
-              {(persona === "field" || persona === "recruiter") && (
+              {/* Regional/District Manager, Recruiter, or Single-Store picking different market: Full location picker */}
+              {(persona === "field" || persona === "recruiter" || (persona === "individual" && pickingDifferentMarket)) && (
                 <>
                   <div className="v2-step-header">
                     <h1 className="type-tagline">Where are you hiring?</h1>
@@ -1783,7 +1854,7 @@ export function V2TalentCentric({
 
           {/* Sidebar with worker cards - shown on location (when selected), brands, experience, and results steps */}
           {(["brands", "experience", "results"].includes(step) ||
-            (step === "location" && selectedLocation && (persona === "field" || persona === "recruiter"))) && (
+            (step === "location" && selectedLocation && (persona === "field" || persona === "recruiter" || (persona === "individual" && pickingDifferentMarket)))) && (
             <V2WorkerSidebar
               workers={filteredWorkers}
               isOpen={sidebarOpen}
@@ -1803,6 +1874,12 @@ export function V2TalentCentric({
               onWorkerClick={() => {
                 /* TODO: open full card */
               }}
+              emptyMessage={
+                step === "location"
+                  ? "No Reflexers in this market yet. Try selecting a different market."
+                  : undefined
+              }
+              isLoading={isLoadingWorkers}
             />
           )}
         </div>

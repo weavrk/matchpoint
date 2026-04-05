@@ -1,4 +1,4 @@
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, MapPin, Users, Loader2 } from 'lucide-react';
 import { WorkerCardChip } from '../../../components/Workers/WorkerCardChip';
 import type { MatchedWorker } from '../../../types';
 
@@ -24,6 +24,8 @@ export interface V2WorkerSidebarProps {
   onWorkerClick?: (worker: MatchedWorker) => void;
   /** Empty state message */
   emptyMessage?: string;
+  /** Whether workers are currently loading */
+  isLoading?: boolean;
 }
 
 export function V2WorkerSidebar({
@@ -34,7 +36,11 @@ export function V2WorkerSidebar({
   showCount = true,
   onWorkerClick,
   emptyMessage = 'No matches yet. Try selecting different brands or criteria.',
+  isLoading = false,
 }: V2WorkerSidebarProps) {
+  // Determine if this is a location-specific empty state
+  const isLocationEmpty = emptyMessage.toLowerCase().includes('market');
+
   return (
     <div className={`v2-sidebar ${isOpen ? '' : 'collapsed'}`}>
       <button
@@ -52,8 +58,22 @@ export function V2WorkerSidebar({
       </div>
 
       <div className="v2-sidebar-cards">
-        {workers.length === 0 ? (
+        {isLoading ? (
+          <div className="v2-no-matches v2-loading-state">
+            <div className="v2-empty-icon">
+              <Loader2 size={32} className="v2-spinner" />
+            </div>
+            <p>Loading talent...</p>
+          </div>
+        ) : workers.length === 0 ? (
           <div className="v2-no-matches">
+            <div className="v2-empty-icon">
+              {isLocationEmpty ? (
+                <MapPin size={32} strokeWidth={1.5} />
+              ) : (
+                <Users size={32} strokeWidth={1.5} />
+              )}
+            </div>
             <p>{emptyMessage}</p>
           </div>
         ) : (

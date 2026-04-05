@@ -14,19 +14,19 @@
 }
 
 .v2-main.slide-in-right-forward {
-  animation: v2FadeIn 400ms ease-in-out forwards;
+  animation: v2FadeIn 300ms ease-out forwards;
 }
 
 .v2-main.slide-out-left-forward {
-  animation: v2SlideOutLeft 400ms ease-in-out forwards;
+  animation: v2SlideOutLeft 250ms ease-in forwards;
 }
 
 .v2-main.slide-in-left-backward {
-  animation: v2FadeIn 400ms ease-in-out forwards;
+  animation: v2FadeInFromLeft 300ms ease-out forwards;
 }
 
 .v2-main.slide-out-right-backward {
-  animation: v2SlideOutRight 400ms ease-in-out forwards;
+  animation: v2SlideOutRight 250ms ease-in forwards;
 }
 
 .v2-main.fade-in {
@@ -55,18 +55,14 @@
   }
 }
 
-/* V2 step animations: fade first (0-50%), then slide (50-100%) */
+/* V2 step animations: simultaneous fade + slide */
 @keyframes v2SlideOutLeft {
   0% {
     transform: translateX(0);
     opacity: 1;
   }
-  50% {
-    transform: translateX(0);
-    opacity: 0;
-  }
   100% {
-    transform: translateX(-300px);
+    transform: translateX(-30px);
     opacity: 0;
   }
 }
@@ -76,12 +72,8 @@
     transform: translateX(0);
     opacity: 1;
   }
-  50% {
-    transform: translateX(0);
-    opacity: 0;
-  }
   100% {
-    transform: translateX(300px);
+    transform: translateX(30px);
     opacity: 0;
   }
 }
@@ -89,9 +81,22 @@
 @keyframes v2FadeIn {
   0% {
     opacity: 0;
+    transform: translateX(30px);
   }
   100% {
     opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes v2FadeInFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
@@ -303,7 +308,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 48px;
+  padding-top: 120px;
   text-align: center;
   flex: 1;
   min-height: 0;
@@ -604,7 +609,7 @@
   padding: 16px;
   gap: 4px 16px;
   background: var(--blue-50);
-  height: 200px;
+  height: 180px;
 }
 
 .v2-page .welcome-card.persona-card .v2-welcome-card-text {
@@ -2270,13 +2275,46 @@
 /* No matches state */
 .v2-no-matches {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 16px;
   height: 200px;
   text-align: center;
   color: var(--secondary);
   font-size: 14px;
   padding: 24px;
+}
+
+.v2-no-matches .v2-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--background-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--secondary);
+}
+
+.v2-no-matches p {
+  margin: 0;
+  max-width: 200px;
+  line-height: 1.4;
+}
+
+/* Loading spinner */
+.v2-spinner {
+  animation: v2Spin 1s linear infinite;
+}
+
+@keyframes v2Spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Animation for card updates */
@@ -2365,4 +2403,9 @@
   .v2-brand-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+}
+
+/* Centered steps: .v2-main padding shorthand in max-width: 1200px would reset top to 48px */
+.v2-main.v2-main-centered {
+  padding-top: 120px;
 }
