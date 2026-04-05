@@ -599,13 +599,18 @@ const WORKER_COLUMNS_FULL = `
   id, name, photo, gender, market, actively_looking, about_me, previous_experience,
   shift_verified, market_favorite, reflex_activity, shifts_on_reflex, brands_worked,
   retailer_quotes, retailer_summary, endorsement_counts, shift_experience, invited_back_stores,
-  commitment_score, tardy_ratio, tardy_percent,
-  urgent_cancel_ratio, urgent_cancel_percent, current_tier, unique_store_count,
-  interview_transcript, worker_uuid, worker_id
+  tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent,
+  current_tier, unique_store_count, interview_transcript, worker_uuid, worker_id
 `.replace(/\s+/g, ' ').trim();
 
 const WORKER_COLUMNS_LIST = `
   id, name, photo, gender, market, shift_verified, shifts_on_reflex, actively_looking, current_tier
+`.replace(/\s+/g, ' ').trim();
+
+// Connection list needs achievement data too (market_favorite, tardy/cancel percents, unique_store_count, reflex_activity)
+const WORKER_COLUMNS_CONNECTION = `
+  id, name, photo, gender, market, shift_verified, shifts_on_reflex, actively_looking, current_tier,
+  market_favorite, tardy_percent, urgent_cancel_percent, unique_store_count, reflex_activity
 `.replace(/\s+/g, ' ').trim();
 
 export interface WorkerRow {
@@ -924,10 +929,10 @@ export async function fetchWorkerConnections(): Promise<WorkerConnectionWithWork
   // Get unique worker IDs
   const workerIds = [...new Set(connections.map(c => c.worker_id))];
 
-  // Fetch workers for these IDs
+  // Fetch workers for these IDs - use connection columns (includes achievement data)
   const { data: workers, error: workersError } = await supabase
     .from('workers')
-    .select(WORKER_COLUMNS_CARD)
+    .select(WORKER_COLUMNS_CONNECTION)
     .in('id', workerIds);
 
   if (workersError) {

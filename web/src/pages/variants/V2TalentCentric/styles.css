@@ -243,6 +243,12 @@
   padding: 0;
 }
 
+/* Chat tab needs no padding and no scroll on v2-main */
+.v2-main.v2-chat-mode {
+  padding: 0;
+  overflow: hidden;
+}
+
 /* Beats .v2-container-welcome .v2-main so welcome hero keeps vertical inset */
 .v2-container-welcome .v2-main.v2-welcome-step {
   padding: 120px 64px 120px;
@@ -1302,8 +1308,8 @@
 }
 
 .v2-chat-followup-chip:hover {
-  border-color: var(--gray-900);
-  background: var(--gray-900);
+  border-color: var(--primary);
+  background: var(--primary);
   color: white;
 }
 
@@ -1312,8 +1318,8 @@
 }
 
 .v2-chat-followup-chip.active {
-  border-color: var(--gray-900);
-  background: var(--gray-900);
+  border-color: var(--primary);
+  background: var(--primary);
   color: white;
 }
 
@@ -1824,11 +1830,10 @@
 
 /* Store chip right icon circle - stroke style like confirmation chips */
 .v2-store-chip .v2-chip-icon-right {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  min-width: 28px;
-  min-height: 28px;
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  aspect-ratio: 1;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1850,6 +1855,56 @@
   border-color: transparent;
   color: var(--primary);
   animation: checkPop 0.3s ease forwards;
+}
+
+/* Location Chat Section - for multi-store different market input */
+.v2-location-chat-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--quaternary);
+}
+
+.v2-location-chat-response {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--background-navy);
+  border-radius: var(--radius-lg);
+}
+
+.v2-location-chat-message {
+  font-size: 14px;
+  color: var(--primary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.v2-location-chat-message.v2-location-chat-success {
+  color: var(--accent-green-dark);
+}
+
+.v2-location-chat-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  width: fit-content;
+}
+
+.v2-location-chat-cta:hover {
+  background: var(--gray-600);
 }
 
 /* Sticky Nav Footer - pinned to bottom of content shell */
@@ -2421,7 +2476,7 @@
 }
 
 .v2-search-clear:hover {
-  color: var(--accent-navy-dark);
+  color: var(--hover);
 }
 
 .v2-search-input::placeholder {
@@ -2452,8 +2507,8 @@
 }
 
 .v2-clear-all:hover:not(:disabled) {
-  background: var(--accent-navy-dark);
-  border-color: var(--accent-navy-dark);
+  background: var(--hover);
+  border-color: var(--hover);
 }
 
 .v2-clear-all:disabled {
@@ -2676,7 +2731,7 @@
 }
 
 .v2-continue-btn:hover:not(:disabled) {
-  background: var(--accent-navy-dark);
+  background: var(--hover);
 }
 
 .v2-continue-btn:disabled {
@@ -2831,7 +2886,7 @@
 }
 
 .v2-action-primary:hover {
-  background: var(--accent-navy-dark);
+  background: var(--hover);
 }
 
 .v2-action-secondary {
@@ -3243,7 +3298,7 @@
 }
 
 .v2-teaser-connect:hover {
-  background: var(--accent-navy-dark);
+  background: var(--hover);
 }
 
 .v2-results-more {
@@ -3276,6 +3331,15 @@
   flex-direction: column;
   overflow: hidden;
   flex-shrink: 0;
+}
+
+.v2-detail-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--secondary);
+  font-size: 14px;
 }
 
 .v2-detail-close {
@@ -3322,10 +3386,21 @@
    CONNECTIONS TAB
    ============================================================ */
 
+.v2-connections-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
 .v2-connections-container {
   flex: 1;
   padding: 32px 48px;
   overflow-y: auto;
+  transition: all 0.3s ease;
+}
+
+.v2-connections-container.with-sidebar {
+  flex: 1;
 }
 
 .v2-connections-header {
@@ -3349,6 +3424,8 @@
 
 .v2-connection-filters.v2-market-filters {
   margin-bottom: 12px;
+  padding-top: 24px;
+  border-top: 1px solid var(--quaternary);
 }
 
 .v2-filter-label {
@@ -3393,6 +3470,38 @@
 
 .v2-filter-pill.active .v2-filter-count {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* Connections Table Header */
+.v2-connections-table-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--quaternary);
+  margin-bottom: 8px;
+}
+
+.v2-table-header-cell {
+  flex-shrink: 0;
+}
+
+.v2-table-header-worker {
+  width: 200px;
+}
+
+.v2-table-header-tags {
+  flex: 1;
+}
+
+.v2-table-header-status {
+  width: 200px;
+  text-align: right;
 }
 
 /* Connections List */
@@ -3443,15 +3552,17 @@
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
 }
 
-/* Row 1: name, market, indicators */
-.v2-connection-row-1 {
+/* Left column: name and market stacked */
+.v2-connection-name-col {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
 }
 
 .v2-connection-name-row {
@@ -3467,11 +3578,19 @@
 }
 
 .v2-connection-market {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 14px;
-  color: var(--secondary);
+  color: var(--primary);
 }
 
-/* Row 2: all tags in one row */
+.v2-connection-market svg {
+  color: var(--secondary);
+  flex-shrink: 0;
+}
+
+/* Right: all tags in one row */
 .v2-connection-tags-row {
   display: flex;
   flex-wrap: wrap;
@@ -3595,7 +3714,7 @@
 }
 
 .v2-connection-action:hover {
-  background: var(--accent-navy-dark);
+  background: var(--hover);
 }
 
 .v2-connection-action.secondary {
@@ -3609,43 +3728,63 @@
   border-color: var(--tertiary);
 }
 
-/* ============================================================
-   CHAT TAB
-   ============================================================ */
-
-.v2-chat-container {
-  display: flex;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+.v2-connection-action.disabled {
+  background: var(--tertiary);
+  color: var(--secondary);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-/* Chat Sidebar */
-.v2-chat-sidebar {
-  width: 320px;
+.v2-connection-action.disabled:hover {
+  background: var(--tertiary);
+}
+
+/* ============================================================
+   CHAT TAB - Full-page two-column layout
+   ============================================================ */
+
+/* Chat Tab container - directly inside v2-page, fills remaining space */
+.v2-chat-tab-container {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  background: var(--white);
+}
+
+/* Chat Sidebar - Left panel with conversation list */
+.v2-chat-tab-container .v2-chat-sidebar {
+  width: 360px;
+  min-width: 360px;
+  max-width: 360px;
   background: var(--white);
   border-right: 1px solid var(--quaternary);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
-.v2-chat-sidebar-header {
+.v2-chat-tab-container .v2-chat-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 20px;
   border-bottom: 1px solid var(--quaternary);
+  flex-shrink: 0;
 }
 
-.v2-chat-sidebar-header h3 {
+.v2-chat-tab-container .v2-chat-sidebar-header h3 {
   font-size: 18px;
   font-weight: 600;
   color: var(--primary);
   margin: 0;
 }
 
-.v2-chat-unread-badge {
+.v2-chat-tab-container .v2-chat-unread-badge {
   background: var(--accent-coral);
   color: white;
   font-size: 12px;
@@ -3654,9 +3793,10 @@
   border-radius: 10px;
 }
 
-/* Chat List */
-.v2-chat-list {
+/* Chat List - scrollable conversation list */
+.v2-chat-tab-container .v2-chat-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 
@@ -3748,23 +3888,27 @@
   margin-top: 18px;
 }
 
-/* Chat Main Area */
-.v2-chat-main {
+/* Chat Main Area - right panel with conversation */
+.v2-chat-tab-container .v2-chat-main {
   flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
   background: var(--gray-50);
+  overflow: hidden;
 }
 
 /* Chat Header */
-.v2-chat-header {
+.v2-chat-tab-container .v2-chat-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
   background: var(--white);
   border-bottom: 1px solid var(--quaternary);
+  flex-shrink: 0;
 }
 
 .v2-chat-header-info {
@@ -3831,14 +3975,15 @@
   border-color: var(--tertiary);
 }
 
-/* Chat Messages - iMessage style */
-.v2-chat-messages {
+/* Chat Messages - iMessage style scrollable area */
+.v2-chat-tab-container .v2-chat-messages {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 20px 16px;
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   background: #f5f5f5;
 }
 
@@ -4009,7 +4154,7 @@
 }
 
 .v2-chat-empty-btn:hover {
-  background: var(--accent-navy-dark);
+  background: var(--hover);
 }
 
 /* Chat Status Badges */
