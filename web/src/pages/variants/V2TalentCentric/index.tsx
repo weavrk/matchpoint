@@ -39,6 +39,8 @@ import { SAMPLE_WORKERS } from "../../../data/workers";
 import { V2Main } from "./V2Main";
 import { V2EmploymentSelector } from "./V2EmploymentSelector";
 import { V2WorkerSidebar } from "./V2WorkerSidebar";
+import { WorkerCard } from "../../../components/Workers/WorkerCard";
+import { WorkerAchievementChips } from "../../../components/Workers/WorkerAchievementChips";
 import type { EmploymentType, AvailabilityHours } from "./V2EmploymentSelector";
 import type { MatchedWorker, ChatMessage, WorkerProfile } from "../../../types";
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
@@ -597,6 +599,9 @@ export function V2TalentCentric({
   // Retailers from Supabase - for brand classification matching
   const [retailers, setRetailers] = useState<Retailer[]>([]);
 
+  // Selected worker for showing full card in sidebar
+  const [selectedWorker, setSelectedWorker] = useState<MatchedWorker | null>(null);
+
   // Search matching brands - only match from start of name
   const searchResults = useMemo(() => {
     if (!brandSearch.trim()) return null;
@@ -1146,10 +1151,16 @@ export function V2TalentCentric({
             Discover
           </button>
           <button
-            className={`tab ${activeTab === "saved" ? "active" : ""}`}
-            onClick={() => setActiveTab("saved")}
+            className={`tab ${activeTab === "connections" ? "active" : ""}`}
+            onClick={() => setActiveTab("connections")}
           >
             Connections
+          </button>
+          <button
+            className={`tab ${activeTab === "chat" ? "active" : ""}`}
+            onClick={() => setActiveTab("chat")}
+          >
+            Chat
           </button>
         </nav>
       </div>
@@ -2123,22 +2134,27 @@ export function V2TalentCentric({
             </V2Main>
           )}
 
-          {/* Results */}
+          {/* Results - Enhanced Meet Your Matches */}
           {step === "results" && (
             <V2Main
-              stepClassName=""
+              stepClassName="v2-results-step"
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               hideFooter
             >
-              <div className="v2-step-header">
+              <div className="v2-results-header">
                 <div className="v2-results-icon">
                   <Sparkles size={32} />
                 </div>
-                <h1 className="type-tagline">Meet your matches</h1>
+                <h1 className="type-tagline">
+                  {filteredWorkers.length > 0
+                    ? `We found ${filteredWorkers.length} amazing matches!`
+                    : "No matches found"}
+                </h1>
                 <p className="v2-step-subtitle">
-                  {filteredWorkers.length} Reflexers match your criteria.
-                  Connect to learn more or book a shift.
+                  {filteredWorkers.length > 0
+                    ? "These Reflexers match your criteria and are ready to connect. Click on a worker to see their full profile."
+                    : "Try adjusting your filters to find more candidates."}
                 </p>
               </div>
 
@@ -2155,8 +2171,72 @@ export function V2TalentCentric({
                 </div>
               )}
 
+              {/* Worker Teaser Grid */}
+              <div className="v2-worker-teaser-grid">
+                {filteredWorkers.slice(0, 12).map((worker) => {
+                  const firstName = worker.name.split(' ')[0];
+                  return (
+                    <div
+                      key={worker.id}
+                      className={`v2-worker-teaser ${selectedWorker?.id === worker.id ? 'selected' : ''}`}
+                      onClick={() => setSelectedWorker(worker)}
+                    >
+                      <div className="v2-teaser-header">
+                        <div className="v2-teaser-avatar">
+                          {worker.photo ? (
+                            <img src={worker.photo} alt={worker.name} />
+                          ) : (
+                            <span>{worker.name.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
+                          )}
+                        </div>
+                        <div className="v2-teaser-info">
+                          <div className="v2-teaser-name-row">
+                            <span className="v2-teaser-name">{worker.name}</span>
+                            {worker.shiftVerified && (
+                              <BadgeCheck size={16} className="v2-teaser-verified" />
+                            )}
+                          </div>
+                          <span className="v2-teaser-market">{worker.market}</span>
+                        </div>
+                      </div>
+                      <div className="v2-teaser-stats">
+                        <span className="v2-teaser-stat">
+                          <strong>{worker.shiftsOnReflex}</strong> shifts
+                        </span>
+                        <span className="v2-teaser-stat">
+                          <strong>{worker.uniqueStoreCount || 0}</strong> stores
+                        </span>
+                      </div>
+                      <WorkerAchievementChips worker={worker} />
+                      {worker.retailerSummary && (
+                        <p className="v2-teaser-summary">
+                          {worker.retailerSummary.slice(0, 100)}...
+                        </p>
+                      )}
+                      <button
+                        className="v2-teaser-connect"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedWorker(worker);
+                        }}
+                      >
+                        <UserPlus size={16} />
+                        Connect with {firstName}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {filteredWorkers.length > 12 && (
+                <p className="v2-results-more">
+                  + {filteredWorkers.length - 12} more matches in the sidebar
+                </p>
+              )}
+
               <div className="v2-results-actions">
                 <button className="v2-action-btn v2-action-primary">
+                  <UserPlus size={18} />
                   Connect with all {filteredWorkers.length}
                 </button>
                 <button
@@ -2169,6 +2249,7 @@ export function V2TalentCentric({
                     setExperienceLevel(null);
                     setCompletedSections(new Set());
                     setStartingFocusArea(null);
+                    setSelectedWorker(null);
                   }}
                 >
                   Start over
@@ -2177,17 +2258,45 @@ export function V2TalentCentric({
             </V2Main>
           )}
 
-          {/* Sidebar with worker cards - shown on location (when selected), employment, brands, experience, and results steps */}
-          {(["employment", "brands", "experience", "results"].includes(step) ||
-            (step === "location" && selectedLocation && (persona === "field" || persona === "recruiter" || (persona === "individual" && pickingDifferentMarket)))) && (
+          {/* Selected Worker Full Card Sidebar */}
+          {step === "results" && selectedWorker && (
+            <div className="v2-worker-detail-sidebar">
+              <button
+                className="v2-detail-close"
+                onClick={() => setSelectedWorker(null)}
+              >
+                <X size={20} />
+              </button>
+              <div className="v2-detail-scroll">
+                <WorkerCard worker={selectedWorker} />
+                <div className="v2-detail-actions">
+                  <button className="v2-action-btn v2-action-primary">
+                    <UserPlus size={18} />
+                    Connect with {selectedWorker.name.split(' ')[0]}
+                  </button>
+                  <button className="v2-action-btn v2-action-secondary">
+                    <CalendarDays size={18} />
+                    Invite to shift
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Sidebar with worker cards - shown on location (when selected), employment, brands, experience steps. On results, only show if no worker selected */}
+          {((["employment", "brands", "experience"].includes(step) ||
+            (step === "results" && !selectedWorker) ||
+            (step === "location" && selectedLocation && (persona === "field" || persona === "recruiter" || (persona === "individual" && pickingDifferentMarket))))) && (
             <V2WorkerSidebar
               workers={["employment", "brands", "experience", "results"].includes(step) ? filteredWorkers : marketWorkers}
               isOpen={sidebarOpen}
               onToggle={() => setSidebarOpen(!sidebarOpen)}
               title={`${MARKETS.find(m => m.id === selectedLocation)?.name || "Market"} Talent`}
               showCount={step !== "results"}
-              onWorkerClick={() => {
-                /* TODO: open full card */
+              onWorkerClick={(worker) => {
+                if (step === "results") {
+                  setSelectedWorker(worker);
+                }
               }}
               emptyMessage={
                 step === "location"
@@ -2200,20 +2309,394 @@ export function V2TalentCentric({
         </div>
       )}
 
-      {activeTab === "saved" && (
-        <div className="tab-empty-state">
-          <div className="empty-state-content">
-            <Heart size={32} strokeWidth={1.5} />
-            <p>No saved workers yet</p>
+      {/* Connections Tab - Shows workers from worker_connections table */}
+      {activeTab === "connections" && (
+        <div className="v2-connections-container">
+          <div className="v2-connections-header">
+            <h2 className="type-section-header-lg">Your Connections</h2>
+            <p className="v2-connections-subtitle">
+              Track workers you've viewed, liked, invited, or connected with
+            </p>
+          </div>
+
+          {/* Connection Status Filter Pills */}
+          <div className="v2-connection-filters">
+            <button className="v2-filter-pill active">
+              All <span className="v2-filter-count">8</span>
+            </button>
+            <button className="v2-filter-pill">
+              <Eye size={14} /> Viewed <span className="v2-filter-count">2</span>
+            </button>
+            <button className="v2-filter-pill">
+              <ThumbsUp size={14} /> Liked <span className="v2-filter-count">2</span>
+            </button>
+            <button className="v2-filter-pill">
+              <UserPlus size={14} /> Invited <span className="v2-filter-count">2</span>
+            </button>
+            <button className="v2-filter-pill">
+              <Link size={14} /> Connected <span className="v2-filter-count">1</span>
+            </button>
+            <button className="v2-filter-pill">
+              <XCircle size={14} /> Not Interested <span className="v2-filter-count">1</span>
+            </button>
+          </div>
+
+          {/* Connections List */}
+          <div className="v2-connections-list">
+            {/* Sample connection cards - hardcoded for demo */}
+            <div className="v2-connection-card">
+              <div className="v2-connection-avatar">
+                <span>MJ</span>
+              </div>
+              <div className="v2-connection-info">
+                <div className="v2-connection-name-row">
+                  <span className="v2-connection-name">Maria Johnson</span>
+                  <BadgeCheck size={16} className="v2-teaser-verified" />
+                </div>
+                <span className="v2-connection-market">Austin, TX</span>
+                <div className="v2-connection-stats">
+                  <span>47 shifts</span>
+                  <span>12 stores</span>
+                </div>
+              </div>
+              <div className="v2-connection-status connected">
+                <Link size={14} /> Connected
+              </div>
+              <button className="v2-connection-action">
+                <MessageCircle size={16} /> Chat
+              </button>
+            </div>
+
+            <div className="v2-connection-card">
+              <div className="v2-connection-avatar">
+                <span>JD</span>
+              </div>
+              <div className="v2-connection-info">
+                <div className="v2-connection-name-row">
+                  <span className="v2-connection-name">James Davis</span>
+                  <BadgeCheck size={16} className="v2-teaser-verified" />
+                </div>
+                <span className="v2-connection-market">Austin, TX</span>
+                <div className="v2-connection-stats">
+                  <span>32 shifts</span>
+                  <span>8 stores</span>
+                </div>
+              </div>
+              <div className="v2-connection-status invited">
+                <UserPlus size={14} /> Invited
+              </div>
+              <button className="v2-connection-action">
+                <MessageCircle size={16} /> Message
+              </button>
+            </div>
+
+            <div className="v2-connection-card">
+              <div className="v2-connection-avatar">
+                <span>SK</span>
+              </div>
+              <div className="v2-connection-info">
+                <div className="v2-connection-name-row">
+                  <span className="v2-connection-name">Sarah Kim</span>
+                </div>
+                <span className="v2-connection-market">Austin, TX</span>
+                <div className="v2-connection-stats">
+                  <span>18 shifts</span>
+                  <span>5 stores</span>
+                </div>
+              </div>
+              <div className="v2-connection-status invited">
+                <UserPlus size={14} /> Invited
+              </div>
+              <button className="v2-connection-action">
+                <MessageCircle size={16} /> Message
+              </button>
+            </div>
+
+            <div className="v2-connection-card">
+              <div className="v2-connection-avatar">
+                <span>TR</span>
+              </div>
+              <div className="v2-connection-info">
+                <div className="v2-connection-name-row">
+                  <span className="v2-connection-name">Tyler Rodriguez</span>
+                  <BadgeCheck size={16} className="v2-teaser-verified" />
+                </div>
+                <span className="v2-connection-market">Austin, TX</span>
+                <div className="v2-connection-stats">
+                  <span>56 shifts</span>
+                  <span>15 stores</span>
+                </div>
+              </div>
+              <div className="v2-connection-status liked">
+                <ThumbsUp size={14} /> Liked
+              </div>
+              <button className="v2-connection-action">
+                <UserPlus size={16} /> Invite
+              </button>
+            </div>
+
+            <div className="v2-connection-card">
+              <div className="v2-connection-avatar">
+                <span>AM</span>
+              </div>
+              <div className="v2-connection-info">
+                <div className="v2-connection-name-row">
+                  <span className="v2-connection-name">Ashley Miller</span>
+                </div>
+                <span className="v2-connection-market">Austin, TX</span>
+                <div className="v2-connection-stats">
+                  <span>24 shifts</span>
+                  <span>7 stores</span>
+                </div>
+              </div>
+              <div className="v2-connection-status liked">
+                <ThumbsUp size={14} /> Liked
+              </div>
+              <button className="v2-connection-action">
+                <UserPlus size={16} /> Invite
+              </button>
+            </div>
+
+            <div className="v2-connection-card">
+              <div className="v2-connection-avatar">
+                <span>CW</span>
+              </div>
+              <div className="v2-connection-info">
+                <div className="v2-connection-name-row">
+                  <span className="v2-connection-name">Chris Wilson</span>
+                  <BadgeCheck size={16} className="v2-teaser-verified" />
+                </div>
+                <span className="v2-connection-market">Austin, TX</span>
+                <div className="v2-connection-stats">
+                  <span>41 shifts</span>
+                  <span>11 stores</span>
+                </div>
+              </div>
+              <div className="v2-connection-status viewed">
+                <Eye size={14} /> Viewed
+              </div>
+              <button className="v2-connection-action">
+                <ThumbsUp size={16} /> Like
+              </button>
+            </div>
+
+            <div className="v2-connection-card">
+              <div className="v2-connection-avatar">
+                <span>EB</span>
+              </div>
+              <div className="v2-connection-info">
+                <div className="v2-connection-name-row">
+                  <span className="v2-connection-name">Emma Brown</span>
+                </div>
+                <span className="v2-connection-market">Austin, TX</span>
+                <div className="v2-connection-stats">
+                  <span>12 shifts</span>
+                  <span>4 stores</span>
+                </div>
+              </div>
+              <div className="v2-connection-status viewed">
+                <Eye size={14} /> Viewed
+              </div>
+              <button className="v2-connection-action">
+                <ThumbsUp size={16} /> Like
+              </button>
+            </div>
+
+            <div className="v2-connection-card not-interested">
+              <div className="v2-connection-avatar">
+                <span>DL</span>
+              </div>
+              <div className="v2-connection-info">
+                <div className="v2-connection-name-row">
+                  <span className="v2-connection-name">David Lee</span>
+                </div>
+                <span className="v2-connection-market">Austin, TX</span>
+                <div className="v2-connection-stats">
+                  <span>8 shifts</span>
+                  <span>3 stores</span>
+                </div>
+              </div>
+              <div className="v2-connection-status not-interested">
+                <XCircle size={14} /> Not Interested
+              </div>
+              <button className="v2-connection-action secondary">
+                Undo
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {activeTab === "connected" && (
-        <div className="tab-empty-state">
-          <div className="empty-state-content">
-            <Link size={32} strokeWidth={1.5} />
-            <p>No connections yet</p>
+      {/* Chat Tab - SMS-style messaging interface */}
+      {activeTab === "chat" && (
+        <div className="v2-chat-container">
+          {/* Chat Sidebar - Conversation List */}
+          <div className="v2-chat-sidebar">
+            <div className="v2-chat-sidebar-header">
+              <h3>Messages</h3>
+              <span className="v2-chat-unread-badge">3</span>
+            </div>
+            <div className="v2-chat-list">
+              {/* Active conversation */}
+              <div className="v2-chat-item active">
+                <div className="v2-chat-item-avatar">
+                  <span>MJ</span>
+                  <div className="v2-chat-online-dot" />
+                </div>
+                <div className="v2-chat-item-info">
+                  <div className="v2-chat-item-header">
+                    <span className="v2-chat-item-name">Maria Johnson</span>
+                    <span className="v2-chat-item-time">2m ago</span>
+                  </div>
+                  <p className="v2-chat-item-preview">
+                    Yes! I'd love to book a shift this weekend.
+                  </p>
+                </div>
+                <div className="v2-chat-unread-dot" />
+              </div>
+
+              <div className="v2-chat-item">
+                <div className="v2-chat-item-avatar">
+                  <span>JD</span>
+                </div>
+                <div className="v2-chat-item-info">
+                  <div className="v2-chat-item-header">
+                    <span className="v2-chat-item-name">James Davis</span>
+                    <span className="v2-chat-item-time">1h ago</span>
+                  </div>
+                  <p className="v2-chat-item-preview">
+                    What's the hourly rate for the position?
+                  </p>
+                </div>
+                <div className="v2-chat-unread-dot" />
+              </div>
+
+              <div className="v2-chat-item">
+                <div className="v2-chat-item-avatar">
+                  <span>SK</span>
+                </div>
+                <div className="v2-chat-item-info">
+                  <div className="v2-chat-item-header">
+                    <span className="v2-chat-item-name">Sarah Kim</span>
+                    <span className="v2-chat-item-time">3h ago</span>
+                  </div>
+                  <p className="v2-chat-item-preview">
+                    I'm available for an interview next Tuesday
+                  </p>
+                </div>
+                <div className="v2-chat-unread-dot" />
+              </div>
+
+              <div className="v2-chat-item">
+                <div className="v2-chat-item-avatar">
+                  <span>TR</span>
+                </div>
+                <div className="v2-chat-item-info">
+                  <div className="v2-chat-item-header">
+                    <span className="v2-chat-item-name">Tyler Rodriguez</span>
+                    <span className="v2-chat-item-time">Yesterday</span>
+                  </div>
+                  <p className="v2-chat-item-preview">
+                    Thanks for reaching out! I'll think about it.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Chat Main Area */}
+          <div className="v2-chat-main">
+            {/* Chat Header */}
+            <div className="v2-chat-header">
+              <div className="v2-chat-header-info">
+                <div className="v2-chat-header-avatar">
+                  <span>MJ</span>
+                  <div className="v2-chat-online-dot" />
+                </div>
+                <div className="v2-chat-header-details">
+                  <span className="v2-chat-header-name">Maria Johnson</span>
+                  <span className="v2-chat-header-status">Online</span>
+                </div>
+              </div>
+              <div className="v2-chat-header-actions">
+                <button className="v2-chat-header-btn">
+                  <CalendarDays size={18} />
+                  Schedule Shift
+                </button>
+                <button className="v2-chat-header-btn">
+                  <Briefcase size={18} />
+                  View Profile
+                </button>
+              </div>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="v2-chat-messages">
+              {/* Date divider */}
+              <div className="v2-chat-date-divider">
+                <span>Today</span>
+              </div>
+
+              {/* Outgoing message */}
+              <div className="v2-chat-message outgoing">
+                <div className="v2-chat-bubble">
+                  <p>Hi Maria! We loved your profile and wanted to see if you'd be interested in a permanent position at our Domain Northside location.</p>
+                  <span className="v2-chat-time">10:30 AM</span>
+                </div>
+              </div>
+
+              {/* Incoming message */}
+              <div className="v2-chat-message incoming">
+                <div className="v2-chat-bubble">
+                  <p>Hi! Thank you so much for reaching out. I've really enjoyed my shifts at your store. What does the role entail?</p>
+                  <span className="v2-chat-time">10:45 AM</span>
+                </div>
+              </div>
+
+              {/* Outgoing message */}
+              <div className="v2-chat-message outgoing">
+                <div className="v2-chat-bubble">
+                  <p>It's a full-time Sales Associate position. You'd be working 35-40 hours per week, mostly evenings and weekends. The pay starts at $18/hr with benefits.</p>
+                  <span className="v2-chat-time">11:00 AM</span>
+                </div>
+              </div>
+
+              {/* Incoming message */}
+              <div className="v2-chat-message incoming">
+                <div className="v2-chat-bubble">
+                  <p>That sounds great! I'm definitely interested. When would be a good time to discuss further?</p>
+                  <span className="v2-chat-time">11:15 AM</span>
+                </div>
+              </div>
+
+              {/* Outgoing message */}
+              <div className="v2-chat-message outgoing">
+                <div className="v2-chat-bubble">
+                  <p>Would you like to come in for a trial shift this weekend? It would give you a chance to see if it's a good fit.</p>
+                  <span className="v2-chat-time">11:30 AM</span>
+                </div>
+              </div>
+
+              {/* Incoming message with enthusiasm */}
+              <div className="v2-chat-message incoming">
+                <div className="v2-chat-bubble">
+                  <p>Yes! I'd love to book a shift this weekend. Saturday works best for me if you have availability.</p>
+                  <span className="v2-chat-time">11:32 AM</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Chat Input */}
+            <div className="v2-chat-input-area">
+              <input
+                type="text"
+                placeholder="Type a message..."
+                className="v2-chat-input"
+              />
+              <button className="v2-chat-send">
+                <Send size={18} />
+              </button>
+            </div>
           </div>
         </div>
       )}
