@@ -543,6 +543,8 @@ export function V2TalentCentric({
   const [isLoading, setIsLoading] = useState(false);
   const chatServiceRef = useRef<V2GeminiService | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const chatInlineRef = useRef<HTMLDivElement>(null);
+  const stepContentScrollRef = useRef<HTMLDivElement>(null);
 
   // Experience level for preference shaping
   const [experienceLevel, setExperienceLevel] =
@@ -655,11 +657,21 @@ export function V2TalentCentric({
 
   // Scroll chat to bottom when messages change or loading state changes
   useEffect(() => {
-    if (chatContainerRef.current && (chatMessages.length > 0 || isLoading)) {
-      chatContainerRef.current.scrollTo({
-        top: chatContainerRef.current.scrollHeight,
-        behavior: "smooth"
-      });
+    if (chatMessages.length > 0 || isLoading) {
+      // Scroll the main content container to the bottom
+      if (stepContentScrollRef.current) {
+        stepContentScrollRef.current.scrollTo({
+          top: stepContentScrollRef.current.scrollHeight,
+          behavior: "smooth"
+        });
+      }
+      // Also scroll within the chat messages container
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTo({
+          top: chatContainerRef.current.scrollHeight,
+          behavior: "smooth"
+        });
+      }
     }
   }, [chatMessages, isLoading]);
 
@@ -968,15 +980,15 @@ export function V2TalentCentric({
                 nextLabel: "Continue",
               }}
             >
-              <div className="v2-step-content-scroll">
+              <div className="v2-step-content-scroll" ref={stepContentScrollRef}>
                 <div className="v2-step-header-chips">
                   <div className="v2-step-header">
                     <h1 className="type-tagline">Tell us about your role so we can focus our questions.</h1>
                   </div>
 
-                  <div className="v2-focus-chips">
+                  <div className={`v2-focus-chips ${chatMessages.length > 0 ? "chat-active" : ""}`}>
                   <button
-                    className={`welcome-card persona-card ${persona === "individual" ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "individual" && chatMessages.length === 0 ? "active" : ""}`}
                     onClick={() => {
                       setPersona("individual");
                       setSelectedLocation("austin-tx");
@@ -995,12 +1007,12 @@ export function V2TalentCentric({
                       Single-Store Manager
                     </h3>
                     <p className="welcome-card-description type-body-md">
-                      Managing a team at one location
+                      Managing a team at one location.
                     </p>
                     </div>
                   </button>
                   <button
-                    className={`welcome-card persona-card ${persona === "multi-store" ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "multi-store" && chatMessages.length === 0 ? "active" : ""}`}
                     onClick={() => {
                       setPersona("multi-store");
                       transitionToStep("location", "forward");
@@ -1018,12 +1030,12 @@ export function V2TalentCentric({
                       Multi-Store Manager
                     </h3>
                     <p className="welcome-card-description type-body-md">
-                      Managing multiple locations in same market
+                      Managing multiple locations in the same area.
                     </p>
                     </div>
                   </button>
                   <button
-                    className={`welcome-card persona-card ${persona === "field" ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "field" && chatMessages.length === 0 ? "active" : ""}`}
                     onClick={() => {
                       setPersona("field");
                       setSelectedLocation(null);
@@ -1042,12 +1054,12 @@ export function V2TalentCentric({
                       Regional/District Manager
                     </h3>
                     <p className="welcome-card-description type-body-md">
-                      Overseeing stores across region(s)
+                      Overseeing stores across a region(s).
                     </p>
                     </div>
                   </button>
                   <button
-                    className={`welcome-card persona-card ${persona === "recruiter" ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "recruiter" && chatMessages.length === 0 ? "active" : ""}`}
                     onClick={() => {
                       setPersona("recruiter");
                       setSelectedLocation(null);
@@ -1063,16 +1075,16 @@ export function V2TalentCentric({
                     </div>
                     <div className="v2-welcome-card-text">
                     <h3 className="welcome-card-title type-chip-header-lg">
-                      Recruiter
+                      HR/Recruiter
                     </h3>
                     <p className="welcome-card-description type-body-md">
-                      Centralized hiring function
+                      Centralized hiring function across the country.
                     </p>
                     </div>
                   </button>
 
                   {/* Chat - full width under persona chips, scrollable */}
-                  <div className="v2-chat-inline">
+                  <div className="v2-chat-inline" ref={chatInlineRef}>
                     {/* Scrollable message area */}
                     {chatMessages.length > 0 && (
                       <div className="v2-chat-messages" ref={chatContainerRef}>
@@ -1196,7 +1208,7 @@ export function V2TalentCentric({
           {/* Step 2: Location Selection - varies by persona */}
           {step === "location" && (
             <V2Main
-              stepClassName="v2-main-centered"
+              stepClassName={persona === "individual" || persona === "multi-store" ? "v2-main-centered" : ""}
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
@@ -1216,13 +1228,10 @@ export function V2TalentCentric({
                   </div>
                   <div className="v2-location-confirm-chips">
                     <button
-                      className="v2-location-confirm-chip selected"
+                      className="v2-location-confirm-chip"
                       onClick={() => transitionToStep("focus", "forward")}
                     >
                       <span>Yes, search in {MARKETS.find(m => m.id === selectedLocation)?.name || "Austin"}</span>
-                      <div className="v2-confirm-chip-icon">
-                        <Check size={18} strokeWidth={2} />
-                      </div>
                     </button>
                     <button
                       className="v2-location-confirm-chip"
@@ -1383,7 +1392,7 @@ export function V2TalentCentric({
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
-                onBack: () => transitionToStep("persona", "back"),
+                onBack: () => transitionToStep("location", "back"),
                 onNext: () => {},
                 showBack: true,
                 nextDisabled: true,

@@ -2559,6 +2559,7 @@
   gap: 2px;
   align-items: center;
   text-align: center;
+  width: 100%;
 }
 
 /* Persona card style: horizontal, text left, icon right, space-between */
@@ -2567,7 +2568,7 @@
   align-items: center;
   justify-content: space-between;
   text-align: left;
-  padding: 32px;
+  padding: 24px;
   gap: 16px;
 }
 

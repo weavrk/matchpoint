@@ -882,7 +882,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
               <li><span className="ds-style-prop">flex-direction:</span> <code>column</code></li>
               <li><span className="ds-style-prop">align-items:</span> <code>center</code></li>
-              <li><span className="ds-style-prop">padding-top:</span> <code>120px</code></li>
+              <li><span className="ds-style-prop">padding-top:</span> <code>48px</code></li>
               <li><span className="ds-style-prop">text-align:</span> <code>center</code></li>
               <li><span className="ds-style-prop">children max-width:</span> <code>720px</code></li>
             </ul>
@@ -899,7 +899,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <li><span className="ds-style-prop">.v2-focus-chips:</span> <code>display: grid</code>, <code>grid-template-columns: repeat(2, 1fr)</code>, <code>gap: 16px</code></li>
               <li><span className="ds-style-prop">.persona-card:</span> <code>flex-direction: row-reverse</code>, <code>justify-content: space-between</code>, <code>padding: 32px</code></li>
               <li><span className="ds-style-prop">.v2-welcome-card-text:</span> <code>display: flex</code>, <code>flex-direction: column</code>, <code>gap: 2px</code>, left-aligned for persona</li>
-              <li><span className="ds-style-prop">.v2-main h3.welcome-card-title:</span> <code>font-size: 24px</code>, <code>line-height: 24px</code>, <code>padding-bottom: 4px</code></li>
+              <li><span className="ds-style-prop">.v2-main h3.welcome-card-title:</span> <code>font-size: 20px</code>, <code>font-weight: 700</code>, <code>line-height: 24px</code>, <code>padding-bottom: 4px</code></li>
               <li><span className="ds-style-prop">.v2-main p.welcome-card-description:</span> <code>font-size: 16px</code></li>
             </ul>
           </div>

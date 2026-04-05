@@ -2364,6 +2364,7 @@
   gap: 2px;
   align-items: center;
   text-align: center;
+  width: 100%;
 }
 
 .ds-chip-demo.welcome-card::after,
