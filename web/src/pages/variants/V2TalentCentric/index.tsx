@@ -617,7 +617,7 @@ export function V2TalentCentric({
 
     await service.startChat({
       userName,
-      retailerName: "Ariat",
+      retailerName: "Your Store",
       market: marketName,
       persona: persona || undefined,
     });
