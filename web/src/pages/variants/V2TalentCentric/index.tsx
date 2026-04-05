@@ -687,11 +687,18 @@ export function V2TalentCentric({
     try {
       let service = focusChatServiceRef.current;
       if (!service) {
-        // Initialize a focus-specific chat service
-        service = createFreshV2GeminiService({
+        // Initialize a focus-specific chat service with 'focus' mode
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+        service = createFreshV2GeminiService(apiKey, 'focus');
+
+        const selectedMarket = MARKETS.find((m) => m.id === selectedLocation);
+        const marketName = selectedMarket?.name || "Austin";
+
+        await service.startChat({
           userName,
-          location: selectedLocation || "austin-tx",
-          persona: "individual",
+          retailerName: 'Your Store',
+          market: marketName,
+          persona: persona || 'individual',
         });
         focusChatServiceRef.current = service;
       }
@@ -717,7 +724,7 @@ export function V2TalentCentric({
     } finally {
       setIsFocusChatLoading(false);
     }
-  }, [userName, selectedLocation]);
+  }, [userName, selectedLocation, persona]);
 
   // Scroll chat to bottom when messages change or loading state changes
   useEffect(() => {
@@ -1593,14 +1600,15 @@ export function V2TalentCentric({
                 nextLabel: "Continue",
               }}
             >
-              <div className="v2-step-header-chips">
-                <div className="v2-step-header">
-                  <h1 className="type-tagline">
-                    Let's narrow down your connections. Where would you like to start, {userName}?
-                  </h1>
-                </div>
+              <div className="v2-step-content-scroll">
+                <div className="v2-step-header-chips">
+                  <div className="v2-step-header">
+                    <h1 className="type-tagline">
+                      Let's narrow down your connections. Where would you like to start, {userName}?
+                    </h1>
+                  </div>
 
-                <div className={`v2-journey-cards${focusChatActive ? " chat-active" : ""}`}>
+                  <div className={`v2-journey-cards${focusChatActive ? " chat-active" : ""}`}>
                   <button
                     className={`journey-card journey-card-1${completedSections.has("employment") ? " completed" : ""}${focusArea === "employment" ? " selected" : ""}`}
                     onClick={() => {
@@ -1699,70 +1707,73 @@ export function V2TalentCentric({
                   </button>
                 </div>
 
-                {/* Chat messages for focus step */}
-                {focusChatMessages.length > 0 && (
-                  <div className="v2-chat-messages v2-focus-chat-messages">
-                    {focusChatMessages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className={`v2-chat-message ${msg.role}`}
-                      >
-                        {msg.role === "assistant" && (
-                          <div className="v2-chat-avatar">
-                            <img src={chatbotAvatarUrl} alt="Assistant" />
+                  {/* Chat - full width under journey cards, scrollable */}
+                  <div className="v2-chat-inline">
+                    {/* Scrollable message area */}
+                    {focusChatMessages.length > 0 && (
+                      <div className="v2-chat-messages v2-focus-chat-messages">
+                        {focusChatMessages.map((msg, idx) => (
+                          <div
+                            key={idx}
+                            className={`v2-chat-message ${msg.role}`}
+                          >
+                            {msg.role === "assistant" && (
+                              <div className="v2-chat-avatar">
+                                <img src={chatbotAvatarUrl} alt="Assistant" />
+                              </div>
+                            )}
+                            <div className="v2-chat-bubble">
+                              {msg.role === "assistant" ? (
+                                <ReactMarkdown>{msg.content}</ReactMarkdown>
+                              ) : (
+                                msg.content
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {isFocusChatLoading && (
+                          <div className="v2-chat-message assistant">
+                            <div className="v2-chat-avatar">
+                              <img src={chatbotAvatarUrl} alt="Assistant" />
+                            </div>
+                            <div className="v2-chat-bubble">
+                              <div className="v2-chat-loading">
+                                <span className="v2-chat-dot"></span>
+                                <span className="v2-chat-dot"></span>
+                                <span className="v2-chat-dot"></span>
+                              </div>
+                            </div>
                           </div>
                         )}
-                        <div className="v2-chat-bubble">
-                          {msg.role === "assistant" ? (
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
-                          ) : (
-                            msg.content
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                    {isFocusChatLoading && (
-                      <div className="v2-chat-message assistant">
-                        <div className="v2-chat-avatar">
-                          <img src={chatbotAvatarUrl} alt="Assistant" />
-                        </div>
-                        <div className="v2-chat-bubble">
-                          <div className="v2-chat-loading">
-                            <span className="v2-chat-dot"></span>
-                            <span className="v2-chat-dot"></span>
-                            <span className="v2-chat-dot"></span>
-                          </div>
-                        </div>
                       </div>
                     )}
+
+                    {/* Input - always visible */}
+                    <div className="v2-chat-prompt">
+                      <textarea
+                        placeholder="Or share more detailed information"
+                        className="v2-chat-prompt-input"
+                        rows={1}
+                        value={focusChatInput}
+                        onFocus={() => setFocusChatActive(true)}
+                        onChange={(e) => setFocusChatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            sendFocusChatMessage(focusChatInput);
+                          }
+                        }}
+                      />
+                      <button
+                        className={`v2-chat-prompt-send${focusChatInput.trim() ? " active" : ""}`}
+                        onClick={() => sendFocusChatMessage(focusChatInput)}
+                        disabled={isFocusChatLoading || !focusChatInput.trim()}
+                      >
+                        <Send size={18} />
+                      </button>
+                    </div>
                   </div>
-                )}
-
-                {/* Chat input for focus step */}
-                <div className="v2-chat-prompt">
-                  <textarea
-                    placeholder="Or share more detailed information"
-                    className="v2-chat-prompt-input"
-                    rows={1}
-                    value={focusChatInput}
-                    onFocus={() => setFocusChatActive(true)}
-                    onChange={(e) => setFocusChatInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        sendFocusChatMessage(focusChatInput);
-                      }
-                    }}
-                  />
-                  <button
-                    className={`v2-chat-prompt-send${focusChatInput.trim() ? " active" : ""}`}
-                    onClick={() => sendFocusChatMessage(focusChatInput)}
-                    disabled={isFocusChatLoading || !focusChatInput.trim()}
-                  >
-                    <Send size={18} />
-                  </button>
                 </div>
-
               </div>
             </V2Main>
           )}

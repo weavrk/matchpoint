@@ -83,14 +83,58 @@ This is the "Talent Centric" variant where retailers browse and discover Shift V
 - Always offer actionable next steps
 - Keep the focus on connecting retailers with talent`;
 
-function buildSystemPrompt(context: V2ChatContext): string {
-  let prompt = V2_SYSTEM_PROMPT
+// Focus Step System Prompt - help user narrow down preferences
+const V2_FOCUS_SYSTEM_PROMPT = `You are a helpful assistant for Reflex, a retail talent platform. You're helping {{USER_NAME}} narrow down their search preferences to find the right Shift Verified Reflexers in {{MARKET}}.
+
+## Your Role
+- Help the user articulate what they're looking for in retail talent
+- Guide them toward the three preference areas: employment type, brand affinity, experience level
+- Understand their specific needs and translate them into search criteria
+- Keep responses focused and actionable
+
+## Current Context
+- User: {{USER_NAME}}
+- Market: {{MARKET}}
+- They've already told us their role - now we're helping them define what kind of talent they want
+
+## The Three Preference Areas
+1. **Employment Type**: Full-time, Part-time, or Flex (just need shift help)
+2. **Brand Affinity**: Which brands' talent do they trust? What tier/style? (luxury, contemporary, athletic, etc.)
+3. **Experience Level**: New to Reflex, Rising talent (5-30 shifts), Seasoned pro (30+), Management ready
+
+## Response Guidelines
+- Keep responses to 2-3 sentences
+- Ask clarifying questions to understand their needs
+- Suggest which preference area might be most relevant based on what they say
+- If they mention hours/availability → guide to Employment Type
+- If they mention brands, style, culture fit → guide to Brand Affinity
+- If they mention skills, experience, reliability → guide to Experience Level
+
+## Examples
+- "I need someone reliable" → Ask about experience level, suggest Seasoned pros with 30+ shifts
+- "Similar to our brand" → Ask what tier they are, suggest Brand Affinity to filter by brands they trust
+- "Just need weekend help" → Suggest Employment Type, ask about part-time vs flex shifts
+- "Looking for a leader" → Suggest Experience Level, specifically Management ready tier
+
+## Rules
+- Don't use emojis unless the user does first
+- Always suggest a clear next step
+- Keep the focus on narrowing down their talent search
+- Reference the three cards they see: Type of employment, Brand affinity, Experience level
+- If the user's input is unclear, too short, or doesn't make sense, respond with: "Sorry, I didn't catch that. To continue, select one of the three cards above - **Type of employment**, **Brand affinity**, or **Experience level** - or tell me more about what you're looking for."
+- Do NOT make up interpretations for unclear input - ask for clarification instead`;
+
+export type V2ChatMode = 'persona' | 'focus';
+
+function buildSystemPrompt(context: V2ChatContext, mode: V2ChatMode = 'persona'): string {
+  const basePrompt = mode === 'focus' ? V2_FOCUS_SYSTEM_PROMPT : V2_SYSTEM_PROMPT;
+  let prompt = basePrompt
     .replace(/\{\{USER_NAME\}\}/g, context.userName)
     .replace(/\{\{RETAILER_NAME\}\}/g, context.retailerName)
     .replace(/\{\{MARKET\}\}/g, context.market);
 
-  // Add persona context if available
-  if (context.persona) {
+  // Add persona context if available (only for persona mode)
+  if (mode === 'persona' && context.persona) {
     const personaLabels: Record<string, string> = {
       individual: 'Single-Store Manager',
       'multi-store': 'Multi-Store Manager',
@@ -121,8 +165,10 @@ export class V2GeminiService {
   private genAI: GoogleGenerativeAI | null = null;
   private chat: ChatSession | null = null;
   private context: V2ChatContext | null = null;
+  private mode: V2ChatMode = 'persona';
 
-  constructor(apiKey?: string) {
+  constructor(apiKey?: string, mode: V2ChatMode = 'persona') {
+    this.mode = mode;
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
     }
@@ -132,41 +178,138 @@ export class V2GeminiService {
     this.context = context;
 
     if (!this.genAI) {
-      // Return mock greeting if no API key
+      console.log('[V2GeminiService] No API key, using mock responses');
       return this.getMockGreeting(context);
     }
 
-    const systemPrompt = buildSystemPrompt(context);
-    const model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    try {
+      const systemPrompt = buildSystemPrompt(context, this.mode);
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-    const history: { role: 'user' | 'model'; parts: { text: string }[] }[] = [
-      { role: 'user', parts: [{ text: systemPrompt }] },
-      { role: 'model', parts: [{ text: "Understood. I'm ready to help connect retailers with talent through discovery." }] },
-    ];
+      const readyMessage = this.mode === 'focus'
+        ? "Understood. I'm ready to help narrow down talent preferences."
+        : "Understood. I'm ready to help connect retailers with talent through discovery.";
 
-    this.chat = model.startChat({ history });
+      const history: { role: 'user' | 'model'; parts: { text: string }[] }[] = [
+        { role: 'user', parts: [{ text: systemPrompt }] },
+        { role: 'model', parts: [{ text: readyMessage }] },
+      ];
 
-    // Return the initial greeting
-    return this.getMockGreeting(context);
+      this.chat = model.startChat({ history });
+      console.log('[V2GeminiService] Chat initialized with Gemini API, mode:', this.mode);
+
+      // Return the initial greeting
+      return this.getMockGreeting(context);
+    } catch (error) {
+      console.error('[V2GeminiService] Failed to initialize chat:', error);
+      return this.getMockGreeting(context);
+    }
   }
 
   private getMockGreeting(_context: V2ChatContext): string {
+    if (this.mode === 'focus') {
+      return `What are you looking for in your next hire? Tell me about your ideal candidate and I'll help you narrow down the search.`;
+    }
     return `Tell me a bit about your role - are you hiring for a single store, managing multiple locations, or recruiting across the region? This helps me find the right talent for your needs.`;
   }
 
   async sendMessage(message: string): Promise<string> {
-    if (!this.chat || !this.context) {
-      // Mock responses when no API
-      return this.getMockResponse(message);
+    // Use mock responses when no API key (no chat session)
+    if (!this.chat) {
+      console.log('[V2GeminiService] No chat session, using mock response');
+      return this.mode === 'focus' ? this.getMockFocusResponse(message) : this.getMockResponse(message);
     }
 
     try {
+      console.log('[V2GeminiService] Sending message to Gemini:', message);
       const response = await this.chat.sendMessage(message);
-      return response.response.text();
+      const text = response.response.text();
+      console.log('[V2GeminiService] Gemini response:', text.substring(0, 100) + '...');
+      return text;
     } catch (error) {
-      console.error('V2 Gemini error:', error);
-      return this.getMockResponse(message);
+      console.error('[V2GeminiService] Gemini API error:', error);
+      return this.mode === 'focus' ? this.getMockFocusResponse(message) : this.getMockResponse(message);
     }
+  }
+
+  // Focus mode mock responses - answer questions + guide to the three cards
+  private getMockFocusResponse(message: string): string {
+    const lower = message.toLowerCase().trim();
+    const isQuestion = lower.includes('?') || lower.startsWith('what') || lower.startsWith('how') || lower.startsWith('can') || lower.startsWith('do') || lower.startsWith('is') || lower.startsWith('are') || lower.startsWith('which');
+
+    // Too short or unclear input
+    if (lower.length < 3) {
+      return `Sorry, I didn't catch that. To continue, select one of the three cards above - **Type of employment**, **Brand affinity**, or **Experience level**.`;
+    }
+
+    // Questions about the platform/process
+    if (isQuestion && (lower.includes('shift verified') || lower.includes('reflexer'))) {
+      return `Shift Verified Reflexers are workers who've completed shifts on our platform with verified performance data - ratings, punctuality, and retailer feedback. To find them, use the cards above to filter by what matters most to you.`;
+    }
+
+    if (isQuestion && (lower.includes('how does') || lower.includes('how do i') || lower.includes('how can'))) {
+      return `You can narrow your search using the three cards above. **Type of employment** filters by commitment level, **Brand affinity** finds workers from similar retailers, and **Experience level** shows proven track records. Which would you like to start with?`;
+    }
+
+    if (isQuestion && (lower.includes('what can') || lower.includes('what do') || lower.includes('what else') || lower.includes('give me') || lower.includes('show me'))) {
+      return `I can help you find the right talent. The three cards above let you filter by: **Type of employment** (full-time, part-time, flex), **Brand affinity** (workers from similar brands), or **Experience level** (new to seasoned). Select one to refine your matches.`;
+    }
+
+    if (isQuestion && (lower.includes('difference') || lower.includes('between'))) {
+      return `Good question! **Type of employment** is about hours and commitment. **Brand affinity** matches workers who've succeeded at brands like yours. **Experience level** filters by proven track record on our platform. Each gives you a different lens on the talent pool.`;
+    }
+
+    // Availability/hours mentions → Employment Type
+    if (lower.includes('weekend') || lower.includes('part-time') || lower.includes('part time') || lower.includes('hours') || lower.includes('availability')) {
+      return `Got it, I've noted your scheduling needs. To filter by availability, select **Type of employment** above - you can choose full-time, part-time, or flex workers.`;
+    }
+
+    if (lower.includes('full-time') || lower.includes('full time') || lower.includes('permanent')) {
+      return `Noted - you're looking for a permanent hire. Select **Type of employment** above and choose Full-time to see Reflexers seeking long-term positions.`;
+    }
+
+    if (lower.includes('flex') || lower.includes('shift') || lower.includes('temporary') || lower.includes('cover')) {
+      return `Got it - you need flexible coverage. Select **Type of employment** above and choose Flex to find workers ready for shifts. You can try them out before committing.`;
+    }
+
+    // Brand/culture mentions → Brand Affinity
+    if (lower.includes('brand') || lower.includes('culture') || lower.includes('fit') || lower.includes('similar') || lower.includes('luxury') || lower.includes('contemporary') || lower.includes('athletic')) {
+      return `I've noted that culture fit matters to you. Select **Brand affinity** above to filter by workers who've succeeded at brands similar to yours.`;
+    }
+
+    if (lower.includes('trust') || lower.includes('quality') || lower.includes('trained')) {
+      return `Got it - you want someone who already knows the ropes. Select **Brand affinity** above to find workers with experience at similar retailers.`;
+    }
+
+    // Skills/reliability mentions → Experience Level
+    if (lower.includes('reliable') || lower.includes('dependable') || lower.includes('punctual') || lower.includes('show up')) {
+      return `Reliability noted as a priority. Select **Experience level** above - Seasoned pros have 30+ shifts and proven track records.`;
+    }
+
+    if (lower.includes('experience') || lower.includes('skilled') || lower.includes('seasoned') || lower.includes('veteran')) {
+      return `Got it - experience matters. Select **Experience level** above to filter by Seasoned pros or Management ready tiers.`;
+    }
+
+    if (lower.includes('train') || lower.includes('new') || lower.includes('fresh') || lower.includes('entry')) {
+      return `Noted - you're open to developing new talent. Select **Experience level** above and check out the New to Reflex tier.`;
+    }
+
+    if (lower.includes('leader') || lower.includes('management') || lower.includes('supervisor') || lower.includes('manager')) {
+      return `Got it - you're looking for leadership potential. Select **Experience level** above and choose the Management ready tier.`;
+    }
+
+    // Generic/unclear → Acknowledge + guide to cards
+    if (lower.includes('best') || lower.includes('good') || lower.includes('recommend') || lower.includes('more')) {
+      return `I've got your requirements noted. To refine your search, select one of the three cards above: **Type of employment** for scheduling, **Brand affinity** for culture fit, or **Experience level** for proven reliability.`;
+    }
+
+    // Catch-all for questions
+    if (isQuestion) {
+      return `Great question! The best way to find what you're looking for is to use the cards above. **Type of employment** for hours/commitment, **Brand affinity** for culture fit, or **Experience level** for track record. Which matters most to you?`;
+    }
+
+    // Default - acknowledge + guide to the three cards
+    return `Got it, I've noted that. To continue, select one of the three cards above to refine your search - **Type of employment**, **Brand affinity**, or **Experience level**.`;
   }
 
   private getMockResponse(message: string): string {
@@ -240,6 +383,6 @@ export class V2GeminiService {
 }
 
 // Create a fresh instance (no memory from previous)
-export function createFreshV2GeminiService(apiKey?: string): V2GeminiService {
-  return new V2GeminiService(apiKey);
+export function createFreshV2GeminiService(apiKey?: string, mode: V2ChatMode = 'persona'): V2GeminiService {
+  return new V2GeminiService(apiKey, mode);
 }
