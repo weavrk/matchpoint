@@ -8,21 +8,21 @@ interface WorkerAchievementChipsProps {
  * WorkerAchievementChips - Reusable achievement/reliability chips
  *
  * Display logic:
- * - Punctual: tardyPercent < 10%
+ * - X% On-Time: 100 - tardyPercent (shown if tardyPercent < 10%, capped at 100%)
  * - Exceptional Commitment: urgentCancelPercent < 5%
  * - 0 Call-Outs: urgentCancelRatio starts with "0/"
- * - 90% Favorite Rating: storeFavoriteCount >= 89% of uniqueStoreCount
- * - 95% Invite Back Rate: invitedBackStores >= 94% of uniqueStoreCount
+ * - X% Favorite Rating: storeFavoriteCount / uniqueStoreCount (shown if >= 89%, capped at 100%)
+ * - X% Invite Back Rate: invitedBackStores / uniqueStoreCount (shown if >= 94%, capped at 100%)
  */
 export function WorkerAchievementChips({ worker }: WorkerAchievementChipsProps) {
   const chips: string[] = [];
 
-  // 100% On-Time: tardyRatio = "0/x" (never late)
-  // Consistently Punctual: tardyPercent < 10% (but not perfect)
+  // On-Time: show percentage if tardyPercent < 10% (90%+ on-time)
   if (worker.tardyRatio && worker.tardyRatio.startsWith('0 /')) {
     chips.push('100% On-Time');
   } else if (worker.tardyPercent != null && worker.tardyPercent < 10) {
-    chips.push('Consistently Punctual');
+    const onTimePercent = Math.min(100 - worker.tardyPercent, 100);
+    chips.push(`${Math.round(onTimePercent)}% On-Time`);
   }
 
   // Exceptional Commitment: urgentCancelPercent < 5%
@@ -38,7 +38,7 @@ export function WorkerAchievementChips({ worker }: WorkerAchievementChipsProps) 
   // 90% Favorite Rating: storeFavoriteCount >= 89% of uniqueStoreCount
   const storeFavoriteCount = worker.reflexActivity?.storeFavoriteCount;
   if (storeFavoriteCount != null && worker.uniqueStoreCount != null && worker.uniqueStoreCount > 0) {
-    const favoritePercent = (storeFavoriteCount / worker.uniqueStoreCount) * 100;
+    const favoritePercent = Math.min((storeFavoriteCount / worker.uniqueStoreCount) * 100, 100);
     if (favoritePercent >= 89) {
       chips.push(`${Math.round(favoritePercent)}% Favorite Rating`);
     }
@@ -46,7 +46,7 @@ export function WorkerAchievementChips({ worker }: WorkerAchievementChipsProps) 
 
   // 95% Invite Back Rate: invitedBackStores >= 94% of uniqueStoreCount
   if (worker.invitedBackStores != null && worker.uniqueStoreCount != null && worker.uniqueStoreCount > 0) {
-    const inviteBackPercent = (worker.invitedBackStores / worker.uniqueStoreCount) * 100;
+    const inviteBackPercent = Math.min((worker.invitedBackStores / worker.uniqueStoreCount) * 100, 100);
     if (inviteBackPercent >= 94) {
       chips.push(`${Math.round(inviteBackPercent)}% Invite Back Rate`);
     }

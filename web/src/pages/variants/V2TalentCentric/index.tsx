@@ -26,6 +26,14 @@ import {
   Blend,
   ChartNoAxesGantt,
   CornerDownRight,
+  Info,
+  Plus,
+  MessageCircle,
+  BadgeCheck,
+  Eye,
+  UserPlus,
+  ThumbsUp,
+  XCircle,
 } from "lucide-react";
 import { SAMPLE_WORKERS } from "../../../data/workers";
 import { V2Main } from "./V2Main";
@@ -34,7 +42,8 @@ import { V2WorkerSidebar } from "./V2WorkerSidebar";
 import type { EmploymentType, AvailabilityHours } from "./V2EmploymentSelector";
 import type { MatchedWorker, ChatMessage, WorkerProfile } from "../../../types";
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
-import { fetchWorkersByMarketAsProfiles } from "../../../services/supabase";
+import { fetchWorkersByMarketAsProfiles, fetchRetailers } from "../../../services/supabase";
+import type { Retailer } from "../../../services/supabase";
 import ReactMarkdown from "react-markdown";
 import chatbotAvatarUrl from "../../../../../assets/logo-and-backgrounds/chatbot.svg?url";
 import "./styles.css";
@@ -123,7 +132,7 @@ import logoWarbyParker from "../../../../../assets/brand-logos/warby-parker.png"
 import logoWolfAndShephard from "../../../../../assets/brand-logos/wolf-and-shephard.png";
 import logoZara from "../../../../../assets/brand-logos/zara.png";
 
-type TabId = "discover" | "saved" | "connected";
+type TabId = "discover" | "connections" | "chat";
 
 // Names for the greeting - shared with V1
 const GREETING_NAMES = [
@@ -150,6 +159,14 @@ const GREETING_NAMES = [
 ];
 const getRandomUserName = () =>
   GREETING_NAMES[Math.floor(Math.random() * GREETING_NAMES.length)];
+
+// Popular brand picks for quick selection
+const POPULAR_BRANDS = [
+  { id: "polo-ralph-lauren", name: "Ralph Lauren" },
+  { id: "marc-jacobs", name: "Marc Jacobs" },
+  { id: "ariat", name: "Ariat" },
+  { id: "golden-goose", name: "Golden Goose" },
+];
 
 // Brand logos array - edit this to add/remove brands
 const BRAND_LOGOS: { id: string; logo: string }[] = [
@@ -354,13 +371,14 @@ const MARKETS = [
   // NH
   { id: "merrimack-nh", name: "Merrimack", state: "NH" },
   // NJ
-  { id: "newark-nj", name: "Newark", state: "NJ" },
+  { id: "central-new-jersey-nj", name: "Central New Jersey", state: "NJ" },
+  { id: "northern-new-jersey-nj", name: "Northern New Jersey", state: "NJ" },
   // NV
   { id: "las-vegas-nv", name: "Las Vegas", state: "NV" },
   // NY
   { id: "long-island-east-ny", name: "Long Island East", state: "NY" },
   { id: "long-island-west-ny", name: "Long Island West", state: "NY" },
-  { id: "new-york-ny", name: "New York", state: "NY" },
+  { id: "new-york-ny", name: "New York City", state: "NY" },
   { id: "westchester-ny", name: "Westchester", state: "NY" },
   { id: "woodbury-ny", name: "Woodbury", state: "NY" },
   // OH
@@ -378,12 +396,12 @@ const MARKETS = [
   { id: "knoxville-tn", name: "Knoxville", state: "TN" },
   { id: "memphis-tn", name: "Memphis", state: "TN" },
   { id: "nashville-tn", name: "Nashville", state: "TN" },
+  { id: "pigeon-forge-tn", name: "Pigeon Forge", state: "TN" },
   // TX
   { id: "austin-tx", name: "Austin", state: "TX" },
   { id: "dallas-tx", name: "Dallas", state: "TX" },
   { id: "houston-tx", name: "Houston", state: "TX" },
   { id: "san-antonio-tx", name: "San Antonio", state: "TX" },
-  { id: "san-marcos-tx", name: "San Marcos", state: "TX" },
   // UT
   { id: "salt-lake-city-ut", name: "Salt Lake City", state: "UT" },
   // WA
@@ -559,6 +577,12 @@ export function V2TalentCentric({
     new Set(),
   );
 
+  // Track which card the user picked first to determine CYOA order
+  // employment → brands → roles
+  // brands → roles → employment
+  // roles → brands → employment
+  const [startingFocusArea, setStartingFocusArea] = useState<FocusArea | null>(null);
+
   // Focus step chat state (separate from persona chat)
   const [focusChatActive, setFocusChatActive] = useState(false);
   const [focusChatInput, setFocusChatInput] = useState("");
@@ -569,6 +593,9 @@ export function V2TalentCentric({
   // Supabase workers state - fetched when location is selected
   const [supabaseWorkers, setSupabaseWorkers] = useState<WorkerProfile[]>([]);
   const [isLoadingWorkers, setIsLoadingWorkers] = useState(false);
+
+  // Retailers from Supabase - for brand classification matching
+  const [retailers, setRetailers] = useState<Retailer[]>([]);
 
   // Search matching brands - only match from start of name
   const searchResults = useMemo(() => {
@@ -773,20 +800,67 @@ export function V2TalentCentric({
       });
   }, [selectedLocation]);
 
-  // CYOA flow: Get next incomplete preference section
-  const getNextIncompleteSection = (current: FocusArea): FocusArea | null => {
-    const sections: FocusArea[] = ["employment", "brands", "roles"];
-    const currentIndex = sections.indexOf(current);
+  // Fetch retailers on mount for brand classification matching
+  useEffect(() => {
+    fetchRetailers()
+      .then((data) => {
+        setRetailers(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching retailers:", error);
+      });
+  }, []);
 
-    // Check sections after current, then wrap around
-    for (let i = 1; i <= sections.length; i++) {
-      const nextIndex = (currentIndex + i) % sections.length;
-      const nextSection = sections[nextIndex];
+  // CYOA flow: Get next incomplete preference section based on starting point
+  // employment → brands → roles (experience)
+  // brands → roles (experience) → employment
+  // roles (experience) → brands → employment
+  const getNextIncompleteSection = (current: FocusArea): FocusArea | null => {
+    // Define the order based on starting focus area
+    const flowOrders: Record<FocusArea, FocusArea[]> = {
+      employment: ["employment", "brands", "roles"],
+      brands: ["brands", "roles", "employment"],
+      roles: ["roles", "brands", "employment"],
+    };
+
+    // Use the starting focus area to determine order, or default to employment order
+    const order = flowOrders[startingFocusArea || "employment"];
+    const currentIndex = order.indexOf(current);
+
+    // Find next incomplete section in the defined order
+    for (let i = 1; i <= order.length; i++) {
+      const nextIndex = (currentIndex + i) % order.length;
+      const nextSection = order[nextIndex];
       if (!completedSections.has(nextSection)) {
         return nextSection;
       }
     }
     return null; // All sections complete
+  };
+
+  // CYOA flow: Get the previous section to go back to
+  // If we're at the first section in the flow, go back to focus page
+  const getPreviousSection = (current: FocusArea): Step => {
+    const flowOrders: Record<FocusArea, FocusArea[]> = {
+      employment: ["employment", "brands", "roles"],
+      brands: ["brands", "roles", "employment"],
+      roles: ["roles", "brands", "employment"],
+    };
+
+    const order = flowOrders[startingFocusArea || "employment"];
+    const currentIndex = order.indexOf(current);
+
+    // If we're at the first section, go back to focus
+    if (currentIndex === 0) {
+      return "focus";
+    }
+
+    // Otherwise, go to the previous section in the flow
+    const prevSection = order[currentIndex - 1];
+    // Map FocusArea to Step
+    if (prevSection === "roles") return "experience";
+    if (prevSection === "brands") return "brands";
+    return "employment";
   };
 
   // Mark a section as complete and navigate to next
@@ -895,26 +969,64 @@ export function V2TalentCentric({
     }
 
     // Filter by selected brands - check brandsWorked and previousExperience
+    // Also include workers with experience at brands in the same classification
     if (selectedBrands.length > 0) {
       const normalizedSelected = selectedBrands.map((id) => normalizeBrand(id));
+
+      // Find classifications of selected brands from retailers table
+      const selectedClassifications = new Set<string>();
+      selectedBrands.forEach((brandId) => {
+        const normalizedId = normalizeBrand(brandId);
+        const retailer = retailers.find((r) =>
+          normalizeBrand(r.name).includes(normalizedId) ||
+          normalizedId.includes(normalizeBrand(r.name))
+        );
+        if (retailer) {
+          selectedClassifications.add(retailer.classification);
+        }
+      });
+
+      // Get all brand names in the same classification groups (for related brand matching)
+      const relatedBrandNames = retailers
+        .filter((r) => selectedClassifications.has(r.classification))
+        .map((r) => normalizeBrand(r.name));
+
       workers = workers.filter((w) => {
-        // Check brandsWorked
-        const hasBrandMatch = w.brandsWorked.some((b) =>
+        // Check brandsWorked against selected brands (direct match)
+        const hasDirectBrandMatch = w.brandsWorked.some((b) =>
           normalizedSelected.some(
             (sel) =>
               normalizeBrand(b.name).includes(sel) ||
               sel.includes(normalizeBrand(b.name)),
           ),
         );
-        // Check previousExperience
-        const hasExpMatch = w.previousExperience?.some((exp) =>
+        // Check previousExperience against selected brands (direct match)
+        const hasDirectExpMatch = w.previousExperience?.some((exp) =>
           normalizedSelected.some(
             (sel) =>
               normalizeBrand(exp.company).includes(sel) ||
               sel.includes(normalizeBrand(exp.company)),
           ),
         );
-        return hasBrandMatch || hasExpMatch;
+
+        // Check brandsWorked against related brands (same classification)
+        const hasRelatedBrandMatch = w.brandsWorked.some((b) =>
+          relatedBrandNames.some(
+            (related) =>
+              normalizeBrand(b.name).includes(related) ||
+              related.includes(normalizeBrand(b.name)),
+          ),
+        );
+        // Check previousExperience against related brands (same classification)
+        const hasRelatedExpMatch = w.previousExperience?.some((exp) =>
+          relatedBrandNames.some(
+            (related) =>
+              normalizeBrand(exp.company).includes(related) ||
+              related.includes(normalizeBrand(exp.company)),
+          ),
+        );
+
+        return hasDirectBrandMatch || hasDirectExpMatch || hasRelatedBrandMatch || hasRelatedExpMatch;
       });
     }
 
@@ -996,7 +1108,7 @@ export function V2TalentCentric({
 
     // Sort by score
     return scored.sort((a, b) => b.matchScore - a.matchScore);
-  }, [selectedBrands, selectedLocation, employmentType, experienceLevel, supabaseWorkers]);
+  }, [selectedBrands, selectedLocation, employmentType, experienceLevel, supabaseWorkers, retailers]);
 
   // Get brands the filtered workers have in common
   const commonBrands = useMemo(() => {
@@ -1618,6 +1730,10 @@ export function V2TalentCentric({
                           setFocusChatActive(false);
                           setFocusChatInput("");
                         }
+                        // Track starting card for CYOA order
+                        if (!startingFocusArea) {
+                          setStartingFocusArea("employment");
+                        }
                         setFocusArea("employment");
                         transitionToStep("employment", "forward");
                       }
@@ -1650,6 +1766,10 @@ export function V2TalentCentric({
                           setFocusChatActive(false);
                           setFocusChatInput("");
                         }
+                        // Track starting card for CYOA order
+                        if (!startingFocusArea) {
+                          setStartingFocusArea("brands");
+                        }
                         setFocusArea("brands");
                         transitionToStep("brands", "forward");
                       }
@@ -1681,6 +1801,10 @@ export function V2TalentCentric({
                         if (focusChatActive) {
                           setFocusChatActive(false);
                           setFocusChatInput("");
+                        }
+                        // Track starting card for CYOA order
+                        if (!startingFocusArea) {
+                          setStartingFocusArea("roles");
                         }
                         setFocusArea("roles");
                         transitionToStep("experience", "forward");
@@ -1785,7 +1909,7 @@ export function V2TalentCentric({
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
-                onBack: () => transitionToStep("focus", "back"),
+                onBack: () => transitionToStep(getPreviousSection("employment"), "back"),
                 showBack: true,
                 onNext: () => completeSection("employment"),
                 nextDisabled: !employmentType,
@@ -1811,7 +1935,7 @@ export function V2TalentCentric({
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
-                onBack: () => transitionToStep("focus", "back"),
+                onBack: () => transitionToStep(getPreviousSection("roles"), "back"),
                 onNext: () => {
                   if (experienceLevel) {
                     completeSection("roles");
@@ -1832,87 +1956,53 @@ export function V2TalentCentric({
                   </p>
                 </div>
 
-                <div className="v2-experience-slider">
-                  <button
-                    className={`welcome-card ${experienceLevel === "new" ? "active" : ""}`}
-                    onClick={() => setExperienceLevel("new")}
-                  >
-                    <div className="welcome-card-icon">
-                      {experienceLevel === "new" ? (
-                        <Check size={24} />
-                      ) : (
-                        <Users size={24} />
-                      )}
+                <div className="v2-experience-track">
+                  <div className="v2-experience-labels">
+                    <div
+                      className={`v2-experience-label ${experienceLevel === "new" ? "active" : ""}`}
+                      onClick={() => setExperienceLevel("new")}
+                    >
+                      <span className="v2-experience-label-title">New to Reflex</span>
+                      <span className="v2-experience-label-subtitle">0-5 shifts</span>
                     </div>
-                    <div className="v2-welcome-card-text">
-                    <h3 className="welcome-card-title type-chip-header-lg">
-                      New to Reflex
-                    </h3>
-                    <p className="welcome-card-description type-body-md">
-                      0-5 shifts completed
-                    </p>
+                    <div
+                      className={`v2-experience-label ${experienceLevel === "rising" ? "active" : ""}`}
+                      onClick={() => setExperienceLevel("rising")}
+                    >
+                      <span className="v2-experience-label-title">Rising talent</span>
+                      <span className="v2-experience-label-subtitle">5-30 shifts</span>
                     </div>
-                  </button>
-                  <button
-                    className={`welcome-card ${experienceLevel === "rising" ? "active" : ""}`}
-                    onClick={() => setExperienceLevel("rising")}
-                  >
-                    <div className="welcome-card-icon">
-                      {experienceLevel === "rising" ? (
-                        <Check size={24} />
-                      ) : (
-                        <Sparkles size={24} />
-                      )}
+                    <div
+                      className={`v2-experience-label ${experienceLevel === "seasoned" ? "active" : ""}`}
+                      onClick={() => setExperienceLevel("seasoned")}
+                    >
+                      <span className="v2-experience-label-title">Seasoned pro</span>
+                      <span className="v2-experience-label-subtitle">30+ shifts</span>
                     </div>
-                    <div className="v2-welcome-card-text">
-                    <h3 className="welcome-card-title type-chip-header-lg">
-                      Rising talent
-                    </h3>
-                    <p className="welcome-card-description type-body-md">
-                      5-30 shifts, building momentum
-                    </p>
+                    <div
+                      className={`v2-experience-label ${experienceLevel === "management" ? "active" : ""}`}
+                      onClick={() => setExperienceLevel("management")}
+                    >
+                      <span className="v2-experience-label-title">Management ready</span>
+                      <span className="v2-experience-label-subtitle">Leadership exp.</span>
                     </div>
-                  </button>
-                  <button
-                    className={`welcome-card ${experienceLevel === "seasoned" ? "active" : ""}`}
-                    onClick={() => setExperienceLevel("seasoned")}
-                  >
-                    <div className="welcome-card-icon">
-                      {experienceLevel === "seasoned" ? (
-                        <Check size={24} />
-                      ) : (
-                        <ShieldCheck size={24} />
-                      )}
-                    </div>
-                    <div className="v2-welcome-card-text">
-                    <h3 className="welcome-card-title type-chip-header-lg">
-                      Seasoned sales pro
-                    </h3>
-                    <p className="welcome-card-description type-body-md">
-                      30+ shifts, proven reliability
-                    </p>
-                    </div>
-                  </button>
-                  <button
-                    className={`welcome-card ${experienceLevel === "management" ? "active" : ""}`}
-                    onClick={() => setExperienceLevel("management")}
-                  >
-                    <div className="welcome-card-icon">
-                      {experienceLevel === "management" ? (
-                        <Check size={24} />
-                      ) : (
-                        <Briefcase size={24} />
-                      )}
-                    </div>
-                    <div className="v2-welcome-card-text">
-                    <h3 className="welcome-card-title type-chip-header-lg">
-                      Management ready
-                    </h3>
-                    <p className="welcome-card-description type-body-md">
-                      Leadership role experience
-                    </p>
-                    </div>
-                  </button>
+                  </div>
+                  <div className="v2-experience-track-line">
+                    <div className="v2-experience-tick" style={{ left: "0%" }} />
+                    <div className="v2-experience-tick" style={{ left: "33.33%" }} />
+                    <div className="v2-experience-tick" style={{ left: "66.66%" }} />
+                    <div className="v2-experience-tick" style={{ left: "100%" }} />
+                    <div
+                      className="v2-experience-thumb"
+                      style={{
+                        left: experienceLevel === "new" ? "0%"
+                          : experienceLevel === "rising" ? "33.33%"
+                          : experienceLevel === "seasoned" ? "66.66%"
+                          : experienceLevel === "management" ? "100%"
+                          : "0%"
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </V2Main>
@@ -1925,7 +2015,7 @@ export function V2TalentCentric({
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
-                onBack: () => transitionToStep("focus", "back"),
+                onBack: () => transitionToStep(getPreviousSection("brands"), "back"),
                 onNext: () => {
                   if (selectedBrands.length > 0) {
                     completeSection("brands");
@@ -1941,12 +2031,28 @@ export function V2TalentCentric({
             >
               <div className="v2-step-header">
                   <h1 className="type-tagline">
-                    What brand experience do you trust?
+                    Whose talent do you trust?
                   </h1>
                   <p className="type-prompt-question">
-                    Select the brands whose talent you would want on your team.
-                    We'll show you Reflexers with experience there.
+                    Select brands that attract the kind of people you'd want on your team. We'll find Reflexers with experience there or at similar brands.
                   </p>
+                </div>
+
+                {/* Popular picks */}
+                <div className="v2-popular-brands">
+                  <span className="v2-popular-label">Popular picks:</span>
+                  <div className="v2-popular-chips">
+                    {POPULAR_BRANDS.map((brand) => (
+                      <button
+                        key={brand.id}
+                        className={`v2-popular-chip ${selectedBrands.includes(brand.id) ? "selected" : ""}`}
+                        onClick={() => toggleBrand(brand.id)}
+                      >
+                        {brand.name}
+                        {selectedBrands.includes(brand.id) ? <Check size={16} /> : <Plus size={16} />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="v2-brand-grid-header">
@@ -1980,13 +2086,15 @@ export function V2TalentCentric({
                       </span>
                     )}
                   </div>
-                  <button
-                    className="v2-clear-all"
-                    onClick={() => setSelectedBrands([])}
-                    disabled={selectedBrands.length === 0}
-                  >
-                    Clear all
-                  </button>
+                  <div className="v2-brand-grid-actions">
+                    <button
+                      className="v2-clear-all"
+                      onClick={() => setSelectedBrands([])}
+                      disabled={selectedBrands.length === 0}
+                    >
+                      Clear all
+                    </button>
+                  </div>
                 </div>
 
               <div className="v2-step-content-scroll">
@@ -2057,8 +2165,10 @@ export function V2TalentCentric({
                     setStep("welcome");
                     setSelectedBrands([]);
                     setEmploymentType(null);
+                    setAvailabilityHours(null);
                     setExperienceLevel(null);
                     setCompletedSections(new Set());
+                    setStartingFocusArea(null);
                   }}
                 >
                   Start over
@@ -2067,11 +2177,11 @@ export function V2TalentCentric({
             </V2Main>
           )}
 
-          {/* Sidebar with worker cards - shown on location (when selected), brands, experience, and results steps */}
-          {(["brands", "experience", "results"].includes(step) ||
+          {/* Sidebar with worker cards - shown on location (when selected), employment, brands, experience, and results steps */}
+          {(["employment", "brands", "experience", "results"].includes(step) ||
             (step === "location" && selectedLocation && (persona === "field" || persona === "recruiter" || (persona === "individual" && pickingDifferentMarket)))) && (
             <V2WorkerSidebar
-              workers={step === "results" ? filteredWorkers : marketWorkers}
+              workers={["employment", "brands", "experience", "results"].includes(step) ? filteredWorkers : marketWorkers}
               isOpen={sidebarOpen}
               onToggle={() => setSidebarOpen(!sidebarOpen)}
               title={`${MARKETS.find(m => m.id === selectedLocation)?.name || "Market"} Talent`}
