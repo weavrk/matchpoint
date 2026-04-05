@@ -1158,19 +1158,8 @@ export function V2TalentCentric({
       });
     }
 
-    // Filter by employment type (from V2EmploymentSelector)
-    if (employmentType) {
-      if (employmentType === "full-time") {
-        workers = workers.filter(
-          (w) => w.preference === "FT" || w.preference === "Both",
-        );
-      } else if (employmentType === "part-time") {
-        workers = workers.filter(
-          (w) => w.preference === "PT" || w.preference === "Both",
-        );
-      }
-      // 'flex' and 'help' options don't filter - they show all workers
-    }
+    // Note: Employment type and hours per week are preference inputs, not filters
+    // They don't reduce the worker pool - all workers remain available
 
     // Filter by experience level (Logic Tree specs)
     if (experienceLevel) {
@@ -1236,7 +1225,7 @@ export function V2TalentCentric({
 
     // Sort by score
     return scored.sort((a, b) => b.matchScore - a.matchScore);
-  }, [selectedBrands, selectedLocation, employmentType, experienceLevel, supabaseWorkers, retailers]);
+  }, [selectedBrands, selectedLocation, experienceLevel, supabaseWorkers, retailers]);
 
   // Get brands the filtered workers have in common
   const commonBrands = useMemo(() => {
@@ -2569,17 +2558,6 @@ export function V2TalentCentric({
                       const initials = getInitials(name);
                       const isNotInterested = connection.status === "not_interested" || connection.status === "removed";
 
-                      // Get brands worked (limit to 3)
-                      const brandsWorked = worker?.brands_worked || [];
-                      const displayBrands = brandsWorked.slice(0, 3);
-                      const moreBrandsCount = brandsWorked.length - 3;
-
-                      // Get role counts from shift_experience
-                      const shiftExperience = worker?.shift_experience || {};
-                      const roleEntries = Object.entries(shiftExperience).sort((a, b) => (b[1] as number) - (a[1] as number));
-                      const displayRoles = roleEntries.slice(0, 3);
-                      const moreRolesCount = roleEntries.length - 3;
-
                       // Calculate achievement chips (green only for connection list)
                       type AchievementChip = { text: string; icon: React.ReactNode };
                       const achievementChips: AchievementChip[] = [];
@@ -2648,31 +2626,6 @@ export function V2TalentCentric({
                                 <span className="tag-counter">{worker?.unique_store_count || 0}</span>
                                 <span className="tag-text">stores</span>
                               </span>
-
-                              {/* Brands worked */}
-                              {displayBrands.map((brand: { name: string; tier?: string }, idx: number) => (
-                                <span key={`brand-${idx}`} className="tag tag-dark-gray tag-sm">
-                                  <span className="tag-text">{brand.name}</span>
-                                </span>
-                              ))}
-                              {moreBrandsCount > 0 && (
-                                <span className="tag tag-dark-gray tag-sm">
-                                  <span className="tag-text">+{moreBrandsCount}</span>
-                                </span>
-                              )}
-
-                              {/* Roles with counts */}
-                              {displayRoles.map(([role, count], idx) => (
-                                <span key={`role-${idx}`} className="tag tag-stroke tag-sm">
-                                  <span className="tag-text">{role}</span>
-                                  <span className="tag-counter">{count as number}</span>
-                                </span>
-                              ))}
-                              {moreRolesCount > 0 && (
-                                <span className="tag tag-stroke tag-sm">
-                                  <span className="tag-text">+{moreRolesCount}</span>
-                                </span>
-                              )}
 
                               {/* Achievement tags (green only) */}
                               {achievementChips.map((chip, idx) => (
