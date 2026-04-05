@@ -1,5 +1,5 @@
 import { ChevronRight, ChevronLeft } from 'lucide-react';
-import { WorkerCardCompact } from '../../../components/Workers/WorkerCardCompact';
+import { WorkerCardChip } from '../../../components/Workers/WorkerCardChip';
 import type { MatchedWorker } from '../../../types';
 
 /**
@@ -58,7 +58,7 @@ export function V2WorkerSidebar({
           </div>
         ) : (
           workers.map(worker => (
-            <WorkerCardCompact
+            <WorkerCardChip
               key={worker.id}
               worker={worker}
               onClick={() => onWorkerClick?.(worker)}

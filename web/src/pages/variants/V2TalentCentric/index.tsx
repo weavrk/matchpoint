@@ -988,11 +988,11 @@ export function V2TalentCentric({
 
                   <div className={`v2-focus-chips ${chatMessages.length > 0 ? "chat-active" : ""}`}>
                   <button
-                    className={`welcome-card persona-card ${persona === "individual" && chatMessages.length === 0 ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "individual" ? "active" : ""}`}
                     onClick={() => {
+                      setChatMessages([]);
                       setPersona("individual");
                       setSelectedLocation("austin-tx");
-                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -1012,10 +1012,10 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`welcome-card persona-card ${persona === "multi-store" && chatMessages.length === 0 ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "multi-store" ? "active" : ""}`}
                     onClick={() => {
+                      setChatMessages([]);
                       setPersona("multi-store");
-                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -1035,11 +1035,11 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`welcome-card persona-card ${persona === "field" && chatMessages.length === 0 ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "field" ? "active" : ""}`}
                     onClick={() => {
+                      setChatMessages([]);
                       setPersona("field");
                       setSelectedLocation(null);
-                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -1059,11 +1059,11 @@ export function V2TalentCentric({
                     </div>
                   </button>
                   <button
-                    className={`welcome-card persona-card ${persona === "recruiter" && chatMessages.length === 0 ? "active" : ""}`}
+                    className={`welcome-card persona-card ${persona === "recruiter" ? "active" : ""}`}
                     onClick={() => {
+                      setChatMessages([]);
                       setPersona("recruiter");
                       setSelectedLocation(null);
-                      transitionToStep("location", "forward");
                     }}
                   >
                     <div className="welcome-card-icon">
@@ -1346,7 +1346,7 @@ export function V2TalentCentric({
                   </div>
 
                   <div
-                    className={`v2-location-grid v2-step-content-scroll ${selectedLocation && sidebarOpen ? "sidebar-open" : ""}`}
+                    className={`v2-location-grid v2-step-content-scroll ${selectedLocation ? "sidebar-open" : ""}`}
                   >
                     {[...MARKETS]
                       .sort((a, b) => a.name.localeCompare(b.name))
@@ -1781,20 +1781,23 @@ export function V2TalentCentric({
             </V2Main>
           )}
 
-          {/* Sidebar with worker cards - shown on brands, experience, and results steps */}
-          {["brands", "experience", "results"].includes(step) && (
+          {/* Sidebar with worker cards - shown on location (when selected), brands, experience, and results steps */}
+          {(["brands", "experience", "results"].includes(step) ||
+            (step === "location" && selectedLocation && (persona === "field" || persona === "recruiter"))) && (
             <V2WorkerSidebar
               workers={filteredWorkers}
               isOpen={sidebarOpen}
               onToggle={() => setSidebarOpen(!sidebarOpen)}
               title={
-                step === "brands"
-                  ? "Shift Verified Reflexers"
-                  : step === "experience"
-                    ? "Matching talent"
-                    : step === "results"
-                      ? `${filteredWorkers.length} matches`
-                      : "Reflexers"
+                step === "location"
+                  ? `${MARKETS.find(m => m.id === selectedLocation)?.name || "Market"} Talent`
+                  : step === "brands"
+                    ? "Shift Verified Reflexers"
+                    : step === "experience"
+                      ? "Matching talent"
+                      : step === "results"
+                        ? `${filteredWorkers.length} matches`
+                        : "Reflexers"
               }
               showCount={step !== "results"}
               onWorkerClick={() => {
