@@ -107,7 +107,7 @@ export function V2EmploymentSelector({
 
           <div className="v2-availability-slider v2-fade-in-second">
             <div className="v2-slider-markers">
-              {HOURS_OPTIONS.map((option, index) => (
+              {HOURS_OPTIONS.map((option) => (
                 <button
                   key={option}
                   type="button"
