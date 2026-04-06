@@ -2,6 +2,7 @@ node_modules/
 dist/
 .env
 .DS_Store
+# Local reference only — do not commit or push
 x.reference/
 .glassdoor-profile/
 glassdoor-cookies.json
