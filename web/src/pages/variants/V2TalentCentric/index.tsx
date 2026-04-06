@@ -1524,7 +1524,7 @@ export function V2TalentCentric({
           {/* Step 2: Location Selection - varies by persona */}
           {step === "location" && (
             <V2Main
-              stepClassName={(persona === "individual" && !pickingDifferentMarket) || persona === "multi-store" ? "v2-main-centered" : ""}
+              stepClassName="v2-main-centered"
               isTransitioning={isTransitioning}
               transitionDirection={transitionDirection}
               footer={{
@@ -2334,12 +2334,13 @@ export function V2TalentCentric({
 
           {/* Selected Worker Full Card Sidebar */}
           {step === "results" && selectedWorker && (
-            <div className="v2-worker-detail-sidebar">
+            <div className={`v2-worker-detail-sidebar${detailSidebarOpen ? "" : " collapsed"}`}>
               <button
-                className="v2-detail-close"
-                onClick={() => setSelectedWorker(null)}
+                className="v2-sidebar-toggle"
+                onClick={() => setDetailSidebarOpen(!detailSidebarOpen)}
+                aria-label={detailSidebarOpen ? "Collapse panel" : "Expand panel"}
               >
-                <X size={20} />
+                {detailSidebarOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
               </button>
               <div className="v2-detail-scroll">
                 <WorkerCardFull worker={selectedWorker} />

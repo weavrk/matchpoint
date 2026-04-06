@@ -1481,6 +1481,7 @@
 .v2-location-controls {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   margin-top: 16px;
   margin-bottom: 16px;
@@ -1583,6 +1584,7 @@
   margin-left: -64px;
   margin-right: -64px;
   width: calc(100% + 128px);
+  border-top: 1px solid var(--quaternary);
 }
 
 .v2-location-grid.sidebar-open {
@@ -3378,30 +3380,17 @@
   flex-direction: column;
   min-height: 0;
   z-index: 20;
+  transition: width 0.3s ease;
+  overflow: visible;
 }
 
-.v2-detail-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--quaternary);
-  background: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--secondary);
-  transition: all 0.15s ease;
-  z-index: 1;
-  flex-shrink: 0;
+.v2-worker-detail-sidebar.collapsed {
+  width: 24px;
 }
 
-.v2-detail-close:hover {
-  color: var(--primary);
-  border-color: var(--tertiary);
+.v2-worker-detail-sidebar.collapsed .v2-detail-scroll {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .v2-detail-scroll {
@@ -3410,6 +3399,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
+  transition: opacity 0.2s ease;
 }
 
 /* Strip the WorkerCardFull card chrome inside the detail panel
