@@ -288,7 +288,7 @@ type FocusArea = "employment" | "brands" | "roles";
 type PersonaType = "individual" | "multi-store" | "field" | "recruiter";
 
 // Experience levels per Logic Tree
-type ExperienceLevel = "new" | "rising" | "seasoned" | "management";
+type ExperienceLevel = "all" | "new" | "rising" | "seasoned" | "management";
 
 // Store locations (retailer's locations they have permission to hire for)
 const STORE_LOCATIONS = [
