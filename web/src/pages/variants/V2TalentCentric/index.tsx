@@ -47,9 +47,10 @@ import {
 import { SAMPLE_WORKERS } from "../../../data/workers";
 import { V2Main } from "./V2Main";
 import { V2EmploymentSelector } from "./V2EmploymentSelector";
-import { V2WorkerSidebar } from "./V2WorkerSidebar";
+import { V2WorkerSidebar, V2SidebarShell } from "./V2WorkerSidebar";
 import { WorkerCard } from "../../../components/Workers/WorkerCard";
 import { WorkerCardFull } from "../../../components/Workers/WorkerCardFull";
+import { WorkerCardCompact } from "../../../components/Workers/WorkerCardCompact";
 import { WorkerAchievementChips } from "../../../components/Workers/WorkerAchievementChips";
 import type { EmploymentType, AvailabilityHours } from "./V2EmploymentSelector";
 import type { MatchedWorker, ChatMessage, WorkerProfile } from "../../../types";
@@ -557,6 +558,7 @@ export function V2TalentCentric({
   const [locationSearch, setLocationSearch] = useState("");
   const [brandSearch, setBrandSearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [detailSidebarOpen, setDetailSidebarOpen] = useState(true);
   const [fallbackUserName] = useState(() => getRandomUserName());
   const userName = propUserName || fallbackUserName;
   const brandRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -2293,104 +2295,41 @@ export function V2TalentCentric({
                 </p>
               </div>
 
-              {commonBrands.length > 0 && (
-                <div className="v2-common-brands">
-                  <span className="v2-common-brands-label">Experience at:</span>
-                  <div className="v2-common-brands-list">
-                    {commonBrands.map((brand) => (
-                      <span key={brand} className="tag tag-stroke tag-sm">
-                        <span className="tag-text">{brand}</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Worker Teaser Grid */}
-              <div className="v2-worker-teaser-grid">
-                {filteredWorkers.slice(0, 12).map((worker) => {
-                  const firstName = worker.name.split(' ')[0];
-                  return (
-                    <div
-                      key={worker.id}
-                      className={`v2-worker-teaser ${selectedWorker?.id === worker.id ? 'selected' : ''}`}
-                      onClick={() => setSelectedWorker(worker)}
-                    >
-                      <div className="v2-teaser-header">
-                        <div className="v2-teaser-avatar">
-                          {worker.photo ? (
-                            <img src={worker.photo} alt={worker.name} />
-                          ) : (
-                            <span>{worker.name.split(' ').map(n => n[0]).join('').toUpperCase()}</span>
-                          )}
-                        </div>
-                        <div className="v2-teaser-info">
-                          <div className="v2-teaser-name-row">
-                            <span className="v2-teaser-name">{worker.name}</span>
-                            {worker.shiftVerified && (
-                              <BadgeCheck size={16} className="v2-teaser-verified" />
-                            )}
-                          </div>
-                          <span className="v2-teaser-market">{worker.market}</span>
-                        </div>
-                      </div>
-                      <div className="v2-teaser-stats">
-                        <span className="v2-teaser-stat">
-                          <strong>{worker.shiftsOnReflex}</strong> shifts
+              {/* Top bar with brands and action button */}
+              <div className="v2-results-topbar">
+                {commonBrands.length > 0 && (
+                  <div className="v2-common-brands">
+                    <span className="v2-common-brands-label">Experience at:</span>
+                    <div className="v2-common-brands-list">
+                      {commonBrands.map((brand) => (
+                        <span key={brand} className="tag tag-stroke tag-sm">
+                          <span className="tag-text">{brand}</span>
                         </span>
-                        <span className="v2-teaser-stat">
-                          <strong>{worker.uniqueStoreCount || 0}</strong> stores
-                        </span>
-                      </div>
-                      <WorkerAchievementChips worker={worker} />
-                      {worker.retailerSummary && (
-                        <p className="v2-teaser-summary">
-                          {worker.retailerSummary.slice(0, 100)}...
-                        </p>
-                      )}
-                      <button
-                        className="v2-teaser-connect"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedWorker(worker);
-                        }}
-                      >
-                        <UserPlus size={16} />
-                        Connect with {firstName}
-                      </button>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
-
-              {filteredWorkers.length > 12 && (
-                <p className="v2-results-more">
-                  + {filteredWorkers.length - 12} more matches in the sidebar
-                </p>
-              )}
-
-              <div className="v2-results-actions">
-                <button className="v2-action-btn v2-action-primary">
+                  </div>
+                )}
+                <button className="v2-action-btn v2-action-primary v2-connect-all-btn">
                   <UserPlus size={18} />
                   Connect with all {filteredWorkers.length}
                 </button>
-                <button
-                  className="v2-action-btn v2-action-secondary"
-                  onClick={() => {
-                    setStep("welcome");
-                    setSelectedBrands([]);
-                    setEmploymentType(null);
-                    setAvailabilityHours(null);
-                    setExperienceLevel(null);
-                    setCompletedSections(new Set());
-                    setStartingFocusArea(null);
-                    setSelectedWorker(null);
-                  }}
-                >
-                  Start over
-                </button>
               </div>
-            </V2Main>
+
+              {/* Worker Card Grid - using DSL WorkerCardCompact */}
+              <div className="v2-worker-card-grid">
+                {filteredWorkers.map((worker) => (
+                  <WorkerCardCompact
+                    key={worker.id}
+                    worker={worker}
+                    onClick={() => {
+                      setSelectedWorker(worker);
+                      setDetailSidebarOpen(true);
+                    }}
+                  />
+                ))}
+              </div>
+
+                          </V2Main>
           )}
 
           {/* Selected Worker Full Card Sidebar */}
@@ -2403,7 +2342,7 @@ export function V2TalentCentric({
                 <X size={20} />
               </button>
               <div className="v2-detail-scroll">
-                <WorkerCard worker={selectedWorker} />
+                <WorkerCardFull worker={selectedWorker} />
                 <div className="v2-detail-actions">
                   <button className="v2-action-btn v2-action-primary">
                     <UserPlus size={18} />
@@ -2418,21 +2357,16 @@ export function V2TalentCentric({
             </div>
           )}
 
-          {/* Sidebar with worker cards - shown on location (when selected and NOT on market confirmation), brands, experience steps. On results, only show if no worker selected */}
+          {/* Sidebar with worker cards - shown on location (when selected and NOT on market confirmation), brands, experience steps */}
           {((["brands", "experience"].includes(step) ||
-            (step === "results" && !selectedWorker) ||
             (step === "location" && selectedLocation && (persona !== "individual" || pickingDifferentMarket)))) && (
             <V2WorkerSidebar
-              workers={["brands", "experience", "results"].includes(step) ? filteredWorkers : marketWorkers}
+              workers={["brands", "experience"].includes(step) ? filteredWorkers : marketWorkers}
               isOpen={sidebarOpen}
               onToggle={() => setSidebarOpen(!sidebarOpen)}
               title={`${MARKETS.find(m => m.id === selectedLocation)?.name || "Market"} Talent`}
-              showCount={step !== "results"}
-              onWorkerClick={(worker) => {
-                if (step === "results") {
-                  setSelectedWorker(worker);
-                }
-              }}
+              showCount={true}
+              onWorkerClick={() => {}}
               emptyMessage={
                 step === "location"
                   ? "No Reflexers in this market yet. Try selecting a different market."
@@ -2838,6 +2772,14 @@ export function V2TalentCentric({
                   <div className="v2-detail-loading">Loading worker details...</div>
                 ) : selectedConnectionFullWorker ? (
                   <>
+                    <div className="v2-detail-icon-actions">
+                      <button className="v2-icon-action-btn" title="Send Message">
+                        <MessageSquare size={20} />
+                      </button>
+                      <button className="v2-icon-action-btn" title="Book a Shift">
+                        <CalendarDays size={20} />
+                      </button>
+                    </div>
                     <WorkerCardFull
                       worker={{
                         id: selectedConnectionFullWorker.id,
@@ -2870,16 +2812,6 @@ export function V2TalentCentric({
                         setSelectedConnectionFullWorker(null);
                       }}
                     />
-                    <div className="v2-detail-actions">
-                      <button className="v2-action-btn v2-action-primary">
-                        <MessageSquare size={18} />
-                        Send Message
-                      </button>
-                      <button className="v2-action-btn v2-action-secondary">
-                        <CalendarDays size={18} />
-                        Book a Shift
-                      </button>
-                    </div>
                   </>
                 ) : null}
               </div>

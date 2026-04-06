@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase, CornerDownRight, CalendarFold, Blend, ChartNoAxesGantt, Search, Award, Trophy, Sparkles, Heart, HeartPlus, ClockCheck } from 'lucide-react';
+import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase, CornerDownRight, CalendarFold, Blend, ChartNoAxesGantt, Search, Award, Trophy, Sparkles, Heart, HeartPlus, ClockCheck, Link, UserPlus, XCircle, CalendarClock, MessageSquare, MessageSquareOff, MessageSquareDot } from 'lucide-react';
 import '../../pages/variants/V2TalentCentric/styles.css';
-import { WorkerCardHeader } from '../Workers/WorkerCardHeader';
+import { WorkerCardHeader, WorkerCardHeaderFull } from '../Workers/WorkerCardHeader';
 import { WorkerCardChip } from '../Workers/WorkerCardChip';
 import { WorkerCardCompact } from '../Workers/WorkerCardCompact';
 import { WorkerCardTesting } from '../Workers/WorkerCardTesting';
 import { WorkerCardFull } from '../Workers/WorkerCardFull';
+import { getBrandLogo } from '../../utils/brandLogos';
 import type { MatchedWorker } from '../../types';
 
 interface DesignSystemPanelProps {
@@ -27,11 +28,14 @@ const TABS: { id: TabId; label: string }[] = [
 const DS_TAG_VARIANT_STYLES = [
   ['tag-stroke', 'Stroke'],
   ['tag-lite-gray', 'Lite gray'],
+  ['tag-gray', 'Gray'],
   ['tag-dark-gray', 'Dark gray'],
   ['tag-green', 'Green'],
-  ['tag-green-light', 'Green Light'],
   ['tag-blue', 'Blue'],
   ['tag-pink', 'Pink'],
+  ['tag-green-light', 'Green Light'],
+  ['tag-blue-light', 'Blue Light'],
+  ['tag-pink-light', 'Pink Light'],
   ['tag-coral', 'Coral'],
 ] as const;
 
@@ -676,17 +680,6 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 </div>
               </div>
               <div className="ds-pill-with-spec">
-                <span className="tag tag-green-light tag-md"><span className="tag-text">Green Light</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">tag-green-light</span>
-                  <span className="ds-spec-text">bg: background-green</span>
-                  <span className="ds-spec-text">text: primary</span>
-                  <span className="ds-spec-text">icon: text-primary</span>
-                  <span className="ds-spec-text">counter bg: #ffffff</span>
-                  <span className="ds-spec-text">counter text: primary</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
                 <span className="tag tag-blue tag-md"><span className="tag-text">Blue</span></span>
                 <div className="ds-spec-column">
                   <span className="ds-spec-text">tag-blue</span>
@@ -706,6 +699,83 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                   <span className="ds-spec-text">icon: text-primary</span>
                   <span className="ds-spec-text">counter bg: #ffffff</span>
                   <span className="ds-spec-text">counter text: primary</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-green-light tag-md"><span className="tag-text">Green Light</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-green-light</span>
+                  <span className="ds-spec-text">bg: background-green</span>
+                  <span className="ds-spec-text">text: primary</span>
+                  <span className="ds-spec-text">icon: text-primary</span>
+                  <span className="ds-spec-text">counter bg: #ffffff</span>
+                  <span className="ds-spec-text">counter text: primary</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-blue-light tag-md"><span className="tag-text">Blue Light</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-blue-light</span>
+                  <span className="ds-spec-text">bg: blue-100</span>
+                  <span className="ds-spec-text">text: primary</span>
+                  <span className="ds-spec-text">icon: text-primary</span>
+                  <span className="ds-spec-text">counter bg: #ffffff</span>
+                  <span className="ds-spec-text">counter text: primary</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag tag-pink-light tag-md"><span className="tag-text">Pink Light</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-pink-light</span>
+                  <span className="ds-spec-text">bg: pink-100</span>
+                  <span className="ds-spec-text">text: primary</span>
+                  <span className="ds-spec-text">icon: text-primary</span>
+                  <span className="ds-spec-text">counter bg: #ffffff</span>
+                  <span className="ds-spec-text">counter text: primary</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="ds-subsection">
+            <h4>Logo Tag</h4>
+            <p className="ds-description">
+              Displays a logo image instead of text. Default 88px square (same as <code>tag-md</code>). Use <code>tag-sm</code> (72px), <code>tag-md</code> (88px), <code>tag-lg</code> (104px), <code>tag-xl</code> (128px), or custom size via <code>--logo-size</code>. Uses <code>box-sizing: content-box</code> so stated size = exact image area.
+            </p>
+            <div className="ds-pills-styles-row" style={{ alignItems: 'flex-end' }}>
+              <div className="ds-pill-with-spec">
+                <span className="tag-logo tag-sm"><img src={getBrandLogo('madewell')} alt="Madewell" /></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-logo tag-sm</span>
+                  <span className="ds-spec-text">72px square</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag-logo tag-md"><img src={getBrandLogo('nike')} alt="Nike" /></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-logo tag-md</span>
+                  <span className="ds-spec-text">88px square (default)</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag-logo tag-lg"><img src={getBrandLogo('nordstrom')} alt="Nordstrom" /></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-logo tag-lg</span>
+                  <span className="ds-spec-text">104px square</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag-logo tag-xl"><img src={getBrandLogo('patagonia')} alt="Patagonia" /></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-logo tag-xl</span>
+                  <span className="ds-spec-text">128px square</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
+                <span className="tag-logo" style={{ '--logo-size': '72px' } as React.CSSProperties}><img src={getBrandLogo('sephora')} alt="Sephora" /></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">custom --logo-size</span>
+                  <span className="ds-spec-text">72px (example)</span>
                 </div>
               </div>
             </div>
@@ -798,8 +868,13 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     <td><code>endorsementCounts[trait]</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-dark-gray tag-md"><span className="tag-text">Moncler</span></span></td>
-                    <td><code>brandsWorked[].name</code></td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span className="tag-logo tag-sm"><img src={getBrandLogo('marc jacobs')} alt="Marc Jacobs" /></span>
+                        <span className="brand-logo-fallback" style={{ width: 72, height: 72, fontSize: 11 }}>Moncler</span>
+                      </div>
+                    </td>
+                    <td><code>brandsWorked[].name</code><br /><span style={{ fontSize: 10, color: 'var(--secondary)' }}>logo if available, else centered name</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -846,6 +921,74 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 </tbody>
               </table>
             </div>
+
+            <h5>Worker Status Tags (tag-sm, connection list)</h5>
+            <div className="ds-chip-logic-box">
+              <table className="ds-logic-table">
+                <thead>
+                  <tr>
+                    <th>Tag</th>
+                    <th>Condition</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><CalendarDays size={12} /></span><span className="tag-text">Shift Scheduled</span></span></td>
+                    <td><code>shift_scheduled: true</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><CalendarClock size={12} /></span><span className="tag-text">Shift Booked</span></span></td>
+                    <td><code>shift_booked: true</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><Link size={12} /></span><span className="tag-text">Connected</span></span></td>
+                    <td><code>status: "accepted"</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><UserPlus size={12} /></span><span className="tag-text">Invited</span></span></td>
+                    <td><code>status: "invited"</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-stroke tag-sm"><span className="tag-icon"><Heart size={12} /></span><span className="tag-text">Saved</span></span></td>
+                    <td><code>status: "liked"</code> or <code>saved_for_later: true</code></td>
+                  </tr>
+                  <tr>
+                    <td><span className="tag tag-gray tag-sm"><span className="tag-icon"><XCircle size={12} /></span><span className="tag-text">Worker Declined</span></span></td>
+                    <td><code>status: "worker_declined"</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h5>Chat Button States</h5>
+            <div className="ds-chip-logic-box">
+              <table className="ds-logic-table">
+                <thead>
+                  <tr>
+                    <th>Button</th>
+                    <th>Condition</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><button className="v2-connection-action" style={{ fontSize: '12px', padding: '4px 10px' }}><MessageSquare size={14} /> Chat</button></td>
+                    <td>Connected, Shift Scheduled, or Shift Booked</td>
+                  </tr>
+                  <tr>
+                    <td><button className="v2-connection-action unread" style={{ fontSize: '12px', padding: '4px 10px' }}><MessageSquareDot size={14} /> Read Message</button></td>
+                    <td><code>has_unread_worker_message: true</code></td>
+                  </tr>
+                  <tr>
+                    <td><button className="v2-connection-action disabled" style={{ fontSize: '12px', padding: '4px 10px' }}><MessageSquareOff size={14} /> Chat</button></td>
+                    <td>Saved (chat not enabled)</td>
+                  </tr>
+                  <tr>
+                    <td><button className="v2-connection-action secondary" style={{ fontSize: '12px', padding: '4px 10px' }}>Undo</button></td>
+                    <td>Worker Declined</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
         )}
@@ -860,10 +1003,25 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
 
           <div className="ds-subsection">
             <h4>WorkerCardHeader (Reusable)</h4>
-            <p className="ds-description">Reusable header component used by all card variants. Shows avatar, name, location, and status pills.</p>
-            <div className="ds-worker-card-example">
-              <div className="worker-card" style={{ background: '#fff' }}>
-                <WorkerCardHeader worker={sampleWorker} />
+            <p className="ds-description">
+              Two exports from <code>WorkerCardHeader.tsx</code>: <strong>WorkerCardHeader</strong> — horizontal row (teaser, compact, chat cards); <strong>WorkerCardHeaderFull</strong> — centered avatar stack for the full overlay. Both show avatar, name, location, and status pills.
+            </p>
+            <div className="ds-worker-header-variants-row">
+              <div className="ds-worker-header-variant">
+                <span className="ds-spec-text">WorkerCardHeader — default row</span>
+                <div className="ds-worker-card-example">
+                  <div className="worker-card" style={{ background: '#fff' }}>
+                    <WorkerCardHeader worker={sampleWorker} />
+                  </div>
+                </div>
+              </div>
+              <div className="ds-worker-header-variant">
+                <span className="ds-spec-text">WorkerCardHeaderFull — centered (full card)</span>
+                <div className="ds-worker-card-example">
+                  <div className="worker-card" style={{ background: '#fff' }}>
+                    <WorkerCardHeaderFull worker={sampleWorker} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1071,12 +1229,14 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 <li><span className="ds-style-prop">border-radius:</span> <code>8px</code></li>
                 <li><span className="ds-style-prop">font-size:</span> <code>16px</code></li>
                 <li><span className="ds-style-prop">font-weight:</span> <code>500</code></li>
-                <li><span className="ds-style-prop">transition:</span> <code>all 0.15s</code></li>
+                <li><span className="ds-style-prop">transition:</span> <code>background 0.2s ease, border-color 0.2s ease</code></li>
                 <li><span className="ds-style-prop">background:</span> <code>var(--primary)</code></li>
                 <li><span className="ds-style-prop">border:</span> <code>1px solid var(--primary)</code></li>
                 <li><span className="ds-style-prop">color:</span> <code>#ffffff</code></li>
-                <li><span className="ds-style-prop">hover background:</span> <code>var(--stone-800)</code></li>
-                <li><span className="ds-style-prop">hover border:</span> <code>var(--stone-800)</code></li>
+                <li><span className="ds-style-prop">hover background:</span> <code>var(--hover)</code></li>
+                <li><span className="ds-style-prop">hover border:</span> <code>var(--hover)</code></li>
+                <li><span className="ds-style-prop">active background:</span> <code>var(--hover)</code></li>
+                <li><span className="ds-style-prop">active border:</span> <code>var(--hover)</code></li>
                 <li><span className="ds-style-prop">disabled background:</span> <code>var(--tertiary)</code></li>
                 <li><span className="ds-style-prop">disabled border:</span> <code>var(--tertiary)</code></li>
                 <li><span className="ds-style-prop">disabled color:</span> <code>#ffffff</code></li>

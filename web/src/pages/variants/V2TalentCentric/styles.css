@@ -2837,8 +2837,18 @@
   margin-bottom: 24px;
 }
 
+/* Results topbar - brands on left, connect button on right */
+.v2-results-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
 .v2-common-brands {
-  margin-bottom: 32px;
+  flex: 1;
 }
 
 .v2-common-brands-label {
@@ -2855,15 +2865,10 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  justify-content: center;
 }
 
-.v2-results-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-  max-width: 300px;
+.v2-connect-all-btn {
+  flex-shrink: 0;
 }
 
 .v2-action-btn {
@@ -3151,6 +3156,37 @@
 }
 
 /* Worker Teaser Grid */
+/* Worker Card Grid - using DSL WorkerCardCompact */
+.v2-worker-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.v2-worker-card-grid .worker-card-compact {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.v2-worker-card-grid .worker-card-compact:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--tertiary);
+}
+
+@media (max-width: 1400px) {
+  .v2-worker-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .v2-worker-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Legacy teaser grid - can be removed */
 .v2-worker-teaser-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -3317,25 +3353,31 @@
   gap: 8px;
 }
 
-/* Worker Detail Sidebar */
+/* Worker Detail Sidebar - extends v2-sidebar shell */
+.v2-detail-sidebar {
+  width: 420px;
+  z-index: 20;
+}
+
+.v2-detail-sidebar .v2-sidebar-cards {
+  padding: 24px;
+}
+
+.v2-detail-sidebar .worker-card {
+  margin-bottom: 24px;
+}
+
+/* ── Full worker detail panel (shared: discover results + connections tab) ── */
 .v2-worker-detail-sidebar {
   position: relative;
   width: 420px;
+  flex-shrink: 0;
   background: var(--white);
-  border-left: 1px solid var(--quaternary);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.v2-detail-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--secondary);
-  font-size: 14px;
+  min-height: 0;
+  z-index: 20;
 }
 
 .v2-detail-close {
@@ -3345,29 +3387,42 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--white);
   border: 1px solid var(--quaternary);
+  background: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
-  transition: all 0.15s;
+  color: var(--secondary);
+  transition: all 0.15s ease;
+  z-index: 1;
+  flex-shrink: 0;
 }
 
 .v2-detail-close:hover {
-  background: var(--gray-50);
+  color: var(--primary);
   border-color: var(--tertiary);
 }
 
 .v2-detail-scroll {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.v2-detail-scroll .worker-card {
-  margin-bottom: 24px;
+/* Strip the WorkerCardFull card chrome inside the detail panel
+   — the panel itself is the container */
+.v2-worker-detail-sidebar .worker-card {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.v2-worker-detail-sidebar .v2-detail-actions {
+  padding: 16px 20px 24px;
 }
 
 .v2-detail-actions {
@@ -3376,6 +3431,33 @@
   gap: 12px;
   padding-top: 16px;
   border-top: 1px solid var(--quaternary);
+}
+
+/* Icon-only action buttons for detail sidebar */
+.v2-detail-icon-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.v2-icon-action-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--quaternary);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--primary);
+  transition: all 0.15s ease;
+}
+
+.v2-icon-action-btn:hover {
+  background: var(--background-gray);
+  border-color: var(--primary);
 }
 
 /* ============================================================

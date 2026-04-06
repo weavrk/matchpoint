@@ -94,6 +94,67 @@
   flex-shrink: 0;
 }
 
+/* ── Header Full Variant (Centered Avatar) ────────────────────────────────── */
+
+.worker-card-header-full {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px 16px;
+  gap: 8px;
+}
+
+.worker-header-full-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: var(--quaternary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.worker-header-full-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.worker-header-full-avatar span {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--secondary);
+}
+
+.worker-header-full-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 0;
+  text-align: center;
+}
+
+.worker-header-full-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--secondary);
+}
+
+.worker-header-full-location svg {
+  color: var(--secondary);
+}
+
+.worker-header-full-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 4px;
+}
 
 .worker-avatar {
   width: 54px;
@@ -602,6 +663,30 @@
   position: relative;
 }
 
+.worker-card-full-overlay .worker-card {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.worker-card-full-overlay .worker-card:hover {
+  box-shadow: none;
+  transform: none;
+}
+
+/* Full card content - no card styling, used inside drawer */
+.worker-card-full-content {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.worker-card-full-content:hover {
+  box-shadow: none;
+  transform: none;
+}
+
 .worker-card-full {
   padding: 24px;
   padding-top: 36px;
@@ -1016,6 +1101,41 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.brand-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.brand-logo-grid .tag-logo {
+  /* Override fixed sizes from .tag-logo base — let the grid column dictate width */
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  min-width: 0;
+}
+
+.brand-logo-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--primary);
+  border: 1px solid var(--quaternary);
+  border-radius: 8px;
+  padding: 4px;
+  aspect-ratio: 1;
+  line-height: 1.3;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .testing-quote {

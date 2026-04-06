@@ -779,6 +779,54 @@ h3.type-chip-header,
   color: var(--text-primary);
 }
 
+/* Gray - light gray background for declined/neutral states */
+.tag-gray {
+  background: var(--gray-100);
+  color: var(--secondary);
+  border: none;
+}
+
+.tag-gray .tag-counter {
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+.tag-gray .tag-icon {
+  color: var(--secondary);
+}
+
+/* Blue Light - light blue background */
+.tag-blue-light {
+  background: var(--background-blue);
+  color: var(--text-primary);
+  border: none;
+}
+
+.tag-blue-light .tag-counter {
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+.tag-blue-light .tag-icon {
+  color: var(--text-primary);
+}
+
+/* Pink Light - pale pink background (mirrors tag-blue-light → blue-100) */
+.tag-pink-light {
+  background: var(--pink-100);
+  color: var(--text-primary);
+  border: none;
+}
+
+.tag-pink-light .tag-counter {
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+.tag-pink-light .tag-icon {
+  color: var(--text-primary);
+}
+
 /* ── Tag Variant Elements ──────────────────── */
 
 /* Counter - always left of text */
@@ -851,6 +899,65 @@ h3.type-chip-header,
 
 .tag-pink .tag-icon {
   color: var(--text-primary);
+}
+
+/* ── Tag Logo Variant ─────────────────────────
+   Displays a logo image instead of text.
+   Default: 88px square (same as tag-md). Sizes: sm 72, md 88, lg 104, xl 128
+   box-sizing: content-box so stated size = exact image area (border adds outside)
+   Usage: <span class="tag-logo"><img src="..." /></span>
+   ───────────────────────────────────────────── */
+
+.tag-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: content-box;
+  width: 88px;
+  height: 88px;
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--quaternary);
+  flex-shrink: 0;
+}
+
+.tag-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Logo tag sizes */
+.tag-logo.tag-sm {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+}
+
+.tag-logo.tag-md {
+  width: 88px;
+  height: 88px;
+  border-radius: 8px;
+}
+
+.tag-logo.tag-lg {
+  width: 104px;
+  height: 104px;
+  border-radius: 10px;
+}
+
+.tag-logo.tag-xl {
+  width: 128px;
+  height: 128px;
+  border-radius: 12px;
+}
+
+/* Custom size support via inline style --logo-size */
+.tag-logo[style*="--logo-size"] {
+  width: var(--logo-size);
+  height: var(--logo-size);
 }
 
 
