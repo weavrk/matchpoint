@@ -88,6 +88,8 @@ export interface WorkerProfile {
   uniqueStoreCount?: number | null;
   // Market favorite - worker is favorited/approved by retailer stores in market
   marketFavorite?: boolean;
+  // Experience level for filtering (not displayed on card)
+  experienceLevel?: 'rising' | 'experienced' | 'seasoned' | 'proven_leader' | null;
   // Legacy fields from sample workers (for compatibility)
   preference?: 'FT' | 'PT' | 'Both';
   endorsements?: Endorsement[];

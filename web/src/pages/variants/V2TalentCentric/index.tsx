@@ -1113,38 +1113,18 @@ export function V2TalentCentric({
     // Note: Employment type and hours per week are preference inputs, not filters
     // They don't reduce the worker pool - all workers remain available
 
-    // Filter by experience level (Logic Tree specs)
+    // Filter by experience level using the experience_level column from DB
+    // UI state maps: "new" → "rising", "rising" → "experienced", "seasoned" → "seasoned", "management" → "proven_leader"
     if (experienceLevel) {
-      if (experienceLevel === "new") {
-        // 0-5 shifts
-        workers = workers.filter(
-          (w) => w.shiftsOnReflex >= 0 && w.shiftsOnReflex <= 5,
-        );
-      } else if (experienceLevel === "rising") {
-        // 5-30 shifts
-        workers = workers.filter(
-          (w) => w.shiftsOnReflex > 5 && w.shiftsOnReflex <= 30,
-        );
-      } else if (experienceLevel === "seasoned") {
-        // 30+ shifts
-        workers = workers.filter((w) => w.shiftsOnReflex > 30);
-      } else if (experienceLevel === "management") {
-        // Has management role in history - check previousExperience for management titles
-        workers = workers.filter((w) => {
-          const mgmtTitles = [
-            "manager",
-            "supervisor",
-            "lead",
-            "coordinator",
-            "director",
-            "assistant manager",
-          ];
-          return w.previousExperience?.some((exp) =>
-            exp.roles?.some((role) =>
-              mgmtTitles.some((title) => role.toLowerCase().includes(title)),
-            ),
-          );
-        });
+      const levelMap: Record<string, string> = {
+        "new": "rising",           // Rising talent: Under 6 mos retail or 20 Flexes
+        "rising": "experienced",   // Experienced: 6 mos - 2 yrs retail or 50 Flexes
+        "seasoned": "seasoned",    // Seasoned pro: 2+ yrs retail or 50+ Flexes
+        "management": "proven_leader" // Proven leader: Has managed a team or store
+      };
+      const dbLevel = levelMap[experienceLevel];
+      if (dbLevel) {
+        workers = workers.filter((w) => w.experienceLevel === dbLevel);
       }
     }
 
@@ -1869,21 +1849,18 @@ export function V2TalentCentric({
                   <button
                     className={`journey-card journey-card-1${completedSections.has("employment") ? " completed" : ""}${focusArea === "employment" ? " selected" : ""}`}
                     onClick={() => {
-                      if (!completedSections.has("employment")) {
-                        // If chat is active, collapse it first
-                        if (focusChatActive) {
-                          setFocusChatActive(false);
-                          setFocusChatInput("");
-                        }
-                        // Track starting card for CYOA order
-                        if (!startingFocusArea) {
-                          setStartingFocusArea("employment");
-                        }
-                        setFocusArea("employment");
-                        transitionToStep("employment", "forward");
+                      // If chat is active, collapse it first
+                      if (focusChatActive) {
+                        setFocusChatActive(false);
+                        setFocusChatInput("");
                       }
+                      // Track starting card for CYOA order
+                      if (!startingFocusArea) {
+                        setStartingFocusArea("employment");
+                      }
+                      setFocusArea("employment");
+                      transitionToStep("employment", "forward");
                     }}
-                    disabled={completedSections.has("employment")}
                   >
                     <div className="journey-card-header">
                       <div className="journey-card-icon">
@@ -1905,21 +1882,18 @@ export function V2TalentCentric({
                   <button
                     className={`journey-card journey-card-2${completedSections.has("brands") ? " completed" : ""}${focusArea === "brands" ? " selected" : ""}`}
                     onClick={() => {
-                      if (!completedSections.has("brands")) {
-                        // If chat is active, collapse it first
-                        if (focusChatActive) {
-                          setFocusChatActive(false);
-                          setFocusChatInput("");
-                        }
-                        // Track starting card for CYOA order
-                        if (!startingFocusArea) {
-                          setStartingFocusArea("brands");
-                        }
-                        setFocusArea("brands");
-                        transitionToStep("brands", "forward");
+                      // If chat is active, collapse it first
+                      if (focusChatActive) {
+                        setFocusChatActive(false);
+                        setFocusChatInput("");
                       }
+                      // Track starting card for CYOA order
+                      if (!startingFocusArea) {
+                        setStartingFocusArea("brands");
+                      }
+                      setFocusArea("brands");
+                      transitionToStep("brands", "forward");
                     }}
-                    disabled={completedSections.has("brands")}
                   >
                     <div className="journey-card-header">
                       <div className="journey-card-icon">
@@ -1941,21 +1915,18 @@ export function V2TalentCentric({
                   <button
                     className={`journey-card journey-card-3${completedSections.has("roles") ? " completed" : ""}${focusArea === "roles" ? " selected" : ""}`}
                     onClick={() => {
-                      if (!completedSections.has("roles")) {
-                        // If chat is active, collapse it first
-                        if (focusChatActive) {
-                          setFocusChatActive(false);
-                          setFocusChatInput("");
-                        }
-                        // Track starting card for CYOA order
-                        if (!startingFocusArea) {
-                          setStartingFocusArea("roles");
-                        }
-                        setFocusArea("roles");
-                        transitionToStep("experience", "forward");
+                      // If chat is active, collapse it first
+                      if (focusChatActive) {
+                        setFocusChatActive(false);
+                        setFocusChatInput("");
                       }
+                      // Track starting card for CYOA order
+                      if (!startingFocusArea) {
+                        setStartingFocusArea("roles");
+                      }
+                      setFocusArea("roles");
+                      transitionToStep("experience", "forward");
                     }}
-                    disabled={completedSections.has("roles")}
                   >
                     <div className="journey-card-header">
                       <div className="journey-card-icon">
@@ -2465,6 +2436,8 @@ export function V2TalentCentric({
               emptyMessage={
                 step === "location"
                   ? "No Reflexers in this market yet. Try selecting a different market."
+                  : step === "experience"
+                  ? "No matches yet. Try selecting a different experience level."
                   : undefined
               }
               isLoading={isLoadingWorkers}

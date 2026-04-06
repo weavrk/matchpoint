@@ -592,7 +592,8 @@ const WORKER_COLUMNS_CARD = `
   id, name, photo, gender, market, actively_looking, shift_verified, market_favorite,
   shifts_on_reflex, brands_worked, endorsement_counts, shift_experience, invited_back_stores,
   about_me, previous_experience, reflex_activity, retailer_quotes, retailer_summary,
-  current_tier, unique_store_count, tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent
+  current_tier, unique_store_count, tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent,
+  experience_level
 `.replace(/\s+/g, ' ').trim();
 
 const WORKER_COLUMNS_FULL = `
@@ -604,13 +605,13 @@ const WORKER_COLUMNS_FULL = `
 `.replace(/\s+/g, ' ').trim();
 
 const WORKER_COLUMNS_LIST = `
-  id, name, photo, gender, market, shift_verified, shifts_on_reflex, actively_looking, current_tier
+  id, name, photo, gender, market, shift_verified, shifts_on_reflex, actively_looking, current_tier, experience_level
 `.replace(/\s+/g, ' ').trim();
 
 // Connection list needs achievement data too (market_favorite, tardy/cancel percents, unique_store_count, reflex_activity)
 const WORKER_COLUMNS_CONNECTION = `
   id, name, photo, gender, market, shift_verified, shifts_on_reflex, actively_looking, current_tier,
-  market_favorite, tardy_percent, urgent_cancel_percent, unique_store_count, reflex_activity
+  market_favorite, tardy_percent, urgent_cancel_percent, unique_store_count, reflex_activity, experience_level
 `.replace(/\s+/g, ' ').trim();
 
 export interface WorkerRow {
@@ -651,6 +652,8 @@ export interface WorkerRow {
   photo: string | null;
   // Market favorite
   market_favorite: boolean;
+  // Experience level for filtering
+  experience_level: 'rising' | 'experienced' | 'seasoned' | 'proven_leader' | null;
 }
 
 export interface WorkerApplicationRow {
@@ -870,6 +873,8 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     uniqueStoreCount: row.unique_store_count,
     // Market favorite
     marketFavorite: row.market_favorite,
+    // Experience level for filtering
+    experienceLevel: row.experience_level,
   };
 }
 

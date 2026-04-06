@@ -45,6 +45,31 @@ Here's the breakdown if we want to choose other methods
 | **Cumulative (1-4)** | **378** | **22.2%** |
 
 
+---
+
+## Experience Level Filtering
+
+Workers are assigned exactly one experience level stored in the `experience_level` column. This is used for filtering in the V2 Talent Centric variant slider but is NOT displayed on worker cards.
+
+### Assignment Rules
+
+| Level | Description | Data Signal | Count |
+| ----- | ----------- | ----------- | ----- |
+| Rising talent | Some retail experience, building skills | Under 6 mos retail experience AND under 20 Flexes | 379 (37.9%) |
+| Experienced | Gaining momentum in retail | 6 mos – 2 yrs retail experience OR 20-49 Flexes | 262 (26.2%) |
+| Seasoned pro | Experienced retail professional | 2+ yrs retail experience OR 50+ Flexes | 304 (30.4%) |
+| Proven leader | Store manager, supervisor, key holder background | Management roles in history (manager/lead/supervisor/director) | 55 (5.5%) |
+
+**Priority:** proven_leader > seasoned > experienced > rising. Each worker goes in exactly one bucket.
+**Note:** Either retail duration OR Flex count can trigger promotion to a tier (whichever qualifies first).
+
+### Technical Implementation
+
+- **DB Column:** `workers.experience_level` (text: 'rising' | 'experienced' | 'seasoned' | 'proven_leader')
+- **Assignment Script:** `web/src/scripts/createExperienceLevel.ts`
+- **Filtering:** `V2TalentCentric/index.tsx` maps UI state to DB values in `filteredWorkers` useMemo
+- **Type:** `WorkerProfile.experienceLevel` (camelCase in frontend code)
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # Tech Stack
@@ -100,6 +125,7 @@ Located in `scripts/`. Run with `npx tsx scripts/<name>.ts`
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `clean-worker-data.ts`         | Removes "Unknown" companies from previous_experience, maps duration codes (SHORT/MEDIUM/LONG/EXTENDED) to readable text, fixes single-word names by extracting first names from retailer quotes, generates first names based on gender when not found. Optional: `--shifts=<csv>` to populate shift_experience from CSV |
 | `update-worker-photos-all.mjs` | Update worker photos from various sources                                                                                                                                                                                                                                                                               |
+| `addExperienceLevel.ts`        | Assigns experience_level to all workers based on retail duration OR flex count (see Experience Level Filtering section). Located in `web/src/scripts/`                                                                                                                                                                  |
 
 
 ### Environment Variables
@@ -435,5 +461,85 @@ Three variants with shared header component. All headers have avatar, name, and 
 | Layout   | flex row, vertically centered; Shift Verified badge pushed to right via `margin-left: auto`        |
 | Badges   | Shift Verified (green, right-aligned) - Actively Looking hidden on Teaser, visible on Compact/Full |
 | Props    | `showActivelyLooking` (default `true`) - pass `false` on WorkerCardTeaser                          |
+
+
+### Worker Connection Status Model
+
+The `worker_connections` table tracks retailer-worker relationships with these fields:
+
+**Database Fields:**
+1. `status` - Primary state: `liked` | `invited` | `accepted` | `not_interested` | `removed`
+2. `invited` (bool) - Invite sent to worker
+3. `connected` (bool) - Worker accepted, relationship active
+4. `chat_open` (bool) - Active chat thread exists
+5. `shift_booked` (bool) - Shift confirmed
+6. `shift_scheduled` (bool) - Shift on calendar
+7. `saved_for_later` (bool) - Bookmarked (clears when connected)
+
+**Status Flow:**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           RETAILER ACTIONS                                  │
+├─────────────┬─────────────┬─────────────┬─────────────┬─────────────────────┤
+│   Liked     │   Invited   │  Accepted   │Not Interested│    Removed         │
+│             │             │             │              │                    │
+└──────┬──────┴──────┬──────┴──────┬──────┴──────┬───────┴─────────┬──────────┘
+       │             │             │             │                 │
+       ▼             │             ▼             ▼                 ▼
+┌─────────────┐      │      ┌─────────────┐┌─────────────┐  ┌─────────────┐
+│ Saved for   │      │      │ Connection  ││No connection│  │ Chat closed │
+│ later       │      │      │             ││ (declined)  │  │             │
+│             │      │      │ connected   ││             │  │             │
+│saved_for_   │      │      │ = true      ││             │  │             │
+│later = true │      │      └──────┬──────┘└─────────────┘  └─────────────┘
+└─────────────┘      │             │
+                     │             ▼
+                     │      ┌─────────────┐
+                     │      │ Chat open   │
+                     │      │             │
+                     │      │ chat_open   │
+                     │      │ = true      │
+                     │      └──────┬──────┘
+                     │             │
+                     │             ▼
+                     │      ┌─────────────┐
+                     │      │ Shift       │
+                     │      │ scheduled   │
+                     │      │             │
+                     │      │shift_sched- │
+                     │      │uled = true  │
+                     └──────┴─────────────┘
+```
+
+**Status Triggers:**
+- `liked` → sets `saved_for_later = true`, `chat_open = false`
+- `invited` → `connected = false` until worker accepts, `chat_open = false`
+- `accepted` → sets `connected = true`, `chat_open = true`
+- `not_interested` → `connected = false`, `chat_open = false`
+- `removed` → `connected = false`, `chat_open = false`
+- When `connected = true`, `saved_for_later` automatically becomes `false`
+
+**Status Tags (tag-sm)**
+
+| Status           | Tag Style     | Icon           | Label            |
+| ---------------- | ------------- | -------------- | ---------------- |
+| Shift Scheduled  | `tag-green`   | `CalendarDays` | Shift Scheduled  |
+| Shift Booked     | `tag-green`   | `CalendarClock`| Shift Booked     |
+| Connected        | `tag-green`   | `Link`         | Connected        |
+| Invited          | `tag-blue`    | `UserPlus`     | Invited          |
+| Saved            | `tag-stroke`  | `Heart`        | Saved            |
+| Worker Declined  | `tag-gray`    | `XCircle`      | Worker Declined  |
+
+**Chat Button Rules**
+
+| Connection Status    | Chat Enabled | Icon                | Button Text    |
+| -------------------- | ------------ | ------------------- | -------------- |
+| Connected            | Yes          | `MessageSquare`     | Chat           |
+| Shift Scheduled      | Yes          | `MessageSquare`     | Chat           |
+| Shift Booked         | Yes          | `MessageSquare`     | Chat           |
+| Unread worker message| Yes          | `MessageSquareDot`  | Read Message   |
+| Saved                | No           | `MessageSquareOff`  | Chat           |
+| Worker Declined      | No           | (shows Undo button) | Undo           |
 
 
