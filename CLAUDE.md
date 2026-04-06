@@ -113,8 +113,7 @@ Workers are assigned exactly one experience level stored in the `experience_leve
 | `job_postings`        | V1 only          | Scraped job listings with salary, benefits                                  |
 | `jobs_published`      | V1 only          | Published job postings with status                                          |
 | `jobs_applications`   | unused (V1 ready)| Worker applications to jobs — functions exist in supabase.ts, not yet wired |
-| `workers`             | V1 + V2          | Filtered worker profiles for display (1,701 total; 1,116 with favorite ≥50%). Includes `experience_level` column |
-| `workers_full`        | scripts only     | Full worker dataset before filtering — used by data cleanup scripts         |
+| `workers`             | V1 + V2          | All worker profiles for display (1,701 workers). Includes `experience_level` column |
 | `worker_connections`  | V2 only          | Retailer–worker relationship tracking (status, invited, connected, chat, shifts) |
 
 

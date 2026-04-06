@@ -728,30 +728,27 @@ const MARKET_ALIASES: Record<string, string[]> = {
   'Knoxville': ['Pigeon Forge'],
   'Pigeon Forge': ['Knoxville'],
   'Austin': ['San Marcos'],
-  'Long Island West': ['New York City'],
   'Northern New Jersey': ['Newark'],
+  // NYC rollup — selecting NYC also returns LI East, LI West, NNJ workers
+  'New York City': ['Long Island East', 'Long Island West', 'Northern New Jersey', 'Newark'],
 };
 
 // Fetch workers by market (card display)
-// Uses fuzzy matching on first 2 words of market name:
-// - "New York" matches "New York City"
-// - "Long Island East" uses "Long Island" to match "Long Island" and "Long Island West"
-// Also includes workers from aliased markets (e.g., "DC" maps to "Washington")
+// Uses contains matching (%term%) on the full market name so multi-value fields work.
+// MARKET_ALIASES lets a single market name pull in workers from adjacent markets.
 export async function fetchWorkersByMarket(market: string): Promise<WorkerRow[]> {
-  // Use first 2 words as base market name for fuzzy matching
-  const baseMarket = market.split(' ').slice(0, 2).join(' ');
-
-  // Build array of market patterns to match
-  const marketPatterns = [baseMarket];
+  // Use full market name for contains matching — no truncation to avoid collisions
+  // (e.g. "Long Island East" must not collapse to "Long Island" and match LI West too)
+  const marketPatterns = [market];
 
   // Add any aliases for this market
-  const aliases = MARKET_ALIASES[market] || MARKET_ALIASES[baseMarket];
+  const aliases = MARKET_ALIASES[market];
   if (aliases) {
     marketPatterns.push(...aliases);
   }
 
-  // Build OR query for all patterns
-  const orFilters = marketPatterns.map(p => `market.ilike.${p}%`).join(',');
+  // Build OR query for all patterns — contains search so multi-value fields match
+  const orFilters = marketPatterns.map(p => `market.ilike.%${p}%`).join(',');
 
   const { data, error } = await supabase
     .from('workers')

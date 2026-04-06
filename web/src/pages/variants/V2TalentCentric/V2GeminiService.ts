@@ -17,10 +17,16 @@
  */
 
 import { GoogleGenerativeAI, ChatSession } from '@google/generative-ai';
+import type { FocusRoute } from '../../../types';
 
 export interface V2ChatMessage {
   role: 'user' | 'assistant';
   content: string;
+}
+
+export interface FocusChatResponse {
+  message: string;
+  suggestedRoute: FocusRoute | null;
 }
 
 export interface V2ChatContext {
@@ -63,6 +69,7 @@ Help the user identify their role by asking: "How many locations are you oversee
 
 ## Rules
 - Don't use emojis unless the user does first
+- Never use em-dashes (—). Use a comma or rewrite the sentence instead.
 - Always guide the user to select a persona card
 - Do NOT make up interpretations for unclear input`;
 
@@ -101,11 +108,56 @@ const V2_FOCUS_SYSTEM_PROMPT = `You are a helpful assistant for Reflex, a retail
 
 ## Rules
 - Don't use emojis unless the user does first
+- Never use em-dashes (—). Use a comma or rewrite the sentence instead.
 - Always suggest a clear next step
 - Keep the focus on narrowing down their talent search
 - Reference the three cards they see: Type of employment, Brand affinity, Experience level
 - If the user's input is unclear, too short, or doesn't make sense, respond with: "Sorry, I didn't catch that. To continue, select one of the three cards above - **Type of employment**, **Brand affinity**, or **Experience level** - or tell me more about what you're looking for."
-- Do NOT make up interpretations for unclear input - ask for clarification instead`;
+- Do NOT make up interpretations for unclear input - ask for clarification instead
+
+## Help and Summary Requests
+If the user asks where to start, asks for help, or asks for a summary of the options, give a concise one-line description of each of the three filters, then route them to Employment Type as the default starting point. Important nuances:
+- Type of employment is about the KIND of role being filled (full-time, part-time, flex), NOT a worker filter
+- Brand affinity is where retailers pick brands whose talent they trust, essentially targeted poaching from respected retailers
+- Experience level filters by career stage: rising talent, experienced, seasoned pro, or proven leader
+
+Example response: "Here's a quick rundown: **Type of employment** tells us what kind of role you're filling, full-time, part-time, or flex shifts. **Brand affinity** is where you pick the brands whose talent you trust. **Experience level** filters by career stage, from rising talent to management-ready. Start with employment type to set the context."
+
+## Job Role and Salary Questions
+If the user mentions a specific role they're hiring for (Sales Associate, Store Manager, Team Member, Keyholder, etc.), acknowledge it and route them to Experience Level. Example: "Good call. For a [role], experience level is the strongest filter we have. When you connect with a worker you can discuss the specific title, responsibilities, and comp."
+
+If the user asks about salary, pay, or hourly rate, answer using the market data below, then route to Experience Level. Keep it factual and helpful.
+
+## Salary Reference Data (from Reflex job postings)
+Sales Associate:
+- Austin: $13-20/hr (avg ~$15-16/hr)
+- New York: $17-24/hr
+- Atlanta: $12-20/hr
+- National range: $13-24/hr depending on market and brand tier
+
+Team Member:
+- Austin: ~$18/hr
+- New York: ~$24/hr
+- National range: $15-24/hr
+
+Store Manager:
+- Austin: $23/hr or $55-75k/year
+- National range: $50-80k/year ($24-38/hr equivalent)
+
+Assistant Store Manager:
+- Austin: $22-31/hr
+- National range: $19-30/hr
+
+Keyholder / Lead:
+- Atlanta: $19-21/hr
+- National range: $16-22/hr
+
+After answering a salary question, always add: "Once you connect with a worker through Reflex, you can discuss exact comp, role specifics, and benefits directly."
+
+## Output Format
+IMPORTANT: Always respond with a valid JSON object and nothing else:
+{"message": "your response text here", "route": null}
+Set "route" to one of: "employment", "brands", "experience" when you can clearly identify which preference area matches the user's input. Set to null if the input is unclear, off-topic, or matches multiple areas equally.`;
 
 export type V2ChatMode = 'persona' | 'focus';
 
@@ -196,7 +248,7 @@ export class V2GeminiService {
     return `First, let me know how many locations you're overseeing.`;
   }
 
-  async sendMessage(message: string): Promise<string> {
+  async sendMessage(message: string): Promise<FocusChatResponse> {
     // Use mock responses when no API key (no chat session)
     if (!this.chat) {
       console.log('[V2GeminiService] No chat session, using mock response');
@@ -208,131 +260,173 @@ export class V2GeminiService {
       const response = await this.chat.sendMessage(message);
       const text = response.response.text();
       console.log('[V2GeminiService] Gemini response:', text.substring(0, 100) + '...');
-      return text;
+
+      // Focus mode returns JSON with { message, route }
+      if (this.mode === 'focus') {
+        try {
+          const cleaned = text.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+          const parsed = JSON.parse(cleaned);
+          return {
+            message: parsed.message || text,
+            suggestedRoute: (['employment', 'brands', 'experience'].includes(parsed.route) ? parsed.route : null) as FocusRoute | null,
+          };
+        } catch {
+          return { message: text, suggestedRoute: null };
+        }
+      }
+
+      return { message: text, suggestedRoute: null };
     } catch (error) {
       console.error('[V2GeminiService] Gemini API error:', error);
       return this.mode === 'focus' ? this.getMockFocusResponse(message) : this.getMockResponse(message);
     }
   }
 
-  // Focus mode mock responses - answer questions + guide to the three cards
-  private getMockFocusResponse(message: string): string {
+  // Focus mode mock responses - return message + suggestedRoute when input maps to a clear area
+  private getMockFocusResponse(message: string): FocusChatResponse {
     const lower = message.toLowerCase().trim();
     const isQuestion = lower.includes('?') || lower.startsWith('what') || lower.startsWith('how') || lower.startsWith('can') || lower.startsWith('do') || lower.startsWith('is') || lower.startsWith('are') || lower.startsWith('which');
 
-    // Too short or unclear input
+    const r = (msg: string, route: FocusRoute | null = null): FocusChatResponse => ({ message: msg, suggestedRoute: route });
+
+    // Too short or unclear
     if (lower.length < 3) {
-      return `Sorry, I didn't catch that. To continue, select one of the three cards above - **Type of employment**, **Brand affinity**, or **Experience level**.`;
+      return r(`Sorry, I didn't catch that. To continue, select one of the three cards above - **Type of employment**, **Brand affinity**, or **Experience level**.`);
     }
 
-    // Questions about the platform/process
+    // Help / summary requests — explain all three filters, default to employment
+    const isHelpRequest = lower.includes('help') || lower.includes('where do i start') || lower.includes('where should i start') || lower.includes('where to start') || lower.includes('summary') || lower.includes('summarize') || lower.includes('explain') || lower.includes('what are my options') || lower.includes('what are the options') || lower.includes('what does each') || lower.includes('walk me through') || lower.includes('not sure where') || lower.includes("don't know where") || lower.includes('overview') || lower.includes('which one') || lower.includes('what order');
+    if (isHelpRequest) {
+      return r(`Here's a quick rundown: **Type of employment** tells us what kind of role you're filling, full-time, part-time, or flex shifts. **Brand affinity** is where you pick the brands whose talent you trust. **Experience level** filters by career stage, from rising talent to management-ready. Start with employment type to set the context.`, 'employment');
+    }
+
+    // Platform questions — no route
     if (isQuestion && (lower.includes('shift verified') || lower.includes('reflexer'))) {
-      return `Shift Verified Reflexers are workers who've completed shifts on our platform with verified performance data - ratings, punctuality, and retailer feedback. To find them, use the cards above to filter by what matters most to you.`;
+      return r(`Shift Verified Reflexers are workers who've completed shifts on our platform with verified performance data - ratings, punctuality, and retailer feedback. To find them, use the cards above to filter by what matters most to you.`);
     }
-
     if (isQuestion && (lower.includes('how does') || lower.includes('how do i') || lower.includes('how can'))) {
-      return `You can narrow your search using the three cards above. **Type of employment** filters by commitment level, **Brand affinity** finds workers from similar retailers, and **Experience level** shows proven track records. Which would you like to start with?`;
+      return r(`You can narrow your search using the three cards above. **Type of employment** filters by commitment level, **Brand affinity** finds workers from similar retailers, and **Experience level** shows proven track records. Which would you like to start with?`);
     }
-
     if (isQuestion && (lower.includes('what can') || lower.includes('what do') || lower.includes('what else') || lower.includes('give me') || lower.includes('show me'))) {
-      return `I can help you find the right talent. The three cards above let you filter by: **Type of employment** (full-time, part-time, flex), **Brand affinity** (workers from similar brands), or **Experience level** (new to seasoned). Select one to refine your matches.`;
+      return r(`I can help you find the right talent. The three cards above let you filter by: **Type of employment** (full-time, part-time, flex), **Brand affinity** (workers from similar brands), or **Experience level** (new to seasoned). Select one to refine your matches.`);
     }
-
     if (isQuestion && (lower.includes('difference') || lower.includes('between'))) {
-      return `Good question! **Type of employment** is about hours and commitment. **Brand affinity** matches workers who've succeeded at brands like yours. **Experience level** filters by proven track record on our platform. Each gives you a different lens on the talent pool.`;
+      return r(`Good question! **Type of employment** is about hours and commitment. **Brand affinity** matches workers who've succeeded at brands like yours. **Experience level** filters by proven track record on our platform. Each gives you a different lens on the talent pool.`);
     }
 
-    // Availability/hours mentions → Employment Type
+    // Employment Type signals
     if (lower.includes('weekend') || lower.includes('part-time') || lower.includes('part time') || lower.includes('hours') || lower.includes('availability')) {
-      return `Got it, I've noted your scheduling needs. To filter by availability, select **Type of employment** above - you can choose full-time, part-time, or flex workers.`;
+      return r(`Got it - sounds like scheduling flexibility matters. I'd start with **Type of employment** to filter by full-time, part-time, or flex.`, 'employment');
     }
-
     if (lower.includes('full-time') || lower.includes('full time') || lower.includes('permanent')) {
-      return `Noted - you're looking for a permanent hire. Select **Type of employment** above and choose Full-time to see Reflexers seeking long-term positions.`;
+      return r(`Noted - you're looking for a permanent hire. **Type of employment** is the right place to start.`, 'employment');
     }
-
     if (lower.includes('flex') || lower.includes('shift') || lower.includes('temporary') || lower.includes('cover')) {
-      return `Got it - you need flexible coverage. Select **Type of employment** above and choose Flex to find workers ready for shifts. You can try them out before committing.`;
+      return r(`Got it - you need flexible coverage. Start with **Type of employment** to find workers ready for shifts.`, 'employment');
     }
 
-    // Brand/culture mentions → Brand Affinity
+    // Brand Affinity signals
     if (lower.includes('brand') || lower.includes('culture') || lower.includes('fit') || lower.includes('similar') || lower.includes('luxury') || lower.includes('contemporary') || lower.includes('athletic')) {
-      return `I've noted that culture fit matters to you. Select **Brand affinity** above to filter by workers who've succeeded at brands similar to yours.`;
+      return r(`I've noted that culture fit matters to you. **Brand affinity** lets you filter by workers who've succeeded at brands similar to yours.`, 'brands');
     }
-
     if (lower.includes('trust') || lower.includes('quality') || lower.includes('trained')) {
-      return `Got it - you want someone who already knows the ropes. Select **Brand affinity** above to find workers with experience at similar retailers.`;
+      return r(`Got it - you want someone who already knows the ropes. **Brand affinity** is a great starting point.`, 'brands');
     }
 
-    // Skills/reliability mentions → Experience Level
+    // Salary / pay / rate questions — give market data, route to experience
+    if (lower.includes('salary') || lower.includes('hourly') || lower.includes('wage') || lower.includes('/hr') || lower.includes('per hour') || lower.includes('pay rate') || lower.includes('compensation') || lower.includes('how much') || lower.includes('enough') || lower.includes('competitive')) {
+      const mentionsSM = lower.includes('store manager') || lower.includes('sm ') || lower.includes(' sm');
+      const mentionsASM = lower.includes('assistant manager') || lower.includes('asm');
+      const mentionsKH = lower.includes('keyholder') || lower.includes('key holder') || lower.includes('lead');
+      const mentionsTM = lower.includes('team member');
+      if (mentionsSM) {
+        return r(`Store Manager roles typically run $55-75k/year ($23-36/hr) nationally, with Austin listings showing $23/hr on the low end and $67k/year for more senior roles. That's a solid range for experienced talent. Once you connect with a worker through Reflex, you can discuss exact comp directly.`, 'experience');
+      }
+      if (mentionsASM) {
+        return r(`Assistant Store Manager roles nationally run $19-30/hr. In Austin we're seeing $22-31/hr in current postings, which is competitive. Once you connect with a worker through Reflex, you can discuss comp and benefits directly.`, 'experience');
+      }
+      if (mentionsKH) {
+        return r(`Keyholder and Lead Associate roles typically run $16-22/hr nationally. That's a fair range for someone with retail floor experience and key responsibilities. Once you connect through Reflex, you can align on exact compensation.`, 'experience');
+      }
+      if (mentionsTM) {
+        return r(`Team Member roles are running ~$18/hr in Austin and up to $24/hr in higher cost-of-living markets like New York. Nationally the range is $15-24/hr. Once you connect with a worker through Reflex, you can get into the specifics.`, 'experience');
+      }
+      // Generic salary question — no role specified, give top-role overview
+      return r(`Here's what current market data shows for Austin retail:\n\n- **Sales Associate**: $14-17/hr\n- **Team Member**: ~$18/hr\n- **Assistant Manager**: $22-31/hr\n- **Store Manager**: $23/hr or $55-75k/year\n\nNew York runs higher across the board ($17-24/hr for floor roles), Atlanta a bit lower. Once you connect with a worker through Reflex, you can talk exact comp and benefits directly. To find the right candidates, I'd start with experience level.`, 'experience');
+    }
+
+    // Specific job role mentions — route to experience
+    if (lower.includes('store manager') || lower.includes('general manager') || lower.includes('gm ') || lower.includes(' gm')) {
+      return r(`Good call. For a Store Manager, experience level is the strongest filter we have. You'll find workers with management backgrounds in the Proven Leader tier. When you connect, you can work out the specific title, comp, and responsibilities.`, 'experience');
+    }
+    if (lower.includes('assistant manager') || lower.includes('asm') || lower.includes('asst manager')) {
+      return r(`For an Assistant Manager role, I'd start with experience level. Workers in the Seasoned Pro or Proven Leader tiers have the retail depth you're looking for. You can talk specifics with them once you connect.`, 'experience');
+    }
+    if (lower.includes('keyholder') || lower.includes('key holder') || lower.includes('key-holder')) {
+      return r(`For a Keyholder, I'd start with experience level. You want someone with solid retail floor time and a proven track record. The Seasoned Pro tier is a great place to start.`, 'experience');
+    }
+    if (lower.includes('sales associate') || lower.includes('floor associate') || lower.includes('retail associate')) {
+      return r(`For a Sales Associate, experience level gives you the most flexibility. You can go Experienced or Seasoned Pro for someone who needs minimal ramp time, or Rising Talent if you're willing to develop them.`, 'experience');
+    }
+    if (lower.includes('team member') || lower.includes('floor staff') || lower.includes('floor team')) {
+      return r(`For a Team Member role, I'd start with experience level. Depending on what you need, Rising Talent through Seasoned Pro all have strong candidates. We'll narrow it from there.`, 'experience');
+    }
+    if (lower.includes('job role') || lower.includes('role first') || lower.includes('start with role') || lower.includes('by role') || lower.includes('specific role')) {
+      return r(`That makes sense. Role usually maps closely to experience level, so that's where I'd start. It'll surface workers with the right background, and when you connect you can get into the specifics of title and responsibilities.`, 'experience');
+    }
+
+    // Experience Level signals
     if (lower.includes('reliable') || lower.includes('dependable') || lower.includes('punctual') || lower.includes('show up')) {
-      return `Reliability noted as a priority. Select **Experience level** above - Seasoned sales pros have 30+ shifts and proven track records.`;
+      return r(`Reliability is a top priority - I'd start with **Experience level**. Seasoned pros have 30+ shifts and proven track records.`, 'experience');
     }
-
     if (lower.includes('experience') || lower.includes('skilled') || lower.includes('seasoned') || lower.includes('veteran')) {
-      return `Got it - experience matters. Select **Experience level** above to filter by Seasoned sales pros or Management ready tiers.`;
+      return r(`Got it - experience matters. Start with **Experience level** to filter by seasoned pros or management-ready workers.`, 'experience');
     }
-
     if (lower.includes('train') || lower.includes('new') || lower.includes('fresh') || lower.includes('entry')) {
-      return `Noted - you're open to developing new talent. Select **Experience level** above and check out the New to Reflex tier.`;
+      return r(`Noted - you're open to developing new talent. Check out the rising talent tier in **Experience level**.`, 'experience');
     }
-
     if (lower.includes('leader') || lower.includes('management') || lower.includes('supervisor') || lower.includes('manager')) {
-      return `Got it - you're looking for leadership potential. Select **Experience level** above and choose the Management ready tier.`;
+      return r(`Got it - you're looking for leadership potential. Start with **Experience level** and choose the management-ready tier.`, 'experience');
     }
 
-    // Generic/unclear → Acknowledge + guide to cards
+    // Generic — acknowledge, no route
     if (lower.includes('best') || lower.includes('good') || lower.includes('recommend') || lower.includes('more')) {
-      return `I've got your requirements noted. To refine your search, select one of the three cards above: **Type of employment** for scheduling, **Brand affinity** for culture fit, or **Experience level** for proven reliability.`;
+      return r(`I've got your requirements noted. To refine your search, select one of the three cards above: **Type of employment** for scheduling, **Brand affinity** for culture fit, or **Experience level** for proven reliability.`);
     }
-
-    // Catch-all for questions
     if (isQuestion) {
-      return `Great question! The best way to find what you're looking for is to use the cards above. **Type of employment** for hours/commitment, **Brand affinity** for culture fit, or **Experience level** for track record. Which matters most to you?`;
+      return r(`Great question! The best way to find what you're looking for is to use the cards above. **Type of employment** for hours/commitment, **Brand affinity** for culture fit, or **Experience level** for track record. Which matters most to you?`);
     }
 
-    // Default - acknowledge + guide to the three cards
-    return `Got it, I've noted that. To continue, select one of the three cards above to refine your search - **Type of employment**, **Brand affinity**, or **Experience level**.`;
+    return r(`Got it, I've noted that. To continue, select one of the three cards above to refine your search - **Type of employment**, **Brand affinity**, or **Experience level**.`);
   }
 
-  // Persona mode mock responses - guide users to select their role/location scope
-  private getMockResponse(message: string): string {
+  // Persona mode mock responses — always no route (persona step doesn't suggest focus areas)
+  private getMockResponse(message: string): FocusChatResponse {
     const lower = message.toLowerCase().trim();
+    const r = (msg: string): FocusChatResponse => ({ message: msg, suggestedRoute: null });
 
-    // Too short or unclear input
     if (lower.length < 3) {
-      return `Sorry, I didn't catch that. First, let me know how many locations you're overseeing - one store, multiple locations, a district/region, or hiring nationally?`;
+      return r(`Sorry, I didn't catch that. First, let me know how many locations you're overseeing - one store, multiple locations, a district/region, or hiring nationally?`);
     }
-
-    // Persona-related - acknowledge and confirm
     if (lower.includes('single') || lower.includes('one store') || lower.includes('one location') || lower.includes('1 store') || lower.includes('1 location')) {
-      return `Got it - you're managing a single store. Select **Single-Store Manager** above to continue.`;
+      return r(`Got it - you're managing a single store. Select **Single-Store Manager** above to continue.`);
     }
-
     if (lower.includes('multi') || lower.includes('multiple') || lower.includes('few') || lower.includes('several') || lower.includes('2') || lower.includes('3')) {
-      return `Got it - you're managing multiple locations. Select **Multi-Store Manager** above to continue.`;
+      return r(`Got it - you're managing multiple locations. Select **Multi-Store Manager** above to continue.`);
     }
-
     if (lower.includes('regional') || lower.includes('district') || lower.includes('field') || lower.includes('area') || lower.includes('territory')) {
-      return `Got it - you're overseeing a district or region. Select **Regional/District Manager** above to continue.`;
+      return r(`Got it - you're overseeing a district or region. Select **Regional/District Manager** above to continue.`);
     }
-
     if (lower.includes('recruit') || lower.includes('hr') || lower.includes('hiring') || lower.includes('national') || lower.includes('company') || lower.includes('brand')) {
-      return `Got it - you're handling recruiting across the brand. Select **HR/Recruiter** above to continue.`;
+      return r(`Got it - you're handling recruiting across the brand. Select **HR/Recruiter** above to continue.`);
     }
-
-    // If they mention something else, acknowledge but redirect to the persona question
     if (lower.includes('help') || lower.includes('looking') || lower.includes('need') || lower.includes('want')) {
-      return `I can help with that! But first, let me know how many locations you're overseeing - select one of the options above.`;
+      return r(`I can help with that! But first, let me know how many locations you're overseeing - select one of the options above.`);
     }
-
-    // Questions
     if (lower.includes('?') || lower.startsWith('what') || lower.startsWith('how') || lower.startsWith('can') || lower.startsWith('why')) {
-      return `Good question! I'll be able to help more once I know your role. Are you managing one store, multiple locations, a district/region, or recruiting nationally? Select an option above.`;
+      return r(`Good question! I'll be able to help more once I know your role. Are you managing one store, multiple locations, a district/region, or recruiting nationally? Select an option above.`);
     }
-
-    // Default response - acknowledge but redirect to persona selection
-    return `Got it, I've noted that. To get started, let me know how many locations you're overseeing - select one of the options above.`;
+    return r(`Got it, I've noted that. To get started, let me know how many locations you're overseeing - select one of the options above.`);
   }
 
   // Update context (e.g., when persona is selected)

@@ -1,13 +1,19 @@
+/* Fills .nav-area (100vh); scroll when items + reviews + footer exceed viewport */
 .side-nav {
   position: relative;
   box-sizing: border-box;
   width: fit-content;
   max-width: 100%;
   flex: 1 1 auto;
+  min-height: 0;
   padding: 24px 24px 32px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   background: url('/images/nav-background.svg') no-repeat center center;
   background-size: cover;
 }

@@ -53,44 +53,21 @@ async function fetchFavoriteWorkers() {
   const allWorkers = [];
   let offset = 0;
 
-  // Fetch from workers_full (backup with original URLs)
   while (true) {
     const { data, error } = await supabase
-      .from('workers_full')
+      .from('workers')
       .select('id, photo, gender, store_favorite_count, unique_store_count')
       .range(offset, offset + 999);
 
     if (error) {
-      console.error('Error fetching workers_full:', error);
-      console.log('Trying workers table instead...');
-      break;
+      console.error('Error fetching workers:', error);
+      process.exit(1);
     }
 
     if (!data || data.length === 0) break;
     allWorkers.push(...data);
     offset += 1000;
     if (data.length < 1000) break;
-  }
-
-  // Fallback to workers if workers_full is empty
-  if (allWorkers.length === 0) {
-    offset = 0;
-    while (true) {
-      const { data, error } = await supabase
-        .from('workers')
-        .select('id, photo, gender, store_favorite_count, unique_store_count')
-        .range(offset, offset + 999);
-
-      if (error) {
-        console.error('Error fetching workers:', error);
-        process.exit(1);
-      }
-
-      if (!data || data.length === 0) break;
-      allWorkers.push(...data);
-      offset += 1000;
-      if (data.length < 1000) break;
-    }
   }
 
   // Filter to favorites >= 50%
@@ -128,7 +105,7 @@ async function main() {
   await mkdir(femaleDir, { recursive: true });
   console.log('Created fresh male/ and female/ directories');
 
-  console.log('\nFetching favorite workers from workers_full (>=50%)...');
+  console.log('\nFetching favorite workers from workers (>=50%)...');
   const workers = await fetchFavoriteWorkers();
 
   const males = workers.filter(w => w.gender === 'male');

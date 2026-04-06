@@ -53,7 +53,7 @@ import { WorkerCardFull } from "../../../components/Workers/WorkerCardFull";
 import { WorkerCardCompact } from "../../../components/Workers/WorkerCardCompact";
 import { WorkerAchievementChips } from "../../../components/Workers/WorkerAchievementChips";
 import type { EmploymentType, AvailabilityHours } from "./V2EmploymentSelector";
-import type { MatchedWorker, ChatMessage, WorkerProfile } from "../../../types";
+import type { MatchedWorker, ChatMessage, WorkerProfile, FocusRoute } from "../../../types";
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
 import { fetchWorkersByMarketAsProfiles, fetchRetailers, fetchWorkerConnections, fetchWorkerById } from "../../../services/supabase";
 import type { WorkerConnectionWithWorker, WorkerRow } from "../../../services/supabase";
@@ -339,56 +339,28 @@ const MARKETS = [
   // AZ
   { id: "phoenix-az", name: "Phoenix", state: "AZ" },
   // CA
-  { id: "bakersfield-ca", name: "Bakersfield", state: "CA" },
   { id: "cabazon-ca", name: "Cabazon", state: "CA" },
-  { id: "fresno-ca", name: "Fresno", state: "CA" },
   { id: "los-angeles-ca", name: "Los Angeles", state: "CA" },
-  { id: "sacramento-ca", name: "Sacramento", state: "CA" },
   { id: "san-diego-ca", name: "San Diego", state: "CA" },
   { id: "san-francisco-ca", name: "San Francisco", state: "CA" },
   { id: "san-jose-ca", name: "San Jose", state: "CA" },
   // CO
-  { id: "boulder-co", name: "Boulder", state: "CO" },
   { id: "denver-co", name: "Denver", state: "CO" },
   // CT
   { id: "westport-ct", name: "Westport", state: "CT" },
   // D.C.
   { id: "washington-dc", name: "Washington", state: "D.C." },
-  // DE
-  { id: "wilmington-de", name: "Wilmington", state: "DE" },
   // FL
-  { id: "fort-myers-fl", name: "Fort Myers", state: "FL" },
-  { id: "fort-walton-beach-fl", name: "Fort Walton Beach", state: "FL" },
   { id: "miami-fl", name: "Miami", state: "FL" },
   { id: "orlando-fl", name: "Orlando", state: "FL" },
-  { id: "tampa-fl", name: "Tampa", state: "FL" },
   // GA
   { id: "atlanta-ga", name: "Atlanta", state: "GA" },
-  { id: "savannah-ga", name: "Savannah", state: "GA" },
   // IL
   { id: "chicago-il", name: "Chicago", state: "IL" },
-  // IN
-  { id: "indianapolis-in", name: "Indianapolis", state: "IN" },
-  // LA
-  { id: "baton-rouge-la", name: "Baton Rouge", state: "LA" },
-  { id: "new-orleans-la", name: "New Orleans", state: "LA" },
   // MA
   { id: "boston-ma", name: "Boston", state: "MA" },
-  // MI
-  { id: "detroit-mi", name: "Detroit", state: "MI" },
-  // MN
-  { id: "minneapolis-mn", name: "Minneapolis", state: "MN" },
-  // MO
-  { id: "st-louis-mo", name: "St. Louis", state: "MO" },
-  // MS
-  { id: "biloxi-ms", name: "Biloxi", state: "MS" },
   // NC
   { id: "charlotte-nc", name: "Charlotte", state: "NC" },
-  { id: "raleigh-durham-nc", name: "Raleigh-Durham", state: "NC" },
-  // NE
-  { id: "omaha-ne", name: "Omaha", state: "NE" },
-  // NH
-  { id: "merrimack-nh", name: "Merrimack", state: "NH" },
   // NJ
   { id: "central-new-jersey-nj", name: "Central New Jersey", state: "NJ" },
   { id: "northern-new-jersey-nj", name: "Northern New Jersey", state: "NJ" },
@@ -400,33 +372,17 @@ const MARKETS = [
   { id: "new-york-ny", name: "New York City", state: "NY" },
   { id: "westchester-ny", name: "Westchester", state: "NY" },
   { id: "woodbury-ny", name: "Woodbury", state: "NY" },
-  // OH
-  { id: "cincinnati-oh", name: "Cincinnati", state: "OH" },
-  { id: "columbus-oh", name: "Columbus", state: "OH" },
-  // OK
-  { id: "tulsa-ok", name: "Tulsa", state: "OK" },
-  // OR
-  { id: "portland-or", name: "Portland", state: "OR" },
   // PA
   { id: "king-of-prussia-pa", name: "King of Prussia", state: "PA" },
   // SC
   { id: "charleston-sc", name: "Charleston", state: "SC" },
   // TN
-  { id: "knoxville-tn", name: "Knoxville", state: "TN" },
-  { id: "memphis-tn", name: "Memphis", state: "TN" },
   { id: "nashville-tn", name: "Nashville", state: "TN" },
-  { id: "pigeon-forge-tn", name: "Pigeon Forge", state: "TN" },
   // TX
   { id: "austin-tx", name: "Austin", state: "TX" },
   { id: "dallas-tx", name: "Dallas", state: "TX" },
   { id: "houston-tx", name: "Houston", state: "TX" },
   { id: "san-antonio-tx", name: "San Antonio", state: "TX" },
-  // UT
-  { id: "salt-lake-city-ut", name: "Salt Lake City", state: "UT" },
-  // WA
-  { id: "seattle-wa", name: "Seattle", state: "WA" },
-  // WI
-  { id: "milwaukee-wi", name: "Milwaukee", state: "WI" },
 ];
 
 // Job roles by category
@@ -606,6 +562,7 @@ export function V2TalentCentric({
   const [isLoading, setIsLoading] = useState(false);
   const chatServiceRef = useRef<V2GeminiService | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const focusChatMessagesRef = useRef<HTMLDivElement>(null);
   const chatInlineRef = useRef<HTMLDivElement>(null);
   const stepContentScrollRef = useRef<HTMLDivElement>(null);
 
@@ -656,7 +613,9 @@ export function V2TalentCentric({
 
   // Location chat state for multi-store "different market" input
   const [locationChatInput, setLocationChatInput] = useState("");
-  const [locationChatResponse, setLocationChatResponse] = useState<{ matched: boolean; marketName?: string; marketId?: string } | null>(null);
+  const [locationChatMessages, setLocationChatMessages] = useState<ChatMessage[]>([]);
+  /** Brief "selected" flash on location DSL chip before navigation */
+  const [locationMarketChipSelectingId, setLocationMarketChipSelectingId] = useState<string | null>(null);
 
   // Search matching brands - only match from start of name
   const searchResults = useMemo(() => {
@@ -738,12 +697,12 @@ export function V2TalentCentric({
         service = await initChatService();
       }
 
-      const responseText = await service.sendMessage(message);
+      const result = await service.sendMessage(message);
 
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: responseText,
+        content: result.message,
         timestamp: new Date(),
       };
       setChatMessages((prev) => [...prev, assistantMessage]);
@@ -794,12 +753,13 @@ export function V2TalentCentric({
         focusChatServiceRef.current = service;
       }
 
-      const responseText = await service.sendMessage(message);
+      const result = await service.sendMessage(message);
 
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: responseText,
+        content: result.message,
+        suggestedRoute: result.suggestedRoute ?? undefined,
         timestamp: new Date(),
       };
       setFocusChatMessages((prev) => [...prev, assistantMessage]);
@@ -817,35 +777,77 @@ export function V2TalentCentric({
     }
   }, [userName, selectedLocation, persona]);
 
-  // Handle location chat input - try to match user input to a market
+  // Handle location chat input - try to match user input to a market (same logic as before; UI is chat bubbles)
   const handleLocationChatSubmit = useCallback((input: string) => {
-    if (!input.trim()) return;
+    const trimmed = input.trim();
+    if (!trimmed) return;
 
-    const searchTerm = input.toLowerCase().trim();
+    const now = Date.now();
+    const userMessage: ChatMessage = {
+      id: `loc-user-${now}`,
+      role: "user",
+      content: trimmed,
+      timestamp: new Date(),
+    };
+    setLocationChatMessages((prev) => [...prev, userMessage]);
 
-    // Try to find a matching market
-    const matchedMarket = MARKETS.find(market => {
+    const searchTerm = trimmed.toLowerCase();
+
+    const matchedMarket = MARKETS.find((market) => {
       const nameMatch = market.name.toLowerCase().includes(searchTerm);
       const stateMatch = market.state.toLowerCase().includes(searchTerm);
-      // Also try matching common variations
       const cityStateMatch = `${market.name}, ${market.state}`.toLowerCase().includes(searchTerm);
       const fullMatch = `${market.name} ${market.state}`.toLowerCase().includes(searchTerm);
       return nameMatch || stateMatch || cityStateMatch || fullMatch;
     });
 
-    if (matchedMarket) {
-      setLocationChatResponse({
-        matched: true,
-        marketName: `${matchedMarket.name}, ${matchedMarket.state}`,
-        marketId: matchedMarket.id
-      });
-    } else {
-      setLocationChatResponse({
-        matched: false
-      });
-    }
+    const assistantMessage: ChatMessage = matchedMarket
+      ? {
+          id: `loc-asst-${now + 1}`,
+          role: "assistant",
+          content: `Found it! **${matchedMarket.name}, ${matchedMarket.state}** is available.`,
+          timestamp: new Date(),
+          locationCta: {
+            variant: "select_market",
+            marketId: matchedMarket.id,
+            marketLabel: `${matchedMarket.name}, ${matchedMarket.state}`,
+          },
+        }
+      : {
+          id: `loc-asst-${now + 1}`,
+          role: "assistant",
+          content:
+            "I couldn't identify that location or market. Let's select from our available markets.",
+          timestamp: new Date(),
+          locationCta: {
+            variant: "browse_markets",
+            marketLabel: "Go to market selection",
+          },
+        };
+
+    setLocationChatMessages((prev) => [...prev, assistantMessage]);
     setLocationChatInput("");
   }, []);
+
+  useEffect(() => {
+    if (step !== "location" || persona !== "multi-store") {
+      setLocationChatMessages([]);
+      setLocationChatInput("");
+      setLocationMarketChipSelectingId(null);
+    }
+  }, [step, persona]);
+
+  // Auto-scroll focus chat messages to bottom when new messages arrive
+  useEffect(() => {
+    if (focusChatMessages.length > 0 || isFocusChatLoading) {
+      if (focusChatMessagesRef.current) {
+        focusChatMessagesRef.current.scrollTo({
+          top: focusChatMessagesRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [focusChatMessages, isFocusChatLoading]);
 
   // Scroll chat to bottom when messages change or loading state changes
   useEffect(() => {
@@ -972,6 +974,31 @@ export function V2TalentCentric({
     if (prevSection === "roles") return "experience";
     if (prevSection === "brands") return "brands";
     return "employment";
+  };
+
+  // Focus route suggestion labels (for chat chip)
+  const FOCUS_ROUTE_LABELS: Record<FocusRoute, string> = {
+    employment: 'Type of employment',
+    brands: 'Brand affinity',
+    experience: 'Experience level',
+  };
+
+  const FOCUS_ROUTE_HELPER: Record<FocusRoute, string> = {
+    employment: "That tracks. I'd start by narrowing down the type of role you're hiring for.",
+    brands: "Good instinct. Filtering by brand experience tends to surface the strongest fits.",
+    experience: "Makes sense. Experience level is one of the clearest signals we have.",
+  };
+
+  // Navigate to a focus area from the suggestion chip
+  const handleFocusRouteSuggestion = (route: FocusRoute) => {
+    setFocusArea(route as FocusArea);
+    if (!startingFocusArea) setStartingFocusArea(route as FocusArea);
+    const stepMap: Record<FocusRoute, Step> = {
+      employment: 'employment',
+      brands: 'brands',
+      experience: 'experience',
+    };
+    transitionToStep(stepMap[route], 'forward');
   };
 
   // Mark a section as complete and navigate to next
@@ -1151,13 +1178,13 @@ export function V2TalentCentric({
     // They don't reduce the worker pool - all workers remain available
 
     // Filter by experience level using the experience_level column from DB
-    // UI state maps: "new" → "rising", "rising" → "experienced", "seasoned" → "seasoned", "management" → "proven_leader"
-    if (experienceLevel) {
+    // "all" = no filter; other UI states map to DB values
+    if (experienceLevel && experienceLevel !== "all") {
       const levelMap: Record<string, string> = {
-        "new": "rising",           // Rising talent: Under 6 mos retail or up to 20 Flexes
-        "rising": "experienced",   // Experienced: 6 mos - 2 yrs retail or up to 50 Flexes
-        "seasoned": "seasoned",    // Seasoned pro: 2+ yrs retail or 50+ Flexes
-        "management": "proven_leader" // Proven leader: Has managed a team or store
+        "new": "rising",
+        "rising": "experienced",
+        "seasoned": "seasoned",
+        "management": "proven_leader"
       };
       const dbLevel = levelMap[experienceLevel];
       if (dbLevel) {
@@ -1651,7 +1678,7 @@ export function V2TalentCentric({
                 <div className="v2-step-content-scroll">
                   <div className="v2-step-header">
                     <h1 className="type-tagline">
-                      Where are you hiring?
+                      Which location or store are you hiring at?
                     </h1>
                   </div>
                   <div className={`v2-location-store-chips${selectedLocation ? " sidebar-open" : ""}`}>
@@ -1685,8 +1712,75 @@ export function V2TalentCentric({
                     })}
                   </div>
 
-                  {/* Chat input for different market */}
-                  <div className="v2-location-chat-section">
+                  {/* Location search — same inline chat pattern as persona / focus (user right, assistant left) */}
+                  <div className="v2-location-chat-section v2-chat-inline">
+                    {locationChatMessages.length > 0 && (
+                      <div className="v2-chat-messages v2-location-chat-messages">
+                        {locationChatMessages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`v2-chat-message ${msg.role}`}
+                          >
+                            {msg.role === "assistant" && (
+                              <div className="v2-chat-avatar">
+                                <img src={chatbotAvatarUrl} alt="Assistant" />
+                              </div>
+                            )}
+                            {msg.role === "user" ? (
+                              <div className="v2-chat-bubble">{msg.content}</div>
+                            ) : (
+                              <div className="v2-chat-bubble-stack">
+                                <div className="v2-chat-bubble">
+                                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                </div>
+                                {msg.locationCta && (
+                                  <button
+                                    type="button"
+                                    className={`v2-chat-followup-chip${locationMarketChipSelectingId === msg.id ? " active" : ""}`}
+                                    disabled={locationMarketChipSelectingId !== null}
+                                    onClick={() => {
+                                      const cta = msg.locationCta;
+                                      if (!cta) return;
+                                      if (cta.variant === "select_market" && cta.marketId) {
+                                        setLocationMarketChipSelectingId(msg.id);
+                                        setSelectedStoreId(null);
+                                        setSelectedLocation(cta.marketId);
+                                        setFocusArea(null);
+                                        setLocationConfirmChoice(null);
+                                        window.setTimeout(() => {
+                                          setLocationChatMessages([]);
+                                          setLocationMarketChipSelectingId(null);
+                                          transitionToStep("focus", "forward");
+                                        }, 180);
+                                      } else if (cta.variant === "browse_markets") {
+                                        setLocationMarketChipSelectingId(msg.id);
+                                        window.setTimeout(() => {
+                                          setPersona("field");
+                                          setSelectedLocation(null);
+                                          setSelectedStoreId(null);
+                                          setLocationChatMessages([]);
+                                          setLocationMarketChipSelectingId(null);
+                                        }, 180);
+                                      }
+                                    }}
+                                  >
+                                    <CornerDownRight size={16} className="v2-chip-icon-left" />
+                                    <span>
+                                      {msg.locationCta!.variant === "select_market"
+                                        ? `Search ${msg.locationCta!.marketLabel ?? "this market"}`
+                                        : (msg.locationCta!.marketLabel ?? "Go to market selection")}
+                                    </span>
+                                    {locationMarketChipSelectingId === msg.id && (
+                                      <Check size={16} className="v2-chip-icon-right" />
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="v2-chat-prompt">
                       <textarea
                         placeholder="Or type a city or market..."
@@ -1702,6 +1796,7 @@ export function V2TalentCentric({
                         }}
                       />
                       <button
+                        type="button"
                         className={`v2-chat-prompt-send${locationChatInput.trim() ? " active" : ""}`}
                         onClick={() => handleLocationChatSubmit(locationChatInput)}
                         disabled={!locationChatInput.trim()}
@@ -1709,48 +1804,6 @@ export function V2TalentCentric({
                         <Send size={18} />
                       </button>
                     </div>
-
-                    {/* Response section */}
-                    {locationChatResponse && (
-                      <div className="v2-location-chat-response">
-                        {locationChatResponse.matched ? (
-                          <>
-                            <p className="v2-location-chat-message v2-location-chat-success">
-                              Found it! <strong>{locationChatResponse.marketName}</strong> is available.
-                            </p>
-                            <button
-                              className="v2-location-chat-cta"
-                              onClick={() => {
-                                if (locationChatResponse.marketId) {
-                                  setSelectedLocation(locationChatResponse.marketId);
-                                  setLocationChatResponse(null);
-                                }
-                              }}
-                            >
-                              Search {locationChatResponse.marketName}
-                              <ArrowRight size={16} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <p className="v2-location-chat-message">
-                              I couldn't identify that location or market. Let's select from our available markets.
-                            </p>
-                            <button
-                              className="v2-location-chat-cta"
-                              onClick={() => {
-                                setPersona("field");
-                                setSelectedLocation(null);
-                                setLocationChatResponse(null);
-                              }}
-                            >
-                              Go to market selection
-                              <ArrowRight size={16} />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
@@ -1904,14 +1957,14 @@ export function V2TalentCentric({
                       transitionToStep("employment", "forward");
                     }}
                   >
-                    <div className="journey-card-header">
-                      <div className="journey-card-icon">
-                        <CalendarFold size={24} strokeWidth={1.5} />
-                      </div>
-                      <h3 className="journey-card-title">Type of employment</h3>
-                    </div>
+                    <p className="journey-card-description">Full-time, part-time, or open to both?</p>
                     <div className="journey-card-footer">
-                      <p className="journey-card-description">Full-time, part-time, or open to both?</p>
+                      <div className="journey-card-header">
+                        <div className="journey-card-icon">
+                          <CalendarFold size={24} strokeWidth={1.5} />
+                        </div>
+                        <h3 className="journey-card-title">Type of employment</h3>
+                      </div>
                       <div className="journey-card-arrow">
                         {completedSections.has("employment") || focusArea === "employment" ? (
                           <Check size={20} strokeWidth={2} />
@@ -1937,14 +1990,14 @@ export function V2TalentCentric({
                       transitionToStep("brands", "forward");
                     }}
                   >
-                    <div className="journey-card-header">
-                      <div className="journey-card-icon">
-                        <Blend size={24} strokeWidth={1.5} />
-                      </div>
-                      <h3 className="journey-card-title">Brand affinity</h3>
-                    </div>
+                    <p className="journey-card-description">Which brands do you like to recruit from?</p>
                     <div className="journey-card-footer">
-                      <p className="journey-card-description">Whose talent do you trust?</p>
+                      <div className="journey-card-header">
+                        <div className="journey-card-icon">
+                          <Blend size={24} strokeWidth={1.5} />
+                        </div>
+                        <h3 className="journey-card-title">Brand affinity</h3>
+                      </div>
                       <div className="journey-card-arrow">
                         {completedSections.has("brands") || focusArea === "brands" ? (
                           <Check size={20} strokeWidth={2} />
@@ -1970,14 +2023,14 @@ export function V2TalentCentric({
                       transitionToStep("experience", "forward");
                     }}
                   >
-                    <div className="journey-card-header">
-                      <div className="journey-card-icon">
-                        <ChartNoAxesGantt size={24} strokeWidth={1.5} />
-                      </div>
-                      <h3 className="journey-card-title">Experience level</h3>
-                    </div>
+                    <p className="journey-card-description">Where are they in their career?</p>
                     <div className="journey-card-footer">
-                      <p className="journey-card-description">Where are they in their career?</p>
+                      <div className="journey-card-header">
+                        <div className="journey-card-icon">
+                          <ChartNoAxesGantt size={24} strokeWidth={1.5} />
+                        </div>
+                        <h3 className="journey-card-title">Experience level</h3>
+                      </div>
                       <div className="journey-card-arrow">
                         {completedSections.has("roles") || focusArea === "roles" ? (
                           <Check size={20} strokeWidth={2} />
@@ -1993,7 +2046,7 @@ export function V2TalentCentric({
                   <div className="v2-chat-inline">
                     {/* Scrollable message area */}
                     {focusChatMessages.length > 0 && (
-                      <div className="v2-chat-messages v2-focus-chat-messages">
+                      <div className="v2-chat-messages v2-focus-chat-messages" ref={focusChatMessagesRef}>
                         {focusChatMessages.map((msg, idx) => (
                           <div
                             key={idx}
@@ -2030,10 +2083,26 @@ export function V2TalentCentric({
                       </div>
                     )}
 
+                    {/* Suggestion chip — appears when Gemini identifies a focus area */}
+                    {!isFocusChatLoading && (() => {
+                      const lastAssistant = [...focusChatMessages].reverse().find(m => m.role === 'assistant');
+                      return lastAssistant?.suggestedRoute ? (
+                        <div className="v2-focus-suggestion-wrapper">
+                          <button
+                            className="message-chip-single"
+                            onClick={() => handleFocusRouteSuggestion(lastAssistant.suggestedRoute!)}
+                          >
+                            <span>Start with {FOCUS_ROUTE_LABELS[lastAssistant.suggestedRoute]}?</span>
+                            <span className="chip-icon"></span>
+                          </button>
+                        </div>
+                      ) : null;
+                    })()}
+
                     {/* Input - always visible */}
                     <div className="v2-chat-prompt">
                       <textarea
-                        placeholder="Or share more detailed information"
+                        placeholder="Or start with something else..."
                         className="v2-chat-prompt-input"
                         rows={1}
                         value={focusChatInput}
@@ -2118,6 +2187,19 @@ export function V2TalentCentric({
                   <button
                     type="button"
                     className="v2-slider-marker"
+                    onClick={() => setExperienceLevel("all")}
+                  >
+                    <span className={`v2-slider-label ${experienceLevel === "all" ? 'active' : ''}`}>
+                      Show me all
+                    </span>
+                    <span className={`v2-slider-sublabel ${experienceLevel === "all" ? 'active' : ''}`}>
+                      All experience<br />levels
+                    </span>
+                    <div className="v2-slider-tick" />
+                  </button>
+                  <button
+                    type="button"
+                    className="v2-slider-marker"
                     onClick={() => setExperienceLevel("new")}
                   >
                     <span className={`v2-slider-label ${experienceLevel === "new" ? 'active' : ''}`}>
@@ -2173,21 +2255,23 @@ export function V2TalentCentric({
                     <div
                       className="v2-slider-fill"
                       style={{
-                        width: experienceLevel === "new" ? "12.5%"
-                          : experienceLevel === "rising" ? "37.5%"
-                          : experienceLevel === "seasoned" ? "62.5%"
-                          : experienceLevel === "management" ? "87.5%"
-                          : "12.5%"
+                        width: experienceLevel === "all" ? "10%"
+                          : experienceLevel === "new" ? "30%"
+                          : experienceLevel === "rising" ? "50%"
+                          : experienceLevel === "seasoned" ? "70%"
+                          : experienceLevel === "management" ? "90%"
+                          : "10%"
                       }}
                     />
                     <div
                       className="v2-experience-thumb"
                       style={{
-                        left: experienceLevel === "new" ? "12.5%"
-                          : experienceLevel === "rising" ? "37.5%"
-                          : experienceLevel === "seasoned" ? "62.5%"
-                          : experienceLevel === "management" ? "87.5%"
-                          : "12.5%"
+                        left: experienceLevel === "all" ? "10%"
+                          : experienceLevel === "new" ? "30%"
+                          : experienceLevel === "rising" ? "50%"
+                          : experienceLevel === "seasoned" ? "70%"
+                          : experienceLevel === "management" ? "90%"
+                          : "10%"
                       }}
                     />
                   </div>
@@ -2219,7 +2303,7 @@ export function V2TalentCentric({
             >
               <div className="v2-step-header">
                   <h1 className="type-tagline">
-                    Whose talent do you trust?
+                    Which brands do you like to recruit from?
                   </h1>
                   <p className="type-prompt-question">
                     Select brands that attract the kind of people you'd want on your team. We'll find Reflexers with experience there or at similar brands.
@@ -2331,8 +2415,8 @@ export function V2TalentCentric({
                 <p className="v2-step-subtitle">
                   {filteredWorkers.length > 0
                     ? filteredWorkers.length === 1
-                      ? "This Reflexer matches your criteria and is ready to connect. Click on the worker to see their full profile."
-                      : "These Reflexers match your criteria and are ready to connect. Click on a worker to see their full profile."
+                      ? "This Reflexer matches your criteria. Click on the worker to see their full profile."
+                      : "These Reflexers match your criteria. Click on a worker to see their full profile."
                     : "Try adjusting your filters to find more candidates."}
                 </p>
               </div>

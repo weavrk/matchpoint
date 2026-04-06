@@ -125,11 +125,20 @@ export interface RetailerProfile {
   totalFlexesWorked: number;
 }
 
+export type FocusRoute = 'employment' | 'brands' | 'experience';
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  suggestedRoute?: FocusRoute;
+  /** V2 location chat: optional assistant action below the bubble */
+  locationCta?: {
+    variant: 'select_market' | 'browse_markets';
+    marketId?: string;
+    marketLabel?: string;
+  };
 }
 
 export interface MatchedWorker extends WorkerProfile {
