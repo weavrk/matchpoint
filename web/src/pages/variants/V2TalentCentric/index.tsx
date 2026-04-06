@@ -182,7 +182,6 @@ const POPULAR_BRANDS = [
 
 // Brand logos array - edit this to add/remove brands
 const BRAND_LOGOS: { id: string; logo: string }[] = [
-  { id: "ralph-lauren", logo: logoRalphLauren },
   { id: "7-for-all-mankind", logo: logo7ForAllMankind },
   { id: "abercrombie", logo: logoAbercrombie },
   { id: "aldo", logo: logoAldo },
@@ -235,6 +234,7 @@ const BRAND_LOGOS: { id: string; logo: string }[] = [
   { id: "patagonia", logo: logoPatagonia },
   { id: "puma", logo: logoPuma },
   { id: "rag-and-bone", logo: logoRagAndBone },
+  { id: "ralph-lauren", logo: logoRalphLauren },
   { id: "reclectic", logo: logoReclectic },
   { id: "reiss", logo: logoReiss },
   { id: "rhone", logo: logoRhone },
