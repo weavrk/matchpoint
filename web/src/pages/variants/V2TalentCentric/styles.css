@@ -319,7 +319,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 96px;
+  padding-top: 48px;
   text-align: center;
   flex: 1;
   min-height: 0;
@@ -971,7 +971,7 @@
 .journey-card.selected {
   border-color: transparent;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  background: var(--gray-900);
+  background: var(--primary);
 }
 
 .journey-card.selected .journey-card-icon,
@@ -1254,6 +1254,43 @@
   transition: all 0.2s ease;
   text-align: left;
 }
+
+/* Suggestion wrapper — helper text + chip */
+.v2-focus-suggestion-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+
+/* Suggestion chip — shown after Gemini response when a focus route is identified */
+.v2-focus-suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--white);
+  border: 1px solid var(--quaternary);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  text-align: left;
+}
+
+.v2-focus-suggestion-chip:hover {
+  border-color: var(--primary);
+  background: var(--background-gray);
+}
+
+.v2-focus-suggestion-chip .v2-chip-icon-left {
+  flex-shrink: 0;
+  color: var(--secondary);
+}
+
 
 .v2-chat-followup-chip .v2-chip-icon-left {
   flex-shrink: 0;
@@ -1722,8 +1759,8 @@
 }
 
 .v2-location-confirm-chip.selected {
-  border-color: var(--hover);
-  background: var(--hover);
+  border-color: var(--primary);
+  background: var(--primary);
   color: #ffffff;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -3136,11 +3173,6 @@
   .v2-brand-grid {
     grid-template-columns: repeat(3, 1fr);
   }
-}
-
-/* Centered steps: .v2-main padding shorthand in max-width: 1200px would reset top to 48px */
-.v2-main.v2-main-centered {
-  padding-top: 96px;
 }
 
 /* ============================================================

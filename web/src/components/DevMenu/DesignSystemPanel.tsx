@@ -501,8 +501,8 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
           <div className="ds-subsection">
             <h4>4. Location Confirm Chip="v2-location-confirm-chip"</h4>
             <p className="ds-description">
-              Full-width chips for location confirmation (Single-Store flow). Background <code>blue-50</code>,
-              hover/selected fills <code>--hover</code> (stone-900) with white text and drop shadow. Checkmark icon on right.
+              Full-width chips for location confirmation (Single-Store flow). Background <code>blue-50</code>;
+              hover fills <code>--hover</code> (stone-900); <strong>selected</strong> uses <code>--primary</code> with white text and drop shadow. Checkmark icon on right.
             </p>
             <div className="ds-example ds-example-list" style={{ maxWidth: '400px' }}>
               {/* Default state */}
@@ -510,7 +510,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 <span>Yes, search in Austin</span>
                 <span className="v2-confirm-chip-icon"><Check size={16} /></span>
               </button>
-              {/* Hover/Selected state (simulated) */}
+              {/* Selected state (primary fill) */}
               <button className="v2-location-confirm-chip selected" type="button">
                 <span>Hire in a different market</span>
                 <span className="v2-confirm-chip-icon"><Check size={16} /></span>
@@ -1147,7 +1147,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               <li><span className="ds-style-prop">display:</span> <code>flex</code></li>
               <li><span className="ds-style-prop">flex-direction:</span> <code>column</code></li>
               <li><span className="ds-style-prop">align-items:</span> <code>center</code></li>
-              <li><span className="ds-style-prop">padding-top:</span> <code>96px</code></li>
+              <li><span className="ds-style-prop">padding-top:</span> <code>48px</code></li>
               <li><span className="ds-style-prop">text-align:</span> <code>center</code></li>
               <li><span className="ds-style-prop">children max-width:</span> <code>720px</code></li>
             </ul>
