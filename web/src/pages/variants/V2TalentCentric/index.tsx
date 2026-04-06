@@ -30,6 +30,8 @@ import {
   Plus,
   MessageCircle,
   MessageSquare,
+  MessageSquareOff,
+  MessageSquareDot,
   BadgeCheck,
   Eye,
   UserPlus,
@@ -2089,60 +2091,90 @@ export function V2TalentCentric({
                 showBack: true,
               }}
             >
-              <div className="v2-step-header-chips">
-                <div className="v2-step-header">
-                  <h1 className="type-tagline">
-                    What experience level are you looking for?
-                  </h1>
-                  <p className="type-prompt-question v2-step-subtitle">
-                    Based on shifts completed on Reflex
-                  </p>
-                </div>
+              <div className="v2-step-header">
+                <h1 className="type-tagline">
+                  What experience level are you looking for?
+                </h1>
+                <p className="type-prompt-question v2-step-subtitle">
+                  Based on shifts completed on Reflex and other retail experience.
+                </p>
+              </div>
 
-                <div className="v2-experience-track">
-                  <div className="v2-experience-labels">
+              <div className="v2-experience-slider">
+                <div className="v2-slider-markers">
+                  <button
+                    type="button"
+                    className="v2-slider-marker"
+                    onClick={() => setExperienceLevel("new")}
+                  >
+                    <span className={`v2-slider-label ${experienceLevel === "new" ? 'active' : ''}`}>
+                      Rising talent
+                    </span>
+                    <span className={`v2-slider-sublabel ${experienceLevel === "new" ? 'active' : ''}`}>
+                      Under 6 mos in retail<br />or 20 Flexes
+                    </span>
+                    <div className="v2-slider-tick" />
+                  </button>
+                  <button
+                    type="button"
+                    className="v2-slider-marker"
+                    onClick={() => setExperienceLevel("rising")}
+                  >
+                    <span className={`v2-slider-label ${experienceLevel === "rising" ? 'active' : ''}`}>
+                      Experienced
+                    </span>
+                    <span className={`v2-slider-sublabel ${experienceLevel === "rising" ? 'active' : ''}`}>
+                      6 mos – 2 yrs in retail<br />or 50 Flexes
+                    </span>
+                    <div className="v2-slider-tick" />
+                  </button>
+                  <button
+                    type="button"
+                    className="v2-slider-marker"
+                    onClick={() => setExperienceLevel("seasoned")}
+                  >
+                    <span className={`v2-slider-label ${experienceLevel === "seasoned" ? 'active' : ''}`}>
+                      Seasoned pro
+                    </span>
+                    <span className={`v2-slider-sublabel ${experienceLevel === "seasoned" ? 'active' : ''}`}>
+                      2+ yrs in retail<br />or 50+ Flexes
+                    </span>
+                    <div className="v2-slider-tick" />
+                  </button>
+                  <button
+                    type="button"
+                    className="v2-slider-marker"
+                    onClick={() => setExperienceLevel("management")}
+                  >
+                    <span className={`v2-slider-label ${experienceLevel === "management" ? 'active' : ''}`}>
+                      Proven leader
+                    </span>
+                    <span className={`v2-slider-sublabel ${experienceLevel === "management" ? 'active' : ''}`}>
+                      Has managed<br />a team or store
+                    </span>
+                    <div className="v2-slider-tick" />
+                  </button>
+                </div>
+                <div className="v2-slider-track-container v2-experience-track">
+                  <div className="v2-slider-track-wrapper">
                     <div
-                      className={`v2-experience-label ${experienceLevel === "new" ? "active" : ""}`}
-                      onClick={() => setExperienceLevel("new")}
-                    >
-                      <span className="v2-experience-label-title">New to Reflex</span>
-                      <span className="v2-experience-label-subtitle">0-5 shifts</span>
-                    </div>
-                    <div
-                      className={`v2-experience-label ${experienceLevel === "rising" ? "active" : ""}`}
-                      onClick={() => setExperienceLevel("rising")}
-                    >
-                      <span className="v2-experience-label-title">Rising talent</span>
-                      <span className="v2-experience-label-subtitle">5-30 shifts</span>
-                    </div>
-                    <div
-                      className={`v2-experience-label ${experienceLevel === "seasoned" ? "active" : ""}`}
-                      onClick={() => setExperienceLevel("seasoned")}
-                    >
-                      <span className="v2-experience-label-title">Seasoned pro</span>
-                      <span className="v2-experience-label-subtitle">30+ shifts</span>
-                    </div>
-                    <div
-                      className={`v2-experience-label ${experienceLevel === "management" ? "active" : ""}`}
-                      onClick={() => setExperienceLevel("management")}
-                    >
-                      <span className="v2-experience-label-title">Management ready</span>
-                      <span className="v2-experience-label-subtitle">Leadership exp.</span>
-                    </div>
-                  </div>
-                  <div className="v2-experience-track-line">
-                    <div className="v2-experience-tick" style={{ left: "0%" }} />
-                    <div className="v2-experience-tick" style={{ left: "33.33%" }} />
-                    <div className="v2-experience-tick" style={{ left: "66.66%" }} />
-                    <div className="v2-experience-tick" style={{ left: "100%" }} />
+                      className="v2-slider-fill"
+                      style={{
+                        width: experienceLevel === "new" ? "12.5%"
+                          : experienceLevel === "rising" ? "37.5%"
+                          : experienceLevel === "seasoned" ? "62.5%"
+                          : experienceLevel === "management" ? "87.5%"
+                          : "12.5%"
+                      }}
+                    />
                     <div
                       className="v2-experience-thumb"
                       style={{
-                        left: experienceLevel === "new" ? "0%"
-                          : experienceLevel === "rising" ? "33.33%"
-                          : experienceLevel === "seasoned" ? "66.66%"
-                          : experienceLevel === "management" ? "100%"
-                          : "0%"
+                        left: experienceLevel === "new" ? "12.5%"
+                          : experienceLevel === "rising" ? "37.5%"
+                          : experienceLevel === "seasoned" ? "62.5%"
+                          : experienceLevel === "management" ? "87.5%"
+                          : "12.5%"
                       }}
                     />
                   </div>
@@ -2480,10 +2512,10 @@ export function V2TalentCentric({
         // Status counts
         const statusCounts = {
           all: workerConnections.length,
-          chat_open: workerConnections.filter(c => c.chat_open).length,
           accepted: workerConnections.filter(c => c.status === "accepted").length,
           invited: workerConnections.filter(c => c.status === "invited").length,
           liked: workerConnections.filter(c => c.status === "liked").length,
+          chat_open: workerConnections.filter(c => c.chat_open).length,
           shift_scheduled: workerConnections.filter(c => c.shift_scheduled).length,
           shift_booked: workerConnections.filter(c => c.shift_booked).length,
           saved_for_later: workerConnections.filter(c => c.saved_for_later).length,
@@ -2546,7 +2578,7 @@ export function V2TalentCentric({
                     className={`v2-filter-pill ${!connectionsStatusFilter ? 'active' : ''}`}
                     onClick={() => setConnectionsStatusFilter(null)}
                   >
-                    All Connections <span className="v2-filter-count">{statusCounts.all}</span>
+                    <Users size={14} /> All Connections <span className="v2-filter-count">{statusCounts.all}</span>
                   </button>
                   <button
                     className={`v2-filter-pill ${connectionsStatusFilter === 'chat_open' ? 'active' : ''}`}
@@ -2746,26 +2778,67 @@ export function V2TalentCentric({
                               <span className="tag-text">Worker Declined</span>
                             </span>
                           ) : null}
-                          {/* Chat button - disabled if no chat_open */}
-                          {isNotInterested ? (
-                            <button className="v2-connection-action secondary">
-                              Undo
-                            </button>
-                          ) : (
-                            <button
-                              className={`v2-connection-action${!connection.chat_open ? ' disabled' : ''}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (connection.chat_open && connection.chat_id) {
-                                  setActiveChatId(connection.chat_id);
-                                  setActiveTab("chat");
-                                }
-                              }}
-                              disabled={!connection.chat_open}
-                            >
-                              <MessageCircle size={16} /> Chat
-                            </button>
-                          )}
+                          {/* Chat button - logic based on connection status */}
+                          {(() => {
+                            const isWorkerDeclined = connection.status === "worker_declined" || connection.status === "not_interested";
+                            const isSaved = connection.status === "liked" || connection.saved_for_later;
+                            const isConnected = connection.status === "accepted";
+                            const hasShift = connection.shift_scheduled || connection.shift_booked;
+                            const hasUnreadMessage = connection.has_unread_worker_message;
+
+                            // Chat enabled for: connected, shift_scheduled, shift_booked
+                            const chatEnabled = isConnected || hasShift;
+                            // Chat disabled for: saved, worker_declined
+                            const chatDisabled = isSaved || isWorkerDeclined;
+
+                            if (isWorkerDeclined) {
+                              return (
+                                <button className="v2-connection-action secondary">
+                                  Undo
+                                </button>
+                              );
+                            }
+
+                            if (chatDisabled) {
+                              return (
+                                <button className="v2-connection-action disabled" disabled>
+                                  <MessageSquareOff size={16} /> Chat
+                                </button>
+                              );
+                            }
+
+                            if (hasUnreadMessage) {
+                              return (
+                                <button
+                                  className="v2-connection-action unread"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (connection.chat_id) {
+                                      setActiveChatId(connection.chat_id);
+                                      setActiveTab("chat");
+                                    }
+                                  }}
+                                >
+                                  <MessageSquareDot size={16} /> Read Message
+                                </button>
+                              );
+                            }
+
+                            return (
+                              <button
+                                className="v2-connection-action"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (connection.chat_id) {
+                                    setActiveChatId(connection.chat_id);
+                                    setActiveTab("chat");
+                                  }
+                                }}
+                              >
+                                <MessageSquare size={16} /> Chat
+                              </button>
+                            );
+                          })()}
                         </div>
                       );
                     })
@@ -2826,12 +2899,12 @@ export function V2TalentCentric({
                     />
                     <div className="v2-detail-actions">
                       <button className="v2-action-btn v2-action-primary">
-                        <CalendarDays size={18} />
-                        Book a Shift
-                      </button>
-                      <button className="v2-action-btn v2-action-secondary">
                         <MessageSquare size={18} />
                         Send Message
+                      </button>
+                      <button className="v2-action-btn v2-action-secondary">
+                        <CalendarDays size={18} />
+                        Book a Shift
                       </button>
                     </div>
                   </>

@@ -563,85 +563,71 @@
   grid-template-columns: repeat(3, 1fr);
 }
 
-/* Experience level track slider */
-.v2-experience-track {
-  position: relative;
-  margin-top: 48px;
-  padding: 0 20px;
-}
-
-.v2-experience-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.v2-experience-label {
+/* Experience level slider - uses same pattern as hours slider */
+.v2-experience-slider {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  opacity: 0.5;
-  transition: opacity 0.15s ease;
-}
-
-.v2-experience-label:hover {
-  opacity: 0.8;
-}
-
-.v2-experience-label.active {
-  opacity: 1;
-}
-
-.v2-experience-label-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary);
-  white-space: nowrap;
-}
-
-.v2-experience-label-subtitle {
-  font-size: 12px;
-  color: var(--secondary);
-  white-space: nowrap;
-}
-
-.v2-experience-track-line {
+  gap: 0;
+  margin-top: 64px;
+  width: 100%;
   position: relative;
-  height: 2px;
-  background: var(--tertiary);
-  margin: 16px 0;
 }
 
-.v2-experience-tick {
-  position: absolute;
-  top: -4px;
-  width: 2px;
-  height: 10px;
-  background: var(--tertiary);
+/* Full width of main column (not capped at 720px like .v2-main-centered > *) */
+.v2-main-centered > .v2-experience-slider {
+  max-width: none;
+  align-self: stretch;
+  width: 100%;
 }
 
+/* Sublabel for experience slider */
+.v2-slider-sublabel {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--secondary);
+  transition: color 0.15s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.v2-slider-sublabel.active {
+  color: var(--primary);
+}
+
+/* Experience thumb - positioned on the track */
 .v2-experience-thumb {
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   background: white;
-  border: 2px solid var(--primary);
+  border: 3px solid var(--app-primary);
   border-radius: 50%;
   cursor: grab;
   transition: left 0.2s ease, box-shadow 0.15s ease;
+  z-index: 12;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .v2-experience-thumb:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .v2-experience-thumb:active {
   cursor: grabbing;
 }
+
+/* Experience slider specific - taller markers for two lines */
+.v2-experience-slider .v2-slider-markers {
+  height: 72px; /* 20px title + 4px gap + 18px subtitle + 8px gap + 12px tick + 10px padding */
+}
+
+.v2-experience-slider .v2-slider-marker {
+  gap: 4px;
+}
+
 
 /* V2Main / v2-main: step headlines (global .type-tagline is 36px) */
 .v2-main h1.type-tagline {
@@ -658,6 +644,11 @@
 
 .v2-main-centered p.type-prompt-question {
   text-align: left;
+}
+
+/* Center subtitle on experience level step */
+.v2-step-subtitle {
+  text-align: center !important;
 }
 
 /* V2Main / v2-main: welcome-card titles (overrides .welcome-card-title + .type-chip-header-lg) */
@@ -2127,6 +2118,11 @@
   box-sizing: border-box;
 }
 
+/* Experience track - 4 items, positions set directly in JSX to match marker centers */
+.v2-slider-track-container.v2-experience-track {
+  padding: 0;
+}
+
 /* Inner wrapper for slider and fill - same size as the input */
 .v2-slider-track-wrapper {
   position: relative;
@@ -2891,7 +2887,7 @@
 
 .v2-action-secondary {
   background: transparent;
-  color: var(--secondary);
+  color: var(--primary);
   border: 1px solid var(--quaternary);
 }
 
@@ -3739,6 +3735,15 @@
   background: var(--tertiary);
 }
 
+.v2-connection-action.unread {
+  background: var(--accent-blue-mid);
+  color: white;
+}
+
+.v2-connection-action.unread:hover {
+  background: var(--accent-blue-dark);
+}
+
 /* ============================================================
    CHAT TAB - Full-page two-column layout
    ============================================================ */
@@ -3984,7 +3989,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background: #f5f5f5;
+  background: white;
 }
 
 .v2-chat-date-divider {
@@ -4024,7 +4029,7 @@
 }
 
 .v2-chat-message.outgoing .v2-chat-bubble {
-  background: #007AFF;
+  background: var(--primary);
   color: white;
   border-bottom-right-radius: 4px;
 }
@@ -4059,7 +4064,7 @@
 .v2-chat-input-area {
   display: flex;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 12px 16px 24px 16px;
   background: #f5f5f5;
   border-top: 1px solid #e0e0e0;
   align-items: center;
