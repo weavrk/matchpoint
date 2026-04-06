@@ -124,6 +124,7 @@ import logoSaks from "../../../../../assets/brand-logos/saks-fifth-avenue.png";
 import logoSephora from "../../../../../assets/brand-logos/sephora.png";
 import logoSezane from "../../../../../assets/brand-logos/sezane.png";
 import logoShinola from "../../../../../assets/brand-logos/shinola.png";
+import logoSkims from "../../../../../assets/brand-logos/skims.png";
 import logoSplendid from "../../../../../assets/brand-logos/splendid.png";
 import logoSteveMadden from "../../../../../assets/brand-logos/steve-madden.png";
 import logoTecovas from "../../../../../assets/brand-logos/tecovas.png";
@@ -242,6 +243,7 @@ const BRAND_LOGOS: { id: string; logo: string }[] = [
   { id: "sephora", logo: logoSephora },
   { id: "sezane", logo: logoSezane },
   { id: "shinola", logo: logoShinola },
+  { id: "skims", logo: logoSkims },
   { id: "splendid", logo: logoSplendid },
   { id: "steve-madden", logo: logoSteveMadden },
   { id: "tecovas", logo: logoTecovas },
