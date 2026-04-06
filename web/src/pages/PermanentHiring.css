@@ -1972,16 +1972,16 @@
 }
 
 .dev-menu-trigger {
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: white;
   border: none;
   cursor: pointer;
   transition: all 0.15s;
   box-shadow:
-    -4px -4px 10px rgba(0, 0, 0, 0.05),
-    6px 6px 14px rgba(0, 0, 0, 0.2);
+    -2px -2px 5px rgba(0, 0, 0, 0.05),
+    3px 3px 7px rgba(0, 0, 0, 0.2);
 }
 
 .dev-menu-trigger:hover {
@@ -2165,8 +2165,8 @@
    ============================================ */
 .dev-menu-container {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 12px;
+  right: 12px;
   z-index: 1000;
 }
 
@@ -2863,6 +2863,62 @@
 }
 
 /* Worker Card Examples */
+.ds-worker-header-variants-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.ds-worker-header-variant {
+  flex: 1 1 280px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ds-worker-header-variant .ds-worker-card-example {
+  max-width: none;
+  width: 100%;
+}
+
+/* DSL: brands worked — name pill vs logo square */
+.ds-brands-worked-variants {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 20px;
+}
+
+.ds-brands-worked-variant {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.ds-shift-experience-preview {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: var(--gray-50);
+  border-radius: 10px;
+  border: 1px solid var(--quaternary);
+}
+
+.ds-shift-experience-preview-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+
+.ds-shift-experience-preview-chips {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .ds-worker-card-example {
   max-width: 400px;
   padding: 16px;
@@ -3004,22 +3060,22 @@
    ============================================ */
 .variant-switcher {
   position: fixed;
-  bottom: 28px;
-  right: 56px; /* 24px (dev menu right) + 20px (dev menu width) + 12px gap */
+  bottom: 12px;
+  right: 28px; /* 12px (dev menu right) + 10px (dev menu width) + 6px gap */
   z-index: 1000;
 }
 
 .variant-switcher-trigger {
-  width: 20px;
-  height: 20px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: white;
   border: none;
   cursor: pointer;
   transition: all 0.15s;
   box-shadow:
-    -4px -4px 10px rgba(0, 0, 0, 0.05),
-    6px 6px 14px rgba(0, 0, 0, 0.2);
+    -2px -2px 5px rgba(0, 0, 0, 0.05),
+    3px 3px 7px rgba(0, 0, 0, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3027,8 +3083,8 @@
 }
 
 .variant-switcher-trigger svg {
-  width: 14px;
-  height: 14px;
+  width: 7px;
+  height: 7px;
   flex-shrink: 0;
 }
 
@@ -3249,12 +3305,15 @@
 }
 
 .ds-nav-btn-next {
-  background: var(--stone-700);
-  border: none;
+  background: var(--primary);
+  border: 1px solid var(--primary);
   color: #ffffff;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
-.ds-nav-btn-next:hover {
-  background: var(--stone-800);
+.ds-nav-btn-next:hover,
+.ds-nav-btn-next:active {
+  background: var(--hover);
+  border-color: var(--hover);
 }
 

@@ -1,5 +1,8 @@
 import finalPhotos from '../data/finalPhotos.json';
 
+// Cache photo assignments by worker ID - ensures same worker always gets same photo
+const workerPhotoCache: Map<string, string> = new Map();
+
 // Track used photos per gender - no repeats until all used
 const usedIndices: { male: Set<number>; female: Set<number> } = {
   male: new Set(),
@@ -7,11 +10,16 @@ const usedIndices: { male: Set<number>; female: Set<number> } = {
 };
 
 /**
- * Get a random photo for a worker based on gender.
- * No photo repeats until all photos in that gender pool are used,
- * then the cycle resets. On page reload, assignments start fresh.
+ * Get a photo for a worker based on gender and worker ID.
+ * Same worker ID always returns the same photo (cached).
+ * No photo repeats until all photos in that gender pool are used.
  */
-export function getWorkerPhoto(gender: 'male' | 'female'): string | null {
+export function getWorkerPhoto(gender: 'male' | 'female', workerId?: string): string | null {
+  // If we have a cached photo for this worker, return it
+  if (workerId && workerPhotoCache.has(workerId)) {
+    return workerPhotoCache.get(workerId)!;
+  }
+
   const photos = finalPhotos[gender] as string[];
 
   if (!photos || photos.length === 0) {
@@ -33,7 +41,14 @@ export function getWorkerPhoto(gender: 'male' | 'female'): string | null {
   usedIndices[gender].add(photoIndex);
   const filename = photos[photoIndex];
 
-  return `/images/avatars/${gender}/${filename}`;
+  const photoPath = `/images/avatars/${gender}/${filename}`;
+
+  // Cache the assignment for this worker
+  if (workerId) {
+    workerPhotoCache.set(workerId, photoPath);
+  }
+
+  return photoPath;
 }
 
 /**

@@ -104,16 +104,18 @@ Workers are assigned exactly one experience level stored in the `experience_leve
 ### Tables
 
 
-| Table               | Description                                           |
-| ------------------- | ----------------------------------------------------- |
-| `markets`           | Geographic markets (city, state)                      |
-| `roles`             | Job role types (title, category, description)         |
-| `retailers`         | Retailer brands (name, classification)                |
-| `job_postings`      | Scraped job listings with salary, benefits            |
-| `workers`           | Filtered worker profiles for display (1,116 workers)  |
-| `workers_full`      | Full worker dataset before filtering                  |
-| `jobs_published`    | Published job postings with status                    |
-| `jobs_applications` | Worker applications to jobs                           |
+| Table                 | Used By          | Description                                                                 |
+| --------------------- | ---------------- | --------------------------------------------------------------------------- |
+| `markets`             | V1 only          | Geographic markets (city, state)                                            |
+| `roles`               | V1 only          | Job role types (title, category, description)                               |
+| `retailers`           | V1 + V2          | Retailer brands (name, classification)                                      |
+| `retailers_live`      | V1 only          | Live retailer list used during job scraping / role matching                 |
+| `job_postings`        | V1 only          | Scraped job listings with salary, benefits                                  |
+| `jobs_published`      | V1 only          | Published job postings with status                                          |
+| `jobs_applications`   | unused (V1 ready)| Worker applications to jobs — functions exist in supabase.ts, not yet wired |
+| `workers`             | V1 + V2          | Filtered worker profiles for display (1,701 total; 1,116 with favorite ≥50%). Includes `experience_level` column |
+| `workers_full`        | scripts only     | Full worker dataset before filtering — used by data cleanup scripts         |
+| `worker_connections`  | V2 only          | Retailer–worker relationship tracking (status, invited, connected, chat, shifts) |
 
 
 ### Useful Scripts
@@ -199,11 +201,11 @@ Scrapers live in `src/scrapers/`. Common behavior:
 Three UX variants exist under `web/src/pages/variants/`. Variant-specific logic (system prompts, flow trees, data structures) lives in each variant's MD file.
 
 
-| Variant            | Docs                        | Focus                                          |
-| ------------------ | --------------------------- | ---------------------------------------------- |
-| V1: Job Focus      | CLAUDE-V1-JOB-FOCUS.md      | Linear chat flow to create job posting         |
-| V2: Talent Centric | CLAUDE-V2-TALENT-CENTRIC.md | Browse Reflexers first, connect or book shifts |
-| V3: Wildcard       | CLAUDE-V3-WILDCARD.md       | Experimental canvas                            |
+| Variant            | Docs                   | Focus                                          |
+| ------------------ | ---------------------- | ---------------------------------------------- |
+| V1: Job Focus      | CLAUDE-V1-JOB-FOCUS.md | Linear chat flow to create job posting         |
+| V2: Talent Centric | claude-v2.md           | Browse Reflexers first, connect or book shifts |
+| V3: Wildcard       | CLAUDE-V3-WILDCARD.md  | Experimental canvas                            |
 
 
 **Switching variants:** Use the Layers icon button (bottom-right, next to dev menu)
@@ -281,7 +283,7 @@ matchpoint/
 │   │   │       │   ├── index.tsx
 │   │   │       │   ├── V2NavFooter.tsx
 │   │   │       │   ├── styles.css
-│   │   │       │   └── CLAUDE-V2-TALENT-CENTRIC.md
+│   │   │       │   └── claude-v2.md
 │   │   │       └── V3Wildcard/
 │   │   │           ├── index.tsx
 │   │   │           ├── styles.css
@@ -410,20 +412,18 @@ Definitions: `web/src/styles/variables.css`
 
 ### Components
 
+Global interactive components shared across variants.
 
-| Component                       | Location             | Usage                                                 |
-| ------------------------------- | -------------------- | ----------------------------------------------------- |
-| `NavChipGrid variant="welcome"` | NavChips.tsx         | Welcome screen 3x2 card grid                          |
-| `NavChipGrid variant="compact"` | NavChips.tsx         | Conversation nav bar                                  |
-| `.persona-card`                 | V2 styles.css        | Persona selection cards (horizontal, space-between)   |
-| `.journey-card`                 | V2 styles.css        | Focus step journey tiles (3-col grid, dark hover)     |
-| `.v2-location-confirm-chip`     | V2 styles.css        | Location confirmation chips (full-width, checkmark)   |
-| `.v2-chat-followup-chip`        | V2 styles.css        | Chat follow-up chips (icon left, arrow right)         |
-| `MessageChip` (single)          | ChatInterface.tsx    | Single-select options with check                      |
-| `MessageChip` (multi)           | ChatInterface.tsx    | Multi-select with plus/check icons                    |
-
+| Component                       | Location          | Usage                                |
+| ------------------------------- | ----------------- | ------------------------------------ |
+| `NavChipGrid variant="welcome"` | NavChips.tsx      | Welcome screen 3x2 card grid         |
+| `NavChipGrid variant="compact"` | NavChips.tsx      | Conversation nav bar                 |
+| `MessageChip` (single)          | ChatInterface.tsx | Single-select options with check     |
+| `MessageChip` (multi)           | ChatInterface.tsx | Multi-select with plus/check icons   |
 
 **Shared states:** Hover/Active = `--app-primary` border + `--gray-50` background
+
+> V2-specific components (persona cards, journey tiles, location chips, etc.) → see `claude-v2.md` → Design System
 
 ### Text Inputs
 
@@ -465,81 +465,6 @@ Three variants with shared header component. All headers have avatar, name, and 
 
 ### Worker Connection Status Model
 
-The `worker_connections` table tracks retailer-worker relationships with these fields:
-
-**Database Fields:**
-1. `status` - Primary state: `liked` | `invited` | `accepted` | `not_interested` | `removed`
-2. `invited` (bool) - Invite sent to worker
-3. `connected` (bool) - Worker accepted, relationship active
-4. `chat_open` (bool) - Active chat thread exists
-5. `shift_booked` (bool) - Shift confirmed
-6. `shift_scheduled` (bool) - Shift on calendar
-7. `saved_for_later` (bool) - Bookmarked (clears when connected)
-
-**Status Flow:**
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           RETAILER ACTIONS                                  │
-├─────────────┬─────────────┬─────────────┬─────────────┬─────────────────────┤
-│   Liked     │   Invited   │  Accepted   │Not Interested│    Removed         │
-│             │             │             │              │                    │
-└──────┬──────┴──────┬──────┴──────┬──────┴──────┬───────┴─────────┬──────────┘
-       │             │             │             │                 │
-       ▼             │             ▼             ▼                 ▼
-┌─────────────┐      │      ┌─────────────┐┌─────────────┐  ┌─────────────┐
-│ Saved for   │      │      │ Connection  ││No connection│  │ Chat closed │
-│ later       │      │      │             ││ (declined)  │  │             │
-│             │      │      │ connected   ││             │  │             │
-│saved_for_   │      │      │ = true      ││             │  │             │
-│later = true │      │      └──────┬──────┘└─────────────┘  └─────────────┘
-└─────────────┘      │             │
-                     │             ▼
-                     │      ┌─────────────┐
-                     │      │ Chat open   │
-                     │      │             │
-                     │      │ chat_open   │
-                     │      │ = true      │
-                     │      └──────┬──────┘
-                     │             │
-                     │             ▼
-                     │      ┌─────────────┐
-                     │      │ Shift       │
-                     │      │ scheduled   │
-                     │      │             │
-                     │      │shift_sched- │
-                     │      │uled = true  │
-                     └──────┴─────────────┘
-```
-
-**Status Triggers:**
-- `liked` → sets `saved_for_later = true`, `chat_open = false`
-- `invited` → `connected = false` until worker accepts, `chat_open = false`
-- `accepted` → sets `connected = true`, `chat_open = true`
-- `not_interested` → `connected = false`, `chat_open = false`
-- `removed` → `connected = false`, `chat_open = false`
-- When `connected = true`, `saved_for_later` automatically becomes `false`
-
-**Status Tags (tag-sm)**
-
-| Status           | Tag Style     | Icon           | Label            |
-| ---------------- | ------------- | -------------- | ---------------- |
-| Shift Scheduled  | `tag-green`   | `CalendarDays` | Shift Scheduled  |
-| Shift Booked     | `tag-green`   | `CalendarClock`| Shift Booked     |
-| Connected        | `tag-green`   | `Link`         | Connected        |
-| Invited          | `tag-blue`    | `UserPlus`     | Invited          |
-| Saved            | `tag-stroke`  | `Heart`        | Saved            |
-| Worker Declined  | `tag-gray`    | `XCircle`      | Worker Declined  |
-
-**Chat Button Rules**
-
-| Connection Status    | Chat Enabled | Icon                | Button Text    |
-| -------------------- | ------------ | ------------------- | -------------- |
-| Connected            | Yes          | `MessageSquare`     | Chat           |
-| Shift Scheduled      | Yes          | `MessageSquare`     | Chat           |
-| Shift Booked         | Yes          | `MessageSquare`     | Chat           |
-| Unread worker message| Yes          | `MessageSquareDot`  | Read Message   |
-| Saved                | No           | `MessageSquareOff`  | Chat           |
-| Worker Declined      | No           | (shows Undo button) | Undo           |
+V2-specific. See `claude-v2.md` → Milestone 4 for the full status model, flow diagram, status tags, and chat button rules.
 
 

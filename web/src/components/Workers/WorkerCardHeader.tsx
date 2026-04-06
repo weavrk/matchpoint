@@ -22,16 +22,16 @@ interface WorkerCardHeaderFullProps {
 export function WorkerCardHeaderFull({ worker, showActivelyLooking = true }: WorkerCardHeaderFullProps) {
   const [imgError, setImgError] = useState(false);
 
-  // Get photo from final photos pool based on gender
+  // Get photo from final photos pool based on gender - cached by worker ID
   const assignedPhoto = useMemo(() => {
     if (worker.gender) {
-      return getWorkerPhoto(worker.gender);
+      return getWorkerPhoto(worker.gender, worker.id);
     }
     return null;
-  }, [worker.gender]);
+  }, [worker.gender, worker.id]);
 
-  // Use worker.photo first (from DB), then fall back to assigned photo, then initials
-  const photoUrl = worker.photo || assignedPhoto;
+  // Use assigned photo, fall back to worker.photo, then initials
+  const photoUrl = assignedPhoto || worker.photo;
 
   const initials = worker.name
     .split(' ')
@@ -99,13 +99,13 @@ export function WorkerCardHeaderFull({ worker, showActivelyLooking = true }: Wor
 export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking = true }: WorkerCardHeaderProps) {
   const [imgError, setImgError] = useState(false);
 
-  // Get photo from final photos pool based on gender
+  // Get photo from final photos pool based on gender - cached by worker ID
   const assignedPhoto = useMemo(() => {
     if (worker.gender) {
-      return getWorkerPhoto(worker.gender);
+      return getWorkerPhoto(worker.gender, worker.id);
     }
     return null;
-  }, [worker.gender]);
+  }, [worker.gender, worker.id]);
 
   // Use assigned photo, fall back to worker.photo, then initials
   const photoUrl = assignedPhoto || worker.photo;

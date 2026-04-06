@@ -2565,7 +2565,7 @@
   width: 16px;
   height: 16px;
   flex-shrink: 0;
-  color: var(--tertiary);
+  color: currentColor;
 }
 
 .v2-popular-chip:hover {
@@ -2645,14 +2645,14 @@
 
 .v2-brand-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 12px;
   margin-bottom: 40px;
   transition: grid-template-columns 0.3s ease;
 }
 
 .v2-brand-grid.expanded {
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(8, 1fr);
 }
 
 .v2-brand-tile {
@@ -2843,30 +2843,37 @@
 .v2-results-topbar {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 24px;
   margin-bottom: 24px;
   width: 100%;
 }
 
 .v2-common-brands {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
   flex: 1;
+  min-width: 0;
 }
 
 .v2-common-brands-label {
-  display: block;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 12px;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  line-height: 1.2;
 }
 
 .v2-common-brands-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 8px;
+  min-width: 0;
+  flex: 1;
+  overflow-x: auto;
 }
 
 .v2-connect-all-btn {
@@ -3166,6 +3173,11 @@
   margin-bottom: 32px;
 }
 
+/* When detail sidebar is open, show 2 columns */
+.v2-worker-card-grid.sidebar-open {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .v2-worker-card-grid .worker-card-compact {
   cursor: pointer;
   transition: all 0.2s ease;
@@ -3379,9 +3391,10 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  max-height: 100vh;
   z-index: 20;
   transition: width 0.3s ease;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .v2-worker-detail-sidebar.collapsed {

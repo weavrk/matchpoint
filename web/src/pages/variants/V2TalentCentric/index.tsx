@@ -78,7 +78,6 @@ import logoBurberry from "../../../../../assets/brand-logos/burberry.png";
 import logoCalvinKlein from "../../../../../assets/brand-logos/calvin-klein.png";
 import logoChanel from "../../../../../assets/brand-logos/chanel.png";
 import logoCosmeticsCompanyStore from "../../../../../assets/brand-logos/cosmetics-company-store.png";
-import logoDeckers from "../../../../../assets/brand-logos/deckers.png";
 import logoDkny from "../../../../../assets/brand-logos/dkny.png";
 import logoEberjey from "../../../../../assets/brand-logos/eberjey.png";
 import logoElysewalker from "../../../../../assets/brand-logos/elysewalker.png";
@@ -105,7 +104,6 @@ import logoMadewell from "../../../../../assets/brand-logos/madewell.png";
 import logoMarcJacobs from "../../../../../assets/brand-logos/marc-jacobs.png";
 import logoMavi from "../../../../../assets/brand-logos/mavi.png";
 import logoMcm from "../../../../../assets/brand-logos/mcm.png";
-import logoMeem from "../../../../../assets/brand-logos/meem.png";
 import logoMichaelKors from "../../../../../assets/brand-logos/michael-kors.png";
 import logoMizzenMain from "../../../../../assets/brand-logos/mizzenmain.png";
 import logoNeimanMarcus from "../../../../../assets/brand-logos/neiman-marcus.png";
@@ -137,13 +135,12 @@ import logoUltaBeauty from "../../../../../assets/brand-logos/ulta-beauty.png";
 import logoUnderArmour from "../../../../../assets/brand-logos/under-armour.png";
 import logoUniqlo from "../../../../../assets/brand-logos/uniqlo.png";
 import logoUrbanOutfitters from "../../../../../assets/brand-logos/urban-outfitters.png";
-import logoUrbn from "../../../../../assets/brand-logos/urbn.png";
 import logoVans from "../../../../../assets/brand-logos/vans.png";
 import logoVeraBradley from "../../../../../assets/brand-logos/vera-bradley.png";
 import logoVeraWang from "../../../../../assets/brand-logos/vera-wang.png";
 import logoVictoriasSecret from "../../../../../assets/brand-logos/victorias-secret.png";
 import logoWarbyParker from "../../../../../assets/brand-logos/warby-parker.png";
-import logoWolfAndShephard from "../../../../../assets/brand-logos/wolf-and-shephard.png";
+import logoWolfAndShepherd from "../../../../../assets/brand-logos/wolf-shepherd.png";
 import logoZara from "../../../../../assets/brand-logos/zara.png";
 
 type TabId = "discover" | "connections" | "chat";
@@ -199,7 +196,6 @@ const BRAND_LOGOS: { id: string; logo: string }[] = [
   { id: "calvin-klein", logo: logoCalvinKlein },
   { id: "chanel", logo: logoChanel },
   { id: "cosmetics-company-store", logo: logoCosmeticsCompanyStore },
-  { id: "deckers", logo: logoDeckers },
   { id: "dkny", logo: logoDkny },
   { id: "eberjey", logo: logoEberjey },
   { id: "elysewalker", logo: logoElysewalker },
@@ -226,7 +222,6 @@ const BRAND_LOGOS: { id: string; logo: string }[] = [
   { id: "marc-jacobs", logo: logoMarcJacobs },
   { id: "mavi", logo: logoMavi },
   { id: "mcm", logo: logoMcm },
-  { id: "meem", logo: logoMeem },
   { id: "michael-kors", logo: logoMichaelKors },
   { id: "mizzen-main", logo: logoMizzenMain },
   { id: "neiman-marcus", logo: logoNeimanMarcus },
@@ -258,13 +253,12 @@ const BRAND_LOGOS: { id: string; logo: string }[] = [
   { id: "under-armour", logo: logoUnderArmour },
   { id: "uniqlo", logo: logoUniqlo },
   { id: "urban-outfitters", logo: logoUrbanOutfitters },
-  { id: "urbn", logo: logoUrbn },
   { id: "vans", logo: logoVans },
   { id: "vera-bradley", logo: logoVeraBradley },
   { id: "vera-wang", logo: logoVeraWang },
   { id: "victorias-secret", logo: logoVictoriasSecret },
   { id: "warby-parker", logo: logoWarbyParker },
-  { id: "wolf-and-shephard", logo: logoWolfAndShephard },
+  { id: "wolf-shepherd", logo: logoWolfAndShepherd },
   { id: "zara", logo: logoZara },
 ];
 
@@ -987,9 +981,11 @@ export function V2TalentCentric({
     }, 250);
   };
 
-  // Helper to normalize brand names for comparison (kebab-case to lowercase, spaces removed)
+  // Helper to normalize brand names for comparison (kebab-case to lowercase, spaces/symbols removed)
+  // Also normalizes "and" to match "&" (e.g. "rag-and-bone" == "Rag & Bone")
+  // and strips "+" so "mizzen-main" matches "Mizzen+Main"
   const normalizeBrand = (name: string) =>
-    name.toLowerCase().replace(/[\s&'.-]+/g, "");
+    name.toLowerCase().replace(/\band\b/g, "").replace(/[\s&+'.,-]+/g, "");
 
   // Workers filtered only by market (for sidebar before results)
   const marketWorkers = useMemo(() => {
@@ -1119,8 +1115,8 @@ export function V2TalentCentric({
     // UI state maps: "new" → "rising", "rising" → "experienced", "seasoned" → "seasoned", "management" → "proven_leader"
     if (experienceLevel) {
       const levelMap: Record<string, string> = {
-        "new": "rising",           // Rising talent: Under 6 mos retail or 20 Flexes
-        "rising": "experienced",   // Experienced: 6 mos - 2 yrs retail or 50 Flexes
+        "new": "rising",           // Rising talent: Under 6 mos retail or up to 20 Flexes
+        "rising": "experienced",   // Experienced: 6 mos - 2 yrs retail or up to 50 Flexes
         "seasoned": "seasoned",    // Seasoned pro: 2+ yrs retail or 50+ Flexes
         "management": "proven_leader" // Proven leader: Has managed a team or store
       };
@@ -2084,7 +2080,7 @@ export function V2TalentCentric({
                       Rising talent
                     </span>
                     <span className={`v2-slider-sublabel ${experienceLevel === "new" ? 'active' : ''}`}>
-                      Under 6 mos in retail<br />or 20 Flexes
+                      Under 6 mos in retail<br />or up to 20 Flexes
                     </span>
                     <div className="v2-slider-tick" />
                   </button>
@@ -2097,7 +2093,7 @@ export function V2TalentCentric({
                       Experienced
                     </span>
                     <span className={`v2-slider-sublabel ${experienceLevel === "rising" ? 'active' : ''}`}>
-                      6 mos – 2 yrs in retail<br />or 50 Flexes
+                      6 mos – 2 yrs in retail<br />or up to 50 Flexes
                     </span>
                     <div className="v2-slider-tick" />
                   </button>
@@ -2285,12 +2281,14 @@ export function V2TalentCentric({
                 </div>
                 <h1 className="type-tagline">
                   {filteredWorkers.length > 0
-                    ? `We found ${filteredWorkers.length} amazing matches!`
+                    ? `We found ${filteredWorkers.length} amazing ${filteredWorkers.length === 1 ? "match" : "matches"}!`
                     : "No matches found"}
                 </h1>
                 <p className="v2-step-subtitle">
                   {filteredWorkers.length > 0
-                    ? "These Reflexers match your criteria and are ready to connect. Click on a worker to see their full profile."
+                    ? filteredWorkers.length === 1
+                      ? "This Reflexer matches your criteria and is ready to connect. Click on the worker to see their full profile."
+                      : "These Reflexers match your criteria and are ready to connect. Click on a worker to see their full profile."
                     : "Try adjusting your filters to find more candidates."}
                 </p>
               </div>
@@ -2311,12 +2309,14 @@ export function V2TalentCentric({
                 )}
                 <button className="v2-action-btn v2-action-primary v2-connect-all-btn">
                   <UserPlus size={18} />
-                  Connect with all {filteredWorkers.length}
+                  {filteredWorkers.length === 1
+                    ? "Connect"
+                    : `Connect with all ${filteredWorkers.length}`}
                 </button>
               </div>
 
               {/* Worker Card Grid - using DSL WorkerCardCompact */}
-              <div className="v2-worker-card-grid">
+              <div className={`v2-worker-card-grid ${detailSidebarOpen ? "sidebar-open" : ""}`}>
                 {filteredWorkers.map((worker) => (
                   <WorkerCardCompact
                     key={worker.id}

@@ -1,6 +1,60 @@
 import { ChevronRight, ChevronLeft, MapPin, Users, Loader2 } from 'lucide-react';
 import { WorkerCardChip } from '../../../components/Workers/WorkerCardChip';
 import type { MatchedWorker } from '../../../types';
+import type { ReactNode } from 'react';
+
+/**
+ * V2SidebarShell - Reusable sidebar shell with expand/collapse toggle
+ *
+ * Provides the outer container with shadow, toggle button, and header.
+ * Content is passed as children for flexibility.
+ */
+export interface V2SidebarShellProps {
+  /** Whether the sidebar is open/expanded */
+  isOpen: boolean;
+  /** Callback to toggle sidebar open/closed */
+  onToggle: () => void;
+  /** Title to display in the header */
+  title?: string;
+  /** Optional subtitle/count badge */
+  subtitle?: string;
+  /** Content to render in the sidebar body */
+  children: ReactNode;
+  /** Additional class name for the sidebar */
+  className?: string;
+}
+
+export function V2SidebarShell({
+  isOpen,
+  onToggle,
+  title,
+  subtitle,
+  children,
+  className = '',
+}: V2SidebarShellProps) {
+  return (
+    <div className={`v2-sidebar ${isOpen ? '' : 'collapsed'} ${className}`}>
+      <button
+        className="v2-sidebar-toggle"
+        onClick={onToggle}
+        aria-label={isOpen ? 'Close panel' : 'Open panel'}
+      >
+        {isOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+      </button>
+      {title && (
+        <div className="v2-sidebar-header">
+          <h2 className="type-section-header-md">{title}</h2>
+          {subtitle && (
+            <span className="v2-sidebar-count">{subtitle}</span>
+          )}
+        </div>
+      )}
+      <div className="v2-sidebar-cards">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 /**
  * V2WorkerSidebar - Reusable right sidebar showing matching workers
@@ -42,51 +96,40 @@ export function V2WorkerSidebar({
   const isLocationEmpty = emptyMessage.toLowerCase().includes('market');
 
   return (
-    <div className={`v2-sidebar ${isOpen ? '' : 'collapsed'}`}>
-      <button
-        className="v2-sidebar-toggle"
-        onClick={onToggle}
-        aria-label={isOpen ? 'Close panel' : 'Open panel'}
-      >
-        {isOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-      </button>
-      <div className="v2-sidebar-header">
-        <h2 className="type-section-header-md">{title}</h2>
-        {showCount && workers.length > 0 && (
-          <span className="v2-sidebar-count">{workers.length} found</span>
-        )}
-      </div>
-
-      <div className="v2-sidebar-cards">
-        {isLoading ? (
-          <div className="v2-no-matches v2-loading-state">
-            <div className="v2-empty-icon">
-              <Loader2 size={32} className="v2-spinner" />
-            </div>
-            <p>Loading talent...</p>
+    <V2SidebarShell
+      isOpen={isOpen}
+      onToggle={onToggle}
+      title={title}
+      subtitle={showCount && workers.length > 0 ? `${workers.length} found` : undefined}
+    >
+      {isLoading ? (
+        <div className="v2-no-matches v2-loading-state">
+          <div className="v2-empty-icon">
+            <Loader2 size={32} className="v2-spinner" />
           </div>
-        ) : workers.length === 0 ? (
-          <div className="v2-no-matches">
-            <div className="v2-empty-icon">
-              {isLocationEmpty ? (
-                <MapPin size={32} strokeWidth={1.5} />
-              ) : (
-                <Users size={32} strokeWidth={1.5} />
-              )}
-            </div>
-            <p>{emptyMessage}</p>
+          <p>Loading talent...</p>
+        </div>
+      ) : workers.length === 0 ? (
+        <div className="v2-no-matches">
+          <div className="v2-empty-icon">
+            {isLocationEmpty ? (
+              <MapPin size={32} strokeWidth={1.5} />
+            ) : (
+              <Users size={32} strokeWidth={1.5} />
+            )}
           </div>
-        ) : (
-          workers.map(worker => (
-            <WorkerCardChip
-              key={worker.id}
-              worker={worker}
-              onClick={() => onWorkerClick?.(worker)}
-            />
-          ))
-        )}
-      </div>
-    </div>
+          <p>{emptyMessage}</p>
+        </div>
+      ) : (
+        workers.map(worker => (
+          <WorkerCardChip
+            key={worker.id}
+            worker={worker}
+            onClick={() => onWorkerClick?.(worker)}
+          />
+        ))
+      )}
+    </V2SidebarShell>
   );
 }
 

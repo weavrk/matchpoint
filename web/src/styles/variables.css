@@ -853,7 +853,7 @@ h3.type-chip-header,
 
 /* ── Additional Tag Color Variants ─────────── */
 
-/* Blue */
+/* Blue — saturated fill (Actively Looking, Invited, etc.) */
 .tag-blue {
   background: var(--accent-blue-light);
   color: var(--text-primary);
@@ -869,20 +869,20 @@ h3.type-chip-header,
   color: var(--text-primary);
 }
 
-/* Blue Light - lighter blue background (blue-100) */
-.tag-blue-light {
-  background: var(--blue-100);
-  color: var(--text-primary);
+/* Primary fill — brand name when no logo asset (square grid or pill) */
+.tag-primary-fill {
+  background: var(--primary);
+  color: #ffffff;
   border: none;
 }
 
-.tag-blue-light .tag-counter {
-  background: #ffffff;
-  color: var(--text-primary);
+.tag-primary-fill .tag-counter {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
-.tag-blue-light .tag-icon {
-  color: var(--text-primary);
+.tag-primary-fill .tag-icon {
+  color: #ffffff;
 }
 
 /* Pink */

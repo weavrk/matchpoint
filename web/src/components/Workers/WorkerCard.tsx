@@ -139,16 +139,16 @@ const toTitleCase = (str: string) => {
 export function WorkerCard({ worker }: WorkerCardProps) {
   const [imgError, setImgError] = useState(false);
 
-  // Get photo from final photos pool based on gender
+  // Get photo from final photos pool based on gender (only if no DB photo)
   const assignedPhoto = useMemo(() => {
-    if (worker.gender) {
+    if (!worker.photo && worker.gender) {
       return getWorkerPhoto(worker.gender);
     }
     return null;
-  }, [worker.gender]);
+  }, [worker.photo, worker.gender]);
 
-  // Use assigned photo, fall back to worker.photo, then initials
-  const photoUrl = assignedPhoto || worker.photo;
+  // Use worker.photo from DB first, fall back to assigned photo, then initials
+  const photoUrl = worker.photo || assignedPhoto;
 
   const initials = worker.name
     .split(' ')
@@ -313,7 +313,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <span className="section-label">Retailers on Reflex</span>
                   <div className="brands-list">
                     {worker.brandsWorked.map((brand, idx) => (
-                      <span key={idx} className="tag tag-dark-gray tag-md">
+                      <span key={idx} className="tag tag-primary-fill tag-md">
                         <span className="tag-text">{toTitleCase(brand.name)}</span>
                       </span>
                     ))}
@@ -327,7 +327,7 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                   <span className="section-label">Shift Experience</span>
                   <div className="endorsements-list">
                     {shiftExperienceEntries.map(([name, count], idx) => (
-                      <span key={idx} className="tag tag-dark-gray tag-md">
+                      <span key={idx} className="tag tag-blue-light tag-md">
                         <span className="tag-text">{name}</span>
                         <span className="tag-counter">{count}</span>
                       </span>

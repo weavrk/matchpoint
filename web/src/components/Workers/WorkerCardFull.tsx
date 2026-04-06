@@ -53,7 +53,7 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
             <span className="testing-label">Shift Experience ({shiftExperienceEntries.length})</span>
             <div className="testing-pills">
               {shiftExperienceEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-dark-gray tag-md">
+                <span key={idx} className="tag tag-blue-light tag-md">
                   <span className="tag-text">{name}</span>
                   <span className="tag-counter">{count}</span>
                 </span>

@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import type { MatchedWorker, WorkerProfile } from '../../types';
 import { WorkerAchievementChips } from './WorkerAchievementChips';
+import { getWorkerPhoto } from '../../hooks/useWorkerPhoto';
 import './WorkerCard.css';
 
 interface WorkerCardChipProps {
@@ -30,6 +32,16 @@ export function WorkerCardChip({ worker, onClick }: WorkerCardChipProps) {
   // Get unique store locations count
   const storeLocations = worker.uniqueStoreCount || 0;
 
+  // Get photo from final photos pool based on gender - cached by worker ID
+  const assignedPhoto = useMemo(() => {
+    if (worker.gender) {
+      return getWorkerPhoto(worker.gender, worker.id);
+    }
+    return null;
+  }, [worker.gender, worker.id]);
+
+  const photoUrl = assignedPhoto || worker.photo;
+
   return (
     <div
       className={`worker-card-chip ${onClick ? 'clickable' : ''}`}
@@ -39,8 +51,8 @@ export function WorkerCardChip({ worker, onClick }: WorkerCardChipProps) {
     >
       <div className="chip-header">
         <div className="chip-avatar">
-          {worker.photo ? (
-            <img src={worker.photo} alt="" />
+          {photoUrl ? (
+            <img src={photoUrl} alt="" />
           ) : (
             <span>{initials}</span>
           )}

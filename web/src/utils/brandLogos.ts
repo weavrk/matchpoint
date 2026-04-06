@@ -19,7 +19,6 @@ import logoBurberry from '../../../assets/brand-logos/burberry.png';
 import logoCalvinKlein from '../../../assets/brand-logos/calvin-klein.png';
 import logoChanel from '../../../assets/brand-logos/chanel.png';
 import logoCosmeticsCompanyStore from '../../../assets/brand-logos/cosmetics-company-store.png';
-import logoDeckers from '../../../assets/brand-logos/deckers.png';
 import logoDkny from '../../../assets/brand-logos/dkny.png';
 import logoEberjey from '../../../assets/brand-logos/eberjey.png';
 import logoElysewalker from '../../../assets/brand-logos/elysewalker.png';
@@ -51,7 +50,6 @@ import logoMadewell from '../../../assets/brand-logos/madewell.png';
 import logoMarcJacobs from '../../../assets/brand-logos/marc-jacobs.png';
 import logoMavi from '../../../assets/brand-logos/mavi.png';
 import logoMcm from '../../../assets/brand-logos/mcm.png';
-import logoMeem from '../../../assets/brand-logos/meem.png';
 import logoOofos from '../../../assets/brand-logos/oofos.png';
 import logoMichaelKors from '../../../assets/brand-logos/michael-kors.png';
 import logoMizzenMain from '../../../assets/brand-logos/mizzenmain.png';
@@ -73,6 +71,7 @@ import logoSaks from '../../../assets/brand-logos/saks-fifth-avenue.png';
 import logoSephora from '../../../assets/brand-logos/sephora.png';
 import logoSezane from '../../../assets/brand-logos/sezane.png';
 import logoSkechers from '../../../assets/brand-logos/skechers.png';
+import logoSkims from '../../../assets/brand-logos/skims.png';
 import logoShinola from '../../../assets/brand-logos/shinola.png';
 import logoSplendid from '../../../assets/brand-logos/splendid.png';
 import logoSteveMadden from '../../../assets/brand-logos/steve-madden.png';
@@ -86,7 +85,6 @@ import logoUltaBeauty from '../../../assets/brand-logos/ulta-beauty.png';
 import logoUnderArmour from '../../../assets/brand-logos/under-armour.png';
 import logoUniqlo from '../../../assets/brand-logos/uniqlo.png';
 import logoUrbanOutfitters from '../../../assets/brand-logos/urban-outfitters.png';
-import logoUrbn from '../../../assets/brand-logos/urbn.png';
 import logoVans from '../../../assets/brand-logos/vans.png';
 import logoVeraBradley from '../../../assets/brand-logos/vera-bradley.png';
 import logoVeraWang from '../../../assets/brand-logos/vera-wang.png';
@@ -102,6 +100,8 @@ const BRAND_LOGO_MAP: Record<string, string> = {
   'abercrombie': logoAbercrombie,
   'abercrombie & fitch': logoAbercrombie,
   'abercrombie and fitch': logoAbercrombie,
+  'abercrombie-and-fitch': logoAbercrombie,
+  'abercrombie fitch': logoAbercrombie,
   'aldo': logoAldo,
   'allbirds': logoAllbirds,
   'allsaints': logoAllsaints,
@@ -117,7 +117,6 @@ const BRAND_LOGO_MAP: Record<string, string> = {
   'calvin klein': logoCalvinKlein,
   'chanel': logoChanel,
   'cosmetics company store': logoCosmeticsCompanyStore,
-  'deckers': logoDeckers,
   'dkny': logoDkny,
   'eberjey': logoEberjey,
   'elyse walker': logoElysewalker,
@@ -161,7 +160,6 @@ const BRAND_LOGO_MAP: Record<string, string> = {
   'mavi jeans': logoMavi,
   'mcm': logoMcm,
   'mcm worldwide': logoMcm,
-  'meem': logoMeem,
   'michael kors': logoMichaelKors,
   'michael kors outlet': logoMichaelKors,
   'mizzen+main': logoMizzenMain,
@@ -191,6 +189,7 @@ const BRAND_LOGO_MAP: Record<string, string> = {
   'sezane': logoSezane,
   'shinola': logoShinola,
   'skechers': logoSkechers,
+  'skims': logoSkims,
   'splendid': logoSplendid,
   'steve madden': logoSteveMadden,
   'tecovas': logoTecovas,
@@ -204,7 +203,6 @@ const BRAND_LOGO_MAP: Record<string, string> = {
   'under armour': logoUnderArmour,
   'uniqlo': logoUniqlo,
   'urban outfitters': logoUrbanOutfitters,
-  'urbn': logoUrbn,
   'vans': logoVans,
   'vera bradley': logoVeraBradley,
   'vera wang': logoVeraWang,
@@ -212,6 +210,8 @@ const BRAND_LOGO_MAP: Record<string, string> = {
   'vineyards vines': logoVineyardVines,
   "victoria's secret": logoVictoriasSecret,
   'victorias secret': logoVictoriasSecret,
+  'victorias-secret': logoVictoriasSecret,
+  'victoria secret': logoVictoriasSecret,
   'warby parker': logoWarbyParker,
   'wolf & shepherd': logoWolfAndShephard,
   'wolf and shepherd': logoWolfAndShephard,

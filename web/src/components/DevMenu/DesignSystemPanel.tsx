@@ -669,6 +669,16 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 </div>
               </div>
               <div className="ds-pill-with-spec">
+                <span className="tag tag-primary-fill tag-md"><span className="tag-text">Primary fill</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">tag-primary-fill</span>
+                  <span className="ds-spec-text">bg: primary</span>
+                  <span className="ds-spec-text">text: #ffffff</span>
+                  <span className="ds-spec-text">icon: #ffffff</span>
+                  <span className="ds-spec-text">counter: translucent on primary</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
                 <span className="tag tag-green tag-md"><span className="tag-text">Green</span></span>
                 <div className="ds-spec-column">
                   <span className="ds-spec-text">tag-green</span>
@@ -683,7 +693,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 <span className="tag tag-blue tag-md"><span className="tag-text">Blue</span></span>
                 <div className="ds-spec-column">
                   <span className="ds-spec-text">tag-blue</span>
-                  <span className="ds-spec-text">bg: blue-lite</span>
+                  <span className="ds-spec-text">bg: accent-blue-light</span>
                   <span className="ds-spec-text">text: primary</span>
                   <span className="ds-spec-text">icon: text-primary</span>
                   <span className="ds-spec-text">counter bg: #ffffff</span>
@@ -716,7 +726,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 <span className="tag tag-blue-light tag-md"><span className="tag-text">Blue Light</span></span>
                 <div className="ds-spec-column">
                   <span className="ds-spec-text">tag-blue-light</span>
-                  <span className="ds-spec-text">bg: blue-100</span>
+                  <span className="ds-spec-text">bg: background-blue</span>
                   <span className="ds-spec-text">text: primary</span>
                   <span className="ds-spec-text">icon: text-primary</span>
                   <span className="ds-spec-text">counter bg: #ffffff</span>
@@ -841,6 +851,22 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               </table>
             </div>
 
+            <h5>Shift experience (role + count — same as worker cards)</h5>
+            <p className="ds-description">
+              Uses the <strong>blue light</strong> variant, not <code>tag-blue</code>.{' '}
+              <code>WorkerCardCompact</code>, <code>WorkerCard</code>, <code>WorkerCardFull</code>, and <code>WorkerCardTesting</code> use{' '}
+              <code>className=&quot;tag tag-blue-light tag-md&quot;</code> with <code>tag-text</code> + <code>tag-counter</code>.
+              Fill: <code>var(--background-blue)</code> via <code>.tag-blue-light</code>; counter: <code>.tag-blue-light .tag-counter</code> (white pill).
+            </p>
+            <div className="ds-shift-experience-preview">
+              <span className="ds-shift-experience-preview-label">Shift Experience</span>
+              <div className="ds-pills-styles-row ds-shift-experience-preview-chips">
+                <span className="tag tag-blue-light tag-md"><span className="tag-text">Sales Associate</span><span className="tag-counter">12</span></span>
+                <span className="tag tag-blue-light tag-md"><span className="tag-text">Event Help</span><span className="tag-counter">5</span></span>
+                <span className="tag tag-blue-light tag-md"><span className="tag-text">Greeter</span><span className="tag-counter">3</span></span>
+              </div>
+            </div>
+
             <h5>Stats Tags (unconditional - shown for all, tag-md)</h5>
             <div className="ds-chip-logic-box">
               <table className="ds-logic-table">
@@ -860,7 +886,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     <td><code>uniqueStoreCount</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-dark-gray tag-md"><span className="tag-text">Sales Associate</span><span className="tag-counter">274</span></span></td>
+                    <td><span className="tag tag-blue-light tag-md"><span className="tag-text">Sales Associate</span><span className="tag-counter">274</span></span></td>
                     <td><code>shiftExperience[role]</code></td>
                   </tr>
                   <tr>
@@ -869,12 +895,24 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                   </tr>
                   <tr>
                     <td>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span className="tag-logo tag-sm"><img src={getBrandLogo('marc jacobs')} alt="Marc Jacobs" /></span>
-                        <span className="brand-logo-fallback" style={{ width: 72, height: 72, fontSize: 11 }}>Moncler</span>
+                      <div className="ds-brands-worked-variants">
+                        <div className="ds-brands-worked-variant">
+                          <span className="ds-spec-text">Name (no logo asset)</span>
+                          <span className="tag tag-primary-fill tag-md"><span className="tag-text">Moncler</span></span>
+                        </div>
+                        <div className="ds-brands-worked-variant">
+                          <span className="ds-spec-text">Logo square</span>
+                          <span className="tag-logo tag-sm"><img src={getBrandLogo('marc jacobs')} alt="Marc Jacobs" /></span>
+                        </div>
                       </div>
                     </td>
-                    <td><code>brandsWorked[].name</code><br /><span style={{ fontSize: 10, color: 'var(--secondary)' }}>logo if available, else centered name</span></td>
+                    <td>
+                      <code>brandsWorked[].name</code>
+                      <br />
+                      <span style={{ fontSize: 10, color: 'var(--secondary)' }}>
+                        Pill: <code>tag-primary-fill</code>. Grid / overlay: <code>tag-logo</code> + <code>.brand-logo-fallback</code> when no logo file.
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -1036,7 +1074,10 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
 
           <div className="ds-subsection">
             <h4>WorkerCardCompact</h4>
-            <p className="ds-description">Compact teaser card for grids and chat. Shows header + Reflex stats + retailer summary (verified) or work history (non-verified) + endorsements.</p>
+            <p className="ds-description">
+              Compact teaser card for grids and chat. Shows header + Reflex stats + retailer summary (verified) or work history (non-verified) + endorsements.
+              Shift Experience rows use <code>tag tag-blue-light tag-md</code> (<code>--background-blue</code>); see Tags tab → Shift experience for canonical markup.
+            </p>
             <div className="ds-worker-card-example">
               <WorkerCardCompact worker={sampleWorker} />
             </div>

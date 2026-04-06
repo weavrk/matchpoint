@@ -10,14 +10,6 @@
 
 # Core Flow
 
-**Prototype context:** Same as V1 (Austin, Ariat, Mike Meyers).
-
-**System prompt:** N/A - No AI chat in this variant.
-
-**Guardrails:** Lead with talent, not forms. Every interaction should feel like discovery.
-
----
-
 ## Milestone 1: User Persona
 
 Understand who is searching: individual store manager, multi-store manager, field recruiter, etc. This informs location logic and UX flow.
@@ -73,7 +65,7 @@ Three-section preference flow with multi-chip selection screens. More open-ended
 | **AI**             | N/A                                                                                                      |
 
 
-**Section 1: Type of Employment**
+### Section 1: Type of Employment
 
 Two content areas in one screen:
 
@@ -86,7 +78,7 @@ Two content areas in one screen:
 
 **"I just need help" option:** Surfaces flex shift opportunity - "Sounds like you could use a Reflex shift while you figure out your hiring needs"
 
-**Section 2: Brand Affinity**
+### Section 2: Brand Affinity
 
 Open-ended matching.
 
@@ -99,7 +91,7 @@ Open-ended matching.
 | **Philosophy**     | Are they looking for brand training (skill) or brand identity (culture fit)? Keep matching loose and surface related talent |
 
 
-**Section 3: Experience in Role**
+### Section 3: Experience in Role
 
 Sliding scale approach vs. binary:
 
@@ -129,25 +121,9 @@ Browse Shift Verified Reflexers filtered by selections. Results screen should fe
 | **AI**             | N/A                                                                                          |
 
 
-**Results Screen UX:**
-
-
-| Element           | Detail                                                                                             |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| **Headline**      | Celebratory but not over-the-top: "We found {N} Reflexers for you" or "{N} Reflexers match"        |
-| **Worker Cards**  | Show top matches with photo, name, Shift Verified badge, brand overlap, AI summary                 |
-| **Primary CTA**   | "Connect with [Name]" - opens chat/connection flow                                                 |
-| **Secondary CTA** | "Invite to a shift" - Cahootz booking flow                                                         |
-| **Sidebar**       | Continues showing full filtered list; cards update reactively                                      |
-| **Empty State**   | "No exact matches. Try adjusting your preferences." with clear way to go back                      |
-| **Delight**       | Subtle animation on card appearance; avoid confetti/party poppers (too much); keep it professional |
-
-
-**Avoid:** Generic success screen with no clear action. The point is to connect with Reflexers, not celebrate finding them.
-
 ---
 
-## Milestone 4: Connect or Book
+## Milestone 4: Connect and Book
 
 Express interest for permanent role OR schedule a Reflex shift to try them out.
 
@@ -160,122 +136,50 @@ Express interest for permanent role OR schedule a Reflex shift to try them out.
 | **AI**             | N/A                                                                            |
 
 
-### Worker Connections Table (Supabase)
+### Worker Connection Status Model
 
-Tracks retailer interactions with worker profiles. Table: `worker_connections`
+**Status Triggers:**
 
-
-| Column           | Type         | Description                                         |
-| ---------------- | ------------ | --------------------------------------------------- |
-| `id`             | UUID         | Primary key (auto-generated)                        |
-| `worker_id`      | UUID         | Reference to `workers.id`                           |
-| `market`         | VARCHAR      | Market where connection occurred (Austin, Dallas, Houston, Phoenix) |
-| `chat_id`        | TEXT         | Unique chat thread identifier (e.g., "chat-maria")  |
-| `status`         | VARCHAR      | Connection status (see Status Flow below)           |
-| `invited`        | BOOLEAN      | Whether retailer sent connection invite (default: false) |
-| `connected`      | BOOLEAN      | Whether worker accepted connection (default: false) |
-| `chat_open`      | BOOLEAN      | Whether chat thread is active (default: false)      |
-| `shift_booked`   | BOOLEAN      | Whether a shift has been booked (default: false)    |
-| `shift_scheduled`| BOOLEAN      | Whether a shift is scheduled (default: false)       |
-| `saved_for_later`| BOOLEAN      | Whether retailer saved worker for later (default: false) |
-| `created_at`     | TIMESTAMPTZ  | When connection was first created                   |
-| `updated_at`     | TIMESTAMPTZ  | When connection was last updated (auto-trigger)     |
-
-
-**Status Values:**
-
-
-| Status           | Description                                    |
-| ---------------- | ---------------------------------------------- |
-| `liked`          | Retailer liked/favorited the worker            |
-| `invited`        | Retailer sent connection invite, awaiting response |
-| `accepted`       | Worker accepted the connection                 |
-| `not_interested` | Retailer marked as not interested              |
-| `removed`        | Retailer removed the connection                |
-
-
-**Status Flow Diagram:**
+- `liked` → sets `saved_for_later = true`, `chat_open = false`
+- `invited` → `connected = false` until worker accepts, `chat_open = false`
+- `accepted` → sets `connected = true`, `chat_open = true`
+- `not_interested` → `connected = false`, `chat_open = false`
+- `removed` → `connected = false`, `chat_open = false`
+- When `connected = true`, `saved_for_later` automatically becomes `false`
 
 ```
-                    ┌─────────────────────────────────────────────────────────────┐
-                    │                    STATUS FLOW                               │
-                    └─────────────────────────────────────────────────────────────┘
-
-                                         ┌─────────┐
-                                         │  LIKED  │ ← Initial state (retailer likes profile)
-                                         └────┬────┘
-                                              │
-                         ┌────────────────────┼────────────────────┐
-                         │                    │                    │
-                         ▼                    ▼                    ▼
-                ┌────────────────┐    ┌────────────────┐    ┌────────────────┐
-                │ saved_for_later│    │    INVITED     │    │ not_interested │
-                │    = true      │    │ (invite sent)  │    │   or removed   │
-                └────────────────┘    └───────┬────────┘    └────────────────┘
-                                              │
-                         ┌────────────────────┼────────────────────┐
-                         │                    │                    │
-                         ▼                    ▼                    ▼
-                ┌────────────────┐    ┌────────────────┐    ┌────────────────┐
-                │  No connection │    │    ACCEPTED    │    │ not_interested │
-                │   (declined)   │    │ connected=true │    │   (declined)   │
-                └────────────────┘    └───────┬────────┘    └────────────────┘
-                                              │
-                         ┌────────────────────┼────────────────────┐
-                         │                    │                    │
-                         ▼                    ▼                    ▼
-                ┌────────────────┐    ┌────────────────┐    ┌────────────────┐
-                │   chat_open    │    │  Chat closed   │    │ saved_for_later│
-                │    = false     │    │ (not engaging) │    │    = true      │
-                └────────────────┘    └────────────────┘    └───────┬────────┘
-                                                                    │
-                                              ┌─────────────────────┘
-                                              │
-                                              ▼
-                                      ┌────────────────┐
-                                      │   chat_open    │
-                                      │    = true      │
-                                      └───────┬────────┘
-                                              │
-                         ┌────────────────────┼────────────────────┐
-                         │                    │                    │
-                         ▼                    ▼                    ▼
-                ┌────────────────┐    ┌────────────────┐    ┌────────────────┐
-                │  Conversation  │    │  shift_booked  │    │ Chat stalled   │
-                │   ongoing      │    │    = true      │    │ (no booking)   │
-                └────────────────┘    └───────┬────────┘    └────────────────┘
-                                              │
-                                              ▼
-                                      ┌────────────────┐
-                                      │shift_scheduled │
-                                      │    = true      │
-                                      └────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           RETAILER ACTIONS                                  │
+├─────────────┬─────────────┬─────────────┬─────────────┬─────────────────────┤
+│   Liked     │   Invited   │  Accepted   │Not Interested│    Removed         │
+│             │             │             │              │                    │
+└──────┬──────┴─────────────┴──────┬──────┴──────┬───────┴─────────┬──────────┘
+       │                           │             │                 │
+       ▼                           ▼             ▼                 ▼
+┌─────────────┐             ┌─────────────┐┌─────────────┐  ┌─────────────┐
+│ Saved for   │             │ Connection  ││No connection│  │ Chat closed │
+│ later       │             │             ││ (declined)  │  │             │
+│             │             │ connected   ││             │  │             │
+│saved_for_   │             │ = true      ││             │  │             │
+│later = true │             └──────┬──────┘└─────────────┘  └─────────────┘
+└─────────────┘                    │
+                                   ▼
+                            ┌─────────────┐
+                            │ Chat open   │
+                            │             │
+                            │ chat_open   │
+                            │ = true      │
+                            └──────┬──────┘
+                                   │
+                                   ▼
+                            ┌─────────────┐
+                            │ Shift       │
+                            │ scheduled   │
+                            │             │
+                            │shift_sched- │
+                            │uled = true  │
+                            └─────────────┘
 ```
-
-**Boolean Flag Combinations (Demo Data):**
-
-| Worker Range | status | connected | chat_open | shift_booked | shift_scheduled | saved_for_later |
-| ------------ | ------ | --------- | --------- | ------------ | --------------- | --------------- |
-| Workers 0-2  | accepted | true | true | true | true | false |
-| Workers 3-4  | accepted | true | true | true | false | false |
-| Workers 5-16 | accepted | true | true | false | false | false |
-| Workers 17-33| accepted | true | false | false | false | varies |
-| Workers 34-42| liked | false | false | false | false | true |
-
-**Demo Data Distribution (43 workers across 4 Southwest markets):**
-
-- 100% invited (43)
-- 79% connected (34)
-- 40% chat_open (17)
-- 12% shift_booked (5)
-- 7% shift_scheduled (3)
-- 42% saved_for_later (18)
-
-**Constraints:**
-
-- No foreign key constraint (worker_id is reference only)
-- RLS disabled with full anon/authenticated access
-- Indexes on `worker_id`, `market`, `status`, `chat_open`
 
 ### Milestone 4a: In-Platform Chat
 
@@ -288,15 +192,6 @@ Retailer and worker communicate directly within Reflex. AI may synthesize or fac
 | **Considerations** | Need conversation prompts/templates; AI synthesis of brand-worker comms TBD; moderation/safety guardrails                         |
 | **Risks**          | Off-platform leakage still possible (phone, email exchange); chat fatigue if too many messages; privacy concerns                  |
 | **AI**             | N/A                                                                                                                               |
-
-
-**Chat Tab Implementation:**
-
-- 19 hardcoded conversations with unique scenarios (not Supabase-driven)
-- iMessage-style UI: blue outgoing (#007AFF), gray incoming (#E9E9EB), gray background (#f5f5f5)
-- Name format in messages list: "First L." (e.g., "Olivia L.")
-- Conversation badges: "Shift Scheduled", "Shift Booked"
-- Scenarios: intro only, job details + shift booked, not interested in FT, negotiating rate, plus varied lengths
 
 
 ### Milestone 4b: Book a Shift (Cahootz)
@@ -338,7 +233,7 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
                               │    can focus our questions."        │
                               │                                     │
                               │   ┌─────────────────────────────┐   │
-                              │   │ 🏪 Single-Store Manager      │   │
+                              │   │ 🏪 Single-Store Manager     │   │
                               │   │ 🏢 Multi-Store Manager      │   │
                               │   │ 🗺  Regional/District Mgr   │   │
                               │   │ 🌐 HR/Recruiter             │   │
@@ -346,9 +241,6 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
                               │                                     │
                               │   [Or share more detailed info...]  │
                               │   (chat input for freeform entry)   │
-                              │                                     │
-                              │   *Selection auto-progresses to     │
-                              │    LOCATION step with animation     │
                               └─────────────────┬───────────────────┘
                                                 │
                                                 │  (persona selection OR chat response)
@@ -382,16 +274,6 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     │                           │ │                           │ │    (empty state)          │
     │   *"Different market"     │ │                           │ │                           │
     │    → MARKET PICKER        │ │                           │ │                           │
-    │    (sub-flow via          │ │                           │ │                           │
-    │    pickingDifferentMarket │ │                           │ │                           │
-    │    state, reuses Field/   │ │                           │ │                           │
-    │    Recruiter view)        │ │                           │ │                           │
-    │                           │ │                           │ │                           │
-    │   *Back from MARKET       │ │                           │ │                           │
-    │    PICKER returns to      │ │                           │ │                           │
-    │    confirmation screen    │ │                           │ │                           │
-    │    with "different"       │ │                           │ │                           │
-    │    selected               │ │                           │ │                           │
     └───────────────┬───────────┘ └───────────────┬───────────┘ └───────────────┬───────────┘
                     │                             │                             │
                     └─────────────────────────────┼─────────────────────────────┘
@@ -410,20 +292,11 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
                               │   ├─────────────────────────────┤   │
                               │   │ Experience level      → / ✓ │   │
                               │   └─────────────────────────────┘   │
-                              │                                     │
-                              │   *Journey cards: arrow (→) when    │
-                              │    available, checkmark (✓) when    │
-                              │    completed                        │
-                              │                                     │
-                              │   *Clicking card auto-progresses    │
-                              │    to that section (no Continue)    │
-                              │                                     │
-                              │   *Completed cards are disabled     │
-                              └─────────────────┬───────────────────┘
-                                                │
-                                                │  (click any card to enter)
-                                                │
-                                                ▼
+                              └────────────────-─┬──────────────────┘
+                                                 │
+                                                 │ 
+                                                 │
+                                                 ▼
                     ┌─────────────────────────────────────────────────────────────┐
                     │                   PREFERENCE SHAPING                        │
                     │                   (3-section CYOA flow)                     │
@@ -436,24 +309,27 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     │   SECTION 1:              │ │   SECTION 2:              │ │   SECTION 3:              │
     │   TYPE OF EMPLOYMENT      │ │   BRAND AFFINITY          │ │   EXPERIENCE IN ROLE      │
     │                           │ │                           │ │                           │
-    │   V2EmploymentSelector    │ │   "What brand experience  │ │   "What experience level  │
-    │   component:              │ │    do you trust?"         │ │    are you looking for?"  │
-    │   ┌─────┐ ┌─────┐ ┌─────┐│ │                           │ │                           │
-    │   │ PT  │ │ FT  │ │Flex ││ │   ┌─────┐ ┌─────┐ ┌─────┐ │ │   ┌───────────────────┐   │
-    │   │     │ │     │ │     ││ │   │Gucci│ │Nike │ │Ariat│ │ │   │ New to Reflex     │   │
-    │   └─────┘ └─────┘ └─────┘│ │   └─────┘ └─────┘ └─────┘ │ │   │ Rising talent     │   │
-    │                           │ │                           │ │   │ Seasoned sales pro│   │
-    │   *Selection auto-        │ │   [Search brands...]      │ │   │ Management ready  │   │
-    │    completes section and  │ │   Multi-select grid       │ │   └───────────────────┘   │
-    │    goes to next focus     │ │   (loose matching)        │ │                           │
-    │                           │ │                           │ │   *Selection auto-        │
-    │   *Filter Logic:          │ │   *Requires Continue btn  │ │    completes section      │
-    │   FT: preference FT/Both  │ │    (multi-select)         │ │                           │
-    │   PT: preference PT/Both  │ │                           │ │   *Filter Logic:          │
-    │   Flex: no filter         │ │   *Filter Logic:          │ │   New: 0-5 shifts         │
-    │                           │ │   brands_worked (loose)   │ │   Rising: 5-30 shifts     │
-    │                           │ │   brand_tier for proxy    │ │   Seasoned: 30+ shifts    │
-    │                           │ │   matching                │ │   Mgmt: role history      │
+    │   type-tagline:           │ │   type-tagline:           │ │   type-tagline:           │
+    │   "What type of           │ │   "Whose talent do you    │ │   "What experience level  │
+    │    employment?"           │ │    trust?"                │ │    are you looking for?"  │
+    │                           │ │                           │ │                           │
+    │   ┌─────┐ ┌─────┐ ┌─────┐ │ │   ┌─────┐ ┌─────┐ ┌─────┐ │ │   [Slider with 4 stops]   │
+    │   │ FT  │ │ PT  │ │Eith-│ │ │   │Gucci│ │Nike │ │Ariat│ │ │   Rising | Experienced |  │
+    │   │     │ │     │ │ er  │ │ │   └─────┘ └─────┘ └─────┘ │ │   Seasoned | Management   │
+    │   └─────┘ └─────┘ └─────┘ │ │                           │ │                           │
+    │                           │ │   [Search brands...]      │ │   *Selection auto-        │
+    │   *Selection auto-        │ │   Multi-select grid       │ │    completes section      │
+    │    completes section and  │ │   (loose matching)        │ │                           │
+    │    goes to next focus     │ │                           │ │   *Filter Logic:          │
+    │                           │ │   *Requires Continue btn  │ │   Rising: <6mo retail     │
+    │   *No filtering -         │ │    (multi-select)         │ │     OR <20 Flexes         │
+    │    data capture only      │ │                           │ │   Experienced: 6mo-2yr    │
+    │                           │ │   *Filter Logic:          │ │     OR 50 Flexes          │
+    │                           │ │   brands_worked (loose)   │ │   Seasoned: 2+ yrs retail │
+    │                           │ │   brand_tier for proxy    │ │     OR 50+ Flexes         │
+    │                           │ │   matching                │ │   Mgmt: managed team/store│
+    │                           │ │                           │ │                           │
+    │                           │ │                           │ │                           │
     └───────────────┬───────────┘ └───────────────┬───────────┘ └───────────────┬───────────┘
                     │                             │                             │
                     └─────────────────────────────┼─────────────────────────────┘
@@ -535,67 +411,218 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     │   *Sparkles icon in header                                                          │
     │                                                                                     │
     │   Future: Individual worker CTAs "Connect" + "Invite to shift"                      │
-    └─────────────────────────────────────┬───────────────────────────────────────────────┘
-                                          │
-                                          │
+    └─────────────────────────────────────────────────────────────────────────────────────┘
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                              WORKER CONNECTIONS (Connections Tab)
+
+    Separate from Discover flow. Shows saved workers from worker_connections table.
+
     ┌─────────────────────────────────────────────────────────────────────────────────────┐
-    │                   WORKER_CONNECTIONS TABLE (Supabase)                               │
-    │                                                                                     │
-    │   Tracks retailer interactions. Data loaded in Connections tab via Supabase.        │
-    │                                                                                     │
-    │   ┌─────────────────────────────────────────────────────────────────────────┐       │
-    │   │  Status Flow:                                                           │       │
-    │   │                                                                         │       │
-    │   │  liked → invited → accepted / not_interested / removed                  │       │
-    │   │                                                                         │       │
-    │   │  Boolean Flags: invited → connected → chat_open → shift_booked → shift_scheduled
-    │   └─────────────────────────────────────────────────────────────────────────┘       │
-    │                                                                                     │
-    │   Connections Tab: Shows workers with filters by market & status                    │
-    │   Chat Tab: Shows workers where chat_open=true, linked via chat_id                  │
-    │   Chat button on Connections tab navigates to Chat tab with chat_id preselected     │
-    │                                                                                     │
-    │   chat_id: Unique thread ID (e.g., "chat-maria") links Connections to Chat          │
-    │                                                                                     │
-    └─────────────────────────────────────────┬───────────────────────────────────────────┘
+    │   Filters: Market dropdown, Status filters (Connected, Saved, Shift Scheduled)      │
+    │   Cards: WorkerCardChip with status tag, chat button                                │
+    │   Data: Loads from worker_connections table via Supabase                            │
+    │   Status flow: liked → invited → accepted / not_interested / removed                │
+    └─────────────────────────────────────────────────────────────────────────────────────┘
                                               │
-                                          │  (Chat tab implemented - loads from worker_connections where chat_open=true)
-                                          │
-                    ┌─────────────────────┴─────────────────────┐
-                    │                                           │
-                    ▼                                           ▼
-    ┌───────────────────────────────────┐   ┌───────────────────────────────────┐
-    │       IN-PLATFORM CHAT            │   │     BOOK A SHIFT (CAHOOTZ)        │
-    │                                   │   │                                   │
-    │   Retailer ←──────→ Worker        │   │   Worker-specific booking:        │
-    │                                   │   │                                   │
-    │   AI-facilitated prompts:         │   │   "When do you need Sarah?"       │
-    │   • "Hi [Name], I saw you         │   │   [Date/time picker]              │
-    │     worked at [Brand]..."         │   │                                   │
-    │   • "What days work best?"        │   │   "What role for this shift?"     │
-    │   • Role/fit discussion           │   │   [Role selector]                 │
-    │                                   │   │                                   │
-    │   [Continue chatting]             │   │   "Which store location?"         │
-    │   [Ready to invite to shift]      │   │   [Store selector]                │
-    │                                   │   │                                   │
-    │                                   │   │   [Book shift with Sarah]         │
-    └───────────────┬───────────────────┘   └───────────────┬───────────────────┘
-                    │                                       │
-                    └─────────────────┬─────────────────────┘
-                                      │
-                                      ▼
-                    ┌─────────────────────────────────────┐
-                    │          SHIFT CONFIRMED            │
-                    │                                     │
-                    │   "Sarah is booked!"                │
-                    │                                     │
-                    │   Shift details summary             │
-                    │   Worker notified                   │
-                    │   Calendar invite sent              │
-                    │                                     │
-                    │   [Connect with more]  [Done]       │
-                    └─────────────────────────────────────┘
+                    ┌─────────────────────────┴─────────────────────────┐
+                    │                                                   │
+                    ▼                                                   ▼
+    ┌───────────────────────────────────┐       ┌───────────────────────────────────┐
+    │             CHAT                  │       │        SCHEDULE SHIFT             │
+    │                                   │       │                                   │
+    │   In-platform messaging between   │       │   Book a Reflex shift with a      │
+    │   retailer and worker.            │       │   specific worker (Cahootz).      │
+    │                                   │       │                                   │
+    │   chat_id links to conversation   │       │   Date, role, store selection     │
+    └───────────────────────────────────┘       └───────────────────────────────────┘
 ```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Database
+
+Supabase tables used by this project.
+
+---
+
+## `workers` (V1 + V2)
+
+Filtered worker profiles for display (1,701 total; 1,116 with favorite ≥50%).
+
+
+| Column                  | Type    | Description                                        |
+| ----------------------- | ------- | -------------------------------------------------- |
+| `id`                    | UUID    | Primary key                                        |
+| `name`                  | VARCHAR | Worker full name                                   |
+| `photo`                 | TEXT    | Photo URL                                          |
+| `gender`                | VARCHAR | male/female                                        |
+| `market`                | VARCHAR | Geographic market (Austin, Dallas, etc.)           |
+| `actively_looking`      | BOOLEAN | Whether worker is actively seeking employment      |
+| `shift_verified`        | BOOLEAN | Has completed shifts on Reflex                     |
+| `market_favorite`       | BOOLEAN | Is a favorite in their market                      |
+| `shifts_on_reflex`      | INTEGER | Total shifts completed                             |
+| `brands_worked`         | JSONB   | Array of {name, tier} brand experience             |
+| `previous_experience`   | JSONB   | Array of {company, duration, roles}                |
+| `endorsement_counts`    | JSONB   | Count of endorsements by type                      |
+| `shift_experience`      | JSONB   | Shifts by role type                                |
+| `retailer_quotes`       | JSONB   | Array of {quote, brand, role}                      |
+| `retailer_summary`      | TEXT    | AI-generated summary                               |
+| `reflex_activity`       | JSONB   | shiftsByTier, longestRelationship, tierProgression |
+| `invited_back_stores`   | INTEGER | Number of stores that invited worker back          |
+| `unique_store_count`    | INTEGER | Number of unique stores worked                     |
+| `tardy_ratio`           | VARCHAR | Tardy ratio as fraction (e.g., "2/50")             |
+| `tardy_percent`         | NUMERIC | Tardy percentage                                   |
+| `urgent_cancel_ratio`   | VARCHAR | Urgent cancel ratio as fraction                    |
+| `urgent_cancel_percent` | NUMERIC | Urgent cancel percentage                           |
+| `current_tier`          | VARCHAR | Worker tier level                                  |
+| `experience_level`      | VARCHAR | rising/experienced/seasoned/proven_leader          |
+| `about_me`              | TEXT    | Worker bio                                         |
+| `interview_transcript`  | JSONB   | Array of {question, answer}                        |
+| `worker_uuid`           | UUID    | External reference UUID                            |
+| `worker_id`             | INTEGER | External reference ID                              |
+
+
+---
+
+## `worker_connections` (V2 only)
+
+Tracks retailer interactions with worker profiles.
+
+
+| Column            | Type        | Description                                   |
+| ----------------- | ----------- | --------------------------------------------- |
+| `id`              | UUID        | Primary key (auto-generated)                  |
+| `worker_id`       | UUID        | Reference to workers.id                       |
+| `market`          | VARCHAR     | Market where connection occurred              |
+| `chat_id`         | TEXT        | Unique chat thread identifier                 |
+| `status`          | VARCHAR     | liked/invited/accepted/not_interested/removed |
+| `invited`         | BOOLEAN     | Retailer sent connection invite               |
+| `connected`       | BOOLEAN     | Worker accepted connection                    |
+| `chat_open`       | BOOLEAN     | Chat thread is active                         |
+| `shift_booked`    | BOOLEAN     | A shift has been booked                       |
+| `shift_scheduled` | BOOLEAN     | A shift is scheduled                          |
+| `saved_for_later` | BOOLEAN     | Retailer saved worker for later               |
+| `created_at`      | TIMESTAMPTZ | When connection was first created             |
+| `updated_at`      | TIMESTAMPTZ | When connection was last updated              |
+
+
+---
+
+## `markets` (V1 only)
+
+Geographic markets.
+
+
+| Column       | Type        | Description                  |
+| ------------ | ----------- | ---------------------------- |
+| `id`         | UUID        | Primary key                  |
+| `name`       | VARCHAR     | Market name (Austin, Dallas) |
+| `state`      | VARCHAR     | State abbreviation (TX, CA)  |
+| `created_at` | TIMESTAMPTZ | When record was created      |
+| `updated_at` | TIMESTAMPTZ | When record was last updated |
+
+
+---
+
+## `roles` (V1 only)
+
+Job role types.
+
+
+| Column           | Type        | Description                        |
+| ---------------- | ----------- | ---------------------------------- |
+| `id`             | UUID        | Primary key                        |
+| `title`          | VARCHAR     | Role title (Sales Associate, etc.) |
+| `category`       | VARCHAR     | Role category                      |
+| `description`    | TEXT        | Role description                   |
+| `match_keywords` | TEXT[]      | Keywords for fuzzy matching        |
+| `created_at`     | TIMESTAMPTZ | When record was created            |
+| `updated_at`     | TIMESTAMPTZ | When record was last updated       |
+
+
+---
+
+## `retailers` (V1 + V2)
+
+Retailer brands.
+
+
+| Column           | Type        | Description                  |
+| ---------------- | ----------- | ---------------------------- |
+| `id`             | UUID        | Primary key                  |
+| `name`           | VARCHAR     | Retailer name                |
+| `classification` | VARCHAR     | Luxury/Specialty/Big Box     |
+| `created_at`     | TIMESTAMPTZ | When record was created      |
+| `updated_at`     | TIMESTAMPTZ | When record was last updated |
+
+
+---
+
+## `job_postings` (V1 only)
+
+Scraped job listings from Indeed.
+
+
+| Column            | Type        | Description                |
+| ----------------- | ----------- | -------------------------- |
+| `id`              | UUID        | Primary key                |
+| `market_name`     | VARCHAR     | Market name                |
+| `company`         | VARCHAR     | Company name               |
+| `location`        | VARCHAR     | Job location               |
+| `title`           | VARCHAR     | Job title                  |
+| `employment_type` | VARCHAR     | Full-time/Part-time        |
+| `salary`          | VARCHAR     | Salary range               |
+| `benefits`        | TEXT        | Benefits description       |
+| `market_id`       | UUID        | Reference to markets.id    |
+| `retailer_id`     | UUID        | Reference to retailers.id  |
+| `role_id`         | UUID        | Reference to roles.id      |
+| `scraped_at`      | TIMESTAMPTZ | When job was scraped       |
+| `source_url`      | TEXT        | Original job posting URL   |
+| `source`          | VARCHAR     | Source site (Indeed, etc.) |
+
+
+---
+
+## `jobs_published` (V1 only)
+
+Published job postings.
+
+
+| Column           | Type        | Description                |
+| ---------------- | ----------- | -------------------------- |
+| `id`             | UUID        | Primary key                |
+| `job_id`         | VARCHAR     | External job identifier    |
+| `job_title`      | VARCHAR     | Job title                  |
+| `job_type`       | VARCHAR     | Part-time/Full-time/Either |
+| `store_location` | VARCHAR     | Store location             |
+| `job_market`     | VARCHAR     | Market name                |
+| `pay_type`       | VARCHAR     | hourly/salary              |
+| `pay_range`      | VARCHAR     | Pay range string           |
+| `benefits`       | TEXT[]      | Array of benefits          |
+| `created_at`     | TIMESTAMPTZ | When job was published     |
+| `unpublished_at` | TIMESTAMPTZ | When job was unpublished   |
+
+
+---
+
+## `jobs_applications` (unused — V1 ready)
+
+Worker applications to jobs. Service functions exist in `supabase.ts` but not yet called by any variant.
+
+
+| Column       | Type        | Description                         |
+| ------------ | ----------- | ----------------------------------- |
+| `id`         | UUID        | Primary key                         |
+| `worker_id`  | UUID        | Reference to workers.id             |
+| `job_id`     | UUID        | Reference to jobs_published.id      |
+| `status`     | VARCHAR     | viewed/liked/applied/not_interested |
+| `invited`    | BOOLEAN     | Whether worker was invited to apply |
+| `created_at` | TIMESTAMPTZ | When application was created        |
+| `updated_at` | TIMESTAMPTZ | When application was last updated   |
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -726,88 +753,92 @@ Worker-specific shift booking flow:
 
 ### DSL Component Usage
 
+> Global components (NavChipGrid, MessageChip, Worker Cards, colors, typography, text inputs) → see `CLAUDE.md` → Design System
 
-| Component                           | Usage                                                                                                                                    |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **Page Components**                 |                                                                                                                                          |
-| `V2Main`                            | Step wrapper (`.v2-main`) with transitions and footer; `stepClassName="v2-main-centered"` → `padding-top: 120px` (see Padding Reference) |
-| `V2ContentShell`                    | Legacy/alternate step shell (animations, padding, footer)                                                                                |
-| `V2NavFooter`                       | Sticky back/next navigation buttons                                                                                                      |
-| **User Persona / Focus**            |                                                                                                                                          |
-| `.v2-focus-chips`                   | 2-column grid of persona cards (`gap: 16px`; stacks to 1 column at max-width 500px)                                                      |
-| `.v2-focus-chips.chat-active`       | Compact mode when chat is engaged (shorter cards, smaller icons)                                                                         |
-| `.welcome-card.persona-card`        | Persona selection card with grid layout: title top-left, desc bottom-left, icon top-right                                                |
-| `.welcome-card.persona-card:hover`  | Drop shadow `0 8px 24px rgba(0, 0, 0, 0.12)`, icon fills primary                                                                         |
-| `.welcome-card.persona-card.active` | Tighter shadow `0 2px 8px rgba(0, 0, 0, 0.15)`, icon filled                                                                              |
-| `.v2-welcome-card-text`             | Wraps title + description; uses `display: contents` for grid positioning                                                                 |
-| `h3.welcome-card-title`             | Card title (20px/24px); grid-area: title                                                                                                 |
-| `p.welcome-card-description`        | Card subtitle (16px); grid-area: desc, aligned bottom                                                                                    |
-| `.welcome-card-icon`                | Circular icon (54px), border primary, hover/active fills                                                                                 |
-| **Persona Chat**                    |                                                                                                                                          |
-| `.v2-chat-inline`                   | Chat container spanning full width under persona chips                                                                                   |
-| `.v2-chat-messages`                 | Scrollable message container                                                                                                             |
-| `.v2-chat-message.user`             | User message (right-aligned, primary bg, white text)                                                                                     |
-| `.v2-chat-message.assistant`        | Assistant message (left-aligned with avatar)                                                                                             |
-| `.v2-chat-avatar`                   | 32px circular avatar with chatbot image                                                                                                  |
-| `.v2-chat-bubble`                   | Message bubble with rounded corners                                                                                                      |
-| `.v2-chat-followup-chips`           | Vertical stack of follow-up selection chips                                                                                              |
-| `.v2-chat-followup-chip`            | Single-select chip with CornerDownRight icon left, Check icon right when active                                                          |
-| `.v2-chat-prompt`                   | Input container with text input and send button                                                                                          |
-| **Focus Step / Journey Cards**      |                                                                                                                                          |
-| `.v2-journey-cards`                 | Container for 3 journey cards (flex column, gap 12px)                                                                                    |
-| `.journey-card`                     | Navigation card with header (icon + title) and footer (desc + arrow/check)                                                               |
-| `.journey-card-header`              | Flex row with icon circle (40px) and title                                                                                               |
-| `.journey-card-icon`                | Circular icon container, background-navy, primary icon                                                                                   |
-| `.journey-card-title`               | 18px/700 title text                                                                                                                      |
-| `.journey-card-footer`              | Description (left) + arrow/check icon (right)                                                                                            |
-| `.journey-card-description`         | 14px secondary text                                                                                                                      |
-| `.journey-card-arrow`               | Arrow (→) when available, Check (✓) when completed                                                                                       |
-| `.journey-card.completed`           | Reduced opacity, disabled state                                                                                                          |
-| `.journey-card:hover`               | Background navy-light, cursor pointer                                                                                                    |
-| **Location Confirm**                |                                                                                                                                          |
-| `.v2-location-confirm-chips`        | Vertical stack of confirmation chips (Single-Store)                                                                                      |
-| `.v2-location-confirm-chip`         | Full-width chip with text and checkmark icon                                                                                             |
-| `.v2-confirm-chip-icon`             | Circular checkmark icon (28px), shows on hover/selected                                                                                  |
-| **Location Picker**                 |                                                                                                                                          |
-| `.v2-location-grid`                 | City chip grid (4 columns, 3 with sidebar)                                                                                               |
-| `.v2-location-chip`                 | Individual city selection chip                                                                                                           |
-| `.v2-location-select`               | Store dropdown (empty default state)                                                                                                     |
-| `.v2-location-controls`             | Dropdown + "or" + search input layout                                                                                                    |
-| `.v2-step-content-scroll`           | Scrollable container for location grid                                                                                                   |
-| **Employment Type**                 |                                                                                                                                          |
-| `.v2-employment-chips`              | Horizontal chip layout for employment options                                                                                            |
-| `.v2-hours-chips`                   | Hours/availability selection chips (TBD)                                                                                                 |
-| **Brand Affinity**                  |                                                                                                                                          |
-| `.v2-brand-grid`                    | Brand logo grid (5-7 columns responsive)                                                                                                 |
-| `.v2-brand-tile`                    | Individual brand logo tile with selection state                                                                                          |
-| `.v2-brand-search`                  | Search input for filtering brands                                                                                                        |
-| **Experience Level**                |                                                                                                                                          |
-| `.v2-experience-scale`              | Sliding scale or card selection for experience (TBD)                                                                                     |
-| **Results**                         |                                                                                                                                          |
-| `WorkerCardTeaser`                  | Worker cards in results/sidebar                                                                                                          |
-| `WorkerCardHeader`                  | Shared header with avatar, name, badges                                                                                                  |
-| `WorkerAchievementChips`            | Achievement tags with icons (green/green-light variants)                                                                                 |
-| `.tag.tag-blue-light.tag-md`        | Shift Verified badge (with BadgeCheck icon, blue-100 bg)                                                                                 |
-| `.tag.tag-blue.tag-md`              | Actively Looking badge (with Search icon)                                                                                                |
-| `.type-section-header-lg`           | "We found N Reflexers" heading                                                                                                           |
-| `.type-section-header-sm`           | "What retailers are saying..." label                                                                                                     |
-| `.type-body-md`                     | Worker summary text                                                                                                                      |
-| **Worker Sidebar**                  |                                                                                                                                          |
-| `V2WorkerSidebar`                   | Collapsible right panel for worker cards                                                                                                 |
-| `.v2-sidebar`                       | Container: 380px open, 24px collapsed, white bg, left drop shadow, z-index: 10                                                           |
-| `.v2-sidebar.collapsed`             | Narrow collapsed state with toggle button                                                                                                |
-| `.v2-sidebar-toggle`                | 24px circle toggle button, chevron icon                                                                                                  |
-| `.v2-sidebar-header`                | Title + count, sticky top                                                                                                                |
-| `.v2-sidebar-cards`                 | Scrollable list of worker cards                                                                                                          |
-| **Chat (TBD)**                      |                                                                                                                                          |
-| `ChatThread`                        | In-platform retailer-worker conversation                                                                                                 |
-| `ChatMessage`                       | Individual message bubble                                                                                                                |
-| `ChatPromptSuggestions`             | AI-facilitated conversation starters                                                                                                     |
-| **Cahootz Booking (TBD)**           |                                                                                                                                          |
-| `CahootzBookingForm`                | Worker-specific shift booking form                                                                                                       |
-| `DateTimePicker`                    | Shift date/time selection                                                                                                                |
-| `RoleSelector`                      | Role selection for shift                                                                                                                 |
-| `StoreSelector`                     | Store location picker                                                                                                                    |
+
+| Component                            | Usage                                                                                                                                    |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Page Components**                  |                                                                                                                                          |
+| `V2Main`                             | Step wrapper (`.v2-main`) with transitions and footer; `stepClassName="v2-main-centered"` → `padding-top: 120px` (see Padding Reference) |
+| `V2ContentShell`                     | Legacy/alternate step shell (animations, padding, footer)                                                                                |
+| `V2NavFooter`                        | Sticky back/next navigation buttons                                                                                                      |
+| **User Persona / Focus**             |                                                                                                                                          |
+| `.v2-focus-chips`                    | 2-column grid of persona cards (`gap: 16px`; stacks to 1 column at max-width 500px)                                                      |
+| `.v2-focus-chips.chat-active`        | Compact mode when chat is engaged (shorter cards, smaller icons)                                                                         |
+| `.welcome-card.persona-card`         | Persona selection card with grid layout: title top-left, desc bottom-left, icon top-right                                                |
+| `.welcome-card.persona-card:hover`   | Drop shadow `0 8px 24px rgba(0, 0, 0, 0.12)`, icon fills primary                                                                         |
+| `.welcome-card.persona-card.active`  | Tighter shadow `0 2px 8px rgba(0, 0, 0, 0.15)`, icon filled                                                                              |
+| `.v2-welcome-card-text`              | Wraps title + description; uses `display: contents` for grid positioning                                                                 |
+| `h3.welcome-card-title`              | Card title (20px/24px); grid-area: title                                                                                                 |
+| `p.welcome-card-description`         | Card subtitle (16px); grid-area: desc, aligned bottom                                                                                    |
+| `.welcome-card-icon`                 | Circular icon (54px), border primary, hover/active fills                                                                                 |
+| **Persona Chat**                     |                                                                                                                                          |
+| `.v2-chat-inline`                    | Chat container spanning full width under persona chips                                                                                   |
+| `.v2-chat-messages`                  | Scrollable message container                                                                                                             |
+| `.v2-chat-message.user`              | User message (right-aligned, primary bg, white text)                                                                                     |
+| `.v2-chat-message.assistant`         | Assistant message (left-aligned with avatar)                                                                                             |
+| `.v2-chat-avatar`                    | 32px circular avatar with chatbot image                                                                                                  |
+| `.v2-chat-bubble`                    | Message bubble with rounded corners                                                                                                      |
+| `.v2-chat-followup-chips`            | Vertical stack of follow-up selection chips                                                                                              |
+| `.v2-chat-followup-chip`             | Single-select chip with CornerDownRight icon left, Check icon right when active                                                          |
+| `.v2-chat-prompt`                    | Input container with text input and send button                                                                                          |
+| **Focus Step / Journey Cards**       |                                                                                                                                          |
+| `.v2-journey-cards`                  | Container for 3 journey cards (flex column, gap 12px)                                                                                    |
+| `.journey-card`                      | Navigation card with header (icon + title) and footer (desc + arrow/check)                                                               |
+| `.journey-card-header`               | Flex row with icon circle (40px) and title                                                                                               |
+| `.journey-card-icon`                 | Circular icon container, background-navy, primary icon                                                                                   |
+| `.journey-card-title`                | 18px/700 title text                                                                                                                      |
+| `.journey-card-footer`               | Description (left) + arrow/check icon (right)                                                                                            |
+| `.journey-card-description`          | 14px secondary text                                                                                                                      |
+| `.journey-card-arrow`                | Arrow (→) when available, Check (✓) when completed                                                                                       |
+| `.journey-card.completed`            | Shows check icon (not disabled, can be re-edited)                                                                                        |
+| `.journey-card:hover`                | Background navy-light, cursor pointer                                                                                                    |
+| **Location Confirm**                 |                                                                                                                                          |
+| `.v2-location-confirm-chips`         | Vertical stack of confirmation chips (Single-Store)                                                                                      |
+| `.v2-location-confirm-chip`          | Full-width chip with text and checkmark icon                                                                                             |
+| `.v2-confirm-chip-icon`              | Circular checkmark icon (28px), shows on hover/selected                                                                                  |
+| **Location Picker**                  |                                                                                                                                          |
+| `.v2-location-grid`                  | City chip grid (4 columns, 3 with sidebar)                                                                                               |
+| `.v2-location-chip`                  | Individual city selection chip                                                                                                           |
+| `.v2-location-select`                | Store dropdown (empty default state)                                                                                                     |
+| `.v2-location-controls`              | Dropdown + "or" + search input layout                                                                                                    |
+| `.v2-step-content-scroll`            | Scrollable container for location grid                                                                                                   |
+| **Employment Type**                  |                                                                                                                                          |
+| `.v2-employment-chips`               | Horizontal chip layout for employment options                                                                                            |
+| `.v2-hours-chips`                    | Hours/availability selection chips (TBD)                                                                                                 |
+| **Brand Affinity**                   |                                                                                                                                          |
+| `.v2-brand-grid`                     | Brand logo grid (5-7 columns responsive)                                                                                                 |
+| `.v2-brand-tile`                     | Individual brand logo tile with selection state                                                                                          |
+| `.v2-brand-search`                   | Search input for filtering brands                                                                                                        |
+| **Experience Level**                 |                                                                                                                                          |
+| `.v2-experience-scale`               | Sliding scale or card selection for experience (TBD)                                                                                     |
+| **Results**                          |                                                                                                                                          |
+| `WorkerCardTeaser`                   | Worker cards in results/sidebar                                                                                                          |
+| `WorkerCardHeader`                   | Shared header with avatar, name, badges                                                                                                  |
+| `WorkerAchievementChips`             | Achievement tags with icons (green/green-light variants)                                                                                 |
+| `.tag.tag-blue-light.tag-md`         | Shift Verified (BadgeCheck); **shift experience** role + count (`tag-text` + `tag-counter`); fill `--background-blue`                    |
+| `.tag.tag-blue.tag-md`               | Actively Looking (Search icon); fill `**--accent-blue-light`** (not the same as blue light)                                              |
+| `.tag.tag-primary-fill.tag-md`       | Retailers on Reflex name pill when showing text-only brands                                                                              |
+| `.tag-logo` / `.brand-logo-fallback` | Brand logo tile vs primary-fill square fallback when no logo asset                                                                       |
+| `.type-section-header-lg`            | "We found N Reflexers" heading                                                                                                           |
+| `.type-section-header-sm`            | "What retailers are saying..." label                                                                                                     |
+| `.type-body-md`                      | Worker summary text                                                                                                                      |
+| **Worker Sidebar**                   |                                                                                                                                          |
+| `V2WorkerSidebar`                    | Collapsible right panel for worker cards                                                                                                 |
+| `.v2-sidebar`                        | Container: 380px open, 24px collapsed, white bg, left drop shadow, z-index: 10                                                           |
+| `.v2-sidebar.collapsed`              | Narrow collapsed state with toggle button                                                                                                |
+| `.v2-sidebar-toggle`                 | 24px circle toggle button, chevron icon                                                                                                  |
+| `.v2-sidebar-header`                 | Title + count, sticky top                                                                                                                |
+| `.v2-sidebar-cards`                  | Scrollable list of worker cards                                                                                                          |
+| **Chat (TBD)**                       |                                                                                                                                          |
+| `ChatThread`                         | In-platform retailer-worker conversation                                                                                                 |
+| `ChatMessage`                        | Individual message bubble                                                                                                                |
+| `ChatPromptSuggestions`              | AI-facilitated conversation starters                                                                                                     |
+| **Cahootz Booking (TBD)**            |                                                                                                                                          |
+| `CahootzBookingForm`                 | Worker-specific shift booking form                                                                                                       |
+| `DateTimePicker`                     | Shift date/time selection                                                                                                                |
+| `RoleSelector`                       | Role selection for shift                                                                                                                 |
+| `StoreSelector`                      | Store location picker                                                                                                                    |
 
 
 ### Transitions

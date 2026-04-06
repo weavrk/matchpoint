@@ -24,14 +24,12 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
     ? Object.entries(worker.shiftExperience).sort((a, b) => b[1] - a[1]).slice(0, 3)
     : [];
 
-  // Endorsements (behavioral traits) - use endorsement_counts directly
-  const endorsementEntries = worker.endorsementCounts
-    ? Object.entries(worker.endorsementCounts).sort((a, b) => b[1] - a[1]).slice(0, 3)
-    : [];
+  // Brands worked - show retailer names
+  const brandsWorked = worker.brandsWorked || [];
 
   return (
     <div className="worker-card worker-card-compact" onClick={onClick}>
-      <WorkerCardHeader worker={worker} showActivelyLooking={false} />
+      <WorkerCardHeader worker={worker} showActivelyLooking={true} />
 
       <div className="worker-card-body">
         {/* About Me - show for all workers if available */}
@@ -65,28 +63,13 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
           </>
         )}
 
-        {/* Non-verified: show work history */}
-        {!worker.shiftVerified && topExperience.length > 0 && (
-          <div className="compact-section">
-            <span className="section-label">Work History</span>
-            <div className="compact-experience-list">
-              {topExperience.map((exp, idx) => (
-                <div key={idx} className="compact-experience-item">
-                  <span className="compact-exp-company">{exp.company}</span>
-                  <span className="compact-exp-detail">{exp.roles[0]} · {exp.duration}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Shift Experience - show for all workers */}
         {shiftExperienceEntries.length > 0 && (
           <div className="compact-section">
             <span className="section-label">Shift Experience</span>
             <div className="compact-endorsements">
               {shiftExperienceEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-dark-gray tag-md">
+                <span key={idx} className="tag tag-blue-light tag-md">
                   <span className="tag-text">{name}</span>
                   <span className="tag-counter">{count}</span>
                 </span>
@@ -95,16 +78,30 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
           </div>
         )}
 
-        {/* Endorsements with counts - show for all workers */}
-        {endorsementEntries.length > 0 && (
+        {/* Retailers on Reflex - show brands worked */}
+        {brandsWorked.length > 0 && (
           <div className="compact-section">
-            <span className="section-label">Endorsements</span>
+            <span className="section-label">Retailers on Reflex</span>
             <div className="compact-endorsements">
-              {endorsementEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-stroke tag-md">
-                  <span className="tag-text">{name}</span>
-                  <span className="tag-counter">{count}</span>
+              {brandsWorked.map((brand, idx) => (
+                <span key={idx} className="tag tag-primary-fill tag-md">
+                  <span className="tag-text">{brand.name}</span>
                 </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Other Experience - show previous work history for all workers */}
+        {topExperience.length > 0 && (
+          <div className="compact-section">
+            <span className="section-label">Other Experience</span>
+            <div className="compact-experience-list">
+              {topExperience.map((exp, idx) => (
+                <div key={idx} className="compact-experience-item">
+                  <span className="compact-exp-company">{exp.company}</span>
+                  <span className="compact-exp-detail">{exp.roles[0]} · {exp.duration}</span>
+                </div>
               ))}
             </div>
           </div>
