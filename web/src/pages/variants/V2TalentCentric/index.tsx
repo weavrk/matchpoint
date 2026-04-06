@@ -47,7 +47,7 @@ import {
 import { SAMPLE_WORKERS } from "../../../data/workers";
 import { V2Main } from "./V2Main";
 import { V2EmploymentSelector } from "./V2EmploymentSelector";
-import { V2WorkerSidebar, V2SidebarShell } from "./V2WorkerSidebar";
+import { V2WorkerSidebar } from "./V2WorkerSidebar";
 import { WorkerCard } from "../../../components/Workers/WorkerCard";
 import { WorkerCardFull } from "../../../components/Workers/WorkerCardFull";
 import { WorkerCardCompact } from "../../../components/Workers/WorkerCardCompact";
@@ -2412,7 +2412,7 @@ export function V2TalentCentric({
             (connectionsStatusFilter === "shift_scheduled" && c.shift_scheduled) ||
             (connectionsStatusFilter === "shift_booked" && c.shift_booked) ||
             (connectionsStatusFilter === "saved_for_later" && c.saved_for_later) ||
-            (connectionsStatusFilter === "worker_declined" && (c.status === "worker_declined" || c.status === "not_interested"));
+            (connectionsStatusFilter === "not_interested" && c.status === "not_interested");
           return marketMatch && statusMatch;
         });
 
@@ -2426,7 +2426,7 @@ export function V2TalentCentric({
           shift_scheduled: workerConnections.filter(c => c.shift_scheduled).length,
           shift_booked: workerConnections.filter(c => c.shift_booked).length,
           saved_for_later: workerConnections.filter(c => c.saved_for_later).length,
-          worker_declined: workerConnections.filter(c => c.status === "worker_declined" || c.status === "not_interested").length,
+          worker_declined: workerConnections.filter(c => c.status === "not_interested").length,
         };
 
         // Helper to get initials
@@ -2679,7 +2679,7 @@ export function V2TalentCentric({
                               <span className="tag-icon"><Heart size={12} /></span>
                               <span className="tag-text">Saved</span>
                             </span>
-                          ) : (connection.status === "worker_declined" || connection.status === "not_interested") ? (
+                          ) : connection.status === "not_interested" ? (
                             <span className="tag tag-gray tag-sm">
                               <span className="tag-icon"><XCircle size={12} /></span>
                               <span className="tag-text">Worker Declined</span>
@@ -2687,11 +2687,11 @@ export function V2TalentCentric({
                           ) : null}
                           {/* Chat button - logic based on connection status */}
                           {(() => {
-                            const isWorkerDeclined = connection.status === "worker_declined" || connection.status === "not_interested";
+                            const isWorkerDeclined = connection.status === "not_interested";
                             const isSaved = connection.status === "liked" || connection.saved_for_later;
                             const isConnected = connection.status === "accepted";
                             const hasShift = connection.shift_scheduled || connection.shift_booked;
-                            const hasUnreadMessage = connection.has_unread_worker_message;
+                            const hasUnreadMessage = false; // has_unread_worker_message not yet in schema
 
                             // Chat enabled for: connected, shift_scheduled, shift_booked
                             const chatEnabled = isConnected || hasShift;
@@ -2794,11 +2794,18 @@ export function V2TalentCentric({
                         uniqueStoreCount: selectedConnectionFullWorker.unique_store_count || 0,
                         brandsWorked: selectedConnectionFullWorker.brands_worked || [],
                         endorsementCounts: selectedConnectionFullWorker.endorsement_counts || {},
-                        shiftExperience: selectedConnectionFullWorker.shift_experience || [],
-                        invitedBackStores: selectedConnectionFullWorker.invited_back_stores || [],
+                        shiftExperience: selectedConnectionFullWorker.shift_experience || {},
+                        invitedBackStores: selectedConnectionFullWorker.invited_back_stores || 0,
                         aboutMe: selectedConnectionFullWorker.about_me || '',
                         previousExperience: selectedConnectionFullWorker.previous_experience || [],
-                        reflexActivity: selectedConnectionFullWorker.reflex_activity || {},
+                        reflexActivity: selectedConnectionFullWorker.reflex_activity
+                          ? {
+                              shiftsByTier: selectedConnectionFullWorker.reflex_activity.shiftsByTier ?? { luxury: 0, elevated: 0, mid: 0 },
+                              longestRelationship: selectedConnectionFullWorker.reflex_activity.longestRelationship ?? null,
+                              tierProgression: (selectedConnectionFullWorker.reflex_activity.tierProgression === 'upward' ? 'upward' : 'stable') as 'upward' | 'stable',
+                              storeFavoriteCount: selectedConnectionFullWorker.reflex_activity.storeFavoriteCount ?? null,
+                            }
+                          : null,
                         retailerQuotes: selectedConnectionFullWorker.retailer_quotes || [],
                         retailerSummary: selectedConnectionFullWorker.retailer_summary || '',
                         currentTier: selectedConnectionFullWorker.current_tier || '',
@@ -2806,6 +2813,8 @@ export function V2TalentCentric({
                         tardyPercent: selectedConnectionFullWorker.tardy_percent || 0,
                         urgentCancelRatio: selectedConnectionFullWorker.urgent_cancel_ratio || '',
                         urgentCancelPercent: selectedConnectionFullWorker.urgent_cancel_percent || 0,
+                        matchScore: 0,
+                        matchReasons: [],
                       }}
                       onClose={() => {
                         setSelectedConnectionWorker(null);
