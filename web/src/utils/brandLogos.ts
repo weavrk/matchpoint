@@ -60,7 +60,7 @@ import logoNorthFace from '../../../assets/brand-logos/north-face.png';
 import logoOldNavy from '../../../assets/brand-logos/old-navy.png';
 import logoPacsun from '../../../assets/brand-logos/pacsun.png';
 import logoPatagonia from '../../../assets/brand-logos/patagonia.png';
-import logoPoloRalphLauren from '../../../assets/brand-logos/polo-ralph-lauren.png';
+import logoRalphLauren from '../../../assets/brand-logos/ralph-lauren.png';
 import logoPuma from '../../../assets/brand-logos/puma.png';
 import logoRagAndBone from '../../../assets/brand-logos/rag-and-bone.png';
 import logoReclectic from '../../../assets/brand-logos/reclectic.png';
@@ -173,9 +173,10 @@ const BRAND_LOGO_MAP: Record<string, string> = {
   'oofos': logoOofos,
   'pacsun': logoPacsun,
   'patagonia': logoPatagonia,
-  'polo ralph lauren': logoPoloRalphLauren,
-  'ralph lauren': logoPoloRalphLauren,
-  'ralph lauren factory store': logoPoloRalphLauren,
+  'polo ralph lauren': logoRalphLauren,
+  'polo-ralph-lauren': logoRalphLauren,
+  'ralph lauren': logoRalphLauren,
+  'ralph lauren factory store': logoRalphLauren,
   'puma': logoPuma,
   'rag & bone': logoRagAndBone,
   'rag and bone': logoRagAndBone,

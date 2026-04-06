@@ -113,7 +113,7 @@ import logoNorthFace from "../../../../../assets/brand-logos/north-face.png";
 import logoOldNavy from "../../../../../assets/brand-logos/old-navy.png";
 import logoPacsun from "../../../../../assets/brand-logos/pacsun.png";
 import logoPatagonia from "../../../../../assets/brand-logos/patagonia.png";
-import logoPoloRalphLauren from "../../../../../assets/brand-logos/polo-ralph-lauren.png";
+import logoRalphLauren from "../../../../../assets/brand-logos/ralph-lauren.png";
 import logoPuma from "../../../../../assets/brand-logos/puma.png";
 import logoRagAndBone from "../../../../../assets/brand-logos/rag-and-bone.png";
 import logoReclectic from "../../../../../assets/brand-logos/reclectic.png";
@@ -174,7 +174,7 @@ const getRandomUserName = () =>
 
 // Popular brand picks for quick selection
 const POPULAR_BRANDS = [
-  { id: "polo-ralph-lauren", name: "Ralph Lauren" },
+  { id: "ralph-lauren", name: "Ralph Lauren" },
   { id: "marc-jacobs", name: "Marc Jacobs" },
   { id: "ariat", name: "Ariat" },
   { id: "golden-goose", name: "Golden Goose" },
@@ -182,6 +182,7 @@ const POPULAR_BRANDS = [
 
 // Brand logos array - edit this to add/remove brands
 const BRAND_LOGOS: { id: string; logo: string }[] = [
+  { id: "ralph-lauren", logo: logoRalphLauren },
   { id: "7-for-all-mankind", logo: logo7ForAllMankind },
   { id: "abercrombie", logo: logoAbercrombie },
   { id: "aldo", logo: logoAldo },
@@ -232,7 +233,6 @@ const BRAND_LOGOS: { id: string; logo: string }[] = [
   { id: "old-navy", logo: logoOldNavy },
   { id: "pacsun", logo: logoPacsun },
   { id: "patagonia", logo: logoPatagonia },
-  { id: "polo-ralph-lauren", logo: logoPoloRalphLauren },
   { id: "puma", logo: logoPuma },
   { id: "rag-and-bone", logo: logoRagAndBone },
   { id: "reclectic", logo: logoReclectic },
@@ -263,6 +263,15 @@ const BRAND_LOGOS: { id: string; logo: string }[] = [
   { id: "wolf-shepherd", logo: logoWolfAndShepherd },
   { id: "zara", logo: logoZara },
 ];
+
+/** V2 grid previously used `polo-ralph-lauren`; canonical id is `ralph-lauren`. */
+const LEGACY_BRAND_ID_MAP: Record<string, string> = {
+  "polo-ralph-lauren": "ralph-lauren",
+};
+
+function canonicalBrandId(brandId: string): string {
+  return LEGACY_BRAND_ID_MAP[brandId] ?? brandId;
+}
 
 type Step =
   | "welcome"
@@ -559,6 +568,27 @@ export function V2TalentCentric({
   const userName = propUserName || fallbackUserName;
   const brandRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
+  useEffect(() => {
+    setSelectedBrands((prev) => {
+      const next = [...new Set(prev.map(canonicalBrandId))];
+      const needsMigration = prev.some((b) => b !== canonicalBrandId(b));
+      return needsMigration ? next : prev;
+    });
+  }, []);
+
+  const uniqueSelectedBrandCount = useMemo(
+    () => new Set(selectedBrands.map(canonicalBrandId)).size,
+    [selectedBrands],
+  );
+
+  const isBrandTileSelected = useCallback(
+    (id: string) =>
+      selectedBrands.some(
+        (b) => canonicalBrandId(b) === canonicalBrandId(id),
+      ),
+    [selectedBrands],
+  );
+
   // New flow state
   const [focusArea, setFocusArea] = useState<FocusArea | null>(null);
   const [employmentType, setEmploymentType] = useState<EmploymentType>(null);
@@ -656,13 +686,16 @@ export function V2TalentCentric({
     }
   }, []);
 
-  // Toggle brand selection
+  // Toggle brand selection (canonical ids; legacy `polo-ralph-lauren` → `ralph-lauren`)
   const toggleBrand = (brandName: string) => {
-    setSelectedBrands((prev) =>
-      prev.includes(brandName)
-        ? prev.filter((b) => b !== brandName)
-        : [...prev, brandName],
-    );
+    const id = canonicalBrandId(brandName);
+    setSelectedBrands((prev) => {
+      const selected = new Set(prev.map(canonicalBrandId));
+      if (selected.has(id)) {
+        return prev.filter((b) => canonicalBrandId(b) !== id);
+      }
+      return [...prev, id];
+    });
   };
 
   // Initialize V2 chat service
@@ -1029,6 +1062,8 @@ export function V2TalentCentric({
 
   // Filter and score workers based on selections (for results step)
   const filteredWorkers = useMemo(() => {
+    const canonicalSelectedIds = selectedBrands.map(canonicalBrandId);
+
     // Use Supabase workers when location is selected, otherwise fall back to sample data
     let workers: WorkerProfile[] = selectedLocation && supabaseWorkers.length > 0
       ? [...supabaseWorkers]
@@ -1051,11 +1086,13 @@ export function V2TalentCentric({
     // Filter by selected brands - check brandsWorked and previousExperience
     // Also include workers with experience at brands in the same classification
     if (selectedBrands.length > 0) {
-      const normalizedSelected = selectedBrands.map((id) => normalizeBrand(id));
+      const normalizedSelected = canonicalSelectedIds.map((id) =>
+        normalizeBrand(id),
+      );
 
       // Find classifications of selected brands from retailers table
       const selectedClassifications = new Set<string>();
-      selectedBrands.forEach((brandId) => {
+      canonicalSelectedIds.forEach((brandId) => {
         const normalizedId = normalizeBrand(brandId);
         const retailer = retailers.find((r) =>
           normalizeBrand(r.name).includes(normalizedId) ||
@@ -1132,9 +1169,14 @@ export function V2TalentCentric({
     const scored: MatchedWorker[] = workers.map((w) => {
       let score = 50;
 
-      // Brand match bonus
+      // Brand match bonus (grid ids are kebab-case; brandsWorked uses display names)
       const brandMatches = w.brandsWorked.filter((b) =>
-        selectedBrands.includes(b.name),
+        canonicalSelectedIds.some(
+          (sid) =>
+            normalizeBrand(b.name) === normalizeBrand(sid) ||
+            normalizeBrand(b.name).includes(normalizeBrand(sid)) ||
+            normalizeBrand(sid).includes(normalizeBrand(b.name)),
+        ),
       ).length;
       score += brandMatches * 10;
 
@@ -2163,14 +2205,14 @@ export function V2TalentCentric({
               footer={{
                 onBack: () => transitionToStep(getPreviousSection("brands"), "back"),
                 onNext: () => {
-                  if (selectedBrands.length > 0) {
+                  if (uniqueSelectedBrandCount > 0) {
                     completeSection("brands");
                   }
                 },
-                nextDisabled: selectedBrands.length === 0,
+                nextDisabled: uniqueSelectedBrandCount === 0,
                 nextLabel:
-                  selectedBrands.length > 0
-                    ? `Continue (${selectedBrands.length})`
+                  uniqueSelectedBrandCount > 0
+                    ? `Continue (${uniqueSelectedBrandCount})`
                     : "Continue",
                 showBack: true,
               }}
@@ -2191,11 +2233,11 @@ export function V2TalentCentric({
                     {POPULAR_BRANDS.map((brand) => (
                       <button
                         key={brand.id}
-                        className={`v2-popular-chip ${selectedBrands.includes(brand.id) ? "selected" : ""}`}
+                        className={`v2-popular-chip ${isBrandTileSelected(brand.id) ? "selected" : ""}`}
                         onClick={() => toggleBrand(brand.id)}
                       >
                         {brand.name}
-                        {selectedBrands.includes(brand.id) ? <Check size={16} /> : <Plus size={16} />}
+                        {isBrandTileSelected(brand.id) ? <Check size={16} /> : <Plus size={16} />}
                       </button>
                     ))}
                   </div>
@@ -2236,7 +2278,7 @@ export function V2TalentCentric({
                     <button
                       className="v2-clear-all"
                       onClick={() => setSelectedBrands([])}
-                      disabled={selectedBrands.length === 0}
+                      disabled={uniqueSelectedBrandCount === 0}
                     >
                       Clear all
                     </button>
@@ -2253,11 +2295,11 @@ export function V2TalentCentric({
                       ref={(el) => {
                         brandRefs.current[brand.id] = el;
                       }}
-                      className={`v2-brand-tile ${selectedBrands.includes(brand.id) ? "selected" : ""}${searchResults && searchResults.some((r) => r.id === brand.id) ? " search-match" : ""}`}
+                      className={`v2-brand-tile ${isBrandTileSelected(brand.id) ? "selected" : ""}${searchResults && searchResults.some((r) => r.id === brand.id) ? " search-match" : ""}`}
                       onClick={() => toggleBrand(brand.id)}
                     >
                       <img src={brand.logo} alt="" className="v2-brand-logo" />
-                      {selectedBrands.includes(brand.id) && (
+                      {isBrandTileSelected(brand.id) && (
                         <div className="v2-brand-check">
                           <Check size={16} />
                         </div>
