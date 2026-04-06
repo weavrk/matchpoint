@@ -91,7 +91,7 @@ import logoVeraWang from '../../../assets/brand-logos/vera-wang.png';
 import logoVineyardVines from '../../../assets/brand-logos/vineyards-vines.png';
 import logoVictoriasSecret from '../../../assets/brand-logos/victorias-secret.png';
 import logoWarbyParker from '../../../assets/brand-logos/warby-parker.png';
-import logoWolfAndShephard from '../../../assets/brand-logos/wolf-and-shephard.png';
+import logoWolfAndShephard from '../../../assets/brand-logos/wolf-shepherd.png';
 import logoZara from '../../../assets/brand-logos/zara.png';
 
 // Map brand names to logos (case-insensitive matching)
