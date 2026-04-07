@@ -938,11 +938,11 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     <td><code>tardyRatio = "0/x"</code> (never late)</td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green-light tag-md"><span className="tag-icon"><ClockCheck size={16} /></span><span className="tag-text">X% On-Time</span></span></td>
+                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><ClockCheck size={16} /></span><span className="tag-text">X% On-Time</span></span></td>
                     <td><code>100 - tardyPercent</code> (if tardyPercent &lt; 10%)</td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green-light tag-md"><span className="tag-icon"><Sparkles size={16} /></span><span className="tag-text">Exceptional Commitment</span></span></td>
+                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><Sparkles size={16} /></span><span className="tag-text">Exceptional Commitment</span></span></td>
                     <td><code>urgentCancelPercent &lt; 5%</code></td>
                   </tr>
                   <tr>
@@ -954,7 +954,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     <td><code>storeFavoriteCount &gt;= 89%</code> of uniqueStoreCount</td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green-light tag-md"><span className="tag-icon"><UserStar size={16} /></span><span className="tag-text">X% Invite Back Rate</span></span></td>
+                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><UserStar size={16} /></span><span className="tag-text">X% Invite Back Rate</span></span></td>
                     <td><code>invitedBackStores &gt;= 94%</code> of uniqueStoreCount</td>
                   </tr>
                 </tbody>

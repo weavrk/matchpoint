@@ -96,18 +96,17 @@ const MALE_NAMES = new Set([
   'aj', 'talib', 'kimar', 'gallo', 'connor'
 ]);
 
-function inferGender(firstName: string): 'she' | 'he' | 'they' {
+function inferGender(firstName: string): 'she' | 'he' {
   const name = firstName.toLowerCase().trim();
   if (FEMALE_NAMES.has(name)) return 'she';
   if (MALE_NAMES.has(name)) return 'he';
-  return 'they'; // Default to neutral if unsure
+  return 'she'; // Default to female if unsure
 }
 
-function getPronouns(gender: 'she' | 'he' | 'they'): { subject: string; object: string; possessive: string } {
+function getPronouns(gender: 'she' | 'he'): { subject: string; object: string; possessive: string } {
   switch (gender) {
     case 'she': return { subject: 'she', object: 'her', possessive: 'her' };
     case 'he': return { subject: 'he', object: 'him', possessive: 'his' };
-    default: return { subject: 'they', object: 'them', possessive: 'their' };
   }
 }
 
@@ -135,7 +134,7 @@ const FEMALE_PHOTOS = [
 let malePhotoIndex = 0;
 let femalePhotoIndex = 0;
 
-function getPhotoForGender(gender: 'she' | 'he' | 'they'): string {
+function getPhotoForGender(gender: 'she' | 'he'): string {
   if (gender === 'he') {
     const photo = MALE_PHOTOS[malePhotoIndex % MALE_PHOTOS.length];
     malePhotoIndex++;
@@ -290,7 +289,7 @@ Write the summary now (just the text, no labels):`;
 
 async function generateRetailerSummary(
   firstName: string,
-  gender: 'she' | 'he' | 'they',
+  gender: 'she' | 'he',
   retailerFeedback: string
 ): Promise<string | null> {
   try {

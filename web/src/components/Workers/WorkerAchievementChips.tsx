@@ -8,7 +8,6 @@ interface WorkerAchievementChipsProps {
 interface ChipData {
   text: string;
   icon: React.ReactNode;
-  variant: 'green' | 'green-light';
 }
 
 /**
@@ -31,7 +30,6 @@ export function WorkerAchievementChips({ worker }: WorkerAchievementChipsProps) 
     chips.push({
       text: 'Market Favorite',
       icon: <Heart size={16} />,
-      variant: 'green'
     });
   }
 
@@ -40,14 +38,12 @@ export function WorkerAchievementChips({ worker }: WorkerAchievementChipsProps) 
     chips.push({
       text: '100% On-Time',
       icon: <Award size={16} />,
-      variant: 'green'
     });
   } else if (worker.tardyPercent != null && worker.tardyPercent < 10) {
     const onTimePercent = Math.min(100 - worker.tardyPercent, 100);
     chips.push({
       text: `${Math.round(onTimePercent)}% On-Time`,
       icon: <ClockCheck size={16} />,
-      variant: 'green-light'
     });
   }
 
@@ -56,7 +52,6 @@ export function WorkerAchievementChips({ worker }: WorkerAchievementChipsProps) 
     chips.push({
       text: 'Exceptional Commitment',
       icon: <Sparkles size={16} />,
-      variant: 'green-light'
     });
   }
 
@@ -65,7 +60,6 @@ export function WorkerAchievementChips({ worker }: WorkerAchievementChipsProps) 
     chips.push({
       text: '0 Call-Outs',
       icon: <Trophy size={16} />,
-      variant: 'green'
     });
   }
 
@@ -77,7 +71,6 @@ export function WorkerAchievementChips({ worker }: WorkerAchievementChipsProps) 
       chips.push({
         text: `${Math.round(favoritePercent)}% Favorite Rating`,
         icon: <HeartPlus size={16} />,
-        variant: 'green'
       });
     }
   }
@@ -89,24 +82,16 @@ export function WorkerAchievementChips({ worker }: WorkerAchievementChipsProps) 
       chips.push({
         text: `${Math.round(inviteBackPercent)}% Invite Back Rate`,
         icon: <UserStar size={16} />,
-        variant: 'green-light'
       });
     }
   }
 
   if (chips.length === 0) return null;
 
-  // Sort chips: green (dark) first, then green-light
-  const sortedChips = [...chips].sort((a, b) => {
-    if (a.variant === 'green' && b.variant === 'green-light') return -1;
-    if (a.variant === 'green-light' && b.variant === 'green') return 1;
-    return 0;
-  });
-
   return (
     <div className="worker-achievement-chips">
-      {sortedChips.map((chip, idx) => (
-        <span key={idx} className={`tag tag-${chip.variant} tag-md`}>
+      {chips.map((chip, idx) => (
+        <span key={idx} className="tag tag-green tag-md">
           <span className="tag-icon">{chip.icon}</span>
           <span className="tag-text">{chip.text}</span>
         </span>
