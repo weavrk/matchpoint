@@ -47,25 +47,45 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
           </div>
         )}
 
-        {/* Shift Experience */}
-        {shiftExperienceEntries.length > 0 && (
+        {/* Reflex Experience — shift role pills + brand logos under one header */}
+        {(shiftExperienceEntries.length > 0 || worker.brandsWorked.length > 0) && (
           <div className="testing-section">
-            <span className="testing-label">Shift Experience ({shiftExperienceEntries.length})</span>
-            <div className="testing-pills">
-              {shiftExperienceEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-blue-light tag-md">
-                  <span className="tag-text">{name}</span>
-                  <span className="tag-counter">{count}</span>
-                </span>
-              ))}
-            </div>
+            <span className="testing-label">Reflex Experience</span>
+
+            {shiftExperienceEntries.length > 0 && (
+              <div className="testing-pills">
+                {shiftExperienceEntries.map(([name, count], idx) => (
+                  <span key={idx} className="tag tag-blue-light tag-md">
+                    <span className="tag-text">{name}</span>
+                    <span className="tag-counter">{count}</span>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {worker.brandsWorked.length > 0 && (
+              <div className={`brand-logo-grid${shiftExperienceEntries.length > 0 ? ' brand-logo-grid-spaced' : ''}`}>
+                {worker.brandsWorked.map((brand, idx) => {
+                  const logo = getBrandLogo(brand.name);
+                  return logo ? (
+                    <span key={idx} className="tag-logo">
+                      <img src={logo} alt={brand.name} />
+                    </span>
+                  ) : (
+                    <span key={idx} className="brand-logo-fallback">
+                      {toTitleCase(brand.name)}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
         {/* Work History (Previous Experience) */}
         {worker.previousExperience.length > 0 && (
           <div className="testing-section">
-            <span className="testing-label">Other Retail Experience ({worker.previousExperience.length})</span>
+            <span className="testing-label">Other Retail Experience</span>
             <div className="testing-data">
               {worker.previousExperience.map((exp, idx) => (
                 <div key={idx} className="testing-row">
@@ -87,7 +107,7 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
         {/* Retailer Quotes */}
         {worker.retailerQuotes && worker.retailerQuotes.length > 0 && (
           <div className="testing-section">
-            <span className="testing-label">Store team reviews ({worker.retailerQuotes.length})</span>
+            <span className="testing-label">Store team reviews</span>
             <div className="testing-data">
               {worker.retailerQuotes.map((quote, idx) => {
                 const brandLogo = getBrandLogo(quote.brand);
@@ -111,31 +131,10 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
           </div>
         )}
 
-        {/* Brands Worked */}
-        {worker.brandsWorked.length > 0 && (
-          <div className="testing-section">
-            <span className="testing-label">Retailers on Reflex ({worker.brandsWorked.length})</span>
-            <div className="brand-logo-grid">
-              {worker.brandsWorked.map((brand, idx) => {
-                const logo = getBrandLogo(brand.name);
-                return logo ? (
-                  <span key={idx} className="tag-logo">
-                    <img src={logo} alt={brand.name} />
-                  </span>
-                ) : (
-                  <span key={idx} className="brand-logo-fallback">
-                    {toTitleCase(brand.name)}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {/* Endorsements */}
         {endorsementEntries.length > 0 && (
           <div className="testing-section">
-            <span className="testing-label">Endorsements ({endorsementEntries.length})</span>
+            <span className="testing-label">Endorsements</span>
             <div className="testing-pills">
               {endorsementEntries.map(([name, count], idx) => (
                 <span key={idx} className="tag tag-stroke tag-md">
@@ -150,7 +149,7 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
         {/* Interview Transcript */}
         {worker.interviewTranscript && Array.isArray(worker.interviewTranscript) && worker.interviewTranscript.length > 0 && (
           <div className="testing-section">
-            <span className="testing-label">Interview ({worker.interviewTranscript.length} Q&A)</span>
+            <span className="testing-label">Interview</span>
             <div className="testing-data">
               {worker.interviewTranscript.map((entry, idx) => (
                 <div key={idx} className="testing-quote">

@@ -85,7 +85,7 @@ export function WorkerCardHeaderFull({ worker, showActivelyLooking = true }: Wor
           )}
 
           {showActivelyLooking && worker.activelyLooking && (
-            <span className="tag tag-blue tag-sm">
+            <span className="tag tag-blue-light tag-sm">
               <span className="tag-icon"><Search size={12} /></span>
               <span className="tag-text">Actively Looking</span>
             </span>
@@ -168,7 +168,7 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
             )}
 
             {showActivelyLooking && worker.activelyLooking && (
-              <span className="tag tag-blue tag-sm">
+              <span className="tag tag-blue-light tag-sm">
                 <span className="tag-icon"><Search size={12} /></span>
                 <span className="tag-text">Actively Looking</span>
               </span>

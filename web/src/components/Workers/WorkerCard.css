@@ -1111,6 +1111,10 @@
   box-sizing: border-box;
 }
 
+.brand-logo-grid.brand-logo-grid-spaced {
+  margin-top: 12px;
+}
+
 .brand-logo-grid .tag-logo {
   /* Override fixed sizes from .tag-logo base — let the grid column dictate width */
   box-sizing: border-box;
@@ -1127,9 +1131,9 @@
   text-align: center;
   font-size: 11px;
   font-weight: 500;
-  color: #ffffff;
-  background: var(--primary);
-  border: none;
+  color: var(--primary);
+  background: #ffffff;
+  border: 1px solid var(--quaternary);
   border-radius: 8px;
   padding: 4px;
   aspect-ratio: 1;
@@ -1222,9 +1226,21 @@
 }
 
 .quote-brand-text {
-  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 11px;
   font-weight: 500;
-  color: var(--text-hint);
+  color: var(--primary);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 4px;
+  width: 100px;
+  height: 88px;
+  line-height: 1.3;
+  box-sizing: border-box;
 }
 
 /* Role styling - bold, left-aligned with dash */

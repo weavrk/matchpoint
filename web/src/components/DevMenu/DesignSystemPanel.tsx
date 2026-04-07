@@ -844,7 +844,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     <td><code>shiftVerified: true</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-blue tag-md"><span className="tag-icon"><Search size={16} /></span><span className="tag-text">Actively Looking</span></span></td>
+                    <td><span className="tag tag-blue-light tag-md"><span className="tag-icon"><Search size={16} /></span><span className="tag-text">Actively Looking</span></span></td>
                     <td><code>activelyLooking: true</code></td>
                   </tr>
                 </tbody>
@@ -1076,7 +1076,8 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             <h4>WorkerCardCompact</h4>
             <p className="ds-description">
               Compact teaser card for grids and chat. Shows header + Reflex stats + retailer summary (verified) or work history (non-verified) + endorsements.
-              Shift Experience rows use <code>tag tag-blue-light tag-md</code> (<code>--background-blue</code>); see Tags tab → Shift experience for canonical markup.
+              Header badges: <code>tag-blue-light tag-sm</code> for both Shift Verified (BadgeCheck icon) and Actively Looking (Search icon) — right-aligned in header.
+              Shift Experience rows use <code>tag tag-blue-light tag-md</code>; see Tags tab → Shift experience for canonical markup.
             </p>
             <div className="ds-worker-card-example">
               <WorkerCardCompact worker={sampleWorker} />

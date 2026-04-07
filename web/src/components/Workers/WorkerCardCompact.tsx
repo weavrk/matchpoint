@@ -66,7 +66,7 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
         {/* Shift Experience - show for all workers */}
         {shiftExperienceEntries.length > 0 && (
           <div className="compact-section">
-            <span className="section-label">Shift Experience</span>
+            <span className="section-label">Reflex Experience</span>
             <div className="compact-endorsements">
               {shiftExperienceEntries.map(([name, count], idx) => (
                 <span key={idx} className="tag tag-blue-light tag-md">
