@@ -1,7 +1,6 @@
-import { useMemo } from 'react';
 import type { MatchedWorker, WorkerProfile } from '../../types';
+import { WorkerCardHeader } from './WorkerCardHeader';
 import { WorkerAchievementChips } from './WorkerAchievementChips';
-import { getWorkerPhoto } from '../../hooks/useWorkerPhoto';
 import './WorkerCard.css';
 
 interface WorkerCardChipProps {
@@ -10,37 +9,11 @@ interface WorkerCardChipProps {
 }
 
 /**
- * WorkerCardChip - Minimal horizontal chip showing avatar, name, and stats.
+ * WorkerCardChip - Compact card showing the shared header (compact mode) + stats + achievement chips.
  * Used for inline mentions, selection lists, and compact displays.
- *
- * Layout: Avatar + Name in a row (vertically centered), achievement chips below
  */
 export function WorkerCardChip({ worker, onClick }: WorkerCardChipProps) {
-  // Format name as "First L."
-  const nameParts = worker.name.split(' ');
-  const displayName = nameParts.length > 1
-    ? `${nameParts[0]} ${nameParts[nameParts.length - 1][0]}.`
-    : nameParts[0];
-
-  // Get initials
-  const initials = worker.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase();
-
-  // Get unique store locations count
   const storeLocations = worker.uniqueStoreCount || 0;
-
-  // Get photo from final photos pool based on gender - cached by worker ID
-  const assignedPhoto = useMemo(() => {
-    if (worker.gender) {
-      return getWorkerPhoto(worker.gender, worker.id);
-    }
-    return null;
-  }, [worker.gender, worker.id]);
-
-  const photoUrl = assignedPhoto || worker.photo;
 
   return (
     <div
@@ -49,27 +22,24 @@ export function WorkerCardChip({ worker, onClick }: WorkerCardChipProps) {
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
     >
-      <div className="chip-header">
-        <div className="chip-avatar">
-          {photoUrl ? (
-            <img src={photoUrl} alt="" />
-          ) : (
-            <span>{initials}</span>
-          )}
+      <WorkerCardHeader
+        worker={worker as MatchedWorker}
+        compact
+        showLocation={false}
+      />
+      <div className="chip-body">
+        <div className="chip-stats">
+          <span className="tag tag-stroke tag-md">
+            <span className="tag-counter">{worker.shiftsOnReflex}</span>
+            <span className="tag-text">Shifts</span>
+          </span>
+          <span className="tag tag-stroke tag-md">
+            <span className="tag-counter">{storeLocations}</span>
+            <span className="tag-text">Store Locations</span>
+          </span>
         </div>
-        <span className="chip-name">{displayName}</span>
+        <WorkerAchievementChips worker={worker} />
       </div>
-      <div className="chip-stats">
-        <span className="tag tag-stroke tag-md">
-          <span className="tag-counter">{worker.shiftsOnReflex}</span>
-          <span className="tag-text">Shifts</span>
-        </span>
-        <span className="tag tag-stroke tag-md">
-          <span className="tag-counter">{storeLocations}</span>
-          <span className="tag-text">Store Locations</span>
-        </span>
-      </div>
-      <WorkerAchievementChips worker={worker} />
     </div>
   );
 }

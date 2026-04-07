@@ -11,13 +11,13 @@
 - **Location Step** — trim to markets with ≥20 workers, NYC rollup for LI/NNJ, multi-store header copy, chip height fix
 - **Brand Affinity Step** — header copy → "Which brands do you like to recruit from?"
 - **Experience Level Step** — "Show me all" as first stop, equal-width click zones across slider
+- **Worker Cards** — Shift Verified + Actively Looking badges: `tag-blue-light tag-sm`, DSL updated
+- **Worker Cards** — "Shift Experience" → "Reflex Experience"; brand logos merged under same header, no duplicate
+- **Worker Cards** — "Retailers on Reflex" → "Reflex Brand Experience"; section counts removed everywhere
 
 ---
 
 ## 🔲 Next Up — Worker Cards (Global)
 
-- Update compact card chips: standardize color and language across all chips
-- Add **Shift Verified** and **Actively Looking** badges to compact cards
-- Rename "Shift Experience" → "Reflex Experience" in the full card header
-- Add **Connect** and **Like** actions to all worker cards throughout the flows
-
+- [ ] Update compact card chips: standardize color and language across all chips
+- [ ] Add **Connect** and **Like** actions to all worker cards throughout the flows

@@ -84,7 +84,7 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
             <span className="section-label">Retailers on Reflex</span>
             <div className="compact-endorsements">
               {brandsWorked.map((brand, idx) => (
-                <span key={idx} className="tag tag-primary-fill tag-md">
+                <span key={idx} className="tag tag-dark-gray tag-md">
                   <span className="tag-text">{brand.name}</span>
                 </span>
               ))}

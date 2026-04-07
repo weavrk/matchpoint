@@ -112,7 +112,7 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
           <span className="testing-label">Retailers on Reflex ({worker.brandsWorked.length})</span>
           <div className="testing-pills">
             {worker.brandsWorked.map((brand, idx) => (
-              <span key={idx} className="tag tag-primary-fill tag-md">
+              <span key={idx} className="tag tag-dark-gray tag-md">
                 <span className="tag-text">{toTitleCase(brand.name)}</span>
               </span>
             ))}

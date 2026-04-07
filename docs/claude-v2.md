@@ -636,12 +636,12 @@ Worker-specific shift booking flow:
 | `.v2-experience-scale`               | Sliding scale or card selection for experience (TBD)                                                                                     |
 | **Results**                          |                                                                                                                                          |
 | `WorkerCardTeaser`                   | Worker cards in results/sidebar                                                                                                          |
-| `WorkerCardHeader`                   | Shared header with avatar, name, badges                                                                                                  |
+| `WorkerCardHeader`                   | Default: `.worker-header-content` `padding: 12px 16px`, `gap: 8px`, `height: fit-content`, `space-between`. Compact: `padding: 0`, `flex-start`, `gap: 8px`; `.worker-card-header.compact` `height: fit-content`, `gap: 0`; `.worker-header-left` `gap: 8px` when compact. Tags `align-self: center`. |
 | `WorkerAchievementChips`             | Achievement tags with icons (green/green-light variants)                                                                                 |
 | `.tag.tag-blue-light.tag-md`         | Shift Verified (BadgeCheck); **shift experience** role + count (`tag-text` + `tag-counter`); fill `--background-blue`                    |
 | `.tag.tag-blue.tag-md`               | Actively Looking (Search icon); fill `**--accent-blue-light`** (not the same as blue light)                                              |
-| `.tag.tag-primary-fill.tag-md`       | Retailers on Reflex name pill when showing text-only brands                                                                              |
-| `.tag-logo` / `.brand-logo-fallback` | Brand logo tile vs primary-fill square fallback when no logo asset                                                                       |
+| `.tag.tag-dark-gray.tag-md`          | Retailers on Reflex name pill when showing text-only brands (`--stone-700`, white text)                                                 |
+| `.tag-logo` / `.brand-logo-fallback` | Brand logo tile vs dark-gray square fallback when no logo asset (same stone-700 + white text as `tag-dark-gray`)                           |
 | `.type-section-header-lg`            | "We found N Reflexers" heading                                                                                                           |
 | `.type-section-header-sm`            | "What retailers are saying..." label                                                                                                     |
 | `.type-body-md`                      | Worker summary text                                                                                                                      |

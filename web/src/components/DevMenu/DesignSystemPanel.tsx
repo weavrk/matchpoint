@@ -510,7 +510,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 <span>Yes, search in Austin</span>
                 <span className="v2-confirm-chip-icon"><Check size={16} /></span>
               </button>
-              {/* Selected state (primary fill) */}
+              {/* Selected state (primary background) */}
               <button className="v2-location-confirm-chip selected" type="button">
                 <span>Hire in a different market</span>
                 <span className="v2-confirm-chip-icon"><Check size={16} /></span>
@@ -596,6 +596,17 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             <h4>Sizes</h4>
             <div className="ds-3col-grid">
               <div className="ds-pill-with-spec">
+                <span className="tag tag-lite-gray tag-xs"><span className="tag-icon"><BadgeCheck size={12} /></span><span className="tag-text">XSmall</span></span>
+                <div className="ds-spec-column">
+                  <span className="ds-spec-text">class: tag-xs</span>
+                  <span className="ds-spec-text">font: 10px / 12px</span>
+                  <span className="ds-spec-text">weight: 500</span>
+                  <span className="ds-spec-text">padding: 3px 6px</span>
+                  <span className="ds-spec-text">icon: 12px</span>
+                  <span className="ds-spec-text">gap: 3px</span>
+                </div>
+              </div>
+              <div className="ds-pill-with-spec">
                 <span className="tag tag-lite-gray tag-sm"><span className="tag-icon"><BadgeCheck size={14} /></span><span className="tag-text">Small</span></span>
                 <div className="ds-spec-column">
                   <span className="ds-spec-text">class: tag-sm</span>
@@ -666,16 +677,6 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                   <span className="ds-spec-text">icon: rgba(255,255,255,0.8)</span>
                   <span className="ds-spec-text">counter bg: gray-100</span>
                   <span className="ds-spec-text">counter text: primary</span>
-                </div>
-              </div>
-              <div className="ds-pill-with-spec">
-                <span className="tag tag-primary-fill tag-md"><span className="tag-text">Primary fill</span></span>
-                <div className="ds-spec-column">
-                  <span className="ds-spec-text">tag-primary-fill</span>
-                  <span className="ds-spec-text">bg: primary</span>
-                  <span className="ds-spec-text">text: #ffffff</span>
-                  <span className="ds-spec-text">icon: #ffffff</span>
-                  <span className="ds-spec-text">counter: translucent on primary</span>
                 </div>
               </div>
               <div className="ds-pill-with-spec">
@@ -898,7 +899,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                       <div className="ds-brands-worked-variants">
                         <div className="ds-brands-worked-variant">
                           <span className="ds-spec-text">Name (no logo asset)</span>
-                          <span className="tag tag-primary-fill tag-md"><span className="tag-text">Moncler</span></span>
+                          <span className="tag tag-dark-gray tag-md"><span className="tag-text">Moncler</span></span>
                         </div>
                         <div className="ds-brands-worked-variant">
                           <span className="ds-spec-text">Logo square</span>
@@ -910,7 +911,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                       <code>brandsWorked[].name</code>
                       <br />
                       <span style={{ fontSize: 10, color: 'var(--secondary)' }}>
-                        Pill: <code>tag-primary-fill</code>. Grid / overlay: <code>tag-logo</code> + <code>.brand-logo-fallback</code> when no logo file.
+                        Text pill: <code>tag-dark-gray</code>. Grid / overlay: <code>tag-logo</code> + <code>.brand-logo-fallback</code> (stone-700, white text) when no logo file.
                       </span>
                     </td>
                   </tr>
@@ -1042,31 +1043,73 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
           <div className="ds-subsection">
             <h4>WorkerCardHeader (Reusable)</h4>
             <p className="ds-description">
-              Two exports from <code>WorkerCardHeader.tsx</code>: <strong>WorkerCardHeader</strong> — horizontal row (teaser, compact, chat cards); <strong>WorkerCardHeaderFull</strong> — centered avatar stack for the full overlay. Both show avatar, name, location, and status pills.
+              Row, full-overlay, and compact layouts from <code>WorkerCardHeader.tsx</code> / <code>WorkerCardHeaderFull</code>. Attributes for each sample are listed below the card.
             </p>
             <div className="ds-worker-header-variants-row">
               <div className="ds-worker-header-variant">
-                <span className="ds-spec-text">WorkerCardHeader — default row</span>
+                <h5 className="ds-variant-sample-title">WorkerCardHeader — default row</h5>
                 <div className="ds-worker-card-example">
                   <div className="worker-card" style={{ background: '#fff' }}>
                     <WorkerCardHeader worker={sampleWorker} />
                   </div>
                 </div>
+                <ul className="ds-variant-spec-list">
+                  <li>Horizontal row layout</li>
+                  <li>Used for teaser, compact card body, and chat cards</li>
+                  <li>Shows avatar, name, location, and status pills (stacked on the right)</li>
+                  <li>
+                    <code>.worker-header-content</code>: <code>padding: 12px 16px</code>, <code>gap: 8px</code>, <code>height: fit-content</code>, <code>justify-content: space-between</code>; status column <code>align-self: center</code>
+                  </li>
+                </ul>
               </div>
               <div className="ds-worker-header-variant">
-                <span className="ds-spec-text">WorkerCardHeaderFull — centered (full card)</span>
+                <h5 className="ds-variant-sample-title">WorkerCardHeaderFull — centered (full card)</h5>
                 <div className="ds-worker-card-example">
                   <div className="worker-card" style={{ background: '#fff' }}>
                     <WorkerCardHeaderFull worker={sampleWorker} />
                   </div>
                 </div>
+                <ul className="ds-variant-spec-list">
+                  <li>Centered avatar stack</li>
+                  <li>Designed for full overlay / detail panel</li>
+                  <li>Shows avatar, name, location, and status pills (row below)</li>
+                </ul>
               </div>
+            </div>
+            <div className="ds-worker-header-variant ds-worker-header-variant-below-row">
+              <h5 className="ds-variant-sample-title">WorkerCardHeader — compact (no location, row badges, 36px avatar)</h5>
+              <div className="ds-worker-card-example">
+                <div className="worker-card" style={{ background: '#fff' }}>
+                  <WorkerCardHeader worker={sampleWorker} compact showLocation={false} />
+                </div>
+              </div>
+              <ul className="ds-variant-spec-list">
+                <li>
+                  Props: <code>compact=&#123;true&#125;</code> <code>showLocation=&#123;false&#125;</code>
+                </li>
+                <li>36px avatar</li>
+                <li>13px name</li>
+                <li>Badges (status pills) in a single row</li>
+                <li>
+                  <code>.worker-card-header.compact</code>: <code>height: fit-content</code>, <code>gap: 0</code>
+                </li>
+                <li>
+                  <code>.worker-header-content</code>: <code>padding: 0</code>, <code>justify-content: flex-start</code>, <code>gap: 8px</code> (inherits <code>height: fit-content</code>)
+                </li>
+                <li>
+                  <code>.worker-header-left</code>: <code>gap: 8px</code>
+                </li>
+                <li>Used in list / chat contexts where space is tight</li>
+              </ul>
             </div>
           </div>
 
           <div className="ds-subsection">
             <h4>WorkerCardChip</h4>
-            <p className="ds-description">Minimal horizontal chip for inline mentions and compact selection lists. Shows avatar, name, location, and verified badge.</p>
+            <p className="ds-description">
+              Minimal card for inline mentions and compact selection lists. Shows avatar, name, Shift Verified + Actively Looking badges (in a row below the name), then stats and achievement chips below.
+              Badges use <code>tag-blue-light tag-sm</code>.
+            </p>
             <div className="ds-worker-card-example">
               <WorkerCardChip worker={sampleWorker} />
             </div>

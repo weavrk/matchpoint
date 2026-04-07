@@ -8,6 +8,8 @@ interface WorkerCardHeaderProps {
   worker: MatchedWorker;
   size?: 'default' | 'large';
   showActivelyLooking?: boolean;
+  showLocation?: boolean;
+  compact?: boolean;
 }
 
 interface WorkerCardHeaderFullProps {
@@ -96,7 +98,7 @@ export function WorkerCardHeaderFull({ worker, showActivelyLooking = true }: Wor
   );
 }
 
-export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking = true }: WorkerCardHeaderProps) {
+export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking = true, showLocation = true, compact = false }: WorkerCardHeaderProps) {
   const [imgError, setImgError] = useState(false);
 
   // Get photo from final photos pool based on gender - cached by worker ID
@@ -127,12 +129,12 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
     ? worker.market.join(', ')
     : worker.market;
 
-  const avatarSize = size === 'large' ? 64 : 54;
+  const avatarSize = compact ? 36 : (size === 'large' ? 64 : 54);
 
   const hasTags = worker.shiftVerified || (showActivelyLooking && worker.activelyLooking);
 
   return (
-    <div className="worker-card-header">
+    <div className={`worker-card-header${compact ? ' compact' : ''}`}>
       <div className="worker-header-content">
         <div className="worker-header-left">
           <div className="worker-avatar" style={{ width: avatarSize, height: avatarSize }}>
@@ -148,8 +150,8 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
           </div>
 
           <div className="worker-name-section">
-            <h3 className="worker-header-name">{displayName}</h3>
-            {marketDisplay && (
+            <h3 className={compact ? 'worker-header-name worker-header-name-compact' : 'worker-header-name'}>{displayName}</h3>
+            {showLocation && marketDisplay && (
               <div className="worker-header-location">
                 <MapPin size={14} />
                 <span>{marketDisplay}</span>
@@ -159,17 +161,17 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
         </div>
 
         {hasTags && (
-          <div className="worker-header-tags">
+          <div className={`worker-header-tags${compact ? ' row' : ''}`}>
             {worker.shiftVerified && (
-              <span className="tag tag-blue-light tag-sm">
-                <span className="tag-icon"><BadgeCheck size={12} /></span>
+              <span className={`tag tag-blue-light ${compact ? 'tag-xs' : 'tag-sm'}`}>
+                <span className="tag-icon"><BadgeCheck size={compact ? 10 : 12} /></span>
                 <span className="tag-text">Shift Verified</span>
               </span>
             )}
 
             {showActivelyLooking && worker.activelyLooking && (
-              <span className="tag tag-blue-light tag-sm">
-                <span className="tag-icon"><Search size={12} /></span>
+              <span className={`tag tag-blue-light ${compact ? 'tag-xs' : 'tag-sm'}`}>
+                <span className="tag-icon"><Search size={compact ? 10 : 12} /></span>
                 <span className="tag-text">Actively Looking</span>
               </span>
             )}
