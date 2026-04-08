@@ -2907,8 +2907,10 @@
 
 .v2-summary-group + .v2-summary-group::before {
   content: '·';
-  color: var(--secondary);
-  font-size: 14px;
+  color: var(--primary);
+  font-size: 24px;
+  line-height: 1;
+  margin-right: 6px;
 }
 
 .v2-results-actions {
@@ -3199,8 +3201,8 @@
 }
 
 .v2-results-header .type-tagline {
-  margin-top: 16px;
-  margin-bottom: 0;
+  margin-top: 12px;
+  margin-bottom: 12px;
 }
 
 .v2-results-header .v2-step-subtitle {
@@ -3701,45 +3703,60 @@
   gap: 16px;
 }
 
-/* Left column: name and market stacked */
+/* Left column: name, market, date */
 .v2-connection-name-col {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  min-width: 140px;
-}
-
-.v2-connection-name-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  min-width: 160px;
+  flex-shrink: 0;
 }
 
 .v2-connection-name {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--primary);
 }
 
-.v2-connection-market {
+.v2-connection-meta {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  color: var(--primary);
-}
-
-.v2-connection-market svg {
+  gap: 8px;
+  font-size: 13px;
   color: var(--secondary);
-  flex-shrink: 0;
 }
 
-/* Right: all tags in one row */
+.v2-connection-market-text {
+  color: var(--primary);
+  font-weight: 400;
+}
+
+.v2-connection-date {
+  color: var(--secondary);
+}
+
+.v2-connection-meta .v2-connection-market-text::after {
+  content: '·';
+  margin-left: 8px;
+  color: var(--tertiary);
+}
+
+/* Middle: badges */
 .v2-connection-tags-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Right: status + chat */
+.v2-connection-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .v2-connection-status {
@@ -3839,6 +3856,129 @@
   height: 100%;
   object-fit: cover;
   border-radius: 50%;
+}
+
+/* ============================================================
+   CONNECTION CARD STYLES
+   ============================================================ */
+
+.v2-conn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--white);
+  border: 1px solid var(--quaternary);
+  border-radius: 10px;
+  border-left: 4px solid var(--quaternary);
+  transition: all 0.15s;
+}
+
+.v2-conn-row:hover {
+  border-color: var(--tertiary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.v2-conn-row.selected {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.v2-conn-row.not-interested { opacity: 0.5; }
+
+.v2-conn-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.v2-conn-name-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.v2-conn-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.v2-conn-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.v2-conn-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--primary);
+}
+
+.v2-conn-meta svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.v2-conn-meta-sep {
+  color: var(--tertiary);
+  margin: 0 2px;
+}
+
+.v2-conn-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.v2-conn-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-left: 56px;
+}
+
+/* Chat button — rectangle style */
+.v2-conn-chat-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--quaternary);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.v2-conn-chat-btn.enabled {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--white);
+}
+
+.v2-conn-chat-btn.enabled:hover {
+  background: var(--hover);
+  border-color: var(--hover);
+}
+
+.v2-conn-chat-btn.disabled {
+  background: var(--gray-100, #f5f5f5);
+  border-color: var(--quaternary);
+  color: var(--tertiary);
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* ============================================================

@@ -29,7 +29,7 @@
 | Scripts       | [scripts.md](docs/scripts.md)                                                                                                                                                                                  |
 | Scrapers      | [scrapers.md](docs/scrapers.md)                                                                                                                                                                                |
 | Database      | [database.md](docs/database.md)                                                                                                                                                                                |
-| Worker Photos | Cloudinary, Pexels, RandomUser. GUI at: `scripts/review-portraits.html` → click photos to flag                                                                                                                 |
+| Worker Photos | Cloudinary, Pexels, RandomUser- social media profile pic color photo male/female STEPS: open `scripts/review-portraits.html`-> `Click a photo and :move to Final`-> `Export to app`                           |
 | Supabase      | Account: [weavrk@gmail.com](mailto:weavrk@gmail.com) · [Project](https://kxfbismfpmjwvemfznvm.supabase.co) · DB: `postgresql://postgres:reflexmatchpoint123@db.kxfbismfpmjwvemfznvm.supabase.co:5432/postgres` |
 
 

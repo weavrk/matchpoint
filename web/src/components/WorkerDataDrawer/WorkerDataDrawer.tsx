@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
-import { WorkerCardTesting } from '../Workers/WorkerCardTesting';
+import { WorkerCardAllAvailableData } from '../Workers/WorkerCardAllAvailableData';
 import { fetchWorkersPaginated, workerRowToProfile } from '../../services/supabase';
 import type { MatchedWorker } from '../../types';
 import './WorkerDataDrawer.css';
@@ -109,7 +109,7 @@ export function WorkerDataDrawer({ isOpen, onClose }: WorkerDataDrawerProps) {
         <div className="worker-data-content" ref={containerRef}>
           <div className="worker-data-grid">
             {workers.map((worker) => (
-              <WorkerCardTesting key={worker.id} worker={worker} />
+              <WorkerCardAllAvailableData key={worker.id} worker={worker} />
             ))}
           </div>
 

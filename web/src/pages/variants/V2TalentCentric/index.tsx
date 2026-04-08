@@ -49,14 +49,15 @@ import { V2WorkerSidebar } from "./V2WorkerSidebar";
 import { WorkerCard } from "../../../components/Workers/WorkerCard";
 import { WorkerCardFull } from "../../../components/Workers/WorkerCardFull";
 import { WorkerCardCompact } from "../../../components/Workers/WorkerCardCompact";
-import { WorkerAchievementChips } from "../../../components/Workers/WorkerAchievementChips";
+import { WorkerAchievementChips, getAchievementChipCount } from "../../../components/Workers/WorkerAchievementChips";
 import type { EmploymentType, AvailabilityHours } from "./V2EmploymentSelector";
 import type { MatchedWorker, ChatMessage, WorkerProfile, FocusRoute } from "../../../types";
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
-import { fetchWorkersByMarketAsProfiles, fetchRetailers, fetchWorkerConnections, fetchWorkerById, bulkInsertWorkerConnections } from "../../../services/supabase";
+import { fetchWorkersByMarketAsProfiles, fetchWorkersByMarketForSidebar, fetchRetailers, fetchWorkerConnections, fetchWorkerById, bulkInsertWorkerConnections } from "../../../services/supabase";
 import type { WorkerConnectionWithWorker, WorkerRow } from "../../../services/supabase";
 import type { Retailer } from "../../../services/supabase";
 import ReactMarkdown from "react-markdown";
+import { getWorkerPhoto as getWorkerPhotoFromPool } from "../../../hooks/useWorkerPhoto";
 import chatbotAvatarUrl from "../../../../../assets/logo-and-backgrounds/chatbot.svg?url";
 import "./styles.css";
 
@@ -602,6 +603,8 @@ export function V2TalentCentric({
   // Worker connections from Supabase
   const [workerConnections, setWorkerConnections] = useState<WorkerConnectionWithWorker[]>([]);
   const [isLoadingConnections, setIsLoadingConnections] = useState(false);
+  const [connectionsFetched, setConnectionsFetched] = useState(false);
+  const [connectionsDirty, setConnectionsDirty] = useState(false);
   const [connectionsMarketFilter, setConnectionsMarketFilter] = useState<string | null>(null);
   const [connectionsStatusFilter, setConnectionsStatusFilter] = useState<string | null>(null);
   const [selectedConnectionWorker, setSelectedConnectionWorker] = useState<WorkerConnectionWithWorker | null>(null);
@@ -880,15 +883,20 @@ export function V2TalentCentric({
     }
 
     setIsLoadingWorkers(true);
-    fetchWorkersByMarketAsProfiles(selectedMarket.name)
+    // Fast fetch with lightweight columns for sidebar display
+    fetchWorkersByMarketForSidebar(selectedMarket.name)
       .then((workers) => {
         setSupabaseWorkers(workers);
+        setIsLoadingWorkers(false);
+        // Background upgrade to full card data for results page
+        return fetchWorkersByMarketAsProfiles(selectedMarket.name);
+      })
+      .then((fullWorkers) => {
+        if (fullWorkers) setSupabaseWorkers(fullWorkers);
       })
       .catch((error) => {
         console.error("Error fetching workers:", error);
         setSupabaseWorkers([]);
-      })
-      .finally(() => {
         setIsLoadingWorkers(false);
       });
   }, [selectedLocation]);
@@ -906,11 +914,13 @@ export function V2TalentCentric({
 
   // Fetch worker connections when connections tab is opened
   useEffect(() => {
-    if (activeTab === "connections") {
+    if (activeTab === "connections" && (!connectionsFetched || connectionsDirty)) {
       setIsLoadingConnections(true);
       fetchWorkerConnections()
         .then((data) => {
           setWorkerConnections(data);
+          setConnectionsFetched(true);
+          setConnectionsDirty(false);
         })
         .catch((error) => {
           console.error("Error fetching worker connections:", error);
@@ -919,7 +929,41 @@ export function V2TalentCentric({
           setIsLoadingConnections(false);
         });
     }
-  }, [activeTab]);
+  }, [activeTab, connectionsDirty, connectionsFetched]);
+
+  // Memoized connection stats — single pass instead of 7 separate .filter() calls
+  const connectionStats = useMemo(() => {
+    const counts = { all: 0, accepted: 0, invited: 0, liked: 0, chat_open: 0, shift_scheduled: 0, shift_booked: 0, saved_for_later: 0, worker_declined: 0 };
+    const marketSet = new Set<string>();
+
+    for (const c of workerConnections) {
+      counts.all++;
+      if (c.status === 'accepted') counts.accepted++;
+      if (c.status === 'invited') counts.invited++;
+      if (c.status === 'liked') counts.liked++;
+      if (c.status === 'not_interested') counts.worker_declined++;
+      if (c.chat_open) counts.chat_open++;
+      if (c.shift_scheduled) counts.shift_scheduled++;
+      if (c.shift_booked) counts.shift_booked++;
+      if (c.saved_for_later) counts.saved_for_later++;
+      if (c.market) marketSet.add(c.market);
+    }
+
+    return { counts, markets: [...marketSet].sort() };
+  }, [workerConnections]);
+
+  const filteredConnections = useMemo(() => {
+    return workerConnections.filter(c => {
+      const marketMatch = !connectionsMarketFilter || c.market === connectionsMarketFilter;
+      const statusMatch = !connectionsStatusFilter || c.status === connectionsStatusFilter ||
+        (connectionsStatusFilter === "chat_open" && c.chat_open) ||
+        (connectionsStatusFilter === "shift_scheduled" && c.shift_scheduled) ||
+        (connectionsStatusFilter === "shift_booked" && c.shift_booked) ||
+        (connectionsStatusFilter === "saved_for_later" && c.saved_for_later) ||
+        (connectionsStatusFilter === "not_interested" && c.status === "not_interested");
+      return marketMatch && statusMatch;
+    });
+  }, [workerConnections, connectionsMarketFilter, connectionsStatusFilter]);
 
   // CYOA flow: Get next incomplete preference section based on starting point
   // employment → brands → roles (experience)
@@ -1221,8 +1265,11 @@ export function V2TalentCentric({
       };
     });
 
+    // Only show workers with at least 1 achievement chip
+    const qualified = scored.filter(w => getAchievementChipCount(w) > 0);
+
     // Sort by score
-    return scored.sort((a, b) => b.matchScore - a.matchScore);
+    return qualified.sort((a, b) => b.matchScore - a.matchScore);
   }, [selectedBrands, selectedLocation, experienceLevel, supabaseWorkers, retailers]);
 
   // Get brands the filtered workers have in common
@@ -2460,6 +2507,7 @@ export function V2TalentCentric({
                       shift_booked: false,
                       shift_scheduled: false,
                       saved_for_later: false,
+                      image_url: w.gender ? getWorkerPhotoFromPool(w.gender, w.id) : null,
                       created_at: new Date().toISOString(),
                       updated_at: new Date().toISOString(),
                       worker: null,
@@ -2475,8 +2523,10 @@ export function V2TalentCentric({
                           status: 'invited' as const,
                           connected: true,
                           saved_for_later: false,
+                          image_url: w.gender ? getWorkerPhotoFromPool(w.gender, w.id) : null,
                         })),
                       );
+                      setConnectionsDirty(true);
                     } catch (err) {
                       console.error('Failed to save connections:', err);
                     }
@@ -2504,6 +2554,7 @@ export function V2TalentCentric({
                       shift_booked: false,
                       shift_scheduled: false,
                       saved_for_later: true,
+                      image_url: w.gender ? getWorkerPhotoFromPool(w.gender, w.id) : null,
                       created_at: new Date().toISOString(),
                       updated_at: new Date().toISOString(),
                       worker: null,
@@ -2519,8 +2570,10 @@ export function V2TalentCentric({
                           status: 'liked' as const,
                           connected: false,
                           saved_for_later: true,
+                          image_url: w.gender ? getWorkerPhotoFromPool(w.gender, w.id) : null,
                         })),
                       );
+                      setConnectionsDirty(true);
                     } catch (err) {
                       console.error('Failed to save connections:', err);
                     }
@@ -2563,6 +2616,7 @@ export function V2TalentCentric({
                           shift_booked: false,
                           shift_scheduled: false,
                           saved_for_later: false,
+                          image_url: worker.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null,
                           created_at: new Date().toISOString(),
                           updated_at: new Date().toISOString(),
                           worker: null,
@@ -2575,6 +2629,7 @@ export function V2TalentCentric({
                             status: 'invited',
                             connected: true,
                             saved_for_later: false,
+                            image_url: worker.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null,
                           }]);
                         } catch (err) { console.error('Failed to save connection:', err); }
                       }
@@ -2601,6 +2656,7 @@ export function V2TalentCentric({
                           shift_booked: false,
                           shift_scheduled: false,
                           saved_for_later: true,
+                          image_url: worker.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null,
                           created_at: new Date().toISOString(),
                           updated_at: new Date().toISOString(),
                           worker: null,
@@ -2613,6 +2669,7 @@ export function V2TalentCentric({
                             status: 'liked',
                             connected: false,
                             saved_for_later: true,
+                            image_url: worker.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null,
                           }]);
                         } catch (err) { console.error('Failed to save connection:', err); }
                       }
@@ -2654,9 +2711,10 @@ export function V2TalentCentric({
               <div className="v2-detail-actions">
                 <button
                   className="v2-action-btn v2-action-primary"
-                  onClick={() => {
+                  onClick={async () => {
                     const alreadyConnected = workerConnections.some(c => c.worker_id === selectedWorker.id);
                     if (!alreadyConnected) {
+                      const imgUrl = selectedWorker.gender ? getWorkerPhotoFromPool(selectedWorker.gender, selectedWorker.id) : null;
                       const newConnection: WorkerConnectionWithWorker = {
                         id: crypto.randomUUID(),
                         worker_id: selectedWorker.id,
@@ -2669,11 +2727,23 @@ export function V2TalentCentric({
                         shift_booked: false,
                         shift_scheduled: false,
                         saved_for_later: false,
+                        image_url: imgUrl,
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         worker: null,
                       };
                       setWorkerConnections(prev => [newConnection, ...prev]);
+                      try {
+                        await bulkInsertWorkerConnections([{
+                          worker_id: selectedWorker.id,
+                          market: typeof selectedWorker.market === 'string' ? selectedWorker.market : selectedWorker.market[0],
+                          status: 'invited',
+                          connected: true,
+                          saved_for_later: false,
+                          image_url: imgUrl,
+                        }]);
+                        setConnectionsDirty(true);
+                      } catch (err) { console.error('Failed to save connection:', err); }
                     }
                     setActiveTab('connections');
                   }}
@@ -2683,13 +2753,14 @@ export function V2TalentCentric({
                 </button>
                 <button
                   className="v2-action-btn v2-action-stroke"
-                  onClick={() => {
+                  onClick={async () => {
                     const existing = workerConnections.find(c => c.worker_id === selectedWorker.id);
                     if (existing) {
                       setWorkerConnections(prev => prev.map(c =>
                         c.worker_id === selectedWorker.id ? { ...c, saved_for_later: true } : c
                       ));
                     } else {
+                      const imgUrl = selectedWorker.gender ? getWorkerPhotoFromPool(selectedWorker.gender, selectedWorker.id) : null;
                       const newConn: WorkerConnectionWithWorker = {
                         id: crypto.randomUUID(),
                         worker_id: selectedWorker.id,
@@ -2702,11 +2773,23 @@ export function V2TalentCentric({
                         shift_booked: false,
                         shift_scheduled: false,
                         saved_for_later: true,
+                        image_url: imgUrl,
                         created_at: new Date().toISOString(),
                         updated_at: new Date().toISOString(),
                         worker: null,
                       };
                       setWorkerConnections(prev => [newConn, ...prev]);
+                      try {
+                        await bulkInsertWorkerConnections([{
+                          worker_id: selectedWorker.id,
+                          market: typeof selectedWorker.market === 'string' ? selectedWorker.market : selectedWorker.market[0],
+                          status: 'liked',
+                          connected: false,
+                          saved_for_later: true,
+                          image_url: imgUrl,
+                        }]);
+                        setConnectionsDirty(true);
+                      } catch (err) { console.error('Failed to save connection:', err); }
                     }
                   }}
                 >
@@ -2761,33 +2844,9 @@ export function V2TalentCentric({
           removed: "Removed",
         };
 
-        // Unique markets for filter
-        const markets = [...new Set(workerConnections.map(c => c.market))].sort();
-
-        // Filter connections based on selected filters
-        const filteredConnections = workerConnections.filter(c => {
-          const marketMatch = !connectionsMarketFilter || c.market === connectionsMarketFilter;
-          const statusMatch = !connectionsStatusFilter || c.status === connectionsStatusFilter ||
-            (connectionsStatusFilter === "chat_open" && c.chat_open) ||
-            (connectionsStatusFilter === "shift_scheduled" && c.shift_scheduled) ||
-            (connectionsStatusFilter === "shift_booked" && c.shift_booked) ||
-            (connectionsStatusFilter === "saved_for_later" && c.saved_for_later) ||
-            (connectionsStatusFilter === "not_interested" && c.status === "not_interested");
-          return marketMatch && statusMatch;
-        });
-
-        // Status counts
-        const statusCounts = {
-          all: workerConnections.length,
-          accepted: workerConnections.filter(c => c.status === "accepted").length,
-          invited: workerConnections.filter(c => c.status === "invited").length,
-          liked: workerConnections.filter(c => c.status === "liked").length,
-          chat_open: workerConnections.filter(c => c.chat_open).length,
-          shift_scheduled: workerConnections.filter(c => c.shift_scheduled).length,
-          shift_booked: workerConnections.filter(c => c.shift_booked).length,
-          saved_for_later: workerConnections.filter(c => c.saved_for_later).length,
-          worker_declined: workerConnections.filter(c => c.status === "not_interested").length,
-        };
+        // Use memoized values from above
+        const markets = connectionStats.markets;
+        const statusCounts = connectionStats.counts;
 
         // Helper to get initials
         const getInitials = (name: string) => {
@@ -2879,13 +2938,6 @@ export function V2TalentCentric({
                   </button>
                 </div>
 
-                {/* Connections Table Header */}
-                <div className="v2-connections-table-header">
-                  <span className="v2-table-header-cell v2-table-header-worker">Worker</span>
-                  <span className="v2-table-header-cell v2-table-header-tags">Badges</span>
-                  <span className="v2-table-header-cell v2-table-header-status">Connection Status</span>
-                </div>
-
                 {/* Connections List */}
                 <div className="v2-connections-list">
                   {filteredConnections.length === 0 ? (
@@ -2896,246 +2948,94 @@ export function V2TalentCentric({
                       const name = worker?.name || "Unknown Worker";
                       const initials = getInitials(name);
                       const isNotInterested = connection.status === "not_interested" || connection.status === "removed";
+                      const dateAdded = new Date(connection.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                      const isSelected = selectedConnectionWorker?.id === connection.id;
 
-                      type AchievementChip = {
-                        text: string;
-                        icon: React.ReactNode;
-                        variant: 'tag-pink' | 'tag-green';
+                      type AchievementChip = { text: string; icon: React.ReactNode; variant: 'tag-pink' | 'tag-green' };
+                      const ac: AchievementChip[] = [];
+                      if ((worker?.store_favorite_count ?? 0) > 1) ac.push({ text: 'Your Store Favorite', icon: <Heart size={12} fill="currentColor" />, variant: 'tag-pink' });
+                      const tp = worker?.tardy_percent ?? 100; const tr = worker?.tardy_ratio || '';
+                      if (tr.startsWith('0 /') || tr.startsWith('0/') || tp === 0 || (worker?.tardy_percent != null && (100 - tp) > 85)) ac.push({ text: 'Consistently On-Time', icon: <ClockCheck size={12} />, variant: 'tag-green' });
+                      const cr = worker?.urgent_cancel_ratio || ''; const cp = worker?.urgent_cancel_percent ?? 100;
+                      if (cr.startsWith('0 /') || cr.startsWith('0/') || cp === 0) ac.push({ text: 'Never Called Out', icon: <Trophy size={12} />, variant: 'tag-green' });
+                      const sfc = worker?.store_favorite_count || 0; const us = worker?.unique_store_count || 0;
+                      if (us > 0 && Math.min((sfc / us) * 100, 100) >= 85) ac.push({ text: 'Strong Store Favorite', icon: <HeartPlus size={12} />, variant: 'tag-green' });
+                      const ib = worker?.invited_back_stores ?? 0;
+                      if (us > 0 && ib > 0 && Math.min((ib / us) * 100, 100) >= 94) ac.push({ text: 'Invite Back Standout', icon: <UserStar size={12} />, variant: 'tag-green' });
+
+                      const handleClick = async () => {
+                        setSelectedConnectionWorker(connection);
+                        setSelectedConnectionFullWorker(null);
+                        const wid = connection.worker?.id;
+                        if (wid) { setIsLoadingConnectionWorker(true); try { setSelectedConnectionFullWorker(await fetchWorkerById(wid)); } catch {} finally { setIsLoadingConnectionWorker(false); } }
                       };
-                      const achievementChips: AchievementChip[] = [];
 
-                      if ((worker?.store_favorite_count ?? 0) > 1) {
-                        achievementChips.push({
-                          text: 'Store Favorite',
-                          icon: <Heart size={14} />,
-                          variant: 'tag-pink',
-                        });
-                      }
+                      // Status tag — used inline with name
+                      const statusTag = connection.shift_scheduled ? (
+                        <span className="tag tag-green tag-sm"><span className="tag-icon"><CalendarDays size={12} /></span><span className="tag-text">Shift Scheduled</span></span>
+                      ) : connection.shift_booked ? (
+                        <span className="tag tag-green tag-sm"><span className="tag-icon"><CalendarClock size={12} /></span><span className="tag-text">Shift Booked</span></span>
+                      ) : connection.status === "accepted" ? (
+                        <span className="tag tag-green tag-sm"><span className="tag-icon"><Link size={12} /></span><span className="tag-text">Connected</span></span>
+                      ) : connection.status === "invited" ? (
+                        <span className="tag tag-dark-gray tag-sm"><span className="tag-icon"><UserPlus size={12} /></span><span className="tag-text">Invited</span></span>
+                      ) : connection.status === "liked" || connection.saved_for_later ? (
+                        <span className="tag tag-stroke tag-sm"><span className="tag-icon"><Heart size={12} /></span><span className="tag-text">Saved</span></span>
+                      ) : connection.status === "not_interested" ? (
+                        <span className="tag tag-lite-gray tag-sm"><span className="tag-icon"><XCircle size={12} /></span><span className="tag-text">Declined</span></span>
+                      ) : null;
 
-                      const tardyRatio = worker?.tardy_ratio || '';
-                      const tardyPercent = worker?.tardy_percent ?? 100;
-                      const neverLateByRatio =
-                        tardyRatio.startsWith('0 /') || tardyRatio.startsWith('0/');
-                      const onTimePercent = 100 - tardyPercent;
-                      const meetsPunctualBar =
-                        neverLateByRatio ||
-                        tardyPercent === 0 ||
-                        (worker?.tardy_percent != null && onTimePercent > 85);
+                      // Status border color for left stripe
+                      const statusBorder = connection.shift_scheduled || connection.shift_booked || connection.status === "accepted"
+                        ? 'var(--background-green, #dcfce7)'
+                        : connection.status === "invited"
+                        ? 'var(--primary)'
+                        : connection.status === "liked" || connection.saved_for_later
+                        ? 'var(--pink-medium, #f8bbd0)'
+                        : 'var(--tertiary)';
 
-                      if (meetsPunctualBar) {
-                        achievementChips.push({
-                          text: 'Consistently On-Time',
-                          icon: <ClockCheck size={14} />,
-                          variant: 'tag-green',
-                        });
-                      }
-
-                      const cancelRatio = worker?.urgent_cancel_ratio || '';
-                      const cancelPercent = worker?.urgent_cancel_percent ?? 100;
-                      if (cancelRatio.startsWith('0 /') || cancelRatio.startsWith('0/') || cancelPercent === 0) {
-                        achievementChips.push({
-                          text: 'Never Called Out',
-                          icon: <Trophy size={14} />,
-                          variant: 'tag-green',
-                        });
-                      }
-
-                      const storeFavCount = worker?.store_favorite_count || 0;
-                      const uniqueStores = worker?.unique_store_count || 0;
-                      if (uniqueStores > 0) {
-                        const favoritePercent = Math.min((storeFavCount / uniqueStores) * 100, 100);
-                        if (favoritePercent >= 85) {
-                          achievementChips.push({
-                            text: 'Strong Store Favorite',
-                            icon: <HeartPlus size={14} />,
-                            variant: 'tag-green',
-                          });
-                        }
-                      }
-
-                      const invitedBack = worker?.invited_back_stores ?? 0;
-                      if (uniqueStores > 0 && invitedBack > 0) {
-                        const inviteBackPercent = Math.min((invitedBack / uniqueStores) * 100, 100);
-                        if (inviteBackPercent >= 94) {
-                          achievementChips.push({
-                            text: 'Invite Back Standout',
-                            icon: <UserStar size={14} />,
-                            variant: 'tag-green',
-                          });
-                        }
-                      }
+                      const chatOk = connection.status === "accepted" || connection.shift_scheduled || connection.shift_booked;
+                      const chatBtn = chatOk ? (
+                        <button type="button" className="v2-conn-chat-btn enabled" onClick={(e) => { e.stopPropagation(); if (connection.chat_id) { setActiveChatId(connection.chat_id); setActiveTab("chat"); } }}>
+                          <MessageSquare size={14} /> Chat
+                        </button>
+                      ) : (
+                        <button type="button" className="v2-conn-chat-btn disabled" disabled>
+                          <MessageSquareOff size={14} /> Chat
+                        </button>
+                      );
 
                       return (
                         <div
                           key={connection.id}
-                          className={`v2-connection-card ${isNotInterested ? "not-interested" : ""} ${selectedConnectionWorker?.id === connection.id ? "selected" : ""}`}
-                          onClick={async () => {
-                            setSelectedConnectionWorker(connection);
-                            setSelectedConnectionFullWorker(null);
-                            // Use worker.id (the actual ID like w001) not worker_id (UUID)
-                            const workerId = connection.worker?.id;
-                            if (workerId) {
-                              setIsLoadingConnectionWorker(true);
-                              try {
-                                const fullWorker = await fetchWorkerById(workerId);
-                                setSelectedConnectionFullWorker(fullWorker);
-                              } catch (err) {
-                                console.error("Error fetching full worker:", err);
-                              } finally {
-                                setIsLoadingConnectionWorker(false);
-                              }
-                            }
-                          }}
-                          style={{ cursor: 'pointer' }}
+                          className={`v2-conn-row${isNotInterested ? ' not-interested' : ''}${isSelected ? ' selected' : ''}`}
+                          onClick={handleClick}
+                          style={{ cursor: 'pointer', borderLeftColor: statusBorder }}
                         >
-                          <div className="v2-connection-avatar">
-                            {worker?.photo ? (
-                              <img src={worker.photo} alt={name} />
-                            ) : (
-                              <span>{initials}</span>
-                            )}
-                          </div>
-                          <div className="v2-connection-info">
-                            {/* Left: Name and market stacked */}
-                            <div className="v2-connection-name-col">
-                              <span className="v2-connection-name">{formatDisplayName(name)}</span>
-                              <div className="v2-connection-market">
-                                <MapPin size={14} />
+                          <div className="v2-conn-top">
+                            <div className="v2-connection-avatar" style={{ width: 44, height: 44 }}>
+                              {connection.image_url ? <img src={connection.image_url} alt={name} /> : <span>{initials}</span>}
+                            </div>
+                            <div className="v2-conn-name-col">
+                              <div className="v2-conn-name-row">
+                                <span className="v2-conn-name">{formatDisplayName(name)}</span>
+                                {statusTag}
+                              </div>
+                              <div className="v2-conn-meta">
+                                <MapPin size={12} />
                                 <span>{connection.market}</span>
+                                <span className="v2-conn-meta-sep">·</span>
+                                <span>Added: {dateAdded}</span>
                               </div>
                             </div>
-
-                            {/* Right: All tags in one row */}
-                            <div className="v2-connection-tags-row">
-                              {/* Shift Verified tag */}
-                              {worker?.shift_verified && (
-                                <span className="tag tag-blue-light tag-sm">
-                                  <span className="tag-icon"><BadgeCheck size={12} /></span>
-                                  <span className="tag-text">Shift Verified</span>
-                                </span>
-                              )}
-                              {/* Actively Looking tag */}
-                              {worker?.actively_looking && (
-                                <span className="tag tag-blue tag-sm">
-                                  <span className="tag-icon"><Search size={12} /></span>
-                                  <span className="tag-text">Actively Looking</span>
-                                </span>
-                              )}
-
-                              {/* Shifts & stores as stroke chips */}
-                              <span className="tag tag-stroke tag-sm">
-                                <span className="tag-counter">{worker?.shifts_on_reflex || 0}</span>
-                                <span className="tag-text">Shifts</span>
-                              </span>
-                              <span className="tag tag-stroke tag-sm">
-                                <span className="tag-counter">{worker?.unique_store_count || 0}</span>
-                                <span className="tag-text">Stores</span>
-                              </span>
-
-                              {achievementChips.map((chip, idx) => (
-                                <span key={`ach-${idx}`} className={`tag ${chip.variant} tag-sm`}>
-                                  <span className="tag-icon">{chip.icon}</span>
-                                  <span className="tag-text">{chip.text}</span>
-                                </span>
-                              ))}
-                            </div>
+                            <div className="v2-conn-right">{chatBtn}</div>
                           </div>
-                          {/* Status tag - show shift status or connection status */}
-                          {connection.shift_scheduled ? (
-                            <span className="tag tag-green tag-sm">
-                              <span className="tag-icon"><CalendarDays size={12} /></span>
-                              <span className="tag-text">Shift Scheduled</span>
-                            </span>
-                          ) : connection.shift_booked ? (
-                            <span className="tag tag-green tag-sm">
-                              <span className="tag-icon"><CalendarClock size={12} /></span>
-                              <span className="tag-text">Shift Booked</span>
-                            </span>
-                          ) : connection.status === "accepted" ? (
-                            <span className="tag tag-green tag-sm">
-                              <span className="tag-icon"><Link size={12} /></span>
-                              <span className="tag-text">Connected</span>
-                            </span>
-                          ) : connection.status === "invited" ? (
-                            <span className="tag tag-dark-gray tag-sm">
-                              <span className="tag-icon"><UserPlus size={12} /></span>
-                              <span className="tag-text">Invited</span>
-                            </span>
-                          ) : connection.status === "liked" || connection.saved_for_later ? (
-                            <span className="tag tag-stroke tag-sm">
-                              <span className="tag-icon"><Heart size={12} /></span>
-                              <span className="tag-text">Saved</span>
-                            </span>
-                          ) : connection.status === "not_interested" ? (
-                            <span className="tag tag-lite-gray tag-sm">
-                              <span className="tag-icon"><XCircle size={12} /></span>
-                              <span className="tag-text">Worker Declined</span>
-                            </span>
-                          ) : null}
-                          {/* Chat button - logic based on connection status */}
-                          {(() => {
-                            const isWorkerDeclined = connection.status === "not_interested";
-                            const isSaved = connection.status === "liked" || connection.saved_for_later;
-                            const isConnected = connection.status === "accepted";
-                            const hasShift = connection.shift_scheduled || connection.shift_booked;
-                            const hasUnreadMessage = false; // has_unread_worker_message not yet in schema
-
-                            // Chat enabled for: connected, shift_scheduled, shift_booked
-                            const chatEnabled = isConnected || hasShift;
-                            // Chat disabled for: saved, worker declined (same UI as other non-chat states)
-                            const chatDisabled = isSaved || isWorkerDeclined;
-
-                            if (chatDisabled) {
-                              return (
-                                <button type="button" className="tag tag-stroke tag-sm" disabled>
-                                  <span className="tag-icon">
-                                    <MessageSquareOff size={14} />
-                                  </span>
-                                  <span className="tag-text">Chat Disabled</span>
-                                </button>
-                              );
-                            }
-
-                            if (hasUnreadMessage) {
-                              return (
-                                <button
-                                  type="button"
-                                  className="tag tag-blue tag-sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (connection.chat_id) {
-                                      setActiveChatId(connection.chat_id);
-                                      setActiveTab("chat");
-                                    }
-                                  }}
-                                >
-                                  <span className="tag-icon">
-                                    <MessageSquareDot size={14} />
-                                  </span>
-                                  <span className="tag-text">Unread Message</span>
-                                </button>
-                              );
-                            }
-
-                            return (
-                              <button
-                                type="button"
-                                className="tag tag-blue tag-sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (connection.chat_id) {
-                                    setActiveChatId(connection.chat_id);
-                                    setActiveTab("chat");
-                                  }
-                                }}
-                              >
-                                <span className="tag-icon">
-                                  <MessageSquare size={14} />
-                                </span>
-                                <span className="tag-text">Chat</span>
-                              </button>
-                            );
-                          })()}
+                          <div className="v2-conn-badges">
+                            {worker?.shift_verified && <span className="tag tag-blue-light tag-sm"><span className="tag-icon"><BadgeCheck size={12} /></span><span className="tag-text">Shift Verified</span></span>}
+                            <span className="tag tag-stroke tag-sm"><span className="tag-counter">{worker?.shifts_on_reflex || 0}</span><span className="tag-text">Shifts</span></span>
+                            {us > 0 && <span className="tag tag-stroke tag-sm"><span className="tag-counter">{us}</span><span className="tag-text">Stores</span></span>}
+                            {ac.slice(0, 3).map((c, i) => <span key={i} className={`tag ${c.variant} tag-sm`}><span className="tag-icon">{c.icon}</span><span className="tag-text">{c.text}</span></span>)}
+                          </div>
                         </div>
                       );
                     })

@@ -78,13 +78,6 @@ export function WorkerCardHeaderFull({ worker, showActivelyLooking = true }: Wor
 
       <h3 className="worker-header-full-name">{displayName}</h3>
 
-      {marketDisplay && (
-        <div className="worker-header-full-location">
-          <MapPin size={14} />
-          <span>{marketDisplay}</span>
-        </div>
-      )}
-
       {hasTags && (
         <div className="worker-header-full-tags">
           {worker.shiftVerified && (
@@ -190,29 +183,27 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
           </div>
 
           <div className="worker-name-section">
-            <div className="worker-name-row">
-              <h3 className={compact ? 'worker-header-name worker-header-name-compact' : 'worker-header-name'}>{displayName}</h3>
-              {hasTags && (
-                <div className="worker-header-tags row">
-                  {worker.shiftVerified && (
-                    <span className="tag tag-blue-light tag-xs">
-                      <span className="tag-icon"><BadgeCheck size={10} /></span>
-                      <span className="tag-text">Shift Verified</span>
-                    </span>
-                  )}
-                  {showActivelyLooking && worker.activelyLooking && (
-                    <span className="tag tag-blue-light tag-xs">
-                      <span className="tag-icon"><Search size={10} /></span>
-                      <span className="tag-text">Actively Looking</span>
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
+            <h3 className={compact ? 'worker-header-name worker-header-name-compact' : 'worker-header-name'}>{displayName}</h3>
             {showLocation && marketDisplay && (
               <div className="worker-header-location">
                 <MapPin size={14} />
                 <span>{marketDisplay}</span>
+              </div>
+            )}
+            {hasTags && (
+              <div className="worker-header-tags row">
+                {worker.shiftVerified && (
+                  <span className="tag tag-blue-light tag-xs">
+                    <span className="tag-icon"><BadgeCheck size={10} /></span>
+                    <span className="tag-text">Shift Verified</span>
+                  </span>
+                )}
+                {showActivelyLooking && worker.activelyLooking && (
+                  <span className="tag tag-blue-light tag-xs">
+                    <span className="tag-icon"><Search size={10} /></span>
+                    <span className="tag-text">Actively Looking</span>
+                  </span>
+                )}
               </div>
             )}
           </div>

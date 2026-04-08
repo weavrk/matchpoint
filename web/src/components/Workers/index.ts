@@ -4,5 +4,5 @@ export { WorkerCardHeader, WorkerCardHeaderFull } from './WorkerCardHeader';
 export { WorkerCardChip } from './WorkerCardChip';
 export { WorkerCardCompact } from './WorkerCardCompact';
 export { WorkerCardFull } from './WorkerCardFull';
-export { WorkerCardTesting } from './WorkerCardTesting';
+export { WorkerCardAllAvailableData } from './WorkerCardAllAvailableData';
 export { WorkerAchievementChips } from './WorkerAchievementChips';

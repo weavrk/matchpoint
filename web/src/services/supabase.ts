@@ -592,7 +592,7 @@ const WORKER_COLUMNS_CARD = `
   id, name, photo, gender, market, actively_looking, shift_verified, market_favorite, favorited_by_brands,
   shifts_on_reflex, brands_worked, endorsement_counts, shift_experience, invited_back_stores,
   about_me, previous_experience, reflex_activity, retailer_quotes, retailer_summary,
-  current_tier, unique_store_count, tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent,
+  current_tier, unique_store_count, store_favorite_count, tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent,
   experience_level
 `.replace(/\s+/g, ' ').trim();
 
@@ -601,7 +601,7 @@ const WORKER_COLUMNS_FULL = `
   shift_verified, market_favorite, favorited_by_brands, reflex_activity, shifts_on_reflex, brands_worked,
   retailer_quotes, retailer_summary, endorsement_counts, shift_experience, invited_back_stores,
   tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent,
-  current_tier, unique_store_count, interview_transcript, worker_uuid, worker_id
+  current_tier, unique_store_count, store_favorite_count, interview_transcript, worker_uuid, worker_id
 `.replace(/\s+/g, ' ').trim();
 
 const WORKER_COLUMNS_LIST = `
@@ -611,7 +611,15 @@ const WORKER_COLUMNS_LIST = `
 // Connection list needs achievement data too (market_favorite, tardy/cancel percents, unique_store_count, reflex_activity)
 const WORKER_COLUMNS_CONNECTION = `
   id, name, photo, gender, market, shift_verified, shifts_on_reflex, actively_looking, current_tier,
-  market_favorite, favorited_by_brands, tardy_percent, urgent_cancel_percent, unique_store_count, reflex_activity, experience_level
+  market_favorite, favorited_by_brands, store_favorite_count, tardy_percent, urgent_cancel_percent, unique_store_count, reflex_activity, experience_level
+`.replace(/\s+/g, ' ').trim();
+
+// Sidebar chips: lightweight columns for WorkerCardChip (achievement data + brands, no heavy text fields)
+const WORKER_COLUMNS_SIDEBAR = `
+  id, name, photo, gender, market, shift_verified, shifts_on_reflex, actively_looking, current_tier,
+  brands_worked, invited_back_stores, unique_store_count, store_favorite_count,
+  tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent,
+  reflex_activity, experience_level
 `.replace(/\s+/g, ' ').trim();
 
 export interface WorkerRow {
@@ -652,8 +660,10 @@ export interface WorkerRow {
   photo: string | null;
   // Market favorite
   market_favorite: boolean;
-  /** Retailer brands that favorited this worker (from source data); used for Store Favorite chip. */
+  /** Retailer brands that favorited this worker (from source data). */
   favorited_by_brands: string[] | null;
+  /** Number of stores that favorited this worker (plain column, not inside reflex_activity). */
+  store_favorite_count: number | null;
   // Experience level for filtering
   experience_level: 'rising' | 'experienced' | 'seasoned' | 'proven_leader' | null;
 }
@@ -849,7 +859,6 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
       shiftsByTier: row.reflex_activity.shiftsByTier,
       longestRelationship: row.reflex_activity.longestRelationship || null,
       tierProgression: (row.reflex_activity.tierProgression as 'upward' | 'stable') || 'stable',
-      storeFavoriteCount: row.reflex_activity.storeFavoriteCount || null,
     } : null,
     activelyLooking: row.actively_looking,
     retailerQuotes: row.retailer_quotes || undefined,
@@ -870,7 +879,7 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     shiftExperience: row.shift_experience,
     // Unique store count
     uniqueStoreCount: row.unique_store_count,
-    // Market favorite (legacy column; Store Favorite chip uses favoritedByBrands + elite brand list)
+    storeFavoriteCount: row.store_favorite_count ?? null,
     marketFavorite: row.market_favorite,
     favoritedByBrands: row.favorited_by_brands ?? undefined,
     // Experience level for filtering
@@ -884,10 +893,32 @@ export async function fetchWorkersAsProfiles(): Promise<WorkerProfile[]> {
   return rows.map(workerRowToProfile);
 }
 
-// Fetch workers by market as WorkerProfile objects
+// Fetch workers by market as WorkerProfile objects (full card data)
 export async function fetchWorkersByMarketAsProfiles(market: string): Promise<WorkerProfile[]> {
   const rows = await fetchWorkersByMarket(market);
   return rows.map(workerRowToProfile);
+}
+
+// Fetch workers by market using lightweight sidebar columns (faster)
+export async function fetchWorkersByMarketForSidebar(market: string): Promise<WorkerProfile[]> {
+  const marketPatterns = [market];
+  const aliases = MARKET_ALIASES[market];
+  if (aliases) marketPatterns.push(...aliases);
+
+  const orFilters = marketPatterns.map(p => `market.ilike.%${p}%`).join(',');
+
+  const { data, error } = await supabase
+    .from('workers')
+    .select(WORKER_COLUMNS_SIDEBAR)
+    .or(orFilters)
+    .order('shift_verified', { ascending: false })
+    .order('shifts_on_reflex', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching sidebar workers:', error);
+    throw error;
+  }
+  return ((data || []) as unknown as WorkerRow[]).map(workerRowToProfile);
 }
 
 // ============================================================
@@ -906,6 +937,7 @@ export interface WorkerConnectionRow {
   shift_booked: boolean;
   shift_scheduled: boolean;
   saved_for_later: boolean;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -914,52 +946,26 @@ export interface WorkerConnectionWithWorker extends WorkerConnectionRow {
   worker: WorkerRow | null;
 }
 
-// Fetch all worker connections with joined worker data
+// Fetch all worker connections with joined worker data (single query)
 export async function fetchWorkerConnections(): Promise<WorkerConnectionWithWorker[]> {
-  // First get all connections
-  const { data: connections, error: connError } = await supabase
+  const { data, error } = await supabase
     .from('worker_connections')
-    .select('*')
+    .select(`*, worker:workers(${WORKER_COLUMNS_CONNECTION})`)
     .order('created_at', { ascending: false });
 
-  if (connError) {
-    console.error('Error fetching worker connections:', connError);
-    throw connError;
+  if (error) {
+    console.error('Error fetching worker connections:', error);
+    throw error;
   }
 
-  if (!connections || connections.length === 0) {
+  if (!data || data.length === 0) {
     return [];
   }
 
-  // Get unique worker IDs
-  const workerIds = [...new Set(connections.map(c => c.worker_id))];
-
-  // Fetch workers for these IDs - use connection columns (includes achievement data)
-  const { data: workers, error: workersError } = await supabase
-    .from('workers')
-    .select(WORKER_COLUMNS_CONNECTION)
-    .in('id', workerIds);
-
-  if (workersError) {
-    console.error('Error fetching workers for connections:', workersError);
-    throw workersError;
-  }
-
-  // Create a map of worker ID to worker data
-  const workerList = (workers || []) as unknown as WorkerRow[];
-  const workerMap = new Map(workerList.map(w => [w.id, w]));
-
-  // Join the data
-  return connections.map(conn => ({
-    ...conn,
-    worker: workerMap.get(conn.worker_id) || null,
+  return data.map(row => ({
+    ...row,
+    worker: (row.worker as unknown as WorkerRow) || null,
   }));
-}
-
-// Fetch connections by status
-export async function fetchWorkerConnectionsByStatus(status: WorkerConnectionRow['status']): Promise<WorkerConnectionWithWorker[]> {
-  const all = await fetchWorkerConnections();
-  return all.filter(c => c.status === status);
 }
 
 // Update a worker connection status
@@ -979,4 +985,39 @@ export async function updateWorkerConnectionStatus(
     throw error;
   }
   return data;
+}
+
+// Bulk-insert worker connections, skipping any worker_id that already exists
+export async function bulkInsertWorkerConnections(
+  rows: { worker_id: string; market: string; status: WorkerConnectionRow['status']; connected: boolean; saved_for_later: boolean; image_url?: string | null }[],
+): Promise<number> {
+  if (rows.length === 0) return 0;
+
+  const now = new Date().toISOString();
+  const payload = rows.map(r => ({
+    worker_id: r.worker_id,
+    market: r.market,
+    status: r.status,
+    invited: r.status === 'invited',
+    connected: r.connected,
+    chat_open: false,
+    shift_booked: false,
+    shift_scheduled: false,
+    saved_for_later: r.saved_for_later,
+    image_url: r.image_url ?? null,
+    created_at: now,
+    updated_at: now,
+  }));
+
+  const { data, error } = await supabase
+    .from('worker_connections')
+    .insert(payload)
+    .select('id');
+
+  if (error) {
+    console.error('Error bulk-inserting connections:', error);
+    throw error;
+  }
+
+  return data?.length ?? 0;
 }

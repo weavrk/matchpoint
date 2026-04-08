@@ -1,10 +1,5 @@
 /**
- * Workers by DB market with storeFavoriteCount >1, >2, >3.
- *
- * - "Long Island" = sum of any market containing "Long Island"
- * - "New York City (metro)" = NYC + Northern NJ + Long Island workers
- *   (those workers also appear in their own market rows)
- *
+ * Workers by DB market with store_favorite_count (column) >1, >2, >3.
  * Usage: npx tsx web/src/scripts/_dbMarketSfcCounts.ts
  */
 import { createClient } from '@supabase/supabase-js';
@@ -24,25 +19,18 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY || (() => { console.error('Missing SUPABASE_SERVICE_KEY'); process.exit(1); return ''; })(),
 );
 
-interface Row {
-  market: string;
-  reflex_activity: { storeFavoriteCount?: number } | null;
-}
+interface Row { market: string; store_favorite_count: number | null }
 
 async function fetchAll(): Promise<Row[]> {
   const all: Row[] = [];
   let offset = 0;
-  const page = 1000;
   for (;;) {
-    const { data, error } = await supabase
-      .from('workers')
-      .select('market, reflex_activity')
-      .range(offset, offset + page - 1);
+    const { data, error } = await supabase.from('workers').select('market, store_favorite_count').range(offset, offset + 999);
     if (error) { console.error(error); process.exit(1); }
     if (!data?.length) break;
     all.push(...(data as Row[]));
-    if (data.length < page) break;
-    offset += page;
+    if (data.length < 1000) break;
+    offset += 1000;
   }
   return all;
 }
@@ -58,71 +46,37 @@ function add(b: Bucket, sfc: number) {
 
 async function main() {
   const rows = await fetchAll();
-
-  // Canonical single-market buckets
   const buckets = new Map<string, Bucket>();
-  // Also accumulate NYC metro and Long Island rollups
   const longIsland = empty();
   const nycMetro = empty();
 
   for (const row of rows) {
     const m = row.market || '(empty)';
-    const sfc = row.reflex_activity?.storeFavoriteCount ?? 0;
-
-    // Put into exact DB market bucket
+    const sfc = row.store_favorite_count ?? 0;
     if (!buckets.has(m)) buckets.set(m, empty());
     add(buckets.get(m)!, sfc);
-
-    // Long Island rollup: any market string containing "Long Island"
-    if (m.includes('Long Island')) {
-      add(longIsland, sfc);
-    }
-
-    // NYC metro rollup: market contains NYC, Northern NJ, or Long Island
-    if (m.includes('New York City') || m.includes('Northern New Jersey') || m.includes('Long Island')) {
-      add(nycMetro, sfc);
-    }
+    if (m.includes('Long Island')) add(longIsland, sfc);
+    if (m.includes('New York City') || m.includes('Northern New Jersey') || m.includes('Long Island')) add(nycMetro, sfc);
   }
 
-  // Sort by total desc, show markets with >= 10 workers
-  const sorted = [...buckets.entries()]
-    .filter(([, v]) => v.total >= 10)
-    .sort((a, b) => b[1].total - a[1].total);
-
+  const sorted = [...buckets.entries()].filter(([, v]) => v.total >= 50).sort((a, b) => b[1].total - a[1].total);
   const hdr = (s: string) => s.padStart(7);
-  console.log('Market'.padEnd(32), hdr('Total'), hdr('>1'), hdr('%>1'), hdr('>2'), hdr('%>2'), hdr('>3'), hdr('%>3'));
+  console.log('Market'.padEnd(30), hdr('Total'), hdr('>1'), hdr('%>1'), hdr('>2'), hdr('%>2'), hdr('>3'), hdr('%>3'));
   console.log('-'.repeat(80));
 
   function printRow(label: string, b: Bucket) {
-    const p1 = b.total ? ((b.gt1 / b.total) * 100).toFixed(1) : '0.0';
-    const p2 = b.total ? ((b.gt2 / b.total) * 100).toFixed(1) : '0.0';
-    const p3 = b.total ? ((b.gt3 / b.total) * 100).toFixed(1) : '0.0';
-    console.log(
-      label.padEnd(32),
-      String(b.total).padStart(7),
-      String(b.gt1).padStart(7), `${p1}%`.padStart(7),
-      String(b.gt2).padStart(7), `${p2}%`.padStart(7),
-      String(b.gt3).padStart(7), `${p3}%`.padStart(7),
-    );
+    const p = (n: number) => b.total ? ((n / b.total) * 100).toFixed(1) : '0.0';
+    console.log(label.padEnd(30), String(b.total).padStart(7), String(b.gt1).padStart(7), `${p(b.gt1)}%`.padStart(7),
+      String(b.gt2).padStart(7), `${p(b.gt2)}%`.padStart(7), String(b.gt3).padStart(7), `${p(b.gt3)}%`.padStart(7));
   }
 
-  for (const [market, b] of sorted) {
-    printRow(market, b);
-  }
-
+  for (const [m, b] of sorted) printRow(m, b);
   console.log('-'.repeat(80));
   printRow('** Long Island (rollup)', longIsland);
   printRow('** NYC Metro (rollup)', nycMetro);
-
-  // Grand total
-  let grand = empty();
-  for (const [, b] of buckets) {
-    grand.total += b.total;
-    grand.gt1 += b.gt1;
-    grand.gt2 += b.gt2;
-    grand.gt3 += b.gt3;
-  }
   console.log('-'.repeat(80));
+  let grand = empty();
+  for (const [, b] of buckets) { grand.total += b.total; grand.gt1 += b.gt1; grand.gt2 += b.gt2; grand.gt3 += b.gt3; }
   printRow('TOTAL', grand);
 }
 

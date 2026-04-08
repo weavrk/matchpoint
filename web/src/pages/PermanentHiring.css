@@ -2864,10 +2864,10 @@
 
 /* Worker Card Examples */
 .ds-worker-header-variants-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
 }
 
 .ds-worker-header-variant {
@@ -2961,15 +2961,35 @@
 }
 
 .ds-worker-card-example {
-  max-width: 400px;
-  padding: 16px;
-  background: var(--gray-50);
-  border-radius: 12px;
+  padding: 0;
+  background: none;
+  border-radius: 0;
 }
 
 .ds-worker-card-example .worker-card {
   margin: 0;
-  border: none;
+}
+
+/* Full card in DSL: restore card chrome (normally stripped for drawer) */
+.ds-worker-card-example .worker-card-full-content {
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  background: #ffffff;
+}
+
+/* WorkerCardHeaderFull — design system panel + .ds-worker-card-example samples (override .ds-section h3) */
+.design-system-content .worker-card-header-full {
+  gap: 0;
+}
+
+.design-system-content .worker-card-header-full .worker-header-full-name {
+  height: fit-content;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0 0 8px;
+  border-top: none;
+  border-image: none;
 }
 
 /* Full Card Example in DSL */

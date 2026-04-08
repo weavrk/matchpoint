@@ -1,3 +1,4 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { ChevronRight, ChevronLeft, MapPin, Users, Loader2 } from 'lucide-react';
 import { WorkerCardChip } from '../../../components/Workers/WorkerCardChip';
 import type { MatchedWorker } from '../../../types';
@@ -82,6 +83,8 @@ export interface V2WorkerSidebarProps {
   isLoading?: boolean;
 }
 
+const PAGE_SIZE = 20;
+
 export function V2WorkerSidebar({
   workers,
   isOpen,
@@ -92,8 +95,31 @@ export function V2WorkerSidebar({
   emptyMessage = 'No matches yet. Try selecting different brands or criteria.',
   isLoading = false,
 }: V2WorkerSidebarProps) {
-  // Determine if this is a location-specific empty state
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  // Reset visible count when workers change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [workers]);
+
+  // Intersection observer for infinite scroll
+  const observerCallback = useCallback((entries: IntersectionObserverEntry[]) => {
+    if (entries[0]?.isIntersecting && visibleCount < workers.length) {
+      setVisibleCount(prev => Math.min(prev + PAGE_SIZE, workers.length));
+    }
+  }, [visibleCount, workers.length]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(observerCallback, { rootMargin: '200px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [observerCallback]);
+
   const isLocationEmpty = emptyMessage.toLowerCase().includes('market');
+  const visibleWorkers = workers.slice(0, visibleCount);
 
   return (
     <V2SidebarShell
@@ -121,13 +147,18 @@ export function V2WorkerSidebar({
           <p>{emptyMessage}</p>
         </div>
       ) : (
-        workers.map(worker => (
-          <WorkerCardChip
-            key={worker.id}
-            worker={worker}
-            onClick={() => onWorkerClick?.(worker)}
-          />
-        ))
+        <>
+          {visibleWorkers.map(worker => (
+            <WorkerCardChip
+              key={worker.id}
+              worker={worker}
+              onClick={() => onWorkerClick?.(worker)}
+            />
+          ))}
+          {visibleCount < workers.length && (
+            <div ref={sentinelRef} style={{ height: 1 }} />
+          )}
+        </>
       )}
     </V2SidebarShell>
   );

@@ -292,9 +292,9 @@ export function WorkerCard({ worker }: WorkerCardProps) {
                     <RotateCcw size={12} /> Invited back: {worker.invitedBackStores} stores
                   </span>
                 )}
-                {reflexActivity?.storeFavoriteCount && (
+                {worker.storeFavoriteCount && (
                   <span className="reflex-metric highlight">
-                    <Star size={12} /> Store favorite at {reflexActivity.storeFavoriteCount} locations
+                    <Star size={12} /> Store favorite at {worker.storeFavoriteCount} locations
                   </span>
                 )}
                 {worker.tardyPercent != null && 100 - worker.tardyPercent > 85 && (

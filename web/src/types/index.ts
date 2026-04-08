@@ -28,7 +28,6 @@ export interface WorkerReflexActivity {
   shiftsByTier: { luxury: number; elevated: number; mid: number };
   longestRelationship: { brand: string; flexCount: number } | null;
   tierProgression: 'upward' | 'stable';
-  storeFavoriteCount: number | null;
 }
 
 export interface RetailerQuote {
@@ -86,7 +85,9 @@ export interface WorkerProfile {
   shiftExperience?: Record<string, number> | null;
   // Unique store locations worked
   uniqueStoreCount?: number | null;
-  // Market favorite (legacy DB flag; UI "Store Favorite" uses favoritedByBrands + elite brand list)
+  /** Number of stores that favorited this worker (from workers.store_favorite_count column). */
+  storeFavoriteCount?: number | null;
+  // Market favorite (legacy DB flag)
   marketFavorite?: boolean;
   /** Brand names that favorited this worker in-market (from workers.favorited_by_brands). */
   favoritedByBrands?: string[] | null;

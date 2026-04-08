@@ -14,15 +14,13 @@
 - **Worker Cards** — Shift Verified + Actively Looking badges: `tag-blue-light tag-sm`, DSL updated
 - **Worker Cards** — "Shift Experience" → "Reflex Experience"; brand logos merged under same header, no duplicate
 - **Worker Cards** — "Retailers on Reflex" → "Reflex Brand Experience"; section counts removed everywhere
+- Update compact card chips: standardize color and language across all chips
+- Add **Connect** and **Like** actions to all worker cards throughout the flows
 
 ---
 
 ## 🔲 Next Up — Worker Cards (Global)
 
-- Update compact card chips: standardize color and language across all chips
-- Add **Connect** and **Like** actions to all worker cards throughout the flows
-
-
+Clean up worker cards
 
 Clean up connections page
-

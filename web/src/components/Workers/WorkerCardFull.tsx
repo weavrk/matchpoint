@@ -5,66 +5,83 @@ import { brandLogoNeedsGridInset, getBrandLogo } from '../../utils/brandLogos';
 
 interface WorkerCardFullProps {
   worker: MatchedWorker;
-  onClose?: () => void; // Optional - parent handles close if using drawer
+  onClose?: () => void;
 }
 
-/**
- * WorkerCardFull - Comprehensive detail card content
- * Renders the full worker profile without any wrapper/overlay
- * Parent component handles positioning (drawer, modal, etc.)
- */
-// Convert string to title case
 const toTitleCase = (str: string) => {
   return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 };
 
 export function WorkerCardFull({ worker }: WorkerCardFullProps) {
-  const { reflexActivity } = worker;
-
-  // Use dedicated shift_experience field if available
   const shiftExperienceEntries = worker.shiftExperience
     ? Object.entries(worker.shiftExperience).sort((a, b) => b[1] - a[1])
     : [];
 
-  // Endorsements (behavioral traits) - use endorsement_counts directly
   const endorsementEntries = worker.endorsementCounts
     ? Object.entries(worker.endorsementCounts).sort((a, b) => b[1] - a[1])
     : [];
+
+  // Dedupe previous experience
+  const previousExperience = (() => {
+    const seen = new Set<string>();
+    return (worker.previousExperience || []).filter(exp => {
+      const roles = exp.roles.filter(r => r && r.toLowerCase() !== 'unknown').join(', ');
+      if (!roles) return false;
+      const key = `${exp.company}|${roles}|${exp.duration}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  })();
 
   return (
     <div className="worker-card worker-card-testing worker-card-full-content">
       <WorkerCardHeaderFull worker={worker} />
 
-      <div className="worker-card-body">
-        {/* Achievement Chips */}
-        <WorkerAchievementChips worker={worker} />
+      <div className="card-sections">
+        {/* 1. Stats + Achievement Chips */}
+        <div className="card-section-item">
+          <div className="compact-stats">
+            <span className="tag tag-stroke tag-sm">
+              <span className="tag-counter">{worker.shiftsOnReflex}</span>
+              <span className="tag-text">{worker.shiftsOnReflex === 1 ? 'Shift' : 'Shifts'}</span>
+            </span>
+            {worker.uniqueStoreCount != null && worker.uniqueStoreCount > 0 && (
+              <span className="tag tag-stroke tag-sm">
+                <span className="tag-counter">{worker.uniqueStoreCount}</span>
+                <span className="tag-text">{worker.uniqueStoreCount === 1 ? 'Store Location' : 'Store Locations'}</span>
+              </span>
+            )}
+          </div>
+          <WorkerAchievementChips worker={worker} />
+        </div>
 
-        {/* About Me */}
+        {/* 2. About */}
         {worker.aboutMe && (
-          <div className="testing-section">
+          <div className="card-section-item">
             <span className="testing-label">About</span>
             <p className="testing-about">{worker.aboutMe}</p>
           </div>
         )}
 
-        {/* Reflex Experience — shift role pills + brand logos under one header */}
+        {/* 3. Reflex Experience (shift pills + brand logos) */}
         {(shiftExperienceEntries.length > 0 || worker.brandsWorked.length > 0) && (
-          <div className="testing-section">
-            <span className="testing-label">Reflex Experience</span>
-
+          <div className="card-section-item">
             {shiftExperienceEntries.length > 0 && (
-              <div className="testing-pills">
-                {shiftExperienceEntries.map(([name, count], idx) => (
-                  <span key={idx} className="tag tag-blue-light tag-sm">
-                    <span className="tag-text">{name}</span>
-                    <span className="tag-counter">{count}</span>
-                  </span>
-                ))}
-              </div>
+              <>
+                <span className="testing-label">Reflex Experience</span>
+                <div className="testing-pills">
+                  {shiftExperienceEntries.map(([name, count], idx) => (
+                    <span key={idx} className="tag tag-blue-light tag-sm">
+                      <span className="tag-text">{name}</span>
+                      <span className="tag-counter">{count}</span>
+                    </span>
+                  ))}
+                </div>
+              </>
             )}
-
             {worker.brandsWorked.length > 0 && (
-              <div className={`brand-logo-grid${shiftExperienceEntries.length > 0 ? ' brand-logo-grid-spaced' : ''}`}>
+              <div className="brand-logo-grid">
                 {worker.brandsWorked.map((brand, idx) => {
                   const logo = getBrandLogo(brand.name);
                   return logo ? (
@@ -85,66 +102,18 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
           </div>
         )}
 
-        {/* Work History (Previous Experience) */}
-        {worker.previousExperience.length > 0 && (() => {
-          // Dedupe by company+role+duration, skip entries with no useful info
-          const seen = new Set<string>();
-          const filtered = worker.previousExperience.filter(exp => {
-            const roles = exp.roles.filter(r => r && r.toLowerCase() !== 'unknown').join(', ');
-            if (!roles) return false;
-            const key = `${exp.company}|${roles}|${exp.duration}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
-          if (filtered.length === 0) return null;
-          return (
-            <div className="testing-section">
-              <span className="testing-label">Other Retail Experience</span>
-              <div className="testing-data">
-                {filtered.map((exp, idx) => {
-                  const roles = exp.roles.filter(r => r && r.toLowerCase() !== 'unknown').join(', ');
-                  return (
-                    <div key={idx} className="testing-row">
-                      <span className="testing-key">{roles}</span>
-                      {exp.duration && ` (${exp.duration})`}
-                      {exp.company && `: ${exp.company}`}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Retailer Summary */}
-        {worker.retailerSummary && (
-          <div className="testing-section">
-            <span className="testing-label">What stores say about {worker.name.split(' ')[0]}</span>
-            <p className="testing-about">{worker.retailerSummary}</p>
-          </div>
-        )}
-
-        {/* Retailer Quotes */}
-        {worker.retailerQuotes && worker.retailerQuotes.length > 0 && (
-          <div className="testing-section">
-            <span className="testing-label">Store team reviews</span>
+        {/* 5. Other Retail Experience */}
+        {previousExperience.length > 0 && (
+          <div className="card-section-item">
+            <span className="testing-label">Other Retail Experience</span>
             <div className="testing-data">
-              {worker.retailerQuotes.map((quote, idx) => {
-                const brandLogo = getBrandLogo(quote.brand);
+              {previousExperience.map((exp, idx) => {
+                const roles = exp.roles.filter(r => r && r.toLowerCase() !== 'unknown').join(', ');
                 return (
-                  <div key={idx} className="testing-quote">
-                    <div className="quote-mark-container">
-                      <span className="quote-open-mark">{'\u201C'}</span>
-                    </div>
-                    <div className="quote-content">
-                      <p className="quote-text">{quote.quote}</p>
-                      {quote.role && <span className="quote-role">{quote.reviewerName ? `${quote.reviewerName}, ` : ''}{quote.role}</span>}
-                    </div>
-                    <div className="quote-logo-container">
-                      {brandLogo && <img src={brandLogo} alt={quote.brand} className="quote-brand-logo" />}
-                      {!brandLogo && quote.brand && <span className="quote-brand-text">{quote.brand}</span>}
-                    </div>
+                  <div key={idx} className="testing-row">
+                    <span className="testing-key">{roles}</span>
+                    {exp.duration && ` (${exp.duration})`}
+                    {exp.company && `: ${exp.company}`}
                   </div>
                 );
               })}
@@ -152,9 +121,46 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
           </div>
         )}
 
-        {/* Endorsements */}
+        {/* 6. Retailer Summary + Store Team Reviews */}
+        {(worker.retailerSummary || (worker.retailerQuotes && worker.retailerQuotes.length > 0)) && (
+          <div className="card-section-item">
+            {worker.retailerSummary && (
+              <>
+                <span className="testing-label">What Stores Say About {worker.name.split(' ')[0]}</span>
+                <p className="testing-about">{worker.retailerSummary}</p>
+              </>
+            )}
+            {worker.retailerQuotes && worker.retailerQuotes.length > 0 && (
+              <>
+                <span className="testing-label">Store Team Reviews</span>
+                <div className="testing-data">
+                  {worker.retailerQuotes.map((quote, idx) => {
+                    const brandLogo = getBrandLogo(quote.brand);
+                    return (
+                      <div key={idx} className="testing-quote">
+                        <div className="quote-mark-container">
+                          <span className="quote-open-mark">{'\u201C'}</span>
+                        </div>
+                        <div className="quote-content">
+                          <p className="quote-text">{quote.quote}</p>
+                          {quote.role && <span className="quote-role">{quote.reviewerName ? `${quote.reviewerName}, ` : ''}{quote.role}</span>}
+                        </div>
+                        <div className="quote-logo-container">
+                          {brandLogo && <img src={brandLogo} alt={quote.brand} className="quote-brand-logo" />}
+                          {!brandLogo && quote.brand && <span className="quote-brand-text">{quote.brand}</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* 8. Endorsements */}
         {endorsementEntries.length > 0 && (
-          <div className="testing-section">
+          <div className="card-section-item">
             <span className="testing-label">Endorsements</span>
             <div className="testing-pills">
               {endorsementEntries.map(([name, count], idx) => (
@@ -166,22 +172,6 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
             </div>
           </div>
         )}
-
-        {/* Interview Transcript */}
-        {worker.interviewTranscript && Array.isArray(worker.interviewTranscript) && worker.interviewTranscript.length > 0 && (
-          <div className="testing-section">
-            <span className="testing-label">Interview</span>
-            <div className="testing-data">
-              {worker.interviewTranscript.map((entry, idx) => (
-                <div key={idx} className="testing-quote">
-                  <div className="testing-row"><span className="testing-key">Q:</span> {entry.question}</div>
-                  <div className="testing-row"><span className="testing-key">A:</span> {entry.answer}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
       </div>
     </div>
   );

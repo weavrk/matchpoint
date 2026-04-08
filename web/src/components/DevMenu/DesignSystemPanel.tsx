@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase, CornerDownRight, CalendarFold, Blend, ChartNoAxesGantt, Search, Trophy, Sparkles, Heart, HeartPlus, ClockCheck, Link, UserPlus, XCircle, CalendarClock, MessageSquare, MessageSquareOff, MessageSquareDot } from 'lucide-react';
 import '../../pages/variants/V2TalentCentric/styles.css';
-import { WorkerCardHeader, WorkerCardHeaderFull } from '../Workers/WorkerCardHeader';
+import '../Workers/WorkerCard.css';
 import { WorkerCardChip } from '../Workers/WorkerCardChip';
 import { WorkerCardCompact } from '../Workers/WorkerCardCompact';
-import { WorkerCardTesting } from '../Workers/WorkerCardTesting';
 import { WorkerCardFull } from '../Workers/WorkerCardFull';
 import { getBrandLogo } from '../../utils/brandLogos';
 import type { MatchedWorker } from '../../types';
@@ -49,6 +48,7 @@ const sampleWorker: MatchedWorker = {
   activelyLooking: true,
   shiftsOnReflex: 361,
   uniqueStoreCount: 39,
+  storeFavoriteCount: 21,
   invitedBackStores: 25,
   currentTier: 'R1',
   tardyPercent: 1,
@@ -855,7 +855,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             <h5>Shift experience (role + count — same as worker cards)</h5>
             <p className="ds-description">
               Uses the <strong>blue light</strong> variant, not <code>tag-blue</code>.{' '}
-              <code>WorkerCardCompact</code>, <code>WorkerCard</code>, <code>WorkerCardFull</code>, and <code>WorkerCardTesting</code> use{' '}
+              <code>WorkerCardCompact</code>, <code>WorkerCard</code>, <code>WorkerCardFull</code>, and <code>WorkerCardAllAvailableData</code> use{' '}
               <code>className=&quot;tag tag-blue-light tag-md&quot;</code> with <code>tag-text</code> + <code>tag-counter</code>.
               Fill: <code>var(--background-blue)</code> via <code>.tag-blue-light</code>; counter: <code>.tag-blue-light .tag-counter</code> (white pill).
             </p>
@@ -930,7 +930,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><span className="tag tag-pink tag-sm"><span className="tag-icon"><Heart size={14} /></span><span className="tag-text">Your Store Favorite</span></span></td>
+                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><Heart size={14} fill="#ffffff" color="#ffffff" /></span><span className="tag-text">Your Store Favorite</span></span></td>
                     <td>
                       <code>hasEliteStoreFavorite(favoritedByBrands)</code>
                       <br />
@@ -940,25 +940,25 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     </td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><ClockCheck size={14} /></span><span className="tag-text">Consistently On-Time</span></span></td>
+                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><ClockCheck size={14} /></span><span className="tag-text">Consistently On-Time</span></span></td>
                     <td>
                       <code>100 - tardyPercent &gt; 85%</code>, or <code>tardyRatio</code> starts with <code>0/</code> (never late)
                     </td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><Sparkles size={14} /></span><span className="tag-text">Low Cancel Rate</span></span></td>
+                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><Sparkles size={14} /></span><span className="tag-text">Low Cancel Rate</span></span></td>
                     <td><code>urgentCancelPercent &lt; 5%</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><Trophy size={14} /></span><span className="tag-text">0 Call-Outs</span></span></td>
+                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><Trophy size={14} /></span><span className="tag-text">0 Call-Outs</span></span></td>
                     <td><code>urgentCancelRatio = "0/x"</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><HeartPlus size={14} /></span><span className="tag-text">Strong Store Favorite</span></span></td>
+                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><HeartPlus size={14} /></span><span className="tag-text">Strong Store Favorite</span></span></td>
                     <td><code>storeFavoriteCount / uniqueStoreCount &gt;= 85%</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><UserStar size={14} /></span><span className="tag-text">Invite Back Standout</span></span></td>
+                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><UserStar size={14} /></span><span className="tag-text">Invite Back Standout</span></span></td>
                     <td><code>invitedBackStores / uniqueStoreCount &gt;= 94%</code></td>
                   </tr>
                 </tbody>
@@ -1055,106 +1055,78 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
             Worker profile cards used across all variants. Import from <code>components/Workers</code>.
           </p>
 
+          {/* Chip + Compact side by side */}
           <div className="ds-subsection">
-            <h4>WorkerCardHeader (Reusable)</h4>
-            <p className="ds-description">
-              Row, full-overlay, and compact layouts from <code>WorkerCardHeader.tsx</code> / <code>WorkerCardHeaderFull</code>. Attributes for each sample are listed below the card.
-            </p>
             <div className="ds-worker-header-variants-row">
               <div className="ds-worker-header-variant">
-                <h5 className="ds-variant-sample-title">WorkerCardHeader — default row</h5>
+                <h4>WorkerCardChip</h4>
                 <div className="ds-worker-card-example">
-                  <div className="worker-card" style={{ background: '#fff' }}>
-                    <WorkerCardHeader worker={sampleWorker} />
-                  </div>
+                  <WorkerCardChip worker={sampleWorker} onConnect={() => {}} onLike={() => {}} />
                 </div>
-                <ul className="ds-variant-spec-list">
-                  <li>Horizontal row layout</li>
-                  <li>Used for teaser, compact card body, and chat cards</li>
-                  <li>Shows avatar, name, location, and status pills (stacked on the right)</li>
-                  <li>
-                    <code>.worker-header-content</code>: <code>padding: 12px 12px 0</code>, <code>gap: 8px</code>, <code>height: fit-content</code>, <code>justify-content: space-between</code>; status column <code>align-self: center</code>
-                  </li>
-                </ul>
               </div>
               <div className="ds-worker-header-variant">
-                <h5 className="ds-variant-sample-title">WorkerCardHeaderFull — centered (full card)</h5>
+                <h4>WorkerCardCompact</h4>
                 <div className="ds-worker-card-example">
-                  <div className="worker-card" style={{ background: '#fff' }}>
-                    <WorkerCardHeaderFull worker={sampleWorker} />
-                  </div>
-                </div>
-                <ul className="ds-variant-spec-list">
-                  <li>Centered avatar stack</li>
-                  <li>Designed for full overlay / detail panel</li>
-                  <li>Shows avatar, name, location, and status pills (row below)</li>
-                </ul>
-              </div>
-            </div>
-            <div className="ds-worker-header-variant ds-worker-header-variant-below-row">
-              <h5 className="ds-variant-sample-title">WorkerCardHeader — compact (no location, row badges, 36px avatar)</h5>
-              <div className="ds-worker-card-example">
-                <div className="worker-card" style={{ background: '#fff' }}>
-                  <WorkerCardHeader worker={sampleWorker} compact showLocation={false} />
+                  <WorkerCardCompact worker={sampleWorker} onConnect={() => {}} onLike={() => {}} />
                 </div>
               </div>
-              <ul className="ds-variant-spec-list">
-                <li>
-                  Props: <code>compact=&#123;true&#125;</code> <code>showLocation=&#123;false&#125;</code>
-                </li>
-                <li>36px avatar</li>
-                <li>13px name</li>
-                <li>Badges (status pills) in a single row</li>
-                <li>
-                  <code>.worker-card-header.compact</code>: <code>height: fit-content</code>, <code>gap: 0</code>
-                </li>
-                <li>
-                  <code>.worker-header-content</code>: <code>padding: 0</code>, <code>justify-content: flex-start</code>, <code>gap: 8px</code> (inherits <code>height: fit-content</code>)
-                </li>
-                <li>
-                  <code>.worker-header-left</code>: <code>gap: 8px</code>
-                </li>
-                <li>Used in list / chat contexts where space is tight</li>
-              </ul>
             </div>
           </div>
 
+          {/* Full + Testing side by side */}
           <div className="ds-subsection">
-            <h4>WorkerCardChip</h4>
-            <p className="ds-description">
-              Minimal card for inline mentions and compact selection lists. Shows avatar, name, Shift Verified + Actively Looking badges (in a row below the name), then stats and achievement chips below.
-              Badges use <code>tag-blue-light tag-sm</code>.
-            </p>
-            <div className="ds-worker-card-example">
-              <WorkerCardChip worker={sampleWorker} />
-            </div>
-          </div>
+            <div className="ds-worker-header-variants-row">
+              <div className="ds-worker-header-variant" >
+                <h4>WorkerCardFull</h4>
+                <div className="ds-worker-card-example">
+                  <WorkerCardFull worker={sampleWorker} onClose={() => {}} />
+                </div>
+              </div>
+              <div className="ds-worker-header-variant">
+                <h4>Available Data Fields</h4>
+                <div className="testing-data" style={{ fontSize: 13 }}>
+                  <div className="testing-row" style={{ fontWeight: 600, marginTop: 8 }}>Stats + Achievement Chips</div>
+                  <div className="testing-row"><span className="testing-key">shiftsOnReflex:</span> {sampleWorker.shiftsOnReflex}</div>
+                  <div className="testing-row"><span className="testing-key">uniqueStoreCount:</span> {sampleWorker.uniqueStoreCount || 'null'}</div>
+                  <div className="testing-row"><span className="testing-key">storeFavoriteCount:</span> {sampleWorker.storeFavoriteCount || 'null'}</div>
+                  <div className="testing-row"><span className="testing-key">tardyPercent:</span> {sampleWorker.tardyPercent != null ? `${sampleWorker.tardyPercent}%` : 'null'}</div>
+                  <div className="testing-row"><span className="testing-key">tardyRatio:</span> {sampleWorker.tardyRatio || 'null'}</div>
+                  <div className="testing-row"><span className="testing-key">urgentCancelPercent:</span> {sampleWorker.urgentCancelPercent != null ? `${sampleWorker.urgentCancelPercent}%` : 'null'}</div>
+                  <div className="testing-row"><span className="testing-key">urgentCancelRatio:</span> {sampleWorker.urgentCancelRatio || 'null'}</div>
+                  <div className="testing-row"><span className="testing-key">invitedBackStores:</span> {sampleWorker.invitedBackStores}</div>
 
-          <div className="ds-subsection">
-            <h4>WorkerCardCompact</h4>
-            <p className="ds-description">
-              Compact teaser card for grids and chat. Shows header + Reflex stats + retailer summary (verified) or work history (non-verified) + endorsements.
-              Header badges: <code>tag-blue-light tag-sm</code> for both Shift Verified (BadgeCheck icon) and Actively Looking (Search icon) — right-aligned in header.
-              Shift Experience rows use <code>tag tag-blue-light tag-md</code>; see Tags tab → Shift experience for canonical markup.
-            </p>
-            <div className="ds-worker-card-example">
-              <WorkerCardCompact worker={sampleWorker} />
-            </div>
-          </div>
+                  <div className="testing-row" style={{ fontWeight: 600, marginTop: 8 }}>About</div>
+                  <div className="testing-row"><span className="testing-key">aboutMe:</span> {sampleWorker.aboutMe ? `"${sampleWorker.aboutMe.slice(0, 60)}..."` : 'null'}</div>
 
-          <div className="ds-subsection">
-            <h4>WorkerCardFull</h4>
-            <p className="ds-description">Full detail overlay card. Opens to the right of chat interface (60% width). Includes close button and comprehensive worker details. Triggered by clicking on a worker card.</p>
-            <div className="ds-worker-card-full-example">
-              <WorkerCardFull worker={sampleWorker} onClose={() => {}} />
-            </div>
-          </div>
+                  <div className="testing-row" style={{ fontWeight: 600, marginTop: 8 }}>Reflex Experience</div>
+                  <div className="testing-row"><span className="testing-key">shiftExperience:</span> {sampleWorker.shiftExperience ? Object.keys(sampleWorker.shiftExperience).join(', ') : 'null'}</div>
 
-          <div className="ds-subsection">
-            <h4>WorkerCardTesting</h4>
-            <p className="ds-description">Testing card that shows ALL available worker data fields. Use for prototyping to see what data is available.</p>
-            <div className="ds-worker-card-example">
-              <WorkerCardTesting worker={sampleWorker} />
+                  <div className="testing-row" style={{ fontWeight: 600, marginTop: 8 }}>Brand Logos</div>
+                  <div className="testing-row"><span className="testing-key">brandsWorked:</span> {sampleWorker.brandsWorked.map(b => b.name).join(', ')}</div>
+
+                  <div className="testing-row" style={{ fontWeight: 600, marginTop: 8 }}>Other Retail Experience</div>
+                  <div className="testing-row"><span className="testing-key">previousExperience:</span> {sampleWorker.previousExperience.map(e => e.company).join(', ')}</div>
+
+                  <div className="testing-row" style={{ fontWeight: 600, marginTop: 8 }}>Retailer Summary</div>
+                  <div className="testing-row"><span className="testing-key">retailerSummary:</span> {sampleWorker.retailerSummary ? `"${sampleWorker.retailerSummary.slice(0, 60)}..."` : 'null'}</div>
+
+                  <div className="testing-row" style={{ fontWeight: 600, marginTop: 8 }}>Store Team Reviews</div>
+                  <div className="testing-row"><span className="testing-key">retailerQuotes:</span> {sampleWorker.retailerQuotes ? `${sampleWorker.retailerQuotes.length} quotes` : 'null'}</div>
+
+                  <div className="testing-row" style={{ fontWeight: 600, marginTop: 8 }}>Endorsements</div>
+                  <div className="testing-row"><span className="testing-key">endorsementCounts:</span> {sampleWorker.endorsementCounts ? Object.keys(sampleWorker.endorsementCounts).join(', ') : 'null'}</div>
+
+                  <div className="testing-row" style={{ fontWeight: 600, marginTop: 8 }}>Basic Info</div>
+                  <div className="testing-row"><span className="testing-key">id:</span> {sampleWorker.id}</div>
+                  <div className="testing-row"><span className="testing-key">name:</span> {sampleWorker.name}</div>
+                  <div className="testing-row"><span className="testing-key">photo:</span> {sampleWorker.photo || 'null'}</div>
+                  <div className="testing-row"><span className="testing-key">market:</span> {sampleWorker.market}</div>
+                  <div className="testing-row"><span className="testing-key">shiftVerified:</span> {sampleWorker.shiftVerified ? 'true' : 'false'}</div>
+                  <div className="testing-row"><span className="testing-key">activelyLooking:</span> {sampleWorker.activelyLooking ? 'true' : 'false'}</div>
+                  <div className="testing-row"><span className="testing-key">currentTier:</span> {sampleWorker.currentTier || 'null'}</div>
+                  <div className="testing-row"><span className="testing-key">reflexActivity:</span> {JSON.stringify(sampleWorker.reflexActivity)}</div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
