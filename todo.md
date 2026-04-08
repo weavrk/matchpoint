@@ -19,5 +19,10 @@
 
 ## 🔲 Next Up — Worker Cards (Global)
 
-- [ ] Update compact card chips: standardize color and language across all chips
-- [ ] Add **Connect** and **Like** actions to all worker cards throughout the flows
+- Update compact card chips: standardize color and language across all chips
+- Add **Connect** and **Like** actions to all worker cards throughout the flows
+
+
+
+Clean up connections page
+

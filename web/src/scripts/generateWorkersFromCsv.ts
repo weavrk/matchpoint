@@ -166,7 +166,7 @@ function parseRatio(raw: string): { ratio: string; percent: number } | null {
   const num = parseInt(match[1]);
   const den = parseInt(match[2]);
   const ratio = `${num}/${den}`;
-  const percent = den > 0 ? parseFloat(((num / den) * 100).toFixed(2)) : 0;
+  const percent = den > 0 ? Math.round((num / den) * 100) : 0;
   return { ratio, percent };
 }
 

@@ -589,7 +589,7 @@ export async function deletePublishedJob(jobId: string): Promise<void> {
 
 // Column sets for optimized queries
 const WORKER_COLUMNS_CARD = `
-  id, name, photo, gender, market, actively_looking, shift_verified, market_favorite,
+  id, name, photo, gender, market, actively_looking, shift_verified, market_favorite, favorited_by_brands,
   shifts_on_reflex, brands_worked, endorsement_counts, shift_experience, invited_back_stores,
   about_me, previous_experience, reflex_activity, retailer_quotes, retailer_summary,
   current_tier, unique_store_count, tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent,
@@ -598,7 +598,7 @@ const WORKER_COLUMNS_CARD = `
 
 const WORKER_COLUMNS_FULL = `
   id, name, photo, gender, market, actively_looking, about_me, previous_experience,
-  shift_verified, market_favorite, reflex_activity, shifts_on_reflex, brands_worked,
+  shift_verified, market_favorite, favorited_by_brands, reflex_activity, shifts_on_reflex, brands_worked,
   retailer_quotes, retailer_summary, endorsement_counts, shift_experience, invited_back_stores,
   tardy_ratio, tardy_percent, urgent_cancel_ratio, urgent_cancel_percent,
   current_tier, unique_store_count, interview_transcript, worker_uuid, worker_id
@@ -611,7 +611,7 @@ const WORKER_COLUMNS_LIST = `
 // Connection list needs achievement data too (market_favorite, tardy/cancel percents, unique_store_count, reflex_activity)
 const WORKER_COLUMNS_CONNECTION = `
   id, name, photo, gender, market, shift_verified, shifts_on_reflex, actively_looking, current_tier,
-  market_favorite, tardy_percent, urgent_cancel_percent, unique_store_count, reflex_activity, experience_level
+  market_favorite, favorited_by_brands, tardy_percent, urgent_cancel_percent, unique_store_count, reflex_activity, experience_level
 `.replace(/\s+/g, ' ').trim();
 
 export interface WorkerRow {
@@ -652,6 +652,8 @@ export interface WorkerRow {
   photo: string | null;
   // Market favorite
   market_favorite: boolean;
+  /** Retailer brands that favorited this worker (from source data); used for Store Favorite chip. */
+  favorited_by_brands: string[] | null;
   // Experience level for filtering
   experience_level: 'rising' | 'experienced' | 'seasoned' | 'proven_leader' | null;
 }
@@ -729,8 +731,8 @@ const MARKET_ALIASES: Record<string, string[]> = {
   'Pigeon Forge': ['Knoxville'],
   'Austin': ['San Marcos'],
   'Northern New Jersey': ['Newark'],
-  // NYC rollup — selecting NYC also returns LI East, LI West, NNJ workers
-  'New York City': ['Long Island East', 'Long Island West', 'Northern New Jersey', 'Newark'],
+  // NYC rollup — selecting NYC also returns Long Island, NNJ, Newark workers
+  'New York City': ['Long Island', 'Northern New Jersey', 'Newark'],
 };
 
 // Fetch workers by market (card display)
@@ -837,12 +839,12 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     gender: row.gender || undefined,
     shiftVerified: row.shift_verified,
     shiftsOnReflex: row.shifts_on_reflex,
-    brandsWorked: row.brands_worked as { name: string; tier: BrandTier }[],
+    brandsWorked: (row.brands_worked as { name: string; tier: BrandTier }[]) || [],
     market: row.market,
     endorsementCounts: row.endorsement_counts,
     invitedBackStores: row.invited_back_stores,
     aboutMe: row.about_me,
-    previousExperience: row.previous_experience || [],
+    previousExperience: (row.previous_experience as { company: string; duration: string; roles: string[] }[]) || [],
     reflexActivity: row.reflex_activity ? {
       shiftsByTier: row.reflex_activity.shiftsByTier,
       longestRelationship: row.reflex_activity.longestRelationship || null,
@@ -868,8 +870,9 @@ export function workerRowToProfile(row: WorkerRow): WorkerProfile {
     shiftExperience: row.shift_experience,
     // Unique store count
     uniqueStoreCount: row.unique_store_count,
-    // Market favorite
+    // Market favorite (legacy column; Store Favorite chip uses favoritedByBrands + elite brand list)
     marketFavorite: row.market_favorite,
+    favoritedByBrands: row.favorited_by_brands ?? undefined,
     // Experience level for filtering
     experienceLevel: row.experience_level,
   };

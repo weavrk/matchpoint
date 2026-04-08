@@ -383,11 +383,11 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     │  ├────────────────────────────┼──────────────────────┼─────────────────────────┤    │
     │  │ ❤️ Market Favorite         │ tag-green            │ marketFavorite: true    │    │
     │  │ 🕐 100% On-Time            │ tag-green            │ tardyRatio = "0 /..."   │    │
-    │  │ 🕐 X% On-Time              │ tag-green-light      │ tardyPercent < 10%      │    │
-    │  │ ✨ Exceptional Commitment  │ tag-green-light      │ urgentCancelPercent < 5%│    │
+    │  │ 🕐 X% On-Time              │ tag-green            │ tardyPercent < 10%      │    │
+    │  │ ✨ Exceptional Commitment  │ tag-green            │ urgentCancelPercent < 5%│    │
     │  │ ✓ 0 Call-Outs             │ tag-green            │ urgentCancelRatio="0/." │    │
     │  │ ❤️ X% Favorite Rating      │ tag-green            │ storeFavorite >= 89%    │    │
-    │  │ 👤 X% Invite Back Rate     │ tag-green-light      │ invitedBack >= 94%      │    │
+    │  │ 👤 X% Invite Back Rate     │ tag-green            │ invitedBack >= 94%      │    │
     │  └────────────────────────────┴──────────────────────┴─────────────────────────┘    │
     └─────────────────────────────────────────────────────────────────────────────────────┘
                                                   │
@@ -637,7 +637,7 @@ Worker-specific shift booking flow:
 | **Results**                          |                                                                                                                                          |
 | `WorkerCardTeaser`                   | Worker cards in results/sidebar                                                                                                          |
 | `WorkerCardHeader`                   | Default: `.worker-header-content` `padding: 12px 16px`, `gap: 8px`, `height: fit-content`, `space-between`. Compact: `padding: 0`, `flex-start`, `gap: 8px`; `.worker-card-header.compact` `height: fit-content`, `gap: 0`; `.worker-header-left` `gap: 8px` when compact. Tags `align-self: center`. |
-| `WorkerAchievementChips`             | Achievement tags with icons (green/green-light variants)                                                                                 |
+| `WorkerAchievementChips`             | Achievement tags with icons (`tag-green` for reliability achievements; `tag-pink` for Store Favorite)                                    |
 | `.tag.tag-blue-light.tag-md`         | Shift Verified (BadgeCheck); **shift experience** role + count (`tag-text` + `tag-counter`); fill `--background-blue`                    |
 | `.tag.tag-blue.tag-md`               | Actively Looking (Search icon); fill `**--accent-blue-light`** (not the same as blue light)                                              |
 | `.tag.tag-dark-gray.tag-md`          | Retailers on Reflex name pill when showing text-only brands (`--stone-700`, white text)                                                 |

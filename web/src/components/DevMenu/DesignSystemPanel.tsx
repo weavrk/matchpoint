@@ -930,8 +930,14 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><Heart size={16} /></span><span className="tag-text">Market Favorite</span></span></td>
-                    <td><code>marketFavorite: true</code></td>
+                    <td><span className="tag tag-pink tag-md"><span className="tag-icon"><Heart size={16} /></span><span className="tag-text">Store Favorite</span></span></td>
+                    <td>
+                      <code>hasEliteStoreFavorite(favoritedByBrands)</code>
+                      <br />
+                      <span style={{ fontSize: 10, color: 'var(--secondary)' }}>
+                        Elite brands: Ariat, Ralph Lauren, Golden Goose, Marc Jacobs, Tecovas, SKIMS, UGG, Rag &amp; Bone
+                      </span>
+                    </td>
                   </tr>
                   <tr>
                     <td><span className="tag tag-green tag-md"><span className="tag-icon"><Award size={16} /></span><span className="tag-text">100% On-Time</span></span></td>
@@ -984,7 +990,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     <td><code>status: "accepted"</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><UserPlus size={12} /></span><span className="tag-text">Invited</span></span></td>
+                    <td><span className="tag tag-dark-gray tag-sm"><span className="tag-icon"><UserPlus size={12} /></span><span className="tag-text">Invited</span></span></td>
                     <td><code>status: "invited"</code></td>
                   </tr>
                   <tr>

@@ -26,9 +26,9 @@ if (!GEMINI_API_KEY) {
   process.exit(1);
 }
 
-const CSV_PATH = '/Users/katherine_1/Downloads/query_result_2026-04-07T15_08_37.011663421-05_00.csv';
-const BATCH_SIZE = 10;
-const DELAY_MS = 150;
+const CSV_PATH = '/Users/katherine_1/Downloads/active_worker_list_2026-04-07T16_08_10.140723639-05_00.csv';
+const BATCH_SIZE = 50;
+const DELAY_MS = 0;
 
 const supabaseUrl = 'https://kxfbismfpmjwvemfznvm.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
@@ -154,10 +154,11 @@ async function generateAboutMe(
   priorExperience: string,
   brandsWorked: string,
   endorsementTags: string,
-  interviewTranscript: string
+  interviewTranscript: string,
+  shiftsOnReflex?: string,
+  market?: string,
+  tier?: string
 ): Promise<string | null> {
-  if (!priorExperience && !brandsWorked && !interviewTranscript) return null;
-
   let interviewInsights = '';
   if (interviewTranscript && interviewTranscript !== '{}') {
     try {
@@ -172,7 +173,7 @@ async function generateAboutMe(
     } catch { /* skip */ }
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as never });
   const prompt = `Write ONE "About Me" summary (2-4 sentences) for a retail worker's profile. Write in first person. Be conversational and natural.
 
 ${ABOUT_ME_EXAMPLES}
@@ -184,12 +185,15 @@ RULES:
 - Never use the worker's name
 - Sound like a real person, not a resume
 - 2-4 sentences, no quotation marks
+- If data is sparse, write a genuine generic retail worker bio — do NOT say "I don't have enough info"
 
 Worker background:
-- Previous experience: ${priorExperience || 'Various retail roles'}
-- Brands worked with: ${brandsWorked || 'Multiple retail brands'}
-- Top endorsements: ${endorsementTags || 'Customer service, reliability'}
-${interviewInsights ? `- Interview insights: ${interviewInsights}` : ''}
+- Shifts completed on Reflex: ${shiftsOnReflex || '1'}
+- Market: ${market || 'retail'}
+- Previous experience: ${priorExperience || 'retail roles'}
+- Brands worked with: ${brandsWorked || 'retail brands'}
+- Top endorsements from managers: ${endorsementTags || 'reliability, customer service'}
+${interviewInsights ? `- In their own words: ${interviewInsights}` : ''}
 
 Write the summary now:`;
 
@@ -200,14 +204,19 @@ Write the summary now:`;
 async function generateRetailerSummary(
   firstName: string,
   gender: 'she' | 'he',
-  retailerFeedback: string
+  retailerFeedback: string,
+  endorsementTags?: string
 ): Promise<string | null> {
-  if (!retailerFeedback?.trim()) return null;
+  const hasFeedback = retailerFeedback?.trim();
+  const hasEndorsements = endorsementTags?.trim();
+  if (!hasFeedback && !hasEndorsements) return null;
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as never });
   const p = getPronouns(gender);
 
-  const prompt = `Write ONE summary (2-5 sentences) of what store teams and managers say about this worker. Use first name "${firstName}" and ${p.subject}/${p.object}/${p.possessive} pronouns.
+  const sentenceCount = hasFeedback ? '2-4 sentences' : '1-2 sentences';
+
+  const prompt = `Write ONE summary of what store teams and managers say about this worker. Use first name "${firstName}" and ${p.subject}/${p.object}/${p.possessive} pronouns.
 
 ${RETAILER_SUMMARY_EXAMPLES}
 
@@ -216,12 +225,13 @@ CRITICAL: Write ONLY the summary text. No options, no labels. Just one natural p
 RULES:
 - Use ONLY first name "${firstName}"
 - Use ${p.subject}/${p.object}/${p.possessive} pronouns — NOT they/them/their
-- 2-5 sentences
+- ${sentenceCount}
 - Use "store managers", "store teams", "brands" instead of "retailers"
 - No quotation marks
+${!hasFeedback ? `- Only endorsement data is available — write 1-2 sentences praising ${p.object} for the listed qualities` : ''}
 
-Feedback:
-${retailerFeedback.substring(0, 1500)}
+${hasFeedback ? `Feedback from store managers:\n${retailerFeedback.substring(0, 1500)}` : ''}
+${hasEndorsements ? `Top endorsements from managers: ${endorsementTags}` : ''}
 
 Write the summary now:`;
 
@@ -255,39 +265,46 @@ function parseCSV(content: string): Record<string, string>[] {
   return rows;
 }
 
-// ── Fetch workers without about_me from Supabase ──────────────────────────────
+// ── Fetch helpers ─────────────────────────────────────────────────────────────
 
 async function fetchWorkersMissingAboutMe(): Promise<Set<number>> {
   const PAGE_SIZE = 1000;
   const ids = new Set<number>();
   let from = 0;
-
-  console.log('Fetching workers without about_me from Supabase...');
-
+  console.log('Fetching workers without about_me...');
   while (true) {
     const { data, error } = await supabase
-      .from('workers')
-      .select('worker_id')
-      .is('about_me', null)
-      .not('worker_id', 'is', null)
+      .from('workers').select('worker_id')
+      .is('about_me', null).not('worker_id', 'is', null)
       .range(from, from + PAGE_SIZE - 1);
-
-    if (error) {
-      console.error('Supabase error:', error.message);
-      break;
-    }
-
-    for (const row of data || []) {
-      if (row.worker_id != null) ids.add(Number(row.worker_id));
-    }
-
-    console.log(`  Fetched ${from}–${from + (data?.length ?? 0) - 1} (${ids.size} needing summaries)`);
-
-    if (!data || data.length < PAGE_SIZE) break;
+    if (error) { console.error('Supabase error:', error.message); break; }
+    for (const row of data || []) ids.add(Number(row.worker_id));
+    console.log(`  ${from}–${from + (data?.length ?? 0) - 1} (${ids.size})`);
+    if (!data?.length || data.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
   }
+  console.log(`→ ${ids.size} workers need about_me\n`);
+  return ids;
+}
 
-  console.log(`→ ${ids.size} workers need summaries.\n`);
+async function fetchWorkersMissingRetailerSummary(): Promise<Set<number>> {
+  const PAGE_SIZE = 1000;
+  const ids = new Set<number>();
+  let from = 0;
+  console.log('Fetching workers with about_me but no retailer_summary...');
+  while (true) {
+    const { data, error } = await supabase
+      .from('workers').select('worker_id')
+      .not('about_me', 'is', null).is('retailer_summary', null)
+      .not('worker_id', 'is', null)
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) { console.error('Supabase error:', error.message); break; }
+    for (const row of data || []) ids.add(Number(row.worker_id));
+    console.log(`  ${from}–${from + (data?.length ?? 0) - 1} (${ids.size})`);
+    if (!data?.length || data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+  console.log(`→ ${ids.size} workers need retailer_summary\n`);
   return ids;
 }
 
@@ -351,31 +368,49 @@ async function run() {
       const firstName = lastName.split(' ')[0];
       const updates: Record<string, string> = {};
       let hadAiError = false;
+      let aiErrorMsg = '';
 
-      try {
-        const aboutMe = await generateAboutMe(
+      const [aboutMe, retailerSummary] = await Promise.allSettled([
+        generateAboutMe(
           row.prior_experience || '',
           row.brands_worked || '',
           row.endorsement_tags || '',
-          row.interview_transcript || ''
-        );
-        if (aboutMe) updates.about_me = aboutMe;
-      } catch { hadAiError = true; }
+          row.interview_transcript || '',
+          row.completed_shift_count || '1',
+          (row.markets || '').split(',')[0].trim(),
+          row.current_tier || ''
+        ),
+        (row.retailer_feedback?.trim() || row.endorsement_tags?.trim())
+          ? generateRetailerSummary(firstName, gender, row.retailer_feedback || '', row.endorsement_tags || '')
+          : Promise.resolve(null),
+      ]);
 
-      try {
-        if (row.retailer_feedback?.trim()) {
-          const summary = await generateRetailerSummary(firstName, gender, row.retailer_feedback);
-          if (summary) updates.retailer_summary = summary;
-        }
-      } catch { hadAiError = true; }
+      let aiErrorMsg = '';
+      if (aboutMe.status === 'fulfilled' && aboutMe.value) {
+        updates.about_me = aboutMe.value;
+      } else if (aboutMe.status === 'rejected') {
+        hadAiError = true;
+        aiErrorMsg = String((aboutMe as PromiseRejectedResult).reason);
+      }
 
-      return { workerUuid, updates, hadAiError };
+      if (retailerSummary.status === 'fulfilled' && retailerSummary.value) {
+        updates.retailer_summary = retailerSummary.value;
+      } else if (retailerSummary.status === 'rejected') {
+        hadAiError = true;
+        if (!aiErrorMsg) aiErrorMsg = String((retailerSummary as PromiseRejectedResult).reason);
+      }
+
+      return { workerUuid, updates, hadAiError, aiErrorMsg };
     }));
 
     // Write each result directly to Supabase
     let batchDone = 0;
     for (const r of results) {
       if (!r) { skipped++; continue; }
+      if (r.hadAiError) {
+        aiErrorCount++;
+        if (aiErrorCount <= 3) console.error(`\n  AI error for ${r.workerUuid}: ${r.aiErrorMsg}`);
+      }
       if (Object.keys(r.updates).length === 0) continue;
 
       const { error } = await supabase
@@ -391,14 +426,61 @@ async function run() {
         if (r.updates.retailer_summary) retailerSummaryCount++;
         batchDone++;
       }
-      if (r.hadAiError) aiErrorCount++;
     }
 
     console.log(`✓ ${batchDone} saved to DB`);
     await delay(DELAY_MS);
   }
 
-  // 5. Summary
+  // 5. Second pass — workers that already have about_me but are missing retailer_summary
+  const needsRetailerOnly = await fetchWorkersMissingRetailerSummary();
+  const retailerOnlyToProcess = Array.from(needsRetailerOnly)
+    .filter(id => csvByWorkerId.has(id))
+    .map(id => csvByWorkerId.get(id)!);
+
+  if (retailerOnlyToProcess.length > 0) {
+    const r2Batches = Math.ceil(retailerOnlyToProcess.length / BATCH_SIZE);
+    console.log(`Retailer-summary-only pass: ${retailerOnlyToProcess.length} workers  |  Batches: ${r2Batches}\n`);
+
+    for (let i = 0; i < retailerOnlyToProcess.length; i += BATCH_SIZE) {
+      const batch = retailerOnlyToProcess.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      process.stdout.write(`  R-Batch ${batchNum}/${r2Batches} (${i + 1}–${Math.min(i + BATCH_SIZE, retailerOnlyToProcess.length)})... `);
+
+      const results = await Promise.all(batch.map(async (row) => {
+        const workerUuid = row.worker_uuid?.trim();
+        const lastName = row.display_name?.trim() || '';
+        if (!lastName || !workerUuid) return null;
+        if (!row.retailer_feedback?.trim() && !row.endorsement_tags?.trim()) return null;
+
+        const gender = detectGender(row.retailer_feedback || '', lastName.split(' ')[0]);
+        const firstName = lastName.split(' ')[0];
+
+        try {
+          const summary = await generateRetailerSummary(firstName, gender, row.retailer_feedback || '', row.endorsement_tags || '');
+          return summary ? { workerUuid, retailer_summary: summary } : null;
+        } catch {
+          aiErrorCount++;
+          return null;
+        }
+      }));
+
+      let batchDone = 0;
+      for (const r of results) {
+        if (!r) continue;
+        const { error } = await supabase
+          .from('workers').update({ retailer_summary: r.retailer_summary }).eq('worker_uuid', r.workerUuid);
+        if (error) { dbErrorCount++; } else { retailerSummaryCount++; batchDone++; }
+      }
+      console.log(`✓ ${batchDone} saved`);
+      await delay(DELAY_MS);
+    }
+  }
+
+  // 6. Trim any existing retailer_summaries that are 5 sentences (old over-long generations)
+  await trimLongRetailerSummaries();
+
+  // 7. Summary
   console.log('\n=== Complete ===');
   console.log(`about_me generated:        ${aboutMeCount}`);
   console.log(`retailer_summary generated: ${retailerSummaryCount}`);
@@ -406,6 +488,69 @@ async function run() {
   console.log(`AI errors:                 ${aiErrorCount}`);
   console.log(`DB errors:                 ${dbErrorCount}`);
   console.log('\nRe-run to retry any workers that errored (they still have no about_me in DB).');
+}
+
+async function trimLongRetailerSummaries() {
+  console.log('\n--- Trimming over-long retailer summaries ---');
+
+  // Fetch all workers that have a retailer_summary
+  const PAGE_SIZE = 1000;
+  const toLong: { worker_uuid: string; retailer_summary: string }[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('workers')
+      .select('worker_uuid, retailer_summary')
+      .not('retailer_summary', 'is', null)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error || !data?.length) break;
+
+    for (const row of data) {
+      if (!row.retailer_summary) continue;
+      // Count sentences (split on . ! ? followed by space or end)
+      const sentences = row.retailer_summary
+        .split(/(?<=[.!?])\s+/)
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0);
+      if (sentences.length >= 5) toLong.push(row);
+    }
+
+    from += PAGE_SIZE;
+    if (data.length < PAGE_SIZE) break;
+  }
+
+  if (toLong.length === 0) {
+    console.log('No over-long summaries found.');
+    return;
+  }
+
+  console.log(`Found ${toLong.length} summaries to trim. Trimming...`);
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash', generationConfig: { thinkingConfig: { thinkingBudget: 0 } } as never });
+
+  let trimmed = 0;
+  let trimErrors = 0;
+
+  await Promise.all(toLong.map(async (row) => {
+    try {
+      const result = await model.generateContent(
+        `Trim this retailer summary to 2-4 sentences. Keep the most impactful content. Return ONLY the trimmed text, no labels.\n\n${row.retailer_summary}`
+      );
+      const trimmedText = cleanResponse(result.response.text());
+      if (!trimmedText) return;
+
+      const { error } = await supabase
+        .from('workers')
+        .update({ retailer_summary: trimmedText })
+        .eq('worker_uuid', row.worker_uuid);
+
+      if (error) { trimErrors++; }
+      else { trimmed++; }
+    } catch { trimErrors++; }
+  }));
+
+  console.log(`Trimmed: ${trimmed}  |  Errors: ${trimErrors}`);
 }
 
 run().catch(console.error);

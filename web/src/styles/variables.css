@@ -878,7 +878,7 @@ h3.type-chip-header,
 
 /* ── Additional Tag Color Variants ─────────── */
 
-/* Blue — saturated fill (Actively Looking, Invited, etc.) */
+/* Blue — saturated fill (Actively Looking, etc.) */
 .tag-blue {
   background: var(--accent-blue-light);
   color: var(--text-primary);

@@ -57,6 +57,7 @@ import type { MatchedWorker, ChatMessage, WorkerProfile, FocusRoute } from "../.
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
 import { fetchWorkersByMarketAsProfiles, fetchRetailers, fetchWorkerConnections, fetchWorkerById } from "../../../services/supabase";
 import type { WorkerConnectionWithWorker, WorkerRow } from "../../../services/supabase";
+import { hasEliteStoreFavorite } from "../../../utils/storeFavoriteElite";
 import type { Retailer } from "../../../services/supabase";
 import ReactMarkdown from "react-markdown";
 import chatbotAvatarUrl from "../../../../../assets/logo-and-backgrounds/chatbot.svg?url";
@@ -334,7 +335,7 @@ const STORE_LOCATIONS = [
   { id: "town-square", name: "Town Square", marketId: "los-angeles-ca" },
 ];
 
-// All available markets for city search (from Oz table - 58 live markets)
+// All available markets for city search (29 markets)
 const MARKETS = [
   // AZ
   { id: "phoenix-az", name: "Phoenix", state: "AZ" },
@@ -367,8 +368,7 @@ const MARKETS = [
   // NV
   { id: "las-vegas-nv", name: "Las Vegas", state: "NV" },
   // NY
-  { id: "long-island-east-ny", name: "Long Island East", state: "NY" },
-  { id: "long-island-west-ny", name: "Long Island West", state: "NY" },
+  { id: "long-island-ny", name: "Long Island", state: "NY" },
   { id: "new-york-ny", name: "New York City", state: "NY" },
   { id: "westchester-ny", name: "Westchester", state: "NY" },
   { id: "woodbury-ny", name: "Woodbury", state: "NY" },
@@ -1137,7 +1137,7 @@ export function V2TalentCentric({
 
       workers = workers.filter((w) => {
         // Check brandsWorked against selected brands (direct match)
-        const hasDirectBrandMatch = w.brandsWorked.some((b) =>
+        const hasDirectBrandMatch = (w.brandsWorked || []).some((b) =>
           normalizedSelected.some(
             (sel) =>
               normalizeBrand(b.name).includes(sel) ||
@@ -1145,7 +1145,7 @@ export function V2TalentCentric({
           ),
         );
         // Check previousExperience against selected brands (direct match)
-        const hasDirectExpMatch = w.previousExperience?.some((exp) =>
+        const hasDirectExpMatch = (w.previousExperience || []).some((exp) =>
           normalizedSelected.some(
             (sel) =>
               normalizeBrand(exp.company).includes(sel) ||
@@ -1154,7 +1154,7 @@ export function V2TalentCentric({
         );
 
         // Check brandsWorked against related brands (same classification)
-        const hasRelatedBrandMatch = w.brandsWorked.some((b) =>
+        const hasRelatedBrandMatch = (w.brandsWorked || []).some((b) =>
           relatedBrandNames.some(
             (related) =>
               normalizeBrand(b.name).includes(related) ||
@@ -1162,7 +1162,7 @@ export function V2TalentCentric({
           ),
         );
         // Check previousExperience against related brands (same classification)
-        const hasRelatedExpMatch = w.previousExperience?.some((exp) =>
+        const hasRelatedExpMatch = (w.previousExperience || []).some((exp) =>
           relatedBrandNames.some(
             (related) =>
               normalizeBrand(exp.company).includes(related) ||
@@ -1197,7 +1197,7 @@ export function V2TalentCentric({
       let score = 50;
 
       // Brand match bonus (grid ids are kebab-case; brandsWorked uses display names)
-      const brandMatches = w.brandsWorked.filter((b) =>
+      const brandMatches = (w.brandsWorked || []).filter((b) =>
         canonicalSelectedIds.some(
           (sid) =>
             normalizeBrand(b.name) === normalizeBrand(sid) ||
@@ -1232,7 +1232,7 @@ export function V2TalentCentric({
   const commonBrands = useMemo(() => {
     const brandCounts: Record<string, number> = {};
     filteredWorkers.forEach((w) => {
-      w.brandsWorked.forEach((b) => {
+      (w.brandsWorked || []).forEach((b) => {
         brandCounts[b.name] = (brandCounts[b.name] || 0) + 1;
       });
     });
@@ -2666,43 +2666,60 @@ export function V2TalentCentric({
                       const initials = getInitials(name);
                       const isNotInterested = connection.status === "not_interested" || connection.status === "removed";
 
-                      // Calculate achievement chips (green only for connection list)
-                      type AchievementChip = { text: string; icon: React.ReactNode };
+                      type AchievementChip = {
+                        text: string;
+                        icon: React.ReactNode;
+                        variant: 'tag-pink' | 'tag-green';
+                      };
                       const achievementChips: AchievementChip[] = [];
 
-                      // Market Favorite
-                      if (worker?.market_favorite) {
-                        achievementChips.push({ text: 'Market Favorite', icon: <Heart size={14} /> });
+                      if (hasEliteStoreFavorite(worker?.favorited_by_brands)) {
+                        achievementChips.push({
+                          text: 'Store Favorite',
+                          icon: <Heart size={14} />,
+                          variant: 'tag-pink',
+                        });
                       }
 
-                      // On-Time badges (X% On-Time first, then 100% On-Time)
                       const tardyRatio = worker?.tardy_ratio || '';
                       const tardyPercent = worker?.tardy_percent ?? 100;
-                      const isNeverLate = tardyRatio.startsWith('0/') || tardyPercent === 0;
+                      const isNeverLate = tardyRatio.startsWith('0 /') || tardyRatio.startsWith('0/') || tardyPercent === 0;
 
                       if (isNeverLate) {
-                        // 100% On-Time - tardyRatio = "0/x" (never late)
-                        achievementChips.push({ text: '100% On-Time', icon: <Award size={14} /> });
+                        achievementChips.push({
+                          text: '100% On-Time',
+                          icon: <Award size={14} />,
+                          variant: 'tag-green',
+                        });
                       } else if (tardyPercent < 10) {
-                        // X% On-Time - show if tardyPercent < 10%
                         const onTimePercent = 100 - tardyPercent;
-                        achievementChips.push({ text: `${Math.round(onTimePercent)}% On-Time`, icon: <Clock size={14} /> });
+                        achievementChips.push({
+                          text: `${Math.round(onTimePercent)}% On-Time`,
+                          icon: <Clock size={14} />,
+                          variant: 'tag-green',
+                        });
                       }
 
-                      // 0 Call-Outs (urgentCancelRatio = "0/x")
                       const cancelRatio = worker?.urgent_cancel_ratio || '';
                       const cancelPercent = worker?.urgent_cancel_percent ?? 100;
-                      if (cancelRatio.startsWith('0/') || cancelPercent === 0) {
-                        achievementChips.push({ text: '0 Call-Outs', icon: <Trophy size={14} /> });
+                      if (cancelRatio.startsWith('0 /') || cancelRatio.startsWith('0/') || cancelPercent === 0) {
+                        achievementChips.push({
+                          text: '0 Call-Outs',
+                          icon: <Trophy size={14} />,
+                          variant: 'tag-green',
+                        });
                       }
 
-                      // Favorite Rating (reflex_activity.storeFavoriteCount / unique_store_count >= 89%)
                       const storeFavCount = worker?.reflex_activity?.storeFavoriteCount || 0;
                       const uniqueStores = worker?.unique_store_count || 0;
                       if (uniqueStores > 0) {
                         const favoritePercent = Math.min((storeFavCount / uniqueStores) * 100, 100);
                         if (favoritePercent >= 89) {
-                          achievementChips.push({ text: `${Math.round(favoritePercent)}% Favorite`, icon: <HeartPlus size={14} /> });
+                          achievementChips.push({
+                            text: `${Math.round(favoritePercent)}% Favorite`,
+                            icon: <HeartPlus size={14} />,
+                            variant: 'tag-green',
+                          });
                         }
                       }
 
@@ -2773,9 +2790,8 @@ export function V2TalentCentric({
                                 <span className="tag-text">Stores</span>
                               </span>
 
-                              {/* Achievement tags (green only) */}
                               {achievementChips.map((chip, idx) => (
-                                <span key={`ach-${idx}`} className="tag tag-green tag-sm">
+                                <span key={`ach-${idx}`} className={`tag ${chip.variant} tag-sm`}>
                                   <span className="tag-icon">{chip.icon}</span>
                                   <span className="tag-text">{chip.text}</span>
                                 </span>
@@ -2799,7 +2815,7 @@ export function V2TalentCentric({
                               <span className="tag-text">Connected</span>
                             </span>
                           ) : connection.status === "invited" ? (
-                            <span className="tag tag-blue tag-sm">
+                            <span className="tag tag-dark-gray tag-sm">
                               <span className="tag-icon"><UserPlus size={12} /></span>
                               <span className="tag-text">Invited</span>
                             </span>
@@ -2919,6 +2935,7 @@ export function V2TalentCentric({
                         activelyLooking: selectedConnectionFullWorker.actively_looking || false,
                         shiftVerified: selectedConnectionFullWorker.shift_verified || false,
                         marketFavorite: selectedConnectionFullWorker.market_favorite || false,
+                        favoritedByBrands: selectedConnectionFullWorker.favorited_by_brands ?? undefined,
                         shiftsOnReflex: selectedConnectionFullWorker.shifts_on_reflex || 0,
                         uniqueStoreCount: selectedConnectionFullWorker.unique_store_count || 0,
                         brandsWorked: selectedConnectionFullWorker.brands_worked || [],

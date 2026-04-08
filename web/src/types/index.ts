@@ -86,8 +86,10 @@ export interface WorkerProfile {
   shiftExperience?: Record<string, number> | null;
   // Unique store locations worked
   uniqueStoreCount?: number | null;
-  // Market favorite - worker is favorited/approved by retailer stores in market
+  // Market favorite (legacy DB flag; UI "Store Favorite" uses favoritedByBrands + elite brand list)
   marketFavorite?: boolean;
+  /** Brand names that favorited this worker in-market (from workers.favorited_by_brands). */
+  favoritedByBrands?: string[] | null;
   // Experience level for filtering (not displayed on card)
   experienceLevel?: 'rising' | 'experienced' | 'seasoned' | 'proven_leader' | null;
   // Legacy fields from sample workers (for compatibility)
