@@ -51,7 +51,7 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
             <span className="testing-label">Shift Experience ({shiftExperienceEntries.length})</span>
             <div className="testing-pills">
               {shiftExperienceEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-blue-light tag-md">
+                <span key={idx} className="tag tag-blue-light tag-sm">
                   <span className="tag-text">{name}</span>
                   <span className="tag-counter">{count}</span>
                 </span>
@@ -112,7 +112,7 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
           <span className="testing-label">Retailers on Reflex ({worker.brandsWorked.length})</span>
           <div className="testing-pills">
             {worker.brandsWorked.map((brand, idx) => (
-              <span key={idx} className="tag tag-dark-gray tag-md">
+              <span key={idx} className="tag tag-dark-gray tag-sm">
                 <span className="tag-text">{toTitleCase(brand.name)}</span>
               </span>
             ))}
@@ -125,7 +125,7 @@ export function WorkerCardTesting({ worker }: WorkerCardTestingProps) {
             <span className="testing-label">Endorsements ({endorsementEntries.length})</span>
             <div className="testing-pills">
               {endorsementEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-stroke tag-md">
+                <span key={idx} className="tag tag-stroke tag-sm">
                   <span className="tag-text">{name}</span>
                   <span className="tag-counter">{count}</span>
                 </span>

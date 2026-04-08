@@ -27,8 +27,8 @@ if (!GEMINI_API_KEY) {
 }
 
 const CSV_PATH = '/Users/katherine_1/Downloads/active_worker_list_2026-04-07T16_08_10.140723639-05_00.csv';
-const BATCH_SIZE = 50;
-const DELAY_MS = 0;
+const BATCH_SIZE = 10;
+const DELAY_MS = 200;
 
 const supabaseUrl = 'https://kxfbismfpmjwvemfznvm.supabase.co';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || '';
@@ -197,7 +197,7 @@ ${interviewInsights ? `- In their own words: ${interviewInsights}` : ''}
 
 Write the summary now:`;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetry(() => model.generateContent(prompt));
   return cleanResponse(result.response.text());
 }
 
@@ -235,7 +235,7 @@ ${hasEndorsements ? `Top endorsements from managers: ${endorsementTags}` : ''}
 
 Write the summary now:`;
 
-  const result = await model.generateContent(prompt);
+  const result = await withRetry(() => model.generateContent(prompt));
   return cleanResponse(result.response.text());
 }
 
@@ -310,6 +310,46 @@ async function fetchWorkersMissingRetailerSummary(): Promise<Set<number>> {
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
+// ── Retry with exponential backoff ───────────────────────────────────────────
+
+let quotaExhausted = false;
+
+class QuotaExhaustedError extends Error {
+  constructor() { super('Daily Gemini quota exhausted — stopping AI calls'); this.name = 'QuotaExhaustedError'; }
+}
+
+function isDailyQuota(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err);
+  return msg.includes('per_day') || msg.includes('per_model_per_day') || msg.includes('requests_per_day');
+}
+
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, baseDelayMs = 2000): Promise<T> {
+  if (quotaExhausted) throw new QuotaExhaustedError();
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status ??
+                     (err as { httpMetadata?: { status?: number } })?.httpMetadata?.status;
+      // Don't retry client errors (bad request, auth)
+      if (status === 400 || status === 401 || status === 403) throw err;
+      // Daily quota — stop everything, no point retrying
+      if (status === 429 && isDailyQuota(err)) {
+        quotaExhausted = true;
+        console.error('\n  ✖ Daily Gemini quota hit — bailing out of AI calls.');
+        throw new QuotaExhaustedError();
+      }
+      if (attempt === maxRetries) throw err;
+      const backoff = baseDelayMs * Math.pow(2, attempt);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`\n  ⟳ Retry ${attempt + 1}/${maxRetries} after ${backoff}ms (${msg})`);
+      await delay(backoff);
+    }
+  }
+  throw new Error('withRetry: unreachable');
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function run() {
@@ -354,6 +394,7 @@ async function run() {
   let skipped = 0;
 
   for (let i = 0; i < toProcess.length; i += BATCH_SIZE) {
+    if (quotaExhausted) { console.log('Quota exhausted — skipping remaining CSV batches.'); break; }
     const batch = toProcess.slice(i, i + BATCH_SIZE);
     const batchNum = Math.floor(i / BATCH_SIZE) + 1;
 
@@ -384,8 +425,6 @@ async function run() {
           ? generateRetailerSummary(firstName, gender, row.retailer_feedback || '', row.endorsement_tags || '')
           : Promise.resolve(null),
       ]);
-
-      let aiErrorMsg = '';
       if (aboutMe.status === 'fulfilled' && aboutMe.value) {
         updates.about_me = aboutMe.value;
       } else if (aboutMe.status === 'rejected') {
@@ -432,7 +471,11 @@ async function run() {
     await delay(DELAY_MS);
   }
 
-  // 5. Second pass — workers that already have about_me but are missing retailer_summary
+  // 5. DB-only pass — workers still missing about_me that weren't in the CSV
+  if (!quotaExhausted) await generateAboutMeFromDb();
+  else console.log('\nSkipping DB-only about_me pass (quota exhausted).');
+
+  // 6. Second pass — workers that already have about_me but are missing retailer_summary
   const needsRetailerOnly = await fetchWorkersMissingRetailerSummary();
   const retailerOnlyToProcess = Array.from(needsRetailerOnly)
     .filter(id => csvByWorkerId.has(id))
@@ -443,6 +486,7 @@ async function run() {
     console.log(`Retailer-summary-only pass: ${retailerOnlyToProcess.length} workers  |  Batches: ${r2Batches}\n`);
 
     for (let i = 0; i < retailerOnlyToProcess.length; i += BATCH_SIZE) {
+      if (quotaExhausted) { console.log('Quota exhausted — skipping remaining retailer batches.'); break; }
       const batch = retailerOnlyToProcess.slice(i, i + BATCH_SIZE);
       const batchNum = Math.floor(i / BATCH_SIZE) + 1;
       process.stdout.write(`  R-Batch ${batchNum}/${r2Batches} (${i + 1}–${Math.min(i + BATCH_SIZE, retailerOnlyToProcess.length)})... `);
@@ -477,10 +521,18 @@ async function run() {
     }
   }
 
-  // 6. Trim any existing retailer_summaries that are 5 sentences (old over-long generations)
-  await trimLongRetailerSummaries();
+  // 7. DB-only retailer summary pass — workers with retailer_quotes or endorsement_counts in DB but no retailer_summary
+  if (!quotaExhausted) await generateRetailerSummaryFromDb();
+  else console.log('\nSkipping DB-only retailer summary pass (quota exhausted).');
 
-  // 7. Summary
+  // 8. Generic retailer line for workers with shift/tier data but no feedback (no AI — always runs)
+  await generateGenericRetailerSummaries();
+
+  // 9. Trim any existing retailer_summaries that are 5 sentences (old over-long generations)
+  if (!quotaExhausted) await trimLongRetailerSummaries();
+  else console.log('\nSkipping trim pass (quota exhausted).');
+
+  // 10. Summary
   console.log('\n=== Complete ===');
   console.log(`about_me generated:        ${aboutMeCount}`);
   console.log(`retailer_summary generated: ${retailerSummaryCount}`);
@@ -488,6 +540,262 @@ async function run() {
   console.log(`AI errors:                 ${aiErrorCount}`);
   console.log(`DB errors:                 ${dbErrorCount}`);
   console.log('\nRe-run to retry any workers that errored (they still have no about_me in DB).');
+}
+
+// ── DB-only about_me pass (workers not in CSV) ──────────────────────────────
+
+async function generateAboutMeFromDb() {
+  console.log('\n--- DB-only about_me pass (workers not in CSV) ---');
+
+  const PAGE_SIZE = 1000;
+  type DbWorker = {
+    worker_uuid: string; name: string; market: string | null;
+    shifts_on_reflex: number; current_tier: string | null;
+    shift_experience: Record<string, number> | null;
+    brands_worked: { name: string }[] | null;
+    previous_experience: { company: string; roles: string[]; duration: string }[] | null;
+    endorsement_counts: Record<string, number> | null;
+  };
+  const workers: DbWorker[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('workers')
+      .select('worker_uuid, name, market, shifts_on_reflex, current_tier, shift_experience, brands_worked, previous_experience, endorsement_counts')
+      .is('about_me', null)
+      .not('worker_uuid', 'is', null)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) { console.error('Supabase error:', error.message); break; }
+    if (!data?.length) break;
+    for (const row of data) workers.push(row as DbWorker);
+    from += PAGE_SIZE;
+    if (data.length < PAGE_SIZE) break;
+  }
+
+  if (workers.length === 0) {
+    console.log('All workers already have about_me.');
+    return;
+  }
+
+  const totalBatches = Math.ceil(workers.length / BATCH_SIZE);
+  console.log(`${workers.length} workers still need about_me (DB-only).  Batches: ${totalBatches}\n`);
+
+  let generated = 0;
+  let errors = 0;
+
+  for (let i = 0; i < workers.length; i += BATCH_SIZE) {
+    if (quotaExhausted) { console.log('Quota exhausted — skipping remaining DB about_me batches.'); break; }
+    const batch = workers.slice(i, i + BATCH_SIZE);
+    const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+    process.stdout.write(`  DB-Batch ${batchNum}/${totalBatches} (${i + 1}–${Math.min(i + BATCH_SIZE, workers.length)})... `);
+
+    const results = await Promise.allSettled(batch.map(async (w) => {
+      // Build inputs from DB columns
+      const priorExp = w.previous_experience
+        ? w.previous_experience.map(j => `${j.company} - ${j.roles.join(', ')} (${j.duration})`).join(' | ')
+        : '';
+      const brands = w.brands_worked
+        ? w.brands_worked.map(b => b.name).join(', ')
+        : '';
+      const endorsements = w.endorsement_counts
+        ? Object.keys(w.endorsement_counts).join(', ')
+        : '';
+
+      const aboutMe = await generateAboutMe(
+        priorExp, brands, endorsements, '',
+        String(w.shifts_on_reflex || 1),
+        w.market || 'retail',
+        w.current_tier || ''
+      );
+
+      return aboutMe ? { workerUuid: w.worker_uuid, about_me: aboutMe } : null;
+    }));
+
+    let batchDone = 0;
+    for (const r of results) {
+      if (r.status === 'rejected') { errors++; continue; }
+      if (!r.value) continue;
+      const { error } = await supabase
+        .from('workers')
+        .update({ about_me: r.value.about_me })
+        .eq('worker_uuid', r.value.workerUuid);
+      if (error) { errors++; } else { generated++; batchDone++; }
+    }
+
+    console.log(`✓ ${batchDone} saved`);
+    await delay(DELAY_MS);
+  }
+
+  console.log(`DB-only about_me: ${generated} written  |  ${errors} errors`);
+}
+
+// ── DB-only retailer summary pass ────────────────────────────────────────────
+
+async function generateRetailerSummaryFromDb() {
+  console.log('\n--- DB-only retailer summary pass ---');
+
+  const PAGE_SIZE = 1000;
+  type DbWorker = {
+    worker_uuid: string; name: string; gender: string;
+    retailer_quotes: { quote: string }[] | null;
+    endorsement_counts: Record<string, number> | null;
+  };
+  const workers: DbWorker[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('workers')
+      .select('worker_uuid, name, gender, retailer_quotes, endorsement_counts')
+      .is('retailer_summary', null)
+      .not('worker_uuid', 'is', null)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) { console.error('Supabase error:', error.message); break; }
+    if (!data?.length) break;
+    for (const row of data) workers.push(row as DbWorker);
+    from += PAGE_SIZE;
+    if (data.length < PAGE_SIZE) break;
+  }
+
+  // Only workers that have retailer_quotes or endorsement_counts
+  const eligible = workers.filter(w => {
+    const hasQuotes = w.retailer_quotes && w.retailer_quotes.length > 0 && w.retailer_quotes.some(q => q.quote?.trim());
+    const hasEndorsements = w.endorsement_counts && Object.keys(w.endorsement_counts).length > 0;
+    return hasQuotes || hasEndorsements;
+  });
+
+  if (eligible.length === 0) {
+    console.log('No workers with DB retailer data need a summary.');
+    return;
+  }
+
+  const totalBatches = Math.ceil(eligible.length / BATCH_SIZE);
+  console.log(`${eligible.length} workers with retailer_quotes/endorsements need retailer_summary.  Batches: ${totalBatches}\n`);
+
+  let generated = 0;
+  let errors = 0;
+
+  for (let i = 0; i < eligible.length; i += BATCH_SIZE) {
+    if (quotaExhausted) { console.log('Quota exhausted — skipping remaining DB retailer batches.'); break; }
+    const batch = eligible.slice(i, i + BATCH_SIZE);
+    const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+    process.stdout.write(`  RDB-Batch ${batchNum}/${totalBatches} (${i + 1}–${Math.min(i + BATCH_SIZE, eligible.length)})... `);
+
+    const results = await Promise.allSettled(batch.map(async (w) => {
+      const firstName = (w.name || '').split(' ')[0];
+      const gender: 'she' | 'he' = w.gender === 'male' ? 'he' : 'she';
+
+      const feedback = w.retailer_quotes
+        ? w.retailer_quotes.map(q => q.quote).filter(Boolean).join(' ')
+        : '';
+      const endorsements = w.endorsement_counts
+        ? Object.keys(w.endorsement_counts).join(', ')
+        : '';
+
+      if (!feedback.trim() && !endorsements.trim()) return null;
+
+      const summary = await generateRetailerSummary(firstName, gender, feedback, endorsements);
+      return summary ? { workerUuid: w.worker_uuid, retailer_summary: summary } : null;
+    }));
+
+    let batchDone = 0;
+    for (const r of results) {
+      if (r.status === 'rejected') { errors++; continue; }
+      if (!r.value) continue;
+      const { error } = await supabase
+        .from('workers')
+        .update({ retailer_summary: r.value.retailer_summary })
+        .eq('worker_uuid', r.value.workerUuid);
+      if (error) { errors++; } else { generated++; batchDone++; }
+    }
+
+    console.log(`✓ ${batchDone} saved`);
+    await delay(DELAY_MS);
+  }
+
+  console.log(`DB-only retailer summaries: ${generated} written  |  ${errors} errors`);
+}
+
+// ── Generic retailer summary (no AI — template from shift/tier data) ─────────
+
+async function generateGenericRetailerSummaries() {
+  console.log('\n--- Generic retailer summaries (shift/tier data only) ---');
+
+  const PAGE_SIZE = 1000;
+  const workers: { worker_uuid: string; name: string; shifts_on_reflex: number; current_tier: string | null; shift_experience: Record<string, number> | null }[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('workers')
+      .select('worker_uuid, name, shifts_on_reflex, current_tier, shift_experience')
+      .not('about_me', 'is', null)
+      .is('retailer_summary', null)
+      .not('worker_uuid', 'is', null)
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) { console.error('Supabase error:', error.message); break; }
+    if (!data?.length) break;
+    for (const row of data) workers.push(row);
+    from += PAGE_SIZE;
+    if (data.length < PAGE_SIZE) break;
+  }
+
+  // Only workers with some shift data or tier
+  const eligible = workers.filter(w =>
+    (w.shifts_on_reflex && w.shifts_on_reflex > 0) || w.current_tier || (w.shift_experience && Object.keys(w.shift_experience).length > 0)
+  );
+
+  if (eligible.length === 0) {
+    console.log('No eligible workers for generic retailer line.');
+    return;
+  }
+
+  console.log(`${eligible.length} workers eligible for generic retailer summary.`);
+  let updated = 0;
+  let errors = 0;
+
+  for (let i = 0; i < eligible.length; i += 500) {
+    const batch = eligible.slice(i, i + 500);
+
+    const results = await Promise.all(batch.map(async (w) => {
+      const firstName = (w.name || '').split(' ')[0];
+      const parts: string[] = [];
+
+      if (w.shifts_on_reflex && w.shifts_on_reflex > 0) {
+        const roles = w.shift_experience ? Object.keys(w.shift_experience) : [];
+        if (roles.length > 0) {
+          const roleList = roles.slice(0, 3).join(', ');
+          parts.push(`${firstName} has completed ${w.shifts_on_reflex} shift${w.shifts_on_reflex === 1 ? '' : 's'} on Reflex across roles including ${roleList}.`);
+        } else {
+          parts.push(`${firstName} has completed ${w.shifts_on_reflex} shift${w.shifts_on_reflex === 1 ? '' : 's'} on the Reflex platform.`);
+        }
+      }
+
+      if (w.current_tier) {
+        parts.push(`Currently a ${w.current_tier} tier member.`);
+      }
+
+      if (parts.length === 0) return null;
+      return { workerUuid: w.worker_uuid, retailer_summary: parts.join(' ') };
+    }));
+
+    for (const r of results) {
+      if (!r) continue;
+      const { error } = await supabase
+        .from('workers')
+        .update({ retailer_summary: r.retailer_summary })
+        .eq('worker_uuid', r.workerUuid);
+      if (error) { errors++; } else { updated++; }
+    }
+
+    await delay(50);
+  }
+
+  console.log(`Generic retailer summaries: ${updated} written  |  ${errors} errors`);
 }
 
 async function trimLongRetailerSummaries() {
@@ -534,9 +842,9 @@ async function trimLongRetailerSummaries() {
 
   await Promise.all(toLong.map(async (row) => {
     try {
-      const result = await model.generateContent(
+      const result = await withRetry(() => model.generateContent(
         `Trim this retailer summary to 2-4 sentences. Keep the most impactful content. Return ONLY the trimmed text, no labels.\n\n${row.retailer_summary}`
-      );
+      ));
       const trimmedText = cleanResponse(result.response.text());
       if (!trimmedText) return;
 

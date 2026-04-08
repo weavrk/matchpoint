@@ -43,12 +43,12 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
         {worker.shiftVerified && (
           <>
             <div className="compact-stats">
-              <span className="tag tag-stroke tag-md">
+              <span className="tag tag-stroke tag-sm">
                 <span className="tag-counter">{worker.shiftsOnReflex}</span>
                 <span className="tag-text">Shifts</span>
               </span>
               {worker.uniqueStoreCount && worker.uniqueStoreCount > 0 && (
-                <span className="tag tag-stroke tag-md">
+                <span className="tag tag-stroke tag-sm">
                   <span className="tag-counter">{worker.uniqueStoreCount}</span>
                   <span className="tag-text">Store Locations</span>
                 </span>
@@ -69,7 +69,7 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
             <span className="section-label">Reflex Experience</span>
             <div className="compact-endorsements">
               {shiftExperienceEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-blue-light tag-md">
+                <span key={idx} className="tag tag-blue-light tag-sm">
                   <span className="tag-text">{name}</span>
                   <span className="tag-counter">{count}</span>
                 </span>
@@ -84,7 +84,7 @@ export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
             <span className="section-label">Retailers on Reflex</span>
             <div className="compact-endorsements">
               {brandsWorked.map((brand, idx) => (
-                <span key={idx} className="tag tag-dark-gray tag-md">
+                <span key={idx} className="tag tag-dark-gray tag-sm">
                   <span className="tag-text">{brand.name}</span>
                 </span>
               ))}

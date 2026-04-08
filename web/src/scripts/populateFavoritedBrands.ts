@@ -18,7 +18,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '/Users/katherine_1/Dropbox/x.wip/x.Tools/matchpoint/.env' });
 
-const CSV_PATH = '/Users/katherine_1/Downloads/active_worker_list_2026-04-07T16_08_10.140723639-05_00.csv';
+const CSV_PATH = '/Users/katherine_1/Downloads/active_worker_list_2026-04-08T12_25_13.11534095-05_00.csv';
 const BATCH_SIZE = 500;
 
 const supabaseUrl = 'https://kxfbismfpmjwvemfznvm.supabase.co';
@@ -68,7 +68,7 @@ async function run() {
   console.log(`CSV rows: ${rows.length}`);
 
   // Build update payloads — only for rows with actual brand data
-  type UpdateRow = { worker_id: number; favorited_by_brands: string[]; market_favorite: boolean };
+  type UpdateRow = { worker_id: number; favorited_by_brands: string[]; store_favorite_count: number; market_favorite: boolean };
   const updates: UpdateRow[] = [];
   let withBrands = 0;
   let withoutBrands = 0;
@@ -91,6 +91,7 @@ async function run() {
     updates.push({
       worker_id: workerId,
       favorited_by_brands: brands,
+      store_favorite_count: brands.length,
       market_favorite: true,
     });
     withBrands++;
@@ -114,7 +115,7 @@ async function run() {
     const results = await Promise.all(batch.map(u =>
       supabase
         .from('workers')
-        .update({ favorited_by_brands: u.favorited_by_brands, market_favorite: u.market_favorite })
+        .update({ favorited_by_brands: u.favorited_by_brands, store_favorite_count: u.store_favorite_count, market_favorite: u.market_favorite })
         .eq('worker_id', u.worker_id)
     ));
 

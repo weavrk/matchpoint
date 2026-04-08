@@ -163,15 +163,15 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
         {hasTags && (
           <div className={`worker-header-tags${compact ? ' row' : ''}`}>
             {worker.shiftVerified && (
-              <span className={`tag tag-blue-light ${compact ? 'tag-xs' : 'tag-sm'}`}>
-                <span className="tag-icon"><BadgeCheck size={compact ? 10 : 12} /></span>
+              <span className="tag tag-blue-light tag-xs">
+                <span className="tag-icon"><BadgeCheck size={10} /></span>
                 <span className="tag-text">Shift Verified</span>
               </span>
             )}
 
             {showActivelyLooking && worker.activelyLooking && (
-              <span className={`tag tag-blue-light ${compact ? 'tag-xs' : 'tag-sm'}`}>
-                <span className="tag-icon"><Search size={compact ? 10 : 12} /></span>
+              <span className="tag tag-blue-light tag-xs">
+                <span className="tag-icon"><Search size={10} /></span>
                 <span className="tag-text">Actively Looking</span>
               </span>
             )}

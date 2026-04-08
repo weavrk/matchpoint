@@ -1,7 +1,7 @@
 import type { MatchedWorker } from '../../types';
 import { WorkerCardHeaderFull } from './WorkerCardHeader';
 import { WorkerAchievementChips } from './WorkerAchievementChips';
-import { getBrandLogo } from '../../utils/brandLogos';
+import { brandLogoNeedsGridInset, getBrandLogo } from '../../utils/brandLogos';
 
 interface WorkerCardFullProps {
   worker: MatchedWorker;
@@ -55,7 +55,7 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
             {shiftExperienceEntries.length > 0 && (
               <div className="testing-pills">
                 {shiftExperienceEntries.map(([name, count], idx) => (
-                  <span key={idx} className="tag tag-blue-light tag-md">
+                  <span key={idx} className="tag tag-blue-light tag-sm">
                     <span className="tag-text">{name}</span>
                     <span className="tag-counter">{count}</span>
                   </span>
@@ -68,7 +68,10 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
                 {worker.brandsWorked.map((brand, idx) => {
                   const logo = getBrandLogo(brand.name);
                   return logo ? (
-                    <span key={idx} className="tag-logo">
+                    <span
+                      key={idx}
+                      className={`tag-logo${brandLogoNeedsGridInset(brand.name) ? ' tag-logo-grid-inset' : ''}`}
+                    >
                       <img src={logo} alt={brand.name} />
                     </span>
                   ) : (
@@ -137,7 +140,7 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
             <span className="testing-label">Endorsements</span>
             <div className="testing-pills">
               {endorsementEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-stroke tag-md">
+                <span key={idx} className="tag tag-stroke tag-sm">
                   <span className="tag-text">{name}</span>
                   <span className="tag-counter">{count}</span>
                 </span>

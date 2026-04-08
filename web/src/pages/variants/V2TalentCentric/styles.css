@@ -3798,57 +3798,6 @@
   border-radius: 50%;
 }
 
-.v2-connection-action {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.15s;
-  flex-shrink: 0;
-}
-
-.v2-connection-action:hover {
-  background: var(--hover);
-}
-
-.v2-connection-action.secondary {
-  background: var(--white);
-  border: 1px solid var(--quaternary);
-  color: var(--secondary);
-}
-
-.v2-connection-action.secondary:hover {
-  background: var(--gray-50);
-  border-color: var(--tertiary);
-}
-
-.v2-connection-action.disabled {
-  background: var(--tertiary);
-  color: var(--secondary);
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.v2-connection-action.disabled:hover {
-  background: var(--tertiary);
-}
-
-.v2-connection-action.unread {
-  background: var(--accent-blue-mid);
-  color: white;
-}
-
-.v2-connection-action.unread:hover {
-  background: var(--accent-blue-dark);
-}
-
 /* ============================================================
    CHAT TAB - Full-page two-column layout
    ============================================================ */

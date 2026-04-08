@@ -29,11 +29,11 @@ export function WorkerCardChip({ worker, onClick }: WorkerCardChipProps) {
       />
       <div className="chip-body">
         <div className="chip-stats">
-          <span className="tag tag-stroke tag-md">
+          <span className="tag tag-stroke tag-sm">
             <span className="tag-counter">{worker.shiftsOnReflex}</span>
             <span className="tag-text">Shifts</span>
           </span>
-          <span className="tag tag-stroke tag-md">
+          <span className="tag tag-stroke tag-sm">
             <span className="tag-counter">{storeLocations}</span>
             <span className="tag-text">Store Locations</span>
           </span>

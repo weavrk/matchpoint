@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase, CornerDownRight, CalendarFold, Blend, ChartNoAxesGantt, Search, Award, Trophy, Sparkles, Heart, HeartPlus, ClockCheck, Link, UserPlus, XCircle, CalendarClock, MessageSquare, MessageSquareOff, MessageSquareDot } from 'lucide-react';
+import { Check, Plus, UserStar, CalendarDays, BadgeCheck, ChevronLeft, ChevronRight, Store, Clock, ArrowRight, Briefcase, CornerDownRight, CalendarFold, Blend, ChartNoAxesGantt, Search, Trophy, Sparkles, Heart, HeartPlus, ClockCheck, Link, UserPlus, XCircle, CalendarClock, MessageSquare, MessageSquareOff, MessageSquareDot } from 'lucide-react';
 import '../../pages/variants/V2TalentCentric/styles.css';
 import { WorkerCardHeader, WorkerCardHeaderFull } from '../Workers/WorkerCardHeader';
 import { WorkerCardChip } from '../Workers/WorkerCardChip';
@@ -911,7 +911,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                       <code>brandsWorked[].name</code>
                       <br />
                       <span style={{ fontSize: 10, color: 'var(--secondary)' }}>
-                        Text pill: <code>tag-dark-gray</code>. Grid / overlay: <code>tag-logo</code> + <code>.brand-logo-fallback</code> (stone-700, white text) when no logo file.
+                        Text pill: <code>tag-dark-gray</code>. Grid / overlay: <code>tag-logo</code> + <code>.brand-logo-fallback</code> (primary text on white, quaternary border) when no logo file. Wide wordmarks use <code>tag-logo-grid-inset</code> (4px) via <code>brandLogoNeedsGridInset()</code>.
                       </span>
                     </td>
                   </tr>
@@ -919,7 +919,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
               </table>
             </div>
 
-            <h5>Achievement Tags (conditional - shown only if met, tag-md)</h5>
+            <h5>Achievement Tags (conditional - shown only if met, tag-sm)</h5>
             <div className="ds-chip-logic-box">
               <table className="ds-logic-table">
                 <thead>
@@ -930,7 +930,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><span className="tag tag-pink tag-md"><span className="tag-icon"><Heart size={16} /></span><span className="tag-text">Store Favorite</span></span></td>
+                    <td><span className="tag tag-pink tag-sm"><span className="tag-icon"><Heart size={14} /></span><span className="tag-text">Your Store Favorite</span></span></td>
                     <td>
                       <code>hasEliteStoreFavorite(favoritedByBrands)</code>
                       <br />
@@ -940,28 +940,26 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     </td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><Award size={16} /></span><span className="tag-text">100% On-Time</span></span></td>
-                    <td><code>tardyRatio = "0/x"</code> (never late)</td>
+                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><ClockCheck size={14} /></span><span className="tag-text">Consistently On-Time</span></span></td>
+                    <td>
+                      <code>100 - tardyPercent &gt; 85%</code>, or <code>tardyRatio</code> starts with <code>0/</code> (never late)
+                    </td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><ClockCheck size={16} /></span><span className="tag-text">X% On-Time</span></span></td>
-                    <td><code>100 - tardyPercent</code> (if tardyPercent &lt; 10%)</td>
-                  </tr>
-                  <tr>
-                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><Sparkles size={16} /></span><span className="tag-text">Exceptional Commitment</span></span></td>
+                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><Sparkles size={14} /></span><span className="tag-text">Low Cancel Rate</span></span></td>
                     <td><code>urgentCancelPercent &lt; 5%</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><Trophy size={16} /></span><span className="tag-text">0 Call-Outs</span></span></td>
+                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><Trophy size={14} /></span><span className="tag-text">0 Call-Outs</span></span></td>
                     <td><code>urgentCancelRatio = "0/x"</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><HeartPlus size={16} /></span><span className="tag-text">X% Favorite Rating</span></span></td>
-                    <td><code>storeFavoriteCount &gt;= 89%</code> of uniqueStoreCount</td>
+                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><HeartPlus size={14} /></span><span className="tag-text">Strong Store Favorite</span></span></td>
+                    <td><code>storeFavoriteCount / uniqueStoreCount &gt;= 85%</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-md"><span className="tag-icon"><UserStar size={16} /></span><span className="tag-text">X% Invite Back Rate</span></span></td>
-                    <td><code>invitedBackStores &gt;= 94%</code> of uniqueStoreCount</td>
+                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><UserStar size={14} /></span><span className="tag-text">Invite Back Standout</span></span></td>
+                    <td><code>invitedBackStores / uniqueStoreCount &gt;= 94%</code></td>
                   </tr>
                 </tbody>
               </table>
@@ -998,8 +996,8 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     <td><code>status: "liked"</code> or <code>saved_for_later: true</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-gray tag-sm"><span className="tag-icon"><XCircle size={12} /></span><span className="tag-text">Worker Declined</span></span></td>
-                    <td><code>status: "worker_declined"</code></td>
+                    <td><span className="tag tag-lite-gray tag-sm"><span className="tag-icon"><XCircle size={12} /></span><span className="tag-text">Worker Declined</span></span></td>
+                    <td><code>{'status: "not_interested"'}</code></td>
                   </tr>
                 </tbody>
               </table>
@@ -1016,20 +1014,31 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><button className="v2-connection-action" style={{ fontSize: '12px', padding: '4px 10px' }}><MessageSquare size={14} /> Chat</button></td>
+                    <td>
+                      <button type="button" className="tag tag-blue tag-sm">
+                        <span className="tag-icon"><MessageSquare size={14} /></span>
+                        <span className="tag-text">Chat</span>
+                      </button>
+                    </td>
                     <td>Connected, Shift Scheduled, or Shift Booked</td>
                   </tr>
                   <tr>
-                    <td><button className="v2-connection-action unread" style={{ fontSize: '12px', padding: '4px 10px' }}><MessageSquareDot size={14} /> Read Message</button></td>
+                    <td>
+                      <button type="button" className="tag tag-blue tag-sm">
+                        <span className="tag-icon"><MessageSquareDot size={14} /></span>
+                        <span className="tag-text">Unread Message</span>
+                      </button>
+                    </td>
                     <td><code>has_unread_worker_message: true</code></td>
                   </tr>
                   <tr>
-                    <td><button className="v2-connection-action disabled" style={{ fontSize: '12px', padding: '4px 10px' }}><MessageSquareOff size={14} /> Chat</button></td>
-                    <td>Saved (chat not enabled)</td>
-                  </tr>
-                  <tr>
-                    <td><button className="v2-connection-action secondary" style={{ fontSize: '12px', padding: '4px 10px' }}>Undo</button></td>
-                    <td>Worker Declined</td>
+                    <td>
+                      <button type="button" className="tag tag-stroke tag-sm" disabled>
+                        <span className="tag-icon"><MessageSquareOff size={14} /></span>
+                        <span className="tag-text">Chat Disabled</span>
+                      </button>
+                    </td>
+                    <td>Saved, Worker Declined, or other cases where chat is not enabled</td>
                   </tr>
                 </tbody>
               </table>
@@ -1064,7 +1073,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                   <li>Used for teaser, compact card body, and chat cards</li>
                   <li>Shows avatar, name, location, and status pills (stacked on the right)</li>
                   <li>
-                    <code>.worker-header-content</code>: <code>padding: 12px 16px</code>, <code>gap: 8px</code>, <code>height: fit-content</code>, <code>justify-content: space-between</code>; status column <code>align-self: center</code>
+                    <code>.worker-header-content</code>: <code>padding: 12px 12px 0</code>, <code>gap: 8px</code>, <code>height: fit-content</code>, <code>justify-content: space-between</code>; status column <code>align-self: center</code>
                   </li>
                 </ul>
               </div>

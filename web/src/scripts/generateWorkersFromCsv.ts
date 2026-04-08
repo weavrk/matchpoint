@@ -111,6 +111,7 @@ const DURATION_MAP: Record<string, string> = {
   SHORT: '< 6 months',
   MEDIUM: '6-18 months',
   LONG: '2+ years',
+  EXTENDED: '2+ years',
   UNKNOWN: '',
 };
 
@@ -128,7 +129,7 @@ function parsePriorExperience(raw: string): PriorJob[] {
 
   for (const entry of entries) {
     // Pattern: "Company [bracket] - Role (DURATION)" or "Company - Role (DURATION)"
-    const match = entry.match(/^(.*?)\s*-\s*(.+?)\s*\((SHORT|MEDIUM|LONG|UNKNOWN)\)\s*$/i);
+    const match = entry.match(/^(.*?)\s*-\s*(.+?)\s*\((SHORT|MEDIUM|LONG|EXTENDED|UNKNOWN)\)\s*$/i);
     if (!match) continue;
 
     let company = match[1].trim().replace(/\[.*?\]/g, '').trim();
@@ -359,7 +360,8 @@ async function run() {
     const prevExperience = parsePriorExperience(row.prior_experience || '');
     const endorsementCounts = parseEndorsementCounts(row.endorsement_tags || '');
     const brandsWorked = parseBrandsWorked(row.brands_worked || '');
-    const shiftExperience = extractShiftExperience(prevExperience);
+    // shift_experience is set to null here — canonical source is populateShiftExperience.ts
+    // which derives it from actual shift CSVs, not prior_experience text.
     const experienceLevel = calcExperienceLevel(prevExperience, shiftsOnReflex);
     levelCounts[experienceLevel as keyof typeof levelCounts]++;
 
@@ -391,7 +393,7 @@ async function run() {
       experience_level: experienceLevel,
       brands_worked: brandsWorked.length ? brandsWorked : null,
       endorsement_counts: Object.keys(endorsementCounts).length ? endorsementCounts : null,
-      shift_experience: Object.keys(shiftExperience).length ? shiftExperience : null,
+      shift_experience: null, // filled by populateShiftExperience.ts from actual shift data
       previous_experience: prevExperience.length ? prevExperience : null,
       retailer_quotes: retailerFeedback ? [{ quote: retailerFeedback }] : null,
       reflex_activity: shiftsOnReflex > 0

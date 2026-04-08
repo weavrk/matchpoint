@@ -620,6 +620,32 @@ h3.type-chip-header,
   flex-shrink: 0;
 }
 
+/* Buttons that use .tag-* variants (e.g. V2 connection chat actions) */
+button.tag {
+  font-family: inherit;
+  font-weight: inherit;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+button.tag:not(.tag-stroke) {
+  border: none;
+}
+
+button.tag:not(:disabled) {
+  cursor: pointer;
+}
+
+button.tag:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+button.tag.tag-blue:not(:disabled):hover {
+  filter: brightness(0.96);
+}
+
 /* ── Tag Sizes ─────────────────────────────── */
 
 /* XSmall: 10px font */
@@ -1096,10 +1122,12 @@ h3.type-chip-header,
 
 .ds-logic-table td code {
   font-size: 11px;
-  background: var(--gray-100);
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: var(--primary);
+  font-family: ui-monospace, monospace;
+  background: var(--gray-200);
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--text-primary);
+  border: 1px solid var(--quaternary);
 }
 
 .ds-logic-table tbody tr:hover {

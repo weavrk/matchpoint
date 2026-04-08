@@ -222,6 +222,22 @@ const BRAND_LOGO_MAP: Record<string, string> = {
 };
 
 /**
+ * Brands whose logo artwork sits flush to the frame in our assets — add a few px
+ * inset only in tight grids (see `.brand-logo-grid .tag-logo.tag-logo-grid-inset`).
+ * Curated list; expand when QA flags more wide wordmarks (not auto-detected from pixels).
+ */
+const BRAND_LOGO_GRID_INSET_NORMALIZED = new Set<string>([
+  'everlane',
+  'golden goose',
+  'mackage',
+  'polo ralph lauren',
+  'polo-ralph-lauren',
+  'ralph lauren',
+  'ralph lauren factory store',
+  'reiss',
+]);
+
+/**
  * Get brand logo path from brand name
  * Returns undefined if no matching logo found
  */
@@ -236,4 +252,10 @@ export function getBrandLogo(brandName: string): string | undefined {
  */
 export function hasBrandLogo(brandName: string): boolean {
   return getBrandLogo(brandName) !== undefined;
+}
+
+/** True when this brand should get slight inset padding in `.brand-logo-grid` only. */
+export function brandLogoNeedsGridInset(brandName: string): boolean {
+  if (!brandName) return false;
+  return BRAND_LOGO_GRID_INSET_NORMALIZED.has(brandName.toLowerCase().trim());
 }

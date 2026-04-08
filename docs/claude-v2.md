@@ -381,13 +381,12 @@ Retailer books a Reflex shift with a specific worker through Cahootz functionali
     │  ┌────────────────────────────┬──────────────────────┬─────────────────────────┐    │
     │  │ Chip                       │ Variant              │ Condition               │    │
     │  ├────────────────────────────┼──────────────────────┼─────────────────────────┤    │
-    │  │ ❤️ Market Favorite         │ tag-green            │ marketFavorite: true    │    │
-    │  │ 🕐 100% On-Time            │ tag-green            │ tardyRatio = "0 /..."   │    │
-    │  │ 🕐 X% On-Time              │ tag-green            │ tardyPercent < 10%      │    │
-    │  │ ✨ Exceptional Commitment  │ tag-green            │ urgentCancelPercent < 5%│    │
+    │  │ ❤️ Your Store Favorite     │ tag-pink             │ hasEliteStoreFavorite   │    │
+    │  │ 🕐 Consistently On-Time    │ tag-green            │ on-time &gt; 85% or 0/x  │    │
+    │  │ ✨ Low Cancel Rate         │ tag-green            │ urgentCancelPercent < 5%│    │
     │  │ ✓ 0 Call-Outs             │ tag-green            │ urgentCancelRatio="0/." │    │
-    │  │ ❤️ X% Favorite Rating      │ tag-green            │ storeFavorite >= 89%    │    │
-    │  │ 👤 X% Invite Back Rate     │ tag-green            │ invitedBack >= 94%      │    │
+    │  │ ❤️ Strong Store Favorite   │ tag-green            │ storeFavorite >= 85%    │    │
+    │  │ 👤 Invite Back Standout    │ tag-green            │ invitedBack >= 94%      │    │
     │  └────────────────────────────┴──────────────────────┴─────────────────────────┘    │
     └─────────────────────────────────────────────────────────────────────────────────────┘
                                                   │

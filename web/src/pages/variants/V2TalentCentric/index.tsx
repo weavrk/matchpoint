@@ -11,7 +11,6 @@ import {
   Users,
   ShieldCheck,
   Unlock,
-  Clock,
   Store,
   Briefcase,
   CalendarDays,
@@ -37,7 +36,6 @@ import {
   UserPlus,
   ThumbsUp,
   XCircle,
-  Award,
   Trophy,
   HeartPlus,
   UserStar,
@@ -57,7 +55,6 @@ import type { MatchedWorker, ChatMessage, WorkerProfile, FocusRoute } from "../.
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
 import { fetchWorkersByMarketAsProfiles, fetchRetailers, fetchWorkerConnections, fetchWorkerById } from "../../../services/supabase";
 import type { WorkerConnectionWithWorker, WorkerRow } from "../../../services/supabase";
-import { hasEliteStoreFavorite } from "../../../utils/storeFavoriteElite";
 import type { Retailer } from "../../../services/supabase";
 import ReactMarkdown from "react-markdown";
 import chatbotAvatarUrl from "../../../../../assets/logo-and-backgrounds/chatbot.svg?url";
@@ -2673,7 +2670,7 @@ export function V2TalentCentric({
                       };
                       const achievementChips: AchievementChip[] = [];
 
-                      if (hasEliteStoreFavorite(worker?.favorited_by_brands)) {
+                      if ((worker?.reflex_activity?.storeFavoriteCount ?? 0) > 2) {
                         achievementChips.push({
                           text: 'Store Favorite',
                           icon: <Heart size={14} />,
@@ -2683,19 +2680,18 @@ export function V2TalentCentric({
 
                       const tardyRatio = worker?.tardy_ratio || '';
                       const tardyPercent = worker?.tardy_percent ?? 100;
-                      const isNeverLate = tardyRatio.startsWith('0 /') || tardyRatio.startsWith('0/') || tardyPercent === 0;
+                      const neverLateByRatio =
+                        tardyRatio.startsWith('0 /') || tardyRatio.startsWith('0/');
+                      const onTimePercent = 100 - tardyPercent;
+                      const meetsPunctualBar =
+                        neverLateByRatio ||
+                        tardyPercent === 0 ||
+                        (worker?.tardy_percent != null && onTimePercent > 85);
 
-                      if (isNeverLate) {
+                      if (meetsPunctualBar) {
                         achievementChips.push({
-                          text: '100% On-Time',
-                          icon: <Award size={14} />,
-                          variant: 'tag-green',
-                        });
-                      } else if (tardyPercent < 10) {
-                        const onTimePercent = 100 - tardyPercent;
-                        achievementChips.push({
-                          text: `${Math.round(onTimePercent)}% On-Time`,
-                          icon: <Clock size={14} />,
+                          text: 'Consistently On-Time',
+                          icon: <ClockCheck size={14} />,
                           variant: 'tag-green',
                         });
                       }
@@ -2704,7 +2700,7 @@ export function V2TalentCentric({
                       const cancelPercent = worker?.urgent_cancel_percent ?? 100;
                       if (cancelRatio.startsWith('0 /') || cancelRatio.startsWith('0/') || cancelPercent === 0) {
                         achievementChips.push({
-                          text: '0 Call-Outs',
+                          text: 'Never Called Out',
                           icon: <Trophy size={14} />,
                           variant: 'tag-green',
                         });
@@ -2714,10 +2710,22 @@ export function V2TalentCentric({
                       const uniqueStores = worker?.unique_store_count || 0;
                       if (uniqueStores > 0) {
                         const favoritePercent = Math.min((storeFavCount / uniqueStores) * 100, 100);
-                        if (favoritePercent >= 89) {
+                        if (favoritePercent >= 85) {
                           achievementChips.push({
-                            text: `${Math.round(favoritePercent)}% Favorite`,
+                            text: 'Strong Store Favorite',
                             icon: <HeartPlus size={14} />,
+                            variant: 'tag-green',
+                          });
+                        }
+                      }
+
+                      const invitedBack = worker?.invited_back_stores ?? 0;
+                      if (uniqueStores > 0 && invitedBack > 0) {
+                        const inviteBackPercent = Math.min((invitedBack / uniqueStores) * 100, 100);
+                        if (inviteBackPercent >= 94) {
+                          achievementChips.push({
+                            text: 'Invite Back Standout',
+                            icon: <UserStar size={14} />,
                             variant: 'tag-green',
                           });
                         }
@@ -2825,7 +2833,7 @@ export function V2TalentCentric({
                               <span className="tag-text">Saved</span>
                             </span>
                           ) : connection.status === "not_interested" ? (
-                            <span className="tag tag-gray tag-sm">
+                            <span className="tag tag-lite-gray tag-sm">
                               <span className="tag-icon"><XCircle size={12} /></span>
                               <span className="tag-text">Worker Declined</span>
                             </span>
@@ -2840,21 +2848,16 @@ export function V2TalentCentric({
 
                             // Chat enabled for: connected, shift_scheduled, shift_booked
                             const chatEnabled = isConnected || hasShift;
-                            // Chat disabled for: saved, worker_declined
+                            // Chat disabled for: saved, worker declined (same UI as other non-chat states)
                             const chatDisabled = isSaved || isWorkerDeclined;
-
-                            if (isWorkerDeclined) {
-                              return (
-                                <button className="v2-connection-action secondary">
-                                  Undo
-                                </button>
-                              );
-                            }
 
                             if (chatDisabled) {
                               return (
-                                <button className="v2-connection-action disabled" disabled>
-                                  <MessageSquareOff size={16} /> Chat
+                                <button type="button" className="tag tag-stroke tag-sm" disabled>
+                                  <span className="tag-icon">
+                                    <MessageSquareOff size={14} />
+                                  </span>
+                                  <span className="tag-text">Chat Disabled</span>
                                 </button>
                               );
                             }
@@ -2862,7 +2865,8 @@ export function V2TalentCentric({
                             if (hasUnreadMessage) {
                               return (
                                 <button
-                                  className="v2-connection-action unread"
+                                  type="button"
+                                  className="tag tag-blue tag-sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if (connection.chat_id) {
@@ -2871,14 +2875,18 @@ export function V2TalentCentric({
                                     }
                                   }}
                                 >
-                                  <MessageSquareDot size={16} /> Read Message
+                                  <span className="tag-icon">
+                                    <MessageSquareDot size={14} />
+                                  </span>
+                                  <span className="tag-text">Unread Message</span>
                                 </button>
                               );
                             }
 
                             return (
                               <button
-                                className="v2-connection-action"
+                                type="button"
+                                className="tag tag-blue tag-sm"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (connection.chat_id) {
@@ -2887,7 +2895,10 @@ export function V2TalentCentric({
                                   }
                                 }}
                               >
-                                <MessageSquare size={16} /> Chat
+                                <span className="tag-icon">
+                                  <MessageSquare size={14} />
+                                </span>
+                                <span className="tag-text">Chat</span>
                               </button>
                             );
                           })()}
