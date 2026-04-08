@@ -7,7 +7,9 @@ interface WorkerCardCompactProps {
   worker: MatchedWorker;
   onClick?: () => void;
   onLike?: () => void;
+  onUnlike?: () => void;
   onConnect?: () => void;
+  onDisconnect?: () => void;
   isConnected?: boolean;
   isLiked?: boolean;
 }
@@ -20,7 +22,7 @@ const toTitleCase = (str: string) => {
  * WorkerCardCompact - Compact teaser card for grids and chat view
  * Order: Header → Stats → Achievement Chips → About Me → Reflex Brand Experience
  */
-export function WorkerCardCompact({ worker, onClick, onLike, onConnect, isConnected, isLiked }: WorkerCardCompactProps) {
+export function WorkerCardCompact({ worker, onClick, onLike, onUnlike, onConnect, onDisconnect, isConnected, isLiked }: WorkerCardCompactProps) {
   const brandsWorked = worker.brandsWorked || [];
   // Derive minimum store count: use DB value, or fall back to brands worked count
   const storeCount = (worker.uniqueStoreCount && worker.uniqueStoreCount > 0)
@@ -29,7 +31,7 @@ export function WorkerCardCompact({ worker, onClick, onLike, onConnect, isConnec
 
   return (
     <div className="worker-card worker-card-compact" onClick={onClick}>
-      <WorkerCardHeader worker={worker} showActivelyLooking={true} showActions onLike={onLike} onConnect={onConnect} isConnected={isConnected} isLiked={isLiked} />
+      <WorkerCardHeader worker={worker} showActivelyLooking={true} showLocation={false} showActions onLike={onLike} onUnlike={onUnlike} onConnect={onConnect} onDisconnect={onDisconnect} isConnected={isConnected} isLiked={isLiked} />
 
       <div className="worker-card-body">
         {/* Stats: Shifts + Store Locations */}

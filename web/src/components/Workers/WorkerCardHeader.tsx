@@ -15,7 +15,9 @@ interface WorkerCardHeaderProps {
   isConnected?: boolean;
   isLiked?: boolean;
   onLike?: () => void;
+  onUnlike?: () => void;
   onConnect?: () => void;
+  onDisconnect?: () => void;
 }
 
 interface WorkerCardHeaderFullProps {
@@ -104,14 +106,14 @@ export function WorkerCardHeaderFull({ worker, showActivelyLooking = true }: Wor
   );
 }
 
-export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking = true, showLocation = true, compact = false, showActions = false, isConnected = false, isLiked = false, onLike, onConnect }: WorkerCardHeaderProps) {
+export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking = true, showLocation = true, compact = false, showActions = false, isConnected = false, isLiked = false, onLike, onUnlike, onConnect, onDisconnect }: WorkerCardHeaderProps) {
   const [imgError, setImgError] = useState(false);
   const [connectAnim, setConnectAnim] = useState<'idle' | 'animating' | 'done'>(isConnected ? 'done' : 'idle');
   const [likeAnim, setLikeAnim] = useState<'idle' | 'animating' | 'done'>(isLiked ? 'done' : 'idle');
 
   // Sync external state
-  useEffect(() => { if (isConnected) setConnectAnim('done'); }, [isConnected]);
-  useEffect(() => { if (isLiked) setLikeAnim('done'); }, [isLiked]);
+  useEffect(() => { setConnectAnim(isConnected ? 'done' : 'idle'); }, [isConnected]);
+  useEffect(() => { setLikeAnim(isLiked ? 'done' : 'idle'); }, [isLiked]);
 
   // Get photo from final photos pool based on gender - cached by worker ID
   const assignedPhoto = useMemo(() => {
@@ -147,7 +149,12 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
 
   const handleConnect = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (connectAnim !== 'idle') return;
+    if (connectAnim === 'animating') return;
+    if (connectAnim === 'done') {
+      setConnectAnim('idle');
+      onDisconnect?.();
+      return;
+    }
     setConnectAnim('animating');
     onConnect?.();
     setTimeout(() => setConnectAnim('done'), 600);
@@ -155,7 +162,12 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (likeAnim !== 'idle') return;
+    if (likeAnim === 'animating') return;
+    if (likeAnim === 'done') {
+      setLikeAnim('idle');
+      onUnlike?.();
+      return;
+    }
     setLikeAnim('animating');
     onLike?.();
     setTimeout(() => setLikeAnim('done'), 600);

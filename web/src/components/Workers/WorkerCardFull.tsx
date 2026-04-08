@@ -86,18 +86,36 @@ export function WorkerCardFull({ worker }: WorkerCardFullProps) {
         )}
 
         {/* Work History (Previous Experience) */}
-        {worker.previousExperience.length > 0 && (
-          <div className="testing-section">
-            <span className="testing-label">Other Retail Experience</span>
-            <div className="testing-data">
-              {worker.previousExperience.map((exp, idx) => (
-                <div key={idx} className="testing-row">
-                  <span className="testing-key">{exp.company}:</span> {exp.roles.join(', ')} ({exp.duration})
-                </div>
-              ))}
+        {worker.previousExperience.length > 0 && (() => {
+          // Dedupe by company+role+duration, skip entries with no useful info
+          const seen = new Set<string>();
+          const filtered = worker.previousExperience.filter(exp => {
+            const roles = exp.roles.filter(r => r && r.toLowerCase() !== 'unknown').join(', ');
+            if (!roles) return false;
+            const key = `${exp.company}|${roles}|${exp.duration}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          if (filtered.length === 0) return null;
+          return (
+            <div className="testing-section">
+              <span className="testing-label">Other Retail Experience</span>
+              <div className="testing-data">
+                {filtered.map((exp, idx) => {
+                  const roles = exp.roles.filter(r => r && r.toLowerCase() !== 'unknown').join(', ');
+                  return (
+                    <div key={idx} className="testing-row">
+                      <span className="testing-key">{roles}</span>
+                      {exp.duration && ` (${exp.duration})`}
+                      {exp.company && `: ${exp.company}`}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Retailer Summary */}
         {worker.retailerSummary && (

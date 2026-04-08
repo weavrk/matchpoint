@@ -53,7 +53,7 @@ import { WorkerAchievementChips } from "../../../components/Workers/WorkerAchiev
 import type { EmploymentType, AvailabilityHours } from "./V2EmploymentSelector";
 import type { MatchedWorker, ChatMessage, WorkerProfile, FocusRoute } from "../../../types";
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
-import { fetchWorkersByMarketAsProfiles, fetchRetailers, fetchWorkerConnections, fetchWorkerById } from "../../../services/supabase";
+import { fetchWorkersByMarketAsProfiles, fetchRetailers, fetchWorkerConnections, fetchWorkerById, bulkInsertWorkerConnections } from "../../../services/supabase";
 import type { WorkerConnectionWithWorker, WorkerRow } from "../../../services/supabase";
 import type { Retailer } from "../../../services/supabase";
 import ReactMarkdown from "react-markdown";
@@ -906,7 +906,7 @@ export function V2TalentCentric({
 
   // Fetch worker connections when connections tab is opened
   useEffect(() => {
-    if (activeTab === "connections" && workerConnections.length === 0) {
+    if (activeTab === "connections") {
       setIsLoadingConnections(true);
       fetchWorkerConnections()
         .then((data) => {
@@ -919,7 +919,7 @@ export function V2TalentCentric({
           setIsLoadingConnections(false);
         });
     }
-  }, [activeTab, workerConnections.length]);
+  }, [activeTab]);
 
   // CYOA flow: Get next incomplete preference section based on starting point
   // employment → brands → roles (experience)
@@ -2406,18 +2406,10 @@ export function V2TalentCentric({
                 </div>
                 <h1 className="type-tagline">
                   {filteredWorkers.length > 0
-                    ? `We found ${filteredWorkers.length} amazing ${filteredWorkers.length === 1 ? "match" : "matches"}!`
+                    ? `We found ${filteredWorkers.length} amazing ${filteredWorkers.length === 1 ? "match" : "matches"} in ${MARKETS.find(m => m.id === selectedLocation)?.name || selectedLocation}!`
                     : "No matches found"}
                 </h1>
                 <div className="v2-search-summary">
-                  {selectedLocation && (
-                    <div className="v2-summary-group">
-                      <span className="v2-summary-label">Market</span>
-                      <span className="tag tag-lite-gray tag-sm">
-                        <span className="tag-text">{MARKETS.find(m => m.id === selectedLocation)?.name || selectedLocation}</span>
-                      </span>
-                    </div>
-                  )}
                   {experienceLevel && (
                     <div className="v2-summary-group">
                       <span className="v2-summary-label">Experience level</span>
@@ -2450,28 +2442,43 @@ export function V2TalentCentric({
               {/* Action buttons */}
               <div className="v2-results-topbar">
                 <div className="v2-results-actions">
-                  <button className="v2-action-btn v2-action-primary v2-connect-all-btn" onClick={() => {
+                  <button className="v2-action-btn v2-action-primary v2-connect-all-btn" onClick={async () => {
                     const existingIds = new Set(workerConnections.map(c => c.worker_id));
-                    const newConns: WorkerConnectionWithWorker[] = filteredWorkers
-                      .filter(w => !existingIds.has(w.id))
-                      .map(w => ({
-                        id: crypto.randomUUID(),
-                        worker_id: w.id,
-                        market: typeof w.market === 'string' ? w.market : w.market[0],
-                        chat_id: null,
-                        status: 'invited' as const,
-                        invited: true,
-                        connected: true,
-                        chat_open: false,
-                        shift_booked: false,
-                        shift_scheduled: false,
-                        saved_for_later: false,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
-                        worker: null,
-                      }));
-                    if (newConns.length > 0) {
-                      setWorkerConnections(prev => [...newConns, ...prev]);
+                    const newWorkers = filteredWorkers.filter(w => !existingIds.has(w.id));
+                    if (newWorkers.length === 0) return;
+
+                    // Optimistic local update
+                    const newConns: WorkerConnectionWithWorker[] = newWorkers.map(w => ({
+                      id: crypto.randomUUID(),
+                      worker_id: w.id,
+                      market: typeof w.market === 'string' ? w.market : w.market[0],
+                      chat_id: null,
+                      status: 'invited' as const,
+                      invited: true,
+                      connected: true,
+                      chat_open: false,
+                      shift_booked: false,
+                      shift_scheduled: false,
+                      saved_for_later: false,
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                      worker: null,
+                    }));
+                    setWorkerConnections(prev => [...newConns, ...prev]);
+
+                    // Persist to DB
+                    try {
+                      await bulkInsertWorkerConnections(
+                        newWorkers.map(w => ({
+                          worker_id: w.id,
+                          market: typeof w.market === 'string' ? w.market : w.market[0],
+                          status: 'invited' as const,
+                          connected: true,
+                          saved_for_later: false,
+                        })),
+                      );
+                    } catch (err) {
+                      console.error('Failed to save connections:', err);
                     }
                   }}>
                     <UserPlus size={14} />
@@ -2479,28 +2486,43 @@ export function V2TalentCentric({
                       ? "Connect"
                       : `Connect with all ${filteredWorkers.length}`}
                   </button>
-                  <button className="v2-action-btn v2-action-primary" onClick={() => {
+                  <button className="v2-action-btn v2-action-primary" onClick={async () => {
                     const existingIds = new Set(workerConnections.map(c => c.worker_id));
-                    const newConns: WorkerConnectionWithWorker[] = filteredWorkers
-                      .filter(w => !existingIds.has(w.id))
-                      .map(w => ({
-                        id: crypto.randomUUID(),
-                        worker_id: w.id,
-                        market: typeof w.market === 'string' ? w.market : w.market[0],
-                        chat_id: null,
-                        status: 'liked' as const,
-                        invited: false,
-                        connected: false,
-                        chat_open: false,
-                        shift_booked: false,
-                        shift_scheduled: false,
-                        saved_for_later: true,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString(),
-                        worker: null,
-                      }));
-                    if (newConns.length > 0) {
-                      setWorkerConnections(prev => [...newConns, ...prev]);
+                    const newWorkers = filteredWorkers.filter(w => !existingIds.has(w.id));
+                    if (newWorkers.length === 0) return;
+
+                    // Optimistic local update
+                    const newConns: WorkerConnectionWithWorker[] = newWorkers.map(w => ({
+                      id: crypto.randomUUID(),
+                      worker_id: w.id,
+                      market: typeof w.market === 'string' ? w.market : w.market[0],
+                      chat_id: null,
+                      status: 'liked' as const,
+                      invited: false,
+                      connected: false,
+                      chat_open: false,
+                      shift_booked: false,
+                      shift_scheduled: false,
+                      saved_for_later: true,
+                      created_at: new Date().toISOString(),
+                      updated_at: new Date().toISOString(),
+                      worker: null,
+                    }));
+                    setWorkerConnections(prev => [...newConns, ...prev]);
+
+                    // Persist to DB
+                    try {
+                      await bulkInsertWorkerConnections(
+                        newWorkers.map(w => ({
+                          worker_id: w.id,
+                          market: typeof w.market === 'string' ? w.market : w.market[0],
+                          status: 'liked' as const,
+                          connected: false,
+                          saved_for_later: true,
+                        })),
+                      );
+                    } catch (err) {
+                      console.error('Failed to save connections:', err);
                     }
                   }}>
                     Save all
@@ -2526,7 +2548,7 @@ export function V2TalentCentric({
                     worker={worker}
                     isConnected={workerConnections.some(c => c.worker_id === worker.id && c.connected)}
                     isLiked={workerConnections.some(c => c.worker_id === worker.id && c.saved_for_later)}
-                    onConnect={() => {
+                    onConnect={async () => {
                       const already = workerConnections.some(c => c.worker_id === worker.id);
                       if (!already) {
                         const newConn: WorkerConnectionWithWorker = {
@@ -2546,9 +2568,21 @@ export function V2TalentCentric({
                           worker: null,
                         };
                         setWorkerConnections(prev => [newConn, ...prev]);
+                        try {
+                          await bulkInsertWorkerConnections([{
+                            worker_id: worker.id,
+                            market: typeof worker.market === 'string' ? worker.market : worker.market[0],
+                            status: 'invited',
+                            connected: true,
+                            saved_for_later: false,
+                          }]);
+                        } catch (err) { console.error('Failed to save connection:', err); }
                       }
                     }}
-                    onLike={() => {
+                    onDisconnect={() => {
+                      setWorkerConnections(prev => prev.filter(c => c.worker_id !== worker.id || c.saved_for_later));
+                    }}
+                    onLike={async () => {
                       const existing = workerConnections.find(c => c.worker_id === worker.id);
                       if (existing) {
                         setWorkerConnections(prev => prev.map(c =>
@@ -2572,6 +2606,25 @@ export function V2TalentCentric({
                           worker: null,
                         };
                         setWorkerConnections(prev => [newConn, ...prev]);
+                        try {
+                          await bulkInsertWorkerConnections([{
+                            worker_id: worker.id,
+                            market: typeof worker.market === 'string' ? worker.market : worker.market[0],
+                            status: 'liked',
+                            connected: false,
+                            saved_for_later: true,
+                          }]);
+                        } catch (err) { console.error('Failed to save connection:', err); }
+                      }
+                    }}
+                    onUnlike={() => {
+                      const conn = workerConnections.find(c => c.worker_id === worker.id);
+                      if (conn && conn.connected) {
+                        setWorkerConnections(prev => prev.map(c =>
+                          c.worker_id === worker.id ? { ...c, saved_for_later: false } : c
+                        ));
+                      } else {
+                        setWorkerConnections(prev => prev.filter(c => c.worker_id !== worker.id));
                       }
                     }}
                     onClick={() => {
@@ -2597,37 +2650,69 @@ export function V2TalentCentric({
               </button>
               <div className="v2-detail-scroll">
                 <WorkerCardFull worker={selectedWorker} />
-                <div className="v2-detail-actions">
-                  <button
-                    className="v2-action-btn v2-action-primary"
-                    onClick={() => {
-                      const alreadyConnected = workerConnections.some(c => c.worker_id === selectedWorker.id);
-                      if (!alreadyConnected) {
-                        const newConnection: WorkerConnectionWithWorker = {
-                          id: crypto.randomUUID(),
-                          worker_id: selectedWorker.id,
-                          market: typeof selectedWorker.market === 'string' ? selectedWorker.market : selectedWorker.market[0],
-                          chat_id: null,
-                          status: 'invited',
-                          invited: true,
-                          connected: true,
-                          chat_open: false,
-                          shift_booked: false,
-                          shift_scheduled: false,
-                          saved_for_later: false,
-                          created_at: new Date().toISOString(),
-                          updated_at: new Date().toISOString(),
-                          worker: null,
-                        };
-                        setWorkerConnections(prev => [newConnection, ...prev]);
-                      }
-                      setActiveTab('connections');
-                    }}
-                  >
-                    <UserPlus size={18} />
-                    Connect with {selectedWorker.name.split(' ')[0]}
-                  </button>
-                </div>
+              </div>
+              <div className="v2-detail-actions">
+                <button
+                  className="v2-action-btn v2-action-primary"
+                  onClick={() => {
+                    const alreadyConnected = workerConnections.some(c => c.worker_id === selectedWorker.id);
+                    if (!alreadyConnected) {
+                      const newConnection: WorkerConnectionWithWorker = {
+                        id: crypto.randomUUID(),
+                        worker_id: selectedWorker.id,
+                        market: typeof selectedWorker.market === 'string' ? selectedWorker.market : selectedWorker.market[0],
+                        chat_id: null,
+                        status: 'invited',
+                        invited: true,
+                        connected: true,
+                        chat_open: false,
+                        shift_booked: false,
+                        shift_scheduled: false,
+                        saved_for_later: false,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        worker: null,
+                      };
+                      setWorkerConnections(prev => [newConnection, ...prev]);
+                    }
+                    setActiveTab('connections');
+                  }}
+                >
+                  <Link size={18} />
+                  Connect with {selectedWorker.name.split(' ')[0]}
+                </button>
+                <button
+                  className="v2-action-btn v2-action-stroke"
+                  onClick={() => {
+                    const existing = workerConnections.find(c => c.worker_id === selectedWorker.id);
+                    if (existing) {
+                      setWorkerConnections(prev => prev.map(c =>
+                        c.worker_id === selectedWorker.id ? { ...c, saved_for_later: true } : c
+                      ));
+                    } else {
+                      const newConn: WorkerConnectionWithWorker = {
+                        id: crypto.randomUUID(),
+                        worker_id: selectedWorker.id,
+                        market: typeof selectedWorker.market === 'string' ? selectedWorker.market : selectedWorker.market[0],
+                        chat_id: null,
+                        status: 'liked',
+                        invited: false,
+                        connected: false,
+                        chat_open: false,
+                        shift_booked: false,
+                        shift_scheduled: false,
+                        saved_for_later: true,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        worker: null,
+                      };
+                      setWorkerConnections(prev => [newConn, ...prev]);
+                    }
+                  }}
+                >
+                  <Heart size={18} />
+                  Save for future opportunities
+                </button>
               </div>
             </div>
           )}

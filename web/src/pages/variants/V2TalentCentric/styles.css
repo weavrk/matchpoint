@@ -3215,6 +3215,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 32px;
+  padding-bottom: 80px;
 }
 
 /* When detail sidebar is open, show 2 columns */
@@ -3427,15 +3428,16 @@
 
 /* ── Full worker detail panel (shared: discover results + connections tab) ── */
 .v2-worker-detail-sidebar {
-  position: relative;
+  position: sticky;
+  top: 0;
   width: 420px;
   flex-shrink: 0;
   background: var(--white);
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.08);
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  max-height: 100vh;
+  height: calc(100vh - 100px);
+  max-height: calc(100vh - 100px);
   z-index: 20;
   transition: width 0.3s ease;
   overflow: visible;
@@ -3470,6 +3472,7 @@
 
 .v2-worker-detail-sidebar .v2-detail-actions {
   padding: 16px 20px 24px;
+  flex-shrink: 0;
 }
 
 .v2-detail-actions {
@@ -3479,6 +3482,17 @@
   gap: 12px;
   padding-top: 16px;
   border-top: 1px solid var(--quaternary);
+}
+
+.v2-action-btn.v2-action-stroke {
+  background: transparent;
+  border: 1px solid var(--quaternary);
+  color: var(--primary);
+}
+
+.v2-action-btn.v2-action-stroke:hover {
+  background: var(--background-sky);
+  border-color: var(--secondary);
 }
 
 .v2-detail-actions .v2-action-btn {

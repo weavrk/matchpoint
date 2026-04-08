@@ -163,71 +163,48 @@
 }
 
 .worker-action-btn.action-done {
-  background: var(--accent-green, #22c55e);
-  border-color: var(--accent-green, #22c55e);
-  cursor: default;
+  background: var(--pink-light, #fce4ec);
+  border-color: var(--pink-light, #fce4ec);
+  color: var(--primary);
+  cursor: pointer;
 }
 
-/* ── Connect animation: burst ring + checkmark ─────────────── */
+.worker-action-btn.action-done:hover {
+  background: var(--pink-medium, #f8bbd0);
+  border-color: var(--pink-medium, #f8bbd0);
+  color: var(--primary);
+}
+
+/* ── Connect animation: pop + checkmark draw ───────────────── */
 
 .worker-action-btn.connect-animating {
-  animation: connect-pop 0.6s ease-out;
+  animation: action-pop 0.6s ease-out forwards;
 }
 
-@keyframes connect-pop {
-  0%   { transform: scale(1); }
-  30%  { transform: scale(1.25); background: var(--accent-green, #22c55e); border-color: var(--accent-green, #22c55e); }
-  50%  { transform: scale(0.9); }
-  100% { transform: scale(1); background: var(--accent-green, #22c55e); border-color: var(--accent-green, #22c55e); }
-}
-
-.action-burst {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.action-burst::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 2px solid var(--accent-green, #22c55e);
-  animation: burst-ring 0.6s ease-out forwards;
-  pointer-events: none;
-}
-
-@keyframes burst-ring {
-  0%   { transform: scale(0.8); opacity: 1; }
-  100% { transform: scale(1.8); opacity: 0; }
-}
-
-/* ── Like animation: heart pop → shrink to check ──────────── */
+/* ── Like animation: pop + checkmark draw ──────────────────── */
 
 .worker-action-btn.like-animating {
-  animation: like-pop 0.6s ease-out;
+  animation: action-pop 0.6s ease-out forwards;
 }
 
-@keyframes like-pop {
-  0%   { transform: scale(1); }
-  25%  { transform: scale(1.3); background: #ef4444; border-color: #ef4444; }
-  50%  { transform: scale(1.1); background: #ef4444; border-color: #ef4444; }
-  75%  { transform: scale(0.9); background: var(--accent-green, #22c55e); border-color: var(--accent-green, #22c55e); }
-  100% { transform: scale(1); background: var(--accent-green, #22c55e); border-color: var(--accent-green, #22c55e); }
+@keyframes action-pop {
+  0%   { transform: scale(1); background: var(--primary); border-color: var(--primary); }
+  25%  { transform: scale(1.2); background: var(--pink-light, #fce4ec); border-color: var(--pink-light, #fce4ec); color: var(--primary); }
+  50%  { transform: scale(0.9); }
+  100% { transform: scale(1); background: var(--pink-light, #fce4ec); border-color: var(--pink-light, #fce4ec); color: var(--primary); }
 }
 
-.action-heart-pop {
+.action-burst, .action-heart-pop {
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: heart-morph 0.6s ease-out;
+  animation: check-draw 0.4s ease-out 0.2s both;
 }
 
-@keyframes heart-morph {
-  0%   { transform: scale(1); opacity: 1; }
-  30%  { transform: scale(1.4); opacity: 1; }
-  60%  { transform: scale(0.6); opacity: 0.5; }
-  100% { transform: scale(1); opacity: 0; }
+@keyframes check-draw {
+  0%   { transform: scale(0) rotate(-45deg); opacity: 0; }
+  60%  { transform: scale(1.2) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
 .worker-header-name-compact {
@@ -1269,24 +1246,28 @@
   padding: 4px;
 }
 
-/* Compact card: smaller logo grid — flex wrap with fixed size */
+/* Compact card: 6-column logo grid filling parent width */
 .worker-card-compact .brand-logo-grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
   gap: 4px;
 }
 
 .worker-card-compact .brand-logo-grid .tag-logo {
-  width: 64px;
-  height: 64px;
-  aspect-ratio: auto;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .worker-card-compact .brand-logo-fallback {
-  width: 64px;
-  height: 64px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
   font-size: 8px;
-  aspect-ratio: auto;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .brand-logo-fallback {
