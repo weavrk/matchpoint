@@ -28,6 +28,7 @@ export interface WorkerReflexActivity {
   shiftsByTier: { luxury: number; elevated: number; mid: number };
   longestRelationship: { brand: string; flexCount: number } | null;
   tierProgression: 'upward' | 'stable';
+  storeFavoriteCount?: number | null;
 }
 
 export interface RetailerQuote {

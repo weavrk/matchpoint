@@ -389,6 +389,7 @@
 
 /* Remove margin from children inside section items */
 .card-section-item .worker-achievement-chips {
+  margin-top: -4px;
   margin-bottom: 0;
 }
 

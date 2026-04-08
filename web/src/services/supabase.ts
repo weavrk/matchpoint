@@ -946,25 +946,39 @@ export interface WorkerConnectionWithWorker extends WorkerConnectionRow {
   worker: WorkerRow | null;
 }
 
-// Fetch all worker connections with joined worker data (single query)
+// Fetch all worker connections with joined worker data
 export async function fetchWorkerConnections(): Promise<WorkerConnectionWithWorker[]> {
-  const { data, error } = await supabase
+  const { data: connections, error: connError } = await supabase
     .from('worker_connections')
-    .select(`*, worker:workers(${WORKER_COLUMNS_CONNECTION})`)
+    .select('*')
     .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching worker connections:', error);
-    throw error;
+  if (connError) {
+    console.error('Error fetching worker connections:', connError);
+    throw connError;
   }
 
-  if (!data || data.length === 0) {
+  if (!connections || connections.length === 0) {
     return [];
   }
 
-  return data.map(row => ({
-    ...row,
-    worker: (row.worker as unknown as WorkerRow) || null,
+  // Batch fetch workers for all connections
+  const workerIds = [...new Set(connections.map(c => c.worker_id))];
+  const { data: workers, error: workersError } = await supabase
+    .from('workers')
+    .select(WORKER_COLUMNS_CONNECTION)
+    .in('id', workerIds);
+
+  if (workersError) {
+    console.error('Error fetching workers for connections:', workersError);
+    throw workersError;
+  }
+
+  const workerMap = new Map((workers || []).map(w => [(w as any).id, w]));
+
+  return connections.map(conn => ({
+    ...conn,
+    worker: (workerMap.get(conn.worker_id) as unknown as WorkerRow) || null,
   }));
 }
 
