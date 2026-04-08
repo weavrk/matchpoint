@@ -75,6 +75,14 @@
   gap: 0;
   align-items: flex-start;
   justify-content: center;
+  min-width: 0;
+}
+
+.worker-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .worker-header-name {
@@ -123,6 +131,103 @@
   flex-direction: row;
   align-items: center;
   align-self: center;
+}
+
+.worker-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.worker-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.worker-action-btn:hover {
+  background: var(--hover);
+  border-color: var(--hover);
+  color: #ffffff;
+}
+
+.worker-action-btn.action-done {
+  background: var(--accent-green, #22c55e);
+  border-color: var(--accent-green, #22c55e);
+  cursor: default;
+}
+
+/* ── Connect animation: burst ring + checkmark ─────────────── */
+
+.worker-action-btn.connect-animating {
+  animation: connect-pop 0.6s ease-out;
+}
+
+@keyframes connect-pop {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.25); background: var(--accent-green, #22c55e); border-color: var(--accent-green, #22c55e); }
+  50%  { transform: scale(0.9); }
+  100% { transform: scale(1); background: var(--accent-green, #22c55e); border-color: var(--accent-green, #22c55e); }
+}
+
+.action-burst {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-burst::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-green, #22c55e);
+  animation: burst-ring 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes burst-ring {
+  0%   { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* ── Like animation: heart pop → shrink to check ──────────── */
+
+.worker-action-btn.like-animating {
+  animation: like-pop 0.6s ease-out;
+}
+
+@keyframes like-pop {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.3); background: #ef4444; border-color: #ef4444; }
+  50%  { transform: scale(1.1); background: #ef4444; border-color: #ef4444; }
+  75%  { transform: scale(0.9); background: var(--accent-green, #22c55e); border-color: var(--accent-green, #22c55e); }
+  100% { transform: scale(1); background: var(--accent-green, #22c55e); border-color: var(--accent-green, #22c55e); }
+}
+
+.action-heart-pop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: heart-morph 0.6s ease-out;
+}
+
+@keyframes heart-morph {
+  0%   { transform: scale(1); opacity: 1; }
+  30%  { transform: scale(1.4); opacity: 1; }
+  60%  { transform: scale(0.6); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 0; }
 }
 
 .worker-header-name-compact {
@@ -654,10 +759,6 @@
   line-height: 1.5;
   color: var(--primary);
   margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 .compact-experience-list {
@@ -1166,6 +1267,26 @@
 /* Wide wordmarks that hug the asset frame — curated in brandLogoNeedsGridInset() */
 .brand-logo-grid .tag-logo.tag-logo-grid-inset {
   padding: 4px;
+}
+
+/* Compact card: smaller logo grid — flex wrap with fixed size */
+.worker-card-compact .brand-logo-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.worker-card-compact .brand-logo-grid .tag-logo {
+  width: 64px;
+  height: 64px;
+  aspect-ratio: auto;
+}
+
+.worker-card-compact .brand-logo-fallback {
+  width: 64px;
+  height: 64px;
+  font-size: 8px;
+  aspect-ratio: auto;
 }
 
 .brand-logo-fallback {

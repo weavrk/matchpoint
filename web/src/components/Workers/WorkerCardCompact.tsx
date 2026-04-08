@@ -1,108 +1,83 @@
 import type { MatchedWorker } from '../../types';
 import { WorkerCardHeader } from './WorkerCardHeader';
-import { generateQuoteSummary } from './utils';
+import { WorkerAchievementChips } from './WorkerAchievementChips';
+import { getBrandLogo, brandLogoNeedsGridInset } from '../../utils/brandLogos';
 
 interface WorkerCardCompactProps {
   worker: MatchedWorker;
   onClick?: () => void;
+  onLike?: () => void;
+  onConnect?: () => void;
+  isConnected?: boolean;
+  isLiked?: boolean;
 }
+
+const toTitleCase = (str: string) => {
+  return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+};
 
 /**
  * WorkerCardCompact - Compact teaser card for grids and chat view
- * For shift-verified workers: Shows Header + Reflex stats + Retailer summary
- * For non-verified workers: Shows Header + Work History
- * Uses DSL pills for endorsements and stats
+ * Order: Header → Stats → Achievement Chips → About Me → Reflex Brand Experience
  */
-export function WorkerCardCompact({ worker, onClick }: WorkerCardCompactProps) {
-  const firstName = worker.name.split(' ')[0];
-  const hasQuotes = worker.retailerQuotes && worker.retailerQuotes.length > 0;
-  const quoteSummary = worker.retailerSummary || (hasQuotes ? generateQuoteSummary(firstName, worker.retailerQuotes!) : null);
-  const topExperience = worker.previousExperience.slice(0, 3);
-
-  // Use dedicated shift_experience field if available, otherwise filter from endorsement_counts
-  const shiftExperienceEntries = worker.shiftExperience
-    ? Object.entries(worker.shiftExperience).sort((a, b) => b[1] - a[1]).slice(0, 3)
-    : [];
-
-  // Brands worked - show retailer names
+export function WorkerCardCompact({ worker, onClick, onLike, onConnect, isConnected, isLiked }: WorkerCardCompactProps) {
   const brandsWorked = worker.brandsWorked || [];
+  // Derive minimum store count: use DB value, or fall back to brands worked count
+  const storeCount = (worker.uniqueStoreCount && worker.uniqueStoreCount > 0)
+    ? worker.uniqueStoreCount
+    : brandsWorked.length > 0 ? brandsWorked.length : null;
 
   return (
     <div className="worker-card worker-card-compact" onClick={onClick}>
-      <WorkerCardHeader worker={worker} showActivelyLooking={true} />
+      <WorkerCardHeader worker={worker} showActivelyLooking={true} showActions onLike={onLike} onConnect={onConnect} isConnected={isConnected} isLiked={isLiked} />
 
       <div className="worker-card-body">
-        {/* About Me - show for all workers if available */}
+        {/* Stats: Shifts + Store Locations */}
+        {worker.shiftVerified && (
+          <div className="compact-stats">
+            <span className="tag tag-stroke tag-sm">
+              <span className="tag-counter">{worker.shiftsOnReflex}</span>
+              <span className="tag-text">{worker.shiftsOnReflex === 1 ? 'Shift' : 'Shifts'}</span>
+            </span>
+            {storeCount != null && storeCount > 0 && (
+              <span className="tag tag-stroke tag-sm">
+                <span className="tag-counter">{storeCount}</span>
+                <span className="tag-text">{storeCount === 1 ? 'Store Location' : 'Store Locations'}</span>
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Achievement Chips */}
+        <WorkerAchievementChips worker={worker} />
+
+        {/* About Me */}
         {worker.aboutMe && (
           <div className="compact-section">
             <p className="compact-about">{worker.aboutMe}</p>
           </div>
         )}
 
-        {/* Shift verified: show reflex stats + retailer summary */}
-        {worker.shiftVerified && (
-          <>
-            <div className="compact-stats">
-              <span className="tag tag-stroke tag-sm">
-                <span className="tag-counter">{worker.shiftsOnReflex}</span>
-                <span className="tag-text">Shifts</span>
-              </span>
-              {worker.uniqueStoreCount && worker.uniqueStoreCount > 0 && (
-                <span className="tag tag-stroke tag-sm">
-                  <span className="tag-counter">{worker.uniqueStoreCount}</span>
-                  <span className="tag-text">Store Locations</span>
-                </span>
-              )}
-            </div>
-            {quoteSummary && (
-              <div className="compact-section">
-                <span className="section-label">What Retailers Say About {firstName}</span>
-                <p className="compact-summary">{quoteSummary}</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Shift Experience - show for all workers */}
-        {shiftExperienceEntries.length > 0 && (
-          <div className="compact-section">
-            <span className="section-label">Reflex Experience</span>
-            <div className="compact-endorsements">
-              {shiftExperienceEntries.map(([name, count], idx) => (
-                <span key={idx} className="tag tag-blue-light tag-sm">
-                  <span className="tag-text">{name}</span>
-                  <span className="tag-counter">{count}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Retailers on Reflex - show brands worked */}
+        {/* Reflex Brand Experience - logos */}
         {brandsWorked.length > 0 && (
           <div className="compact-section">
-            <span className="section-label">Retailers on Reflex</span>
-            <div className="compact-endorsements">
-              {brandsWorked.map((brand, idx) => (
-                <span key={idx} className="tag tag-dark-gray tag-sm">
-                  <span className="tag-text">{brand.name}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Other Experience - show previous work history for all workers */}
-        {topExperience.length > 0 && (
-          <div className="compact-section">
-            <span className="section-label">Other Experience</span>
-            <div className="compact-experience-list">
-              {topExperience.map((exp, idx) => (
-                <div key={idx} className="compact-experience-item">
-                  <span className="compact-exp-company">{exp.company}</span>
-                  <span className="compact-exp-detail">{exp.roles[0]} · {exp.duration}</span>
-                </div>
-              ))}
+            <span className="section-label">Reflex Brand Experience</span>
+            <div className="brand-logo-grid">
+              {brandsWorked.map((brand, idx) => {
+                const logo = getBrandLogo(brand.name);
+                return logo ? (
+                  <span
+                    key={idx}
+                    className={`tag-logo${brandLogoNeedsGridInset(brand.name) ? ' tag-logo-grid-inset' : ''}`}
+                  >
+                    <img src={logo} alt={brand.name} />
+                  </span>
+                ) : (
+                  <span key={idx} className="brand-logo-fallback">
+                    {toTitleCase(brand.name)}
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}

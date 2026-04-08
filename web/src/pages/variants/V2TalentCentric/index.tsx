@@ -1835,7 +1835,7 @@ export function V2TalentCentric({
                         }}
                         className="v2-location-select"
                       >
-                        <option value="">Select a location</option>
+                        <option value="" disabled hidden>Select a location</option>
                         {STORE_LOCATIONS.map((location) => (
                           <option key={location.id} value={location.id}>
                             {location.name}
@@ -2409,35 +2409,113 @@ export function V2TalentCentric({
                     ? `We found ${filteredWorkers.length} amazing ${filteredWorkers.length === 1 ? "match" : "matches"}!`
                     : "No matches found"}
                 </h1>
-                <p className="v2-step-subtitle">
-                  {filteredWorkers.length > 0
-                    ? filteredWorkers.length === 1
-                      ? "This Reflexer matches your criteria. Click on the worker to see their full profile."
-                      : "These Reflexers match your criteria. Click on a worker to see their full profile."
-                    : "Try adjusting your filters to find more candidates."}
-                </p>
-              </div>
-
-              {/* Top bar with brands and action button */}
-              <div className="v2-results-topbar">
-                {commonBrands.length > 0 && (
-                  <div className="v2-common-brands">
-                    <span className="v2-common-brands-label">Experience at:</span>
-                    <div className="v2-common-brands-list">
-                      {commonBrands.map((brand) => (
-                        <span key={brand} className="tag tag-stroke tag-sm">
-                          <span className="tag-text">{brand}</span>
+                <div className="v2-search-summary">
+                  {selectedLocation && (
+                    <div className="v2-summary-group">
+                      <span className="v2-summary-label">Market</span>
+                      <span className="tag tag-lite-gray tag-sm">
+                        <span className="tag-text">{MARKETS.find(m => m.id === selectedLocation)?.name || selectedLocation}</span>
+                      </span>
+                    </div>
+                  )}
+                  {experienceLevel && (
+                    <div className="v2-summary-group">
+                      <span className="v2-summary-label">Experience level</span>
+                      <span className="tag tag-lite-gray tag-sm">
+                        <span className="tag-text">
+                          {experienceLevel === 'all' ? 'All levels'
+                            : experienceLevel === 'new' ? 'Rising talent'
+                            : experienceLevel === 'rising' ? 'Experienced'
+                            : experienceLevel === 'seasoned' ? 'Seasoned pro'
+                            : experienceLevel === 'management' ? 'Proven leader'
+                            : experienceLevel}
+                        </span>
+                      </span>
+                    </div>
+                  )}
+                  {selectedBrands.length > 0 && (
+                    <div className="v2-summary-group">
+                      <span className="v2-summary-label">Brand experience</span>
+                      {selectedBrands.map(b => (
+                        <span key={b} className="tag tag-lite-gray tag-sm">
+                          <span className="tag-text">{b.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>
                         </span>
                       ))}
                     </div>
-                  </div>
-                )}
-                <button className="v2-action-btn v2-action-primary v2-connect-all-btn">
-                  <UserPlus size={18} />
-                  {filteredWorkers.length === 1
-                    ? "Connect"
-                    : `Connect with all ${filteredWorkers.length}`}
-                </button>
+                  )}
+                </div>
+              </div>
+
+              <hr className="v2-results-divider" />
+              {/* Action buttons */}
+              <div className="v2-results-topbar">
+                <div className="v2-results-actions">
+                  <button className="v2-action-btn v2-action-primary v2-connect-all-btn" onClick={() => {
+                    const existingIds = new Set(workerConnections.map(c => c.worker_id));
+                    const newConns: WorkerConnectionWithWorker[] = filteredWorkers
+                      .filter(w => !existingIds.has(w.id))
+                      .map(w => ({
+                        id: crypto.randomUUID(),
+                        worker_id: w.id,
+                        market: typeof w.market === 'string' ? w.market : w.market[0],
+                        chat_id: null,
+                        status: 'invited' as const,
+                        invited: true,
+                        connected: true,
+                        chat_open: false,
+                        shift_booked: false,
+                        shift_scheduled: false,
+                        saved_for_later: false,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        worker: null,
+                      }));
+                    if (newConns.length > 0) {
+                      setWorkerConnections(prev => [...newConns, ...prev]);
+                    }
+                  }}>
+                    <UserPlus size={14} />
+                    {filteredWorkers.length === 1
+                      ? "Connect"
+                      : `Connect with all ${filteredWorkers.length}`}
+                  </button>
+                  <button className="v2-action-btn v2-action-primary" onClick={() => {
+                    const existingIds = new Set(workerConnections.map(c => c.worker_id));
+                    const newConns: WorkerConnectionWithWorker[] = filteredWorkers
+                      .filter(w => !existingIds.has(w.id))
+                      .map(w => ({
+                        id: crypto.randomUUID(),
+                        worker_id: w.id,
+                        market: typeof w.market === 'string' ? w.market : w.market[0],
+                        chat_id: null,
+                        status: 'liked' as const,
+                        invited: false,
+                        connected: false,
+                        chat_open: false,
+                        shift_booked: false,
+                        shift_scheduled: false,
+                        saved_for_later: true,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                        worker: null,
+                      }));
+                    if (newConns.length > 0) {
+                      setWorkerConnections(prev => [...newConns, ...prev]);
+                    }
+                  }}>
+                    Save all
+                  </button>
+                  <button className="v2-action-btn v2-action-secondary" onClick={() => {
+                    setSelectedLocation(null);
+                    setSelectedBrands([]);
+                    setExperienceLevel(null);
+                    setSelectedWorker(null);
+                    setDetailSidebarOpen(false);
+                    setStep('location');
+                  }}>
+                    Start New Search
+                  </button>
+                </div>
               </div>
 
               {/* Worker Card Grid - using DSL WorkerCardCompact */}
@@ -2446,6 +2524,56 @@ export function V2TalentCentric({
                   <WorkerCardCompact
                     key={worker.id}
                     worker={worker}
+                    isConnected={workerConnections.some(c => c.worker_id === worker.id && c.connected)}
+                    isLiked={workerConnections.some(c => c.worker_id === worker.id && c.saved_for_later)}
+                    onConnect={() => {
+                      const already = workerConnections.some(c => c.worker_id === worker.id);
+                      if (!already) {
+                        const newConn: WorkerConnectionWithWorker = {
+                          id: crypto.randomUUID(),
+                          worker_id: worker.id,
+                          market: typeof worker.market === 'string' ? worker.market : worker.market[0],
+                          chat_id: null,
+                          status: 'invited',
+                          invited: true,
+                          connected: true,
+                          chat_open: false,
+                          shift_booked: false,
+                          shift_scheduled: false,
+                          saved_for_later: false,
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString(),
+                          worker: null,
+                        };
+                        setWorkerConnections(prev => [newConn, ...prev]);
+                      }
+                    }}
+                    onLike={() => {
+                      const existing = workerConnections.find(c => c.worker_id === worker.id);
+                      if (existing) {
+                        setWorkerConnections(prev => prev.map(c =>
+                          c.worker_id === worker.id ? { ...c, saved_for_later: true } : c
+                        ));
+                      } else {
+                        const newConn: WorkerConnectionWithWorker = {
+                          id: crypto.randomUUID(),
+                          worker_id: worker.id,
+                          market: typeof worker.market === 'string' ? worker.market : worker.market[0],
+                          chat_id: null,
+                          status: 'liked',
+                          invited: false,
+                          connected: false,
+                          chat_open: false,
+                          shift_booked: false,
+                          shift_scheduled: false,
+                          saved_for_later: true,
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString(),
+                          worker: null,
+                        };
+                        setWorkerConnections(prev => [newConn, ...prev]);
+                      }
+                    }}
                     onClick={() => {
                       setSelectedWorker(worker);
                       setDetailSidebarOpen(true);
@@ -2470,13 +2598,34 @@ export function V2TalentCentric({
               <div className="v2-detail-scroll">
                 <WorkerCardFull worker={selectedWorker} />
                 <div className="v2-detail-actions">
-                  <button className="v2-action-btn v2-action-primary">
+                  <button
+                    className="v2-action-btn v2-action-primary"
+                    onClick={() => {
+                      const alreadyConnected = workerConnections.some(c => c.worker_id === selectedWorker.id);
+                      if (!alreadyConnected) {
+                        const newConnection: WorkerConnectionWithWorker = {
+                          id: crypto.randomUUID(),
+                          worker_id: selectedWorker.id,
+                          market: typeof selectedWorker.market === 'string' ? selectedWorker.market : selectedWorker.market[0],
+                          chat_id: null,
+                          status: 'invited',
+                          invited: true,
+                          connected: true,
+                          chat_open: false,
+                          shift_booked: false,
+                          shift_scheduled: false,
+                          saved_for_later: false,
+                          created_at: new Date().toISOString(),
+                          updated_at: new Date().toISOString(),
+                          worker: null,
+                        };
+                        setWorkerConnections(prev => [newConnection, ...prev]);
+                      }
+                      setActiveTab('connections');
+                    }}
+                  >
                     <UserPlus size={18} />
                     Connect with {selectedWorker.name.split(' ')[0]}
-                  </button>
-                  <button className="v2-action-btn v2-action-secondary">
-                    <CalendarDays size={18} />
-                    Invite to shift
                   </button>
                 </div>
               </div>
@@ -2670,7 +2819,7 @@ export function V2TalentCentric({
                       };
                       const achievementChips: AchievementChip[] = [];
 
-                      if ((worker?.reflex_activity?.storeFavoriteCount ?? 0) > 2) {
+                      if ((worker?.store_favorite_count ?? 0) > 1) {
                         achievementChips.push({
                           text: 'Store Favorite',
                           icon: <Heart size={14} />,
@@ -2706,7 +2855,7 @@ export function V2TalentCentric({
                         });
                       }
 
-                      const storeFavCount = worker?.reflex_activity?.storeFavoriteCount || 0;
+                      const storeFavCount = worker?.store_favorite_count || 0;
                       const uniqueStores = worker?.unique_store_count || 0;
                       if (uniqueStores > 0) {
                         const favoritePercent = Math.min((storeFavCount / uniqueStores) * 100, 100);
@@ -2955,12 +3104,12 @@ export function V2TalentCentric({
                         invitedBackStores: selectedConnectionFullWorker.invited_back_stores || 0,
                         aboutMe: selectedConnectionFullWorker.about_me || '',
                         previousExperience: selectedConnectionFullWorker.previous_experience || [],
+                        storeFavoriteCount: selectedConnectionFullWorker.store_favorite_count ?? null,
                         reflexActivity: selectedConnectionFullWorker.reflex_activity
                           ? {
                               shiftsByTier: selectedConnectionFullWorker.reflex_activity.shiftsByTier ?? { luxury: 0, elevated: 0, mid: 0 },
                               longestRelationship: selectedConnectionFullWorker.reflex_activity.longestRelationship ?? null,
                               tierProgression: (selectedConnectionFullWorker.reflex_activity.tierProgression === 'upward' ? 'upward' : 'stable') as 'upward' | 'stable',
-                              storeFavoriteCount: selectedConnectionFullWorker.reflex_activity.storeFavoriteCount ?? null,
                             }
                           : null,
                         retailerQuotes: selectedConnectionFullWorker.retailer_quotes || [],
