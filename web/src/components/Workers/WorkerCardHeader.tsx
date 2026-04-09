@@ -32,16 +32,12 @@ interface WorkerCardHeaderFullProps {
 export function WorkerCardHeaderFull({ worker, showActivelyLooking = true }: WorkerCardHeaderFullProps) {
   const [imgError, setImgError] = useState(false);
 
-  // Get photo from final photos pool based on gender - cached by worker ID
-  const assignedPhoto = useMemo(() => {
-    if (worker.gender) {
-      return getWorkerPhoto(worker.gender, worker.id);
-    }
+  // Use worker.photo if available, otherwise assign from pool
+  const photoUrl = useMemo(() => {
+    if (worker.photo) return worker.photo;
+    if (worker.gender) return getWorkerPhoto(worker.gender, worker.id);
     return null;
-  }, [worker.gender, worker.id]);
-
-  // Use worker.photo first (may be pre-assigned), fall back to pool photo
-  const photoUrl = worker.photo || assignedPhoto;
+  }, [worker.photo, worker.gender, worker.id]);
 
   const initials = worker.name
     .split(' ')
@@ -108,16 +104,12 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
   useEffect(() => { setConnectAnim(isConnected ? 'done' : 'idle'); }, [isConnected]);
   useEffect(() => { setLikeAnim(isLiked ? 'done' : 'idle'); }, [isLiked]);
 
-  // Get photo from final photos pool based on gender - cached by worker ID
-  const assignedPhoto = useMemo(() => {
-    if (worker.gender) {
-      return getWorkerPhoto(worker.gender, worker.id);
-    }
+  // Use worker.photo if available, otherwise assign from pool
+  const photoUrl = useMemo(() => {
+    if (worker.photo) return worker.photo;
+    if (worker.gender) return getWorkerPhoto(worker.gender, worker.id);
     return null;
-  }, [worker.gender, worker.id]);
-
-  // Use worker.photo first (may be pre-assigned), fall back to pool photo
-  const photoUrl = worker.photo || assignedPhoto;
+  }, [worker.photo, worker.gender, worker.id]);
 
   const initials = worker.name
     .split(' ')

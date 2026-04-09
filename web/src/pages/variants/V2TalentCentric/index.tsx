@@ -3050,7 +3050,7 @@ export function V2TalentCentric({
                             <div className="v2-conn-col-1">
                               <div className="v2-connection-avatar" style={{ width: 64, height: 64 }}>
                                 {(() => {
-                                  const photo = connection.image_url || worker?.photo || (worker?.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null);
+                                  const photo = worker?.photo || (worker?.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null) || connection.image_url;
                                   return photo ? <img src={photo} alt={name} /> : <span>{initials}</span>;
                                 })()}
                                 {worker?.shift_verified && (
@@ -3170,7 +3170,7 @@ export function V2TalentCentric({
           const workerId = chatId.replace('chat-', '');
           const connection = workerConnections.find(c => c.worker_id === workerId);
           const worker = connection?.worker;
-          return connection?.image_url || worker?.photo || (worker?.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null);
+          return worker?.photo || (worker?.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null) || connection?.image_url;
         };
 
         // Format name as "First L."
