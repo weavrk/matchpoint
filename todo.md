@@ -16,10 +16,10 @@
 - **Worker Cards** — "Retailers on Reflex" → "Reflex Brand Experience"; section counts removed everywhere
 - Update compact card chips: standardize color and language across all chips
 - Add **Connect** and **Like** actions to all worker cards throughout the flows
-- Clean up worker cards
-  Clean up connections page
+- Clean up worker cards 
+- Clean up connections page
 
 ---
 
-## 🔲 Next Up — Worker Cards (Global)
+## 🔲 Next Up
 

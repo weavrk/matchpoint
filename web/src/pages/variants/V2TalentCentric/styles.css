@@ -2988,6 +2988,7 @@
   transform: translateY(-50%);
   width: 32px;
   height: 32px;
+  z-index: 30;
   background: var(--gray-50);
   border: 1px solid var(--quaternary);
   border-radius: 50%;
@@ -2995,7 +2996,6 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 10;
   color: var(--secondary);
   transition: all 0.15s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -3433,6 +3433,7 @@
   position: sticky;
   top: 0;
   width: 420px;
+  margin-left: 16px;
   flex-shrink: 0;
   background: var(--white);
   box-shadow: -4px 0 16px rgba(0, 0, 0, 0.08);
@@ -3442,8 +3443,6 @@
   max-height: calc(100vh - 100px);
   z-index: 20;
   transition: width 0.3s ease;
-  overflow-x: visible;
-  overflow-y: auto;
 }
 
 .v2-worker-detail-sidebar.collapsed {
@@ -3459,8 +3458,6 @@
   flex: 1;
   overflow-y: auto;
   padding: 0;
-  display: flex;
-  flex-direction: column;
   min-height: 0;
   transition: opacity 0.2s ease;
 }

@@ -598,7 +598,7 @@ export function V2TalentCentric({
   const [selectedWorker, setSelectedWorker] = useState<MatchedWorker | null>(null);
 
   // Active chat conversation state
-  const [activeChatId, setActiveChatId] = useState<string>("chat-jasmin");
+  const [activeChatId, setActiveChatId] = useState<string>("");
   const [chatInputValue, setChatInputValue] = useState("");
 
   // Worker connections from Supabase
@@ -610,6 +610,7 @@ export function V2TalentCentric({
   const [connectionsStatusFilter, setConnectionsStatusFilter] = useState<string | null>(null);
   const [connectionsSearch, setConnectionsSearch] = useState('');
   const [selectedConnectionWorker, setSelectedConnectionWorker] = useState<WorkerConnectionWithWorker | null>(null);
+  const [connDetailOpen, setConnDetailOpen] = useState(false);
   const [selectedConnectionFullWorker, setSelectedConnectionFullWorker] = useState<WorkerRow | null>(null);
   const [isLoadingConnectionWorker, setIsLoadingConnectionWorker] = useState(false);
 
@@ -2909,7 +2910,7 @@ export function V2TalentCentric({
 
         return (
           <div className="v2-connections-wrapper">
-          <div className={`v2-connections-container ${selectedConnectionWorker ? 'with-sidebar' : ''}`}>
+          <div className={`v2-connections-container ${selectedConnectionWorker && connDetailOpen ? 'with-sidebar' : ''}`}>
             <div className="v2-connections-header">
               <h2 className="type-section-header-lg">Your Connections</h2>
               <div className="v2-conn-filter-row">
@@ -2996,6 +2997,7 @@ export function V2TalentCentric({
 
                       const handleClick = async () => {
                         setSelectedConnectionWorker(connection);
+                        setConnDetailOpen(true);
                         setSelectedConnectionFullWorker(null);
                         const wid = connection.worker?.id;
                         if (wid) { setIsLoadingConnectionWorker(true); try { setSelectedConnectionFullWorker(await fetchWorkerById(wid)); } catch {} finally { setIsLoadingConnectionWorker(false); } }
@@ -3028,7 +3030,7 @@ export function V2TalentCentric({
 
                       const chatOk = connection.status === "accepted" || connection.shift_scheduled || connection.shift_booked;
                       const chatBtn = chatOk ? (
-                        <button type="button" className="v2-conn-chat-btn enabled" onClick={(e) => { e.stopPropagation(); if (connection.chat_id) { setActiveChatId(connection.chat_id); setActiveTab("chat"); } }}>
+                        <button type="button" className="v2-conn-chat-btn enabled" onClick={(e) => { e.stopPropagation(); setActiveChatId(`chat-${connection.worker_id}`); setActiveTab("chat"); }}>
                           <MessageSquare size={14} /> Chat
                         </button>
                       ) : (
@@ -3094,16 +3096,13 @@ export function V2TalentCentric({
 
           {/* Selected Connection Worker Full Card Sidebar */}
           {selectedConnectionWorker && (
-            <div className={`v2-worker-detail-sidebar${selectedConnectionWorker ? '' : ' collapsed'}`}>
+            <div className={`v2-worker-detail-sidebar${connDetailOpen ? '' : ' collapsed'}`}>
               <button
                 className="v2-sidebar-toggle"
-                onClick={() => {
-                  setSelectedConnectionWorker(null);
-                  setSelectedConnectionFullWorker(null);
-                }}
-                aria-label="Collapse panel"
+                onClick={() => setConnDetailOpen(!connDetailOpen)}
+                aria-label={connDetailOpen ? "Collapse panel" : "Expand panel"}
               >
-                <ChevronRight size={20} />
+                {connDetailOpen ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
               </button>
               <div className="v2-detail-scroll">
                 {isLoadingConnectionWorker ? (
@@ -3165,8 +3164,10 @@ export function V2TalentCentric({
       {activeTab === "chat" && (() => {
         // Get worker photos from workerConnections for chat avatars
         const getWorkerPhoto = (chatId: string) => {
-          const connection = workerConnections.find(c => c.chat_id === chatId);
-          return connection?.worker?.photo || null;
+          const workerId = chatId.replace('chat-', '');
+          const connection = workerConnections.find(c => c.worker_id === workerId);
+          const worker = connection?.worker;
+          return connection?.image_url || worker?.photo || (worker?.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null);
         };
 
         // Format name as "First L."
@@ -3184,8 +3185,8 @@ export function V2TalentCentric({
           return parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : parts[0].slice(0, 2);
         };
 
-        // 19 unique conversations with varying scenarios
-        const CHAT_CONVERSATIONS = [
+        // Message templates — reused across connected workers
+        const MESSAGE_TEMPLATES = [
           // 1. Shift booked - coordinated a shift
           {
             id: "chat-jasmin",
@@ -3505,6 +3506,27 @@ export function V2TalentCentric({
             ],
           },
         ];
+
+        // Build CHAT_CONVERSATIONS from connected workers (chat_open = true)
+        const chatConnections = workerConnections.filter(c => c.chat_open || c.status === 'accepted');
+        const CHAT_CONVERSATIONS = chatConnections.map((conn, idx) => {
+          const template = MESSAGE_TEMPLATES[idx % MESSAGE_TEMPLATES.length];
+          const workerName = conn.worker?.name || 'Unknown';
+          const firstName = workerName.split(' ')[0];
+          // Replace first names in messages with actual worker name
+          const oldFirstName = template.fullName.split(' ')[0];
+          const messages = template.messages.map(m => ({
+            ...m,
+            text: m.text.replace(new RegExp(oldFirstName, 'g'), firstName),
+          }));
+          return {
+            ...template,
+            id: `chat-${conn.worker_id}`,
+            fullName: workerName,
+            badge: conn.shift_scheduled ? 'scheduled' as const : conn.shift_booked ? 'booked' as const : null,
+            messages,
+          };
+        });
 
         // Find active conversation or default to first
         const activeConversation = CHAT_CONVERSATIONS.find(c => c.id === activeChatId) || CHAT_CONVERSATIONS[0];
