@@ -40,8 +40,8 @@ export function WorkerCardHeaderFull({ worker, showActivelyLooking = true }: Wor
     return null;
   }, [worker.gender, worker.id]);
 
-  // Use assigned photo, fall back to worker.photo, then initials
-  const photoUrl = assignedPhoto || worker.photo;
+  // Use worker.photo first (may be pre-assigned), fall back to pool photo
+  const photoUrl = worker.photo || assignedPhoto;
 
   const initials = worker.name
     .split(' ')
@@ -116,8 +116,8 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
     return null;
   }, [worker.gender, worker.id]);
 
-  // Use assigned photo, fall back to worker.photo, then initials
-  const photoUrl = assignedPhoto || worker.photo;
+  // Use worker.photo first (may be pre-assigned), fall back to pool photo
+  const photoUrl = worker.photo || assignedPhoto;
 
   const initials = worker.name
     .split(' ')

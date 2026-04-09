@@ -3113,7 +3113,10 @@ export function V2TalentCentric({
                       worker={{
                         id: selectedConnectionFullWorker.id,
                         name: selectedConnectionFullWorker.name,
-                        photo: selectedConnectionFullWorker.photo || undefined,
+                        photo: (() => {
+                          const w = selectedConnectionWorker?.worker;
+                          return selectedConnectionWorker?.image_url || w?.photo || (w?.gender ? getWorkerPhotoFromPool(w.gender, w.id) : undefined) || selectedConnectionFullWorker.photo || undefined;
+                        })(),
                         gender: selectedConnectionFullWorker.gender || 'female',
                         market: selectedConnectionFullWorker.market || '',
                         activelyLooking: selectedConnectionFullWorker.actively_looking || false,
