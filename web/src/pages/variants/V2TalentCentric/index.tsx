@@ -3115,7 +3115,7 @@ export function V2TalentCentric({
                         name: selectedConnectionFullWorker.name,
                         photo: (() => {
                           const w = selectedConnectionWorker?.worker;
-                          return selectedConnectionWorker?.image_url || w?.photo || (w?.gender ? getWorkerPhotoFromPool(w.gender, w.id) : undefined) || selectedConnectionFullWorker.photo || undefined;
+                          return w?.photo || (w?.gender ? getWorkerPhotoFromPool(w.gender, w.id) : null) || selectedConnectionWorker?.image_url || selectedConnectionFullWorker.photo || undefined;
                         })(),
                         gender: selectedConnectionFullWorker.gender || 'female',
                         market: selectedConnectionFullWorker.market || '',
