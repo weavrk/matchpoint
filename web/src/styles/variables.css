@@ -863,6 +863,16 @@ button.tag.tag-blue:not(:disabled):hover {
   color: var(--text-primary);
 }
 
+.tag-pink-stroke {
+  background: #ffffff;
+  color: var(--text-primary);
+  border: 1px solid var(--accent-pink-light, #f8bbd0);
+}
+
+.tag-pink-stroke .tag-icon {
+  color: var(--accent-pink-light, #f8bbd0);
+}
+
 /* Gray - light gray background for declined/neutral states */
 .tag-gray {
   background: var(--gray-100);

@@ -930,7 +930,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><Heart size={14} fill="#ffffff" color="#ffffff" /></span><span className="tag-text">Your Store Favorite</span></span></td>
+                    <td><span className="tag tag-stroke tag-sm"><span className="tag-icon"><Heart size={14} fill="var(--brand-pink)" color="var(--brand-pink)" /></span><span className="tag-text">Your Store Favorite</span></span></td>
                     <td>
                       <code>hasEliteStoreFavorite(favoritedByBrands)</code>
                       <br />
@@ -940,25 +940,25 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     </td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><ClockCheck size={14} /></span><span className="tag-text">Consistently On-Time</span></span></td>
+                    <td><span className="tag tag-stroke tag-sm"><span className="tag-icon"><ClockCheck size={14} /></span><span className="tag-text">Consistently On-Time</span></span></td>
                     <td>
                       <code>100 - tardyPercent &gt; 85%</code>, or <code>tardyRatio</code> starts with <code>0/</code> (never late)
                     </td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><Sparkles size={14} /></span><span className="tag-text">Low Cancel Rate</span></span></td>
+                    <td><span className="tag tag-stroke tag-sm"><span className="tag-icon"><Sparkles size={14} /></span><span className="tag-text">Low Cancel Rate</span></span></td>
                     <td><code>urgentCancelPercent &lt; 5%</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><Trophy size={14} /></span><span className="tag-text">0 Call-Outs</span></span></td>
+                    <td><span className="tag tag-stroke tag-sm"><span className="tag-icon"><Trophy size={14} /></span><span className="tag-text">0 Call-Outs</span></span></td>
                     <td><code>urgentCancelRatio = "0/x"</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><HeartPlus size={14} /></span><span className="tag-text">Strong Store Favorite</span></span></td>
+                    <td><span className="tag tag-stroke tag-sm"><span className="tag-icon"><HeartPlus size={14} /></span><span className="tag-text">Strong Store Favorite</span></span></td>
                     <td><code>storeFavoriteCount / uniqueStoreCount &gt;= 85%</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><UserStar size={14} /></span><span className="tag-text">Invite Back Standout</span></span></td>
+                    <td><span className="tag tag-stroke tag-sm"><span className="tag-icon"><UserStar size={14} /></span><span className="tag-text">Invite Back Standout</span></span></td>
                     <td><code>invitedBackStores / uniqueStoreCount &gt;= 94%</code></td>
                   </tr>
                 </tbody>
@@ -976,11 +976,11 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                 </thead>
                 <tbody>
                   <tr>
-                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><CalendarDays size={12} /></span><span className="tag-text">Shift Scheduled</span></span></td>
+                    <td><span className="tag tag-blue tag-sm"><span className="tag-icon"><CalendarDays size={12} /></span><span className="tag-text">Flex Booked</span></span></td>
                     <td><code>shift_scheduled: true</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-green tag-sm"><span className="tag-icon"><CalendarClock size={12} /></span><span className="tag-text">Shift Booked</span></span></td>
+                    <td><span className="tag tag-blue-light tag-sm"><span className="tag-icon"><CalendarClock size={12} /></span><span className="tag-text">Flex Requested</span></span></td>
                     <td><code>shift_booked: true</code></td>
                   </tr>
                   <tr>
@@ -988,7 +988,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                     <td><code>status: "accepted"</code></td>
                   </tr>
                   <tr>
-                    <td><span className="tag tag-dark-gray tag-sm"><span className="tag-icon"><UserPlus size={12} /></span><span className="tag-text">Invited</span></span></td>
+                    <td><span className="tag tag-green-light tag-sm"><span className="tag-icon"><UserPlus size={12} /></span><span className="tag-text">Invited</span></span></td>
                     <td><code>status: "invited"</code></td>
                   </tr>
                   <tr>
@@ -1020,7 +1020,7 @@ export function DesignSystemPanel({ onClose }: DesignSystemPanelProps) {
                         <span className="tag-text">Chat</span>
                       </button>
                     </td>
-                    <td>Connected, Shift Scheduled, or Shift Booked</td>
+                    <td>Connected, Flex Booked, or Flex Requested</td>
                   </tr>
                   <tr>
                     <td>
