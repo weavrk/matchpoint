@@ -32,11 +32,10 @@ interface WorkerCardHeaderFullProps {
 export function WorkerCardHeaderFull({ worker, showActivelyLooking = true }: WorkerCardHeaderFullProps) {
   const [imgError, setImgError] = useState(false);
 
-  // Use worker.photo if available, otherwise assign from pool
+  // Deterministic photo from approved pool, fall back to worker.photo
   const photoUrl = useMemo(() => {
-    if (worker.photo) return worker.photo;
     if (worker.gender) return getWorkerPhoto(worker.gender, worker.id);
-    return null;
+    return worker.photo || null;
   }, [worker.photo, worker.gender, worker.id]);
 
   const initials = worker.name
@@ -104,11 +103,10 @@ export function WorkerCardHeader({ worker, size = 'default', showActivelyLooking
   useEffect(() => { setConnectAnim(isConnected ? 'done' : 'idle'); }, [isConnected]);
   useEffect(() => { setLikeAnim(isLiked ? 'done' : 'idle'); }, [isLiked]);
 
-  // Use worker.photo if available, otherwise assign from pool
+  // Deterministic photo from approved pool, fall back to worker.photo
   const photoUrl = useMemo(() => {
-    if (worker.photo) return worker.photo;
     if (worker.gender) return getWorkerPhoto(worker.gender, worker.id);
-    return null;
+    return worker.photo || null;
   }, [worker.photo, worker.gender, worker.id]);
 
   const initials = worker.name

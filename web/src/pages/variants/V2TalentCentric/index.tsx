@@ -2539,7 +2539,7 @@ export function V2TalentCentric({
                       console.error('Failed to save connections:', err);
                     }
                   }}>
-                    <UserPlus size={14} />
+                    <UserPlus size={18} />
                     {filteredWorkers.length === 1
                       ? "Connect"
                       : `Connect with all ${filteredWorkers.length}`}
@@ -2619,7 +2619,6 @@ export function V2TalentCentric({
                           const mkt = MARKETS.find(m => m.id === selectedLocation)?.name || (typeof worker.market === 'string' ? worker.market : worker.market[0]);
                           const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: worker.id, market: mkt, chat_id: null, status: 'invited', invited: true, connected: true, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: false, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
                           setWorkerConnections(prev => [newConn, ...prev]);
-                          setConnectionsDirty(true);
                           try { await bulkInsertWorkerConnections([{ worker_id: worker.id, market: mkt, status: 'invited', connected: true, saved_for_later: false }]); } catch {}
                         }
                       }}
@@ -2641,7 +2640,6 @@ export function V2TalentCentric({
                           const mkt = MARKETS.find(m => m.id === selectedLocation)?.name || (typeof worker.market === 'string' ? worker.market : worker.market[0]);
                           const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: worker.id, market: mkt, chat_id: null, status: 'liked', invited: false, connected: false, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: true, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
                           setWorkerConnections(prev => [newConn, ...prev]);
-                          setConnectionsDirty(true);
                           try { await bulkInsertWorkerConnections([{ worker_id: worker.id, market: mkt, status: 'liked', connected: false, saved_for_later: true }]); } catch {}
                         }
                       }}
@@ -2765,7 +2763,6 @@ export function V2TalentCentric({
                         worker: null,
                       };
                       setWorkerConnections(prev => [newConn, ...prev]);
-                      setConnectionsDirty(true);
                       try {
                         await bulkInsertWorkerConnections([{
                           worker_id: selectedWorker.id,
@@ -2775,7 +2772,6 @@ export function V2TalentCentric({
                           saved_for_later: true,
                           image_url: imgUrl,
                         }]);
-                        setConnectionsDirty(true);
                       } catch (err) { console.error('Failed to save connection:', err); }
                     }
                   }}
@@ -3036,7 +3032,7 @@ export function V2TalentCentric({
                             <div className="v2-conn-col-1">
                               <div className="v2-connection-avatar" style={{ width: 64, height: 64 }}>
                                 {(() => {
-                                  const photo = worker?.photo || (worker?.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null) || connection.image_url;
+                                  const photo = (worker?.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null) || worker?.photo || connection.image_url;
                                   return photo ? <img src={photo} alt={name} /> : <span>{initials}</span>;
                                 })()}
                                 {worker?.shift_verified && (
@@ -3108,7 +3104,6 @@ export function V2TalentCentric({
                           const mkt = selectedConnectionWorker.market;
                           const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: wid, market: mkt, chat_id: null, status: 'invited', invited: true, connected: true, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: false, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
                           setWorkerConnections(prev => [newConn, ...prev]);
-                          setConnectionsDirty(true);
                         }
                         try { await bulkInsertWorkerConnections([{ worker_id: wid, market: selectedConnectionWorker.market, status: 'invited', connected: true, saved_for_later: false }]); } catch {}
                       }}
@@ -3132,7 +3127,6 @@ export function V2TalentCentric({
                           const mkt = selectedConnectionWorker.market;
                           const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: wid, market: mkt, chat_id: null, status: 'liked', invited: false, connected: false, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: true, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
                           setWorkerConnections(prev => [newConn, ...prev]);
-                          setConnectionsDirty(true);
                         }
                         try { await bulkInsertWorkerConnections([{ worker_id: wid, market: selectedConnectionWorker.market, status: 'liked', connected: false, saved_for_later: true }]); } catch {}
                       }}
@@ -3148,13 +3142,13 @@ export function V2TalentCentric({
                         }
                       }}
                       worker={{
-                        id: selectedConnectionFullWorker.id,
+                        id: selectedConnectionWorker?.worker?.id || selectedConnectionFullWorker.id,
                         name: selectedConnectionFullWorker.name,
                         photo: (() => {
                           const w = selectedConnectionWorker?.worker;
                           return w?.photo || (w?.gender ? getWorkerPhotoFromPool(w.gender, w.id) : null) || selectedConnectionWorker?.image_url || selectedConnectionFullWorker.photo || undefined;
                         })(),
-                        gender: selectedConnectionFullWorker.gender || 'female',
+                        gender: selectedConnectionWorker?.worker?.gender || selectedConnectionFullWorker.gender || 'female',
                         market: selectedConnectionFullWorker.market || '',
                         activelyLooking: selectedConnectionFullWorker.actively_looking || false,
                         shiftVerified: selectedConnectionFullWorker.shift_verified || false,
@@ -3207,7 +3201,7 @@ export function V2TalentCentric({
           const workerId = chatId.replace('chat-', '');
           const connection = workerConnections.find(c => c.worker_id === workerId);
           const worker = connection?.worker;
-          return worker?.photo || (worker?.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null) || connection?.image_url;
+          return (worker?.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null) || worker?.photo || connection?.image_url;
         };
 
         // Format name as "First L."
