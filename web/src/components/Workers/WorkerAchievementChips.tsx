@@ -87,7 +87,9 @@ export function WorkerAchievementChips({ worker, size = 'tag-sm' }: WorkerAchiev
     });
   }
 
-  if (worker.urgentCancelPercent != null && worker.urgentCancelPercent < 5) {
+  const neverCalledOut = worker.urgentCancelRatio && worker.urgentCancelRatio.startsWith('0 /');
+
+  if (!neverCalledOut && worker.urgentCancelPercent != null && worker.urgentCancelPercent < 5) {
     chips.push({
       text: 'Low Cancel Rate',
       icon: <Sparkles size={14} />,
@@ -95,7 +97,7 @@ export function WorkerAchievementChips({ worker, size = 'tag-sm' }: WorkerAchiev
     });
   }
 
-  if (worker.urgentCancelRatio && worker.urgentCancelRatio.startsWith('0 /')) {
+  if (neverCalledOut) {
     chips.push({
       text: 'Never Called Out',
       icon: <Trophy size={14} />,

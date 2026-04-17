@@ -50,21 +50,27 @@ export function WorkerCardCompact({ worker, onClick, onLike, onUnlike, onConnect
             <>
               <span className="section-label">Reflex Brand Experience</span>
               <div className="brand-logo-grid">
-                {brandsWorked.map((brand, idx) => {
-                  const logo = getBrandLogo(brand.name);
-                  return logo ? (
-                    <span
-                      key={idx}
-                      className={`tag-logo${brandLogoNeedsGridInset(brand.name) ? ' tag-logo-grid-inset' : ''}`}
-                    >
-                      <img src={logo} alt={brand.name} />
-                    </span>
-                  ) : (
-                    <span key={idx} className="brand-logo-fallback">
-                      {toTitleCase(brand.name)}
-                    </span>
-                  );
-                })}
+                {(() => {
+                  const seen = new Set<string>();
+                  return brandsWorked.map((brand, idx) => {
+                    const logo = getBrandLogo(brand.name);
+                    const key = logo || brand.name.toLowerCase();
+                    if (seen.has(key)) return null;
+                    seen.add(key);
+                    return logo ? (
+                      <span
+                        key={idx}
+                        className={`tag-logo${brandLogoNeedsGridInset(brand.name) ? ' tag-logo-grid-inset' : ''}`}
+                      >
+                        <img src={logo} alt={brand.name} />
+                      </span>
+                    ) : (
+                      <span key={idx} className="brand-logo-fallback">
+                        {toTitleCase(brand.name)}
+                      </span>
+                    );
+                  });
+                })()}
               </div>
             </>
           )}

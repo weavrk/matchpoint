@@ -54,7 +54,7 @@ import { WorkerAchievementChips, getAchievementChipCount } from "../../../compon
 import type { EmploymentType, AvailabilityHours } from "./V2EmploymentSelector";
 import type { MatchedWorker, ChatMessage, WorkerProfile, FocusRoute } from "../../../types";
 import { createFreshV2GeminiService, V2GeminiService } from "./V2GeminiService";
-import { fetchWorkersByMarketAsProfiles, fetchWorkersByMarketForSidebar, fetchRetailers, fetchWorkerConnections, fetchWorkerById, bulkInsertWorkerConnections } from "../../../services/supabase";
+import { fetchWorkersByMarketAsProfiles, fetchWorkersByMarketForSidebar, fetchRetailers, fetchWorkerConnections, fetchWorkerById, bulkInsertWorkerConnections, deleteWorkerConnection } from "../../../services/supabase";
 import type { WorkerConnectionWithWorker, WorkerRow } from "../../../services/supabase";
 import type { Retailer } from "../../../services/supabase";
 import ReactMarkdown from "react-markdown";
@@ -915,9 +915,9 @@ export function V2TalentCentric({
       });
   }, []);
 
-  // Fetch worker connections when connections tab is opened
+  // Fetch worker connections on mount + when tab opened + when dirty
   useEffect(() => {
-    if (activeTab === "connections" && (!connectionsFetched || connectionsDirty)) {
+    if (!connectionsFetched || connectionsDirty || activeTab === "connections") {
       setIsLoadingConnections(true);
       fetchWorkerConnections()
         .then((data) => {
@@ -2520,6 +2520,7 @@ export function V2TalentCentric({
                       worker: null,
                     }));
                     setWorkerConnections(prev => [...newConns, ...prev]);
+                    setConnectionsDirty(true);
 
                     // Persist to DB
                     try {
@@ -2567,6 +2568,7 @@ export function V2TalentCentric({
                       worker: null,
                     }));
                     setWorkerConnections(prev => [...newConns, ...prev]);
+                    setConnectionsDirty(true);
 
                     // Persist to DB
                     try {
@@ -2600,122 +2602,61 @@ export function V2TalentCentric({
                 </div>
               </div>
 
-              {/* Worker Card Grid - using DSL WorkerCardCompact */}
-              <div className={`v2-worker-card-grid ${detailSidebarOpen ? "sidebar-open" : ""}`}>
+              {/* Worker Card Grid - using WorkerCardFull */}
+              <div className={`v2-worker-card-grid v2-grid-full ${detailSidebarOpen ? "sidebar-open" : ""}`}>
                 {filteredWorkers.map((worker) => (
-                  <WorkerCardCompact
-                    key={worker.id}
-                    worker={worker}
-                    isConnected={workerConnections.some(c => c.worker_id === worker.id && c.connected)}
-                    isLiked={workerConnections.some(c => c.worker_id === worker.id && c.saved_for_later)}
-                    onConnect={async () => {
-                      const existing = workerConnections.find(c => c.worker_id === worker.id);
-                      if (existing) {
-                        // Upgrade: mark connected, remove saved
-                        setWorkerConnections(prev => prev.map(c =>
-                          c.worker_id === worker.id ? { ...c, status: 'invited' as const, connected: true, saved_for_later: false } : c
-                        ));
-                      } else {
-                        const mkt = MARKETS.find(m => m.id === selectedLocation)?.name || (typeof worker.market === 'string' ? worker.market : worker.market[0]);
-                        const newConn: WorkerConnectionWithWorker = {
-                          id: crypto.randomUUID(),
-                          worker_id: worker.id,
-                          market: mkt,
-                          chat_id: null,
-                          status: 'invited',
-                          invited: true,
-                          connected: true,
-                          chat_open: false,
-                          shift_booked: false,
-                          shift_scheduled: false,
-                          saved_for_later: false,
-                          image_url: worker.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null,
-                          created_at: new Date().toISOString(),
-                          updated_at: new Date().toISOString(),
-                          worker: {
-                            id: worker.id, name: worker.name, photo: worker.photo || null, gender: worker.gender || null,
-                            market: typeof worker.market === 'string' ? worker.market : worker.market[0],
-                            shift_verified: worker.shiftVerified, actively_looking: worker.activelyLooking,
-                            shifts_on_reflex: worker.shiftsOnReflex, unique_store_count: worker.uniqueStoreCount ?? null,
-                            store_favorite_count: worker.storeFavoriteCount ?? null, brands_worked: worker.brandsWorked || [],
-                            invited_back_stores: worker.invitedBackStores, tardy_ratio: worker.tardyRatio || null,
-                            tardy_percent: worker.tardyPercent ?? null, urgent_cancel_ratio: worker.urgentCancelRatio || null,
-                            urgent_cancel_percent: worker.urgentCancelPercent ?? null, current_tier: worker.currentTier || null,
-                            experience_level: worker.experienceLevel || null,
-                          } as any,
-                        };
-                        setWorkerConnections(prev => [newConn, ...prev]);
-                        try {
-                          await bulkInsertWorkerConnections([{
-                            worker_id: worker.id, market: mkt, status: 'invited', connected: true, saved_for_later: false,
-                            image_url: worker.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null,
-                          }]);
-                        } catch (err) { console.error('Failed to save connection:', err); }
-                      }
-                    }}
-                    onDisconnect={() => {
-                      setWorkerConnections(prev => prev.filter(c => c.worker_id !== worker.id || c.saved_for_later));
-                    }}
-                    onLike={async () => {
-                      const existing = workerConnections.find(c => c.worker_id === worker.id);
-                      if (existing) {
-                        // Upgrade: mark saved, remove connected
-                        setWorkerConnections(prev => prev.map(c =>
-                          c.worker_id === worker.id ? { ...c, status: 'liked' as const, connected: false, saved_for_later: true } : c
-                        ));
-                      } else {
-                        const mkt = MARKETS.find(m => m.id === selectedLocation)?.name || (typeof worker.market === 'string' ? worker.market : worker.market[0]);
-                        const newConn: WorkerConnectionWithWorker = {
-                          id: crypto.randomUUID(),
-                          worker_id: worker.id,
-                          market: mkt,
-                          chat_id: null,
-                          status: 'liked',
-                          invited: false,
-                          connected: false,
-                          chat_open: false,
-                          shift_booked: false,
-                          shift_scheduled: false,
-                          saved_for_later: true,
-                          image_url: worker.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null,
-                          created_at: new Date().toISOString(),
-                          updated_at: new Date().toISOString(),
-                          worker: {
-                            id: worker.id, name: worker.name, photo: worker.photo || null, gender: worker.gender || null,
-                            market: typeof worker.market === 'string' ? worker.market : worker.market[0],
-                            shift_verified: worker.shiftVerified, actively_looking: worker.activelyLooking,
-                            shifts_on_reflex: worker.shiftsOnReflex, unique_store_count: worker.uniqueStoreCount ?? null,
-                            store_favorite_count: worker.storeFavoriteCount ?? null, brands_worked: worker.brandsWorked || [],
-                            invited_back_stores: worker.invitedBackStores, tardy_ratio: worker.tardyRatio || null,
-                            tardy_percent: worker.tardyPercent ?? null, urgent_cancel_ratio: worker.urgentCancelRatio || null,
-                            urgent_cancel_percent: worker.urgentCancelPercent ?? null, current_tier: worker.currentTier || null,
-                            experience_level: worker.experienceLevel || null,
-                          } as any,
-                        };
-                        setWorkerConnections(prev => [newConn, ...prev]);
-                        try {
-                          await bulkInsertWorkerConnections([{
-                            worker_id: worker.id, market: mkt, status: 'liked', connected: false, saved_for_later: true,
-                            image_url: worker.gender ? getWorkerPhotoFromPool(worker.gender, worker.id) : null,
-                          }]);
-                        } catch (err) { console.error('Failed to save connection:', err); }
-                      }
-                    }}
-                    onUnlike={() => {
-                      const conn = workerConnections.find(c => c.worker_id === worker.id);
-                      if (conn && conn.connected) {
-                        setWorkerConnections(prev => prev.map(c =>
-                          c.worker_id === worker.id ? { ...c, saved_for_later: false } : c
-                        ));
-                      } else {
-                        setWorkerConnections(prev => prev.filter(c => c.worker_id !== worker.id));
-                      }
-                    }}
-                    onClick={() => {
-                      setSelectedWorker(worker);
-                      setDetailSidebarOpen(true);
-                    }}
-                  />
+                  <div key={worker.id} className="v2-grid-full-card">
+                    <WorkerCardFull
+                      worker={worker}
+                      showActions
+                      isConnected={workerConnections.some(c => c.worker_id === worker.id && c.connected)}
+                      isLiked={workerConnections.some(c => c.worker_id === worker.id && c.saved_for_later)}
+                      onConnect={async () => {
+                        const existing = workerConnections.find(c => c.worker_id === worker.id);
+                        if (existing) {
+                          setWorkerConnections(prev => prev.map(c => c.worker_id === worker.id ? { ...c, status: 'invited' as const, connected: true, saved_for_later: false } : c));
+                        } else {
+                          const mkt = MARKETS.find(m => m.id === selectedLocation)?.name || (typeof worker.market === 'string' ? worker.market : worker.market[0]);
+                          const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: worker.id, market: mkt, chat_id: null, status: 'invited', invited: true, connected: true, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: false, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
+                          setWorkerConnections(prev => [newConn, ...prev]);
+                          setConnectionsDirty(true);
+                          try { await bulkInsertWorkerConnections([{ worker_id: worker.id, market: mkt, status: 'invited', connected: true, saved_for_later: false }]); } catch {}
+                        }
+                      }}
+                      onDisconnect={async () => {
+                        const conn = workerConnections.find(c => c.worker_id === worker.id);
+                        if (conn?.saved_for_later) {
+                          setWorkerConnections(prev => prev.map(c => c.worker_id === worker.id ? { ...c, connected: false, status: 'liked' as const } : c));
+                          try { await bulkInsertWorkerConnections([{ worker_id: worker.id, market: conn.market, status: 'liked', connected: false, saved_for_later: true }]); } catch {}
+                        } else {
+                          setWorkerConnections(prev => prev.filter(c => c.worker_id !== worker.id));
+                          try { await deleteWorkerConnection(worker.id); } catch {}
+                        }
+                      }}
+                      onLike={async () => {
+                        const existing = workerConnections.find(c => c.worker_id === worker.id);
+                        if (existing) {
+                          setWorkerConnections(prev => prev.map(c => c.worker_id === worker.id ? { ...c, status: 'liked' as const, connected: false, saved_for_later: true } : c));
+                        } else {
+                          const mkt = MARKETS.find(m => m.id === selectedLocation)?.name || (typeof worker.market === 'string' ? worker.market : worker.market[0]);
+                          const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: worker.id, market: mkt, chat_id: null, status: 'liked', invited: false, connected: false, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: true, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
+                          setWorkerConnections(prev => [newConn, ...prev]);
+                          setConnectionsDirty(true);
+                          try { await bulkInsertWorkerConnections([{ worker_id: worker.id, market: mkt, status: 'liked', connected: false, saved_for_later: true }]); } catch {}
+                        }
+                      }}
+                      onUnlike={async () => {
+                        const conn = workerConnections.find(c => c.worker_id === worker.id);
+                        if (conn?.connected) {
+                          setWorkerConnections(prev => prev.map(c => c.worker_id === worker.id ? { ...c, saved_for_later: false } : c));
+                          try { await bulkInsertWorkerConnections([{ worker_id: worker.id, market: conn.market, status: conn.status, connected: true, saved_for_later: false }]); } catch {}
+                        } else {
+                          setWorkerConnections(prev => prev.filter(c => c.worker_id !== worker.id));
+                          try { await deleteWorkerConnection(worker.id); } catch {}
+                        }
+                      }}
+                    />
+                  </div>
                 ))}
               </div>
 
@@ -2824,6 +2765,7 @@ export function V2TalentCentric({
                         worker: null,
                       };
                       setWorkerConnections(prev => [newConn, ...prev]);
+                      setConnectionsDirty(true);
                       try {
                         await bulkInsertWorkerConnections([{
                           worker_id: selectedWorker.id,
@@ -2863,6 +2805,50 @@ export function V2TalentCentric({
                   : undefined
               }
               isLoading={isLoadingWorkers}
+              isWorkerConnected={(id) => workerConnections.some(c => c.worker_id === id && c.connected)}
+              isWorkerLiked={(id) => workerConnections.some(c => c.worker_id === id && c.saved_for_later)}
+              onWorkerConnect={async (w) => {
+                const existing = workerConnections.find(c => c.worker_id === w.id);
+                if (existing) {
+                  setWorkerConnections(prev => prev.map(c => c.worker_id === w.id ? { ...c, status: 'invited' as const, connected: true, saved_for_later: false } : c));
+                } else {
+                  const mkt = MARKETS.find(m => m.id === selectedLocation)?.name || (typeof w.market === 'string' ? w.market : w.market[0]);
+                  const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: w.id, market: mkt, chat_id: null, status: 'invited', invited: true, connected: true, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: false, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
+                  setWorkerConnections(prev => [newConn, ...prev]);
+                  try { await bulkInsertWorkerConnections([{ worker_id: w.id, market: mkt, status: 'invited', connected: true, saved_for_later: false }]); } catch {}
+                }
+              }}
+              onWorkerDisconnect={async (w) => {
+                const conn = workerConnections.find(c => c.worker_id === w.id);
+                if (conn?.saved_for_later) {
+                  setWorkerConnections(prev => prev.map(c => c.worker_id === w.id ? { ...c, connected: false, status: 'liked' as const } : c));
+                  try { await bulkInsertWorkerConnections([{ worker_id: w.id, market: conn.market, status: 'liked', connected: false, saved_for_later: true }]); } catch {}
+                } else {
+                  setWorkerConnections(prev => prev.filter(c => c.worker_id !== w.id));
+                  try { await deleteWorkerConnection(w.id); } catch {}
+                }
+              }}
+              onWorkerLike={async (w) => {
+                const existing = workerConnections.find(c => c.worker_id === w.id);
+                if (existing) {
+                  setWorkerConnections(prev => prev.map(c => c.worker_id === w.id ? { ...c, status: 'liked' as const, connected: false, saved_for_later: true } : c));
+                } else {
+                  const mkt = MARKETS.find(m => m.id === selectedLocation)?.name || (typeof w.market === 'string' ? w.market : w.market[0]);
+                  const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: w.id, market: mkt, chat_id: null, status: 'liked', invited: false, connected: false, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: true, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
+                  setWorkerConnections(prev => [newConn, ...prev]);
+                  try { await bulkInsertWorkerConnections([{ worker_id: w.id, market: mkt, status: 'liked', connected: false, saved_for_later: true }]); } catch {}
+                }
+              }}
+              onWorkerUnlike={async (w) => {
+                const conn = workerConnections.find(c => c.worker_id === w.id);
+                if (conn?.connected) {
+                  setWorkerConnections(prev => prev.map(c => c.worker_id === w.id ? { ...c, saved_for_later: false } : c));
+                  try { await bulkInsertWorkerConnections([{ worker_id: w.id, market: conn.market, status: conn.status, connected: true, saved_for_later: false }]); } catch {}
+                } else {
+                  setWorkerConnections(prev => prev.filter(c => c.worker_id !== w.id));
+                  try { await deleteWorkerConnection(w.id); } catch {}
+                }
+              }}
             />
           )}
         </div>
@@ -3110,6 +3096,57 @@ export function V2TalentCentric({
                 ) : selectedConnectionFullWorker ? (
                   <>
                     <WorkerCardFull
+                      showActions
+                      isConnected={workerConnections.some(c => c.worker_id === selectedConnectionWorker.worker_id && c.connected)}
+                      isLiked={workerConnections.some(c => c.worker_id === selectedConnectionWorker.worker_id && c.saved_for_later)}
+                      onConnect={async () => {
+                        const wid = selectedConnectionWorker.worker_id;
+                        const existing = workerConnections.find(c => c.worker_id === wid);
+                        if (existing) {
+                          setWorkerConnections(prev => prev.map(c => c.worker_id === wid ? { ...c, status: 'invited' as const, connected: true, saved_for_later: false } : c));
+                        } else {
+                          const mkt = selectedConnectionWorker.market;
+                          const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: wid, market: mkt, chat_id: null, status: 'invited', invited: true, connected: true, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: false, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
+                          setWorkerConnections(prev => [newConn, ...prev]);
+                          setConnectionsDirty(true);
+                        }
+                        try { await bulkInsertWorkerConnections([{ worker_id: wid, market: selectedConnectionWorker.market, status: 'invited', connected: true, saved_for_later: false }]); } catch {}
+                      }}
+                      onDisconnect={async () => {
+                        const wid = selectedConnectionWorker.worker_id;
+                        const conn = workerConnections.find(c => c.worker_id === wid);
+                        if (conn?.saved_for_later) {
+                          setWorkerConnections(prev => prev.map(c => c.worker_id === wid ? { ...c, connected: false, status: 'liked' as const } : c));
+                          try { await bulkInsertWorkerConnections([{ worker_id: wid, market: conn.market, status: 'liked', connected: false, saved_for_later: true }]); } catch {}
+                        } else {
+                          setWorkerConnections(prev => prev.filter(c => c.worker_id !== wid));
+                          try { await deleteWorkerConnection(wid); } catch {}
+                        }
+                      }}
+                      onLike={async () => {
+                        const wid = selectedConnectionWorker.worker_id;
+                        const existing = workerConnections.find(c => c.worker_id === wid);
+                        if (existing) {
+                          setWorkerConnections(prev => prev.map(c => c.worker_id === wid ? { ...c, status: 'liked' as const, connected: false, saved_for_later: true } : c));
+                        } else {
+                          const mkt = selectedConnectionWorker.market;
+                          const newConn: WorkerConnectionWithWorker = { id: crypto.randomUUID(), worker_id: wid, market: mkt, chat_id: null, status: 'liked', invited: false, connected: false, chat_open: false, shift_booked: false, shift_scheduled: false, saved_for_later: true, image_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), worker: null };
+                          setWorkerConnections(prev => [newConn, ...prev]);
+                          setConnectionsDirty(true);
+                        }
+                        try { await bulkInsertWorkerConnections([{ worker_id: wid, market: selectedConnectionWorker.market, status: 'liked', connected: false, saved_for_later: true }]); } catch {}
+                      }}
+                      onUnlike={async () => {
+                        const wid = selectedConnectionWorker.worker_id;
+                        const conn = workerConnections.find(c => c.worker_id === wid);
+                        if (conn?.connected) {
+                          setWorkerConnections(prev => prev.map(c => c.worker_id === wid ? { ...c, saved_for_later: false } : c));
+                          try { await bulkInsertWorkerConnections([{ worker_id: wid, market: conn.market, status: conn.status, connected: true, saved_for_later: false }]); } catch {}
+                        } else {
+                          setWorkerConnections(prev => prev.filter(c => c.worker_id !== wid));
+                          try { await deleteWorkerConnection(wid); } catch {}
+                        }
+                      }}
                       worker={{
                         id: selectedConnectionFullWorker.id,
                         name: selectedConnectionFullWorker.name,

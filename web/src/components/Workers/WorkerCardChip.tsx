@@ -7,12 +7,14 @@ interface WorkerCardChipProps {
   worker: MatchedWorker | WorkerProfile;
   onClick?: () => void;
   onLike?: () => void;
+  onUnlike?: () => void;
   onConnect?: () => void;
+  onDisconnect?: () => void;
   isConnected?: boolean;
   isLiked?: boolean;
 }
 
-export function WorkerCardChip({ worker, onClick, onLike, onConnect, isConnected, isLiked }: WorkerCardChipProps) {
+export function WorkerCardChip({ worker, onClick, onLike, onUnlike, onConnect, onDisconnect, isConnected, isLiked }: WorkerCardChipProps) {
   const brandsWorked = worker.brandsWorked || [];
   const storeCount = (worker.uniqueStoreCount != null && worker.uniqueStoreCount > 0)
     ? worker.uniqueStoreCount
@@ -31,7 +33,9 @@ export function WorkerCardChip({ worker, onClick, onLike, onConnect, isConnected
         showLocation={false}
         showActions
         onLike={onLike}
+        onUnlike={onUnlike}
         onConnect={onConnect}
+        onDisconnect={onDisconnect}
         isConnected={isConnected}
         isLiked={isLiked}
       />

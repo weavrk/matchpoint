@@ -1025,7 +1025,7 @@ export async function bulkInsertWorkerConnections(
 
   const { data, error } = await supabase
     .from('worker_connections')
-    .insert(payload)
+    .upsert(payload, { onConflict: 'worker_id' })
     .select('id');
 
   if (error) {
@@ -1034,4 +1034,17 @@ export async function bulkInsertWorkerConnections(
   }
 
   return data?.length ?? 0;
+}
+
+// Delete a worker connection by worker_id
+export async function deleteWorkerConnection(workerId: string): Promise<void> {
+  const { error } = await supabase
+    .from('worker_connections')
+    .delete()
+    .eq('worker_id', workerId);
+
+  if (error) {
+    console.error('Error deleting worker connection:', error);
+    throw error;
+  }
 }

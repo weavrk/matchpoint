@@ -2059,6 +2059,15 @@
   display: none;
 }
 
+.v2-employment-chips .journey-card-title {
+  font-size: 24px;
+}
+
+.v2-employment-chips .journey-card-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
 /* Availability section */
 .v2-availability-header {
   margin-top: 64px;
@@ -3020,11 +3029,9 @@
 }
 
 .v2-sidebar-count {
-  font-size: 14px;
-  color: var(--secondary);
-  background: var(--white);
-  padding: 4px 12px;
-  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--primary);
 }
 
 .v2-sidebar-cards {
@@ -3220,7 +3227,34 @@
   padding-bottom: 80px;
 }
 
-/* When detail sidebar is open, show 2 columns */
+/* Full card grid: 3 columns */
+.v2-worker-card-grid.v2-grid-full {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.v2-grid-full-card {
+  border: 1px solid var(--quaternary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.v2-grid-full-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.v2-grid-full-card .worker-card {
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.v2-worker-card-grid.v2-grid-full.sidebar-open {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* When detail sidebar is open (compact), show 2 columns */
 .v2-worker-card-grid.sidebar-open {
   grid-template-columns: repeat(2, 1fr);
 }

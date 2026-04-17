@@ -81,6 +81,18 @@ export interface V2WorkerSidebarProps {
   emptyMessage?: string;
   /** Whether workers are currently loading */
   isLoading?: boolean;
+  /** Check if a worker is connected */
+  isWorkerConnected?: (workerId: string) => boolean;
+  /** Check if a worker is saved/liked */
+  isWorkerLiked?: (workerId: string) => boolean;
+  /** Connect callback */
+  onWorkerConnect?: (worker: MatchedWorker) => void;
+  /** Disconnect callback */
+  onWorkerDisconnect?: (worker: MatchedWorker) => void;
+  /** Like/save callback */
+  onWorkerLike?: (worker: MatchedWorker) => void;
+  /** Unlike/unsave callback */
+  onWorkerUnlike?: (worker: MatchedWorker) => void;
 }
 
 const PAGE_SIZE = 20;
@@ -94,6 +106,12 @@ export function V2WorkerSidebar({
   onWorkerClick,
   emptyMessage = 'No matches yet. Try selecting different brands or criteria.',
   isLoading = false,
+  isWorkerConnected,
+  isWorkerLiked,
+  onWorkerConnect,
+  onWorkerDisconnect,
+  onWorkerLike,
+  onWorkerUnlike,
 }: V2WorkerSidebarProps) {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -153,6 +171,12 @@ export function V2WorkerSidebar({
               key={worker.id}
               worker={worker}
               onClick={() => onWorkerClick?.(worker)}
+              isConnected={isWorkerConnected?.(worker.id)}
+              isLiked={isWorkerLiked?.(worker.id)}
+              onConnect={onWorkerConnect ? () => onWorkerConnect(worker) : undefined}
+              onDisconnect={onWorkerDisconnect ? () => onWorkerDisconnect(worker) : undefined}
+              onLike={onWorkerLike ? () => onWorkerLike(worker) : undefined}
+              onUnlike={onWorkerUnlike ? () => onWorkerUnlike(worker) : undefined}
             />
           ))}
           {visibleCount < workers.length && (
